@@ -42,14 +42,15 @@ const urlTokenizer = µb.urlTokenizer;
 //      |    | +------- bit  3- 4: party [0-3]
 //      |    +--------- bit  5- 9: type [0-31]
 //      +-------------- bit 10-15: unused
+const CategoryCount = 1 << 0xa; // shift left to first unused bit
 
 const ActionBitsMask = 0b0000000011;
 const TypeBitsMask   = 0b1111100000;
 const TypeBitsOffset = 5;
 
-const BlockAction    = 0 << 0;
-const AllowAction    = 1 << 0;
-const ModifyAction   = 2 << 0;
+const BlockAction    = 0b00 << 0;
+const AllowAction    = 0b01 << 0;
+const ModifyAction   = 0b10 << 0;
 // Note:
 //   It's possible to increase granularity of ModifyAction realm with
 //   sub-realms if it helps performance, but so far I found it's not
@@ -59,9 +60,10 @@ const Important      = 1 << 2;
 
 const BlockImportant = BlockAction | Important;
 
-const AnyParty       = 0 << 3;
-const FirstParty     = 1 << 3;
-const ThirdParty     = 2 << 3;
+const AnyParty       = 0b00 << 3;
+const FirstParty     = 0b01 << 3;
+const ThirdParty     = 0b10 << 3;
+const AllParties     = 0b11 << 3;
 
 
 const typeNameToTypeValue = {
@@ -88,8 +90,8 @@ const typeNameToTypeValue = {
        'inline-font': 17 << TypeBitsOffset,
      'inline-script': 18 << TypeBitsOffset,
              'cname': 19 << TypeBitsOffset,
-            'unused': 20 << TypeBitsOffset,
-          'redirect': 21 << TypeBitsOffset,
+//          'unused': 20 << TypeBitsOffset,
+//          'unused': 21 << TypeBitsOffset,
             'webrtc': 22 << TypeBitsOffset,
        'unsupported': 23 << TypeBitsOffset,
 };
@@ -137,8 +139,6 @@ const typeValueToTypeName = [
     'inline-font',
     'inline-script',
     'cname',
-    'unused',
-    'redirect',
     'webrtc',
     'unsupported',
 ];
@@ -281,9 +281,10 @@ const isSeparatorChar = c => (charClassMap[c] & CHAR_CLASS_SEPARATOR) !== 0;
 
 /******************************************************************************/
 
-let filterUnits = [ null ];
+const filterUnits = [ null ];
 
-let filterSequences = new Uint32Array(131072);
+// Initial size should be enough for default set of filter lists.
+const filterSequences = JSON.parse(`[${'0,'.repeat(163839)}0]`);
 let filterSequenceWritePtr = 3;
 
 const filterSequenceAdd = function(a, b) {
@@ -297,12 +298,16 @@ const filterSequenceAdd = function(a, b) {
     return i;
 };
 
+// TODO:
+//   Evaluate whether it's worth to add ability to keep track of freed
+//   sequence slots for reuse purpose.
+
 const filterSequenceBufferResize = function(newSize) {
     if ( newSize <= filterSequences.length ) { return; }
     const size = (newSize + 0x3FFF) & ~0x3FFF;
-    const buffer = new Uint32Array(size);
-    buffer.set(filterSequences);
-    filterSequences = buffer;
+    for ( let i = filterSequences.length; i < size; i++ ) {
+        filterSequences[i] = 0;
+    }
 };
 
 /******************************************************************************/
@@ -345,6 +350,7 @@ let   filterClassIdGenerator = 0;
 const registerFilterClass = function(ctor) {
     const fid = filterClassIdGenerator++;
     ctor.fid = ctor.prototype.fid = fid;
+    ctor.fidstr = `${fid}`;
     filterClasses[fid] = ctor;
 };
 
@@ -358,13 +364,19 @@ const filterFromCtor = function(ctor, ...args) {
     return iunit;
 };
 
+const filterUnitFromFilter = function(f) {
+    const iunit = filterUnits.length;
+    filterUnits.push(f);
+    return iunit;
+};
+
 const filterUnitFromCompiled = function(args) {
     const ctor = filterClasses[args[0]];
     const keygen = ctor.keyFromArgs;
     if ( keygen === undefined ) {
         return filterUnits.push(ctor.fromCompiled(args)) - 1;
     }
-    let key = `${ctor.fid}`;
+    let key = ctor.fidstr;
     const keyargs = keygen(args);
     if ( keyargs !== undefined ) {
         key += `\t${keyargs}`;
@@ -377,9 +389,7 @@ const filterUnitFromCompiled = function(args) {
     return iunit;
 };
 
-const filterFromSelfie = function(args) {
-    return filterClasses[args[0]].fromSelfie(args);
-};
+const filterFromSelfie = args => filterClasses[args[0]].fromSelfie(args);
 
 /******************************************************************************/
 
@@ -1237,6 +1247,10 @@ const FilterOriginHit = class {
         this.n = n;
     }
 
+    get domainOpt() {
+        return filterOrigin.trieContainer.extractHostname(this.i, this.n);
+    }
+
     match() {
         return filterOrigin.trieContainer.matchesHostname(
             $docHostname,
@@ -1250,11 +1264,7 @@ const FilterOriginHit = class {
     }
 
     logData(details) {
-        details.domains.push(this.getHostname());
-    }
-
-    getHostname() {
-        return filterOrigin.trieContainer.extractHostname(this.i, this.n);
+        details.domains.push(this.domainOpt);
     }
 
     static compile(hostname) {
@@ -1273,6 +1283,8 @@ const FilterOriginHit = class {
     }
 };
 
+FilterOriginHit.prototype.hasOriginHit = true;
+
 registerFilterClass(FilterOriginHit);
 
 /******************************************************************************/
@@ -1283,7 +1295,7 @@ const FilterOriginMiss = class extends FilterOriginHit {
     }
 
     logData(details) {
-        details.domains.push(`~${this.getHostname()}`);
+        details.domains.push(`~${this.domainOpt}`);
     }
 
     static compile(hostname) {
@@ -1301,6 +1313,8 @@ const FilterOriginMiss = class extends FilterOriginHit {
         return new FilterOriginMiss(args[1], args[2]);
     }
 };
+
+FilterOriginMiss.prototype.hasOriginHit = false;
 
 registerFilterClass(FilterOriginMiss);
 
@@ -1354,6 +1368,8 @@ const FilterOriginHitSet = class {
     }
 };
 
+FilterOriginHitSet.prototype.hasOriginHit = true;
+
 registerFilterClass(FilterOriginHitSet);
 
 /******************************************************************************/
@@ -1385,6 +1401,8 @@ const FilterOriginMissSet = class extends FilterOriginHitSet {
         return args[1];
     }
 };
+
+FilterOriginMissSet.prototype.hasOriginHit = false;
 
 registerFilterClass(FilterOriginMissSet);
 
@@ -1556,7 +1574,7 @@ const FilterModifierResult = class {
 
 const FilterCollection = class {
     constructor(i = 0) {
-        this.i = i | 0;
+        this.i = i;
     }
 
     get size() {
@@ -1570,21 +1588,21 @@ const FilterCollection = class {
         this.i = filterSequenceAdd(iunit, j);
     }
 
-    shift() {
-        const sequences = filterSequences;
-        filterUnits[sequences[this.i+0]] = null;
-        this.i = sequences[this.i+1];
+    shift(drop = false) {
+        if ( drop ) {
+            filterUnits[filterSequences[this.i+0]] = null;
+        }
+        this.i = filterSequences[this.i+1];
     }
 
     forEach(fn) {
         let i = this.i;
         if ( i === 0 ) { return; }
-        const sequences = filterSequences;
         do {
-            const iunit = sequences[i+0];
+            const iunit = filterSequences[i+0];
             const r = fn(iunit);
             if ( r !== undefined ) { return r; }
-            i = sequences[i+1];
+            i = filterSequences[i+1];
         } while ( i !== 0 );
     }
 
@@ -1602,24 +1620,22 @@ const FilterCollection = class {
         return [ ctor.fid, fdata ];
     }
 
-    static fromCompiled(ctor, args) {
-        let iprev = 0, i0 = 0;
-        const n = args[1].length;
-        for ( let i = 0; i < n; i++ ) {
-            const iunit = filterUnitFromCompiled(args[1][i]);
-            const inext = filterSequenceAdd(iunit, 0);
-            if ( iprev !== 0 ) {
-                filterSequences[iprev+1] = inext;
-            } else {
-                i0 = inext;
-            }
-            iprev = inext;
+    static fromCompiled(args, bucket) {
+        const units = args[1];
+        const n = units.length;
+        let iunit, inext = 0;
+        let i = n;
+        while ( i-- ) {
+            iunit = filterUnitFromCompiled(units[i]);
+            inext = filterSequenceAdd(iunit, inext);
         }
-        return new ctor(i0, args[1].length);
+        bucket.i = inext;
+        return bucket;
     }
 
-    static fromSelfie(ctor, args) {
-        return new ctor(args[1]);
+    static fromSelfie(args, bucket) {
+        bucket.i = args[1];
+        return bucket;
     }
 };
 
@@ -1627,26 +1643,27 @@ const FilterCollection = class {
 
 const FilterCompositeAny = class extends FilterCollection {
     match() {
-        const sequences = filterSequences;
-        const units = filterUnits;
         let i = this.i;
         while ( i !== 0 ) {
-            if ( units[sequences[i+0]].match() ) { return true; }
-            i = sequences[i+1];
+            if ( filterUnits[filterSequences[i+0]].match() ) { return true; }
+            i = filterSequences[i+1];
         }
         return false;
     }
 
     static compile(fdata) {
-        return FilterCollection.compile(FilterCompositeAny, fdata);
+        return super.compile(FilterCompositeAny, fdata);
     }
 
     static fromCompiled(args) {
-        return FilterCollection.fromCompiled(FilterCompositeAny, args);
+        return super.fromCompiled(args, new FilterCompositeAny());
     }
 
-    static fromSelfie(args) {
-        return FilterCollection.fromSelfie(FilterCompositeAny, args);
+    static fromSelfie(args, bucket) {
+        if ( bucket === undefined ) {
+            bucket = new FilterCompositeAny();
+        }
+        return super.fromSelfie(args, bucket);
     }
 };
 
@@ -1656,33 +1673,36 @@ registerFilterClass(FilterCompositeAny);
 
 const FilterCompositeAll = class extends FilterCollection {
     match() {
-        const sequences = filterSequences;
-        const units = filterUnits;
         let i = this.i;
         while ( i !== 0 ) {
-            if ( units[sequences[i+0]].match() !== true ) { return false; }
-            i = sequences[i+1];
+            if ( filterUnits[filterSequences[i+0]].match() !== true ) {
+                return false;
+            }
+            i = filterSequences[i+1];
         }
         return true;
     }
 
+    // IMPORTANT: the modifier filter unit is assumed to be ALWAYS the
+    // first unit in the sequence. This requirement ensures that we do
+    // not have to traverse the sequence to find the modifier filter
+    // unit.
     matchAndFetchModifiers(env) {
-        if ( this.match() !== true ) { return false; }
-        this.forEach(iunit => {
-            const f = filterUnits[iunit];
-            if ( f.matchAndFetchModifiers instanceof Function ) {
-                f.matchAndFetchModifiers(env);
-            }
-        });
+        const f = filterUnits[filterSequences[this.i]];
+        if (
+            f.matchAndFetchModifiers instanceof Function &&
+            f.type === env.modifier &&
+            this.match()
+        ) {
+            f.matchAndFetchModifiers(env);
+        }
     }
 
     get modifier() {
-        return this.forEach(iunit => {
-            const f = filterUnits[iunit];
-            if ( f.matchAndFetchModifiers instanceof Function ) {
-                return f.modifier;
-            }
-        });
+        const f = filterUnits[filterSequences[this.i]];
+        if ( f.matchAndFetchModifiers instanceof Function ) {
+            return f.modifier;
+        }
     }
 
     // FilterPatternPlain is assumed to be first filter in sequence. This can
@@ -1691,22 +1711,42 @@ const FilterCompositeAll = class extends FilterCollection {
         return filterUnits[filterSequences[this.i]].isBidiTrieable === true;
     }
 
+    get hasOriginHit() {
+        return this.forEach(iunit => {
+            if ( filterUnits[iunit].hasOriginHit === true ) {
+                return true;
+            }
+        });
+    }
+
+    get domainOpt() {
+        return this.forEach(iunit => {
+            const f = filterUnits[iunit];
+            if ( f.hasOriginHit === true ) {
+                return f.domainOpt;
+            }
+        });
+    }
+
     toBidiTrie() {
         const details = filterUnits[filterSequences[this.i]].toBidiTrie();
-        this.shift();
+        this.shift(true);
         return details;
     }
 
     static compile(fdata) {
-        return FilterCollection.compile(FilterCompositeAll, fdata);
+        return super.compile(FilterCompositeAll, fdata);
     }
 
     static fromCompiled(args) {
-        return FilterCollection.fromCompiled(FilterCompositeAll, args);
+        return super.fromCompiled(args, new FilterCompositeAll());
     }
 
-    static fromSelfie(args) {
-        return FilterCollection.fromSelfie(FilterCompositeAll, args);
+    static fromSelfie(args, bucket) {
+        if ( bucket === undefined ) {
+            bucket = new FilterCompositeAll();
+        }
+        return super.fromSelfie(args, bucket);
     }
 };
 
@@ -1922,7 +1962,10 @@ registerFilterClass(FilterHTTPJustOrigin);
 
 const FilterPlainTrie = class {
     constructor(trie) {
-        this.plainTrie = trie;
+        this.plainTrie = trie !== undefined
+            ? trie
+            : bidiTrie.createOne();
+        this.$matchedUnit = 0;
     }
 
     match() {
@@ -1946,107 +1989,7 @@ const FilterPlainTrie = class {
         }
     }
 
-    toSelfie() {
-        return [ this.fid, bidiTrie.compileOne(this.plainTrie) ];
-    }
-
-    static fromSelfie(args) {
-        return new FilterPlainTrie(bidiTrie.createOne(args[1]));
-    }
-};
-
-FilterPlainTrie.prototype.$matchedUnit = 0;
-
-registerFilterClass(FilterPlainTrie);
-
-/******************************************************************************/
-
-const FilterBucket = class extends FilterCollection {
-    match() {
-        if ( this.plainTrie !== null ) {
-            if ( this.plainTrie.matches($tokenBeg, this) !== 0 ) {
-                this.$matchedTrie = true;
-                this.$matchedUnit = this.plainTrie.$iu;
-                return true;
-            }
-        }
-        const sequences = filterSequences;
-        const units = filterUnits;
-        let i = this.i;
-        while ( i !== 0 ) {
-            if ( units[sequences[i+0]].match() ) {
-                this.$matchedTrie = false;
-                this.$matchedUnit = sequences[i+0];
-                return true;
-            }
-            i = sequences[i+1];
-        }
-        return false;
-    }
-
-    matchAndFetchModifiers(env) {
-        const units = filterUnits;
-        this.forEach(iunit => {
-            env.iunit = iunit;
-            units[iunit].matchAndFetchModifiers(env);
-        });
-    }
-
-    logData(details) {
-        if ( this.$matchedTrie ) {
-            const s = $requestURL.slice(this.plainTrie.$l, this.plainTrie.$r);
-            details.pattern.push(s);
-            details.regex.push(restrFromPlainPattern(s));
-        }
-        if ( this.$matchedUnit !== -1 ) {
-            filterUnits[this.$matchedUnit].logData(details);
-        }
-    }
-
-    toSelfie() {
-        const selfie = super.toSelfie();
-        if ( this.plainTrie !== null ) {
-            selfie.push(bidiTrie.compileOne(this.plainTrie));
-        }
-        return selfie;
-    }
-
-    optimize() {
-        const units = filterUnits;
-        let n = 0;
-        let i = this.i;
-        do {
-            if ( units[filterSequences[i+0]].isBidiTrieable ) { n += 1; }
-            i = filterSequences[i+1];
-        } while ( i !== 0 && n < 3 );
-        if ( n < 3 ) { return; }
-        if ( this.plainTrie === null ) {
-            this.plainTrie = bidiTrie.createOne();
-        }
-        i = this.i;
-        let iprev = 0;
-        for (;;) {
-            const iunit = filterSequences[i+0];
-            const inext = filterSequences[i+1];
-            if ( units[iunit].isBidiTrieable ) {
-                this._addToTrie(iunit);
-                if ( iprev !== 0 ) {
-                    filterSequences[iprev+1] = inext;
-                } else {
-                    this.i = inext;
-                }
-            } else {
-                iprev = i;
-            }
-            if ( inext === 0 ) { break; }
-            i = inext;
-        }
-        if ( this.i === 0 ) {
-            return new FilterPlainTrie(this.plainTrie);
-        }
-    }
-
-    _addToTrie(iunit) {
+    addUnitToTrie(iunit) {
         const f = filterUnits[iunit];
         const trieDetails = f.toBidiTrie();
         const id = this.plainTrie.add(
@@ -2056,14 +1999,14 @@ const FilterBucket = class extends FilterCollection {
         );
         // No point storing a pattern with conditions if the bidi-trie already
         // contain a pattern with no conditions.
-        let ix = this.plainTrie.getExtra(id);
+        const ix = this.plainTrie.getExtra(id);
         if ( ix === 1 ) {
             filterUnits[iunit] = null;
             return;
         }
-        // If the newly stored pattern has no condition, shortcut existing
-        // ones since they will always be short-circuited by the
-        // condition-less pattern.
+        // If the newly stored pattern has no condition, short-circuit existing
+        // ones since they will always be short-circuited by the condition-less
+        // pattern.
         if ( f instanceof FilterPatternPlain ) {
             this.plainTrie.setExtra(id, 1);
             filterUnits[iunit] = null;
@@ -2077,20 +2020,192 @@ const FilterBucket = class extends FilterCollection {
         this.plainTrie.setExtra(id, filterSequenceAdd(iunit, ix));
     }
 
+    toSelfie() {
+        return [ this.fid, bidiTrie.compileOne(this.plainTrie) ];
+    }
+
     static fromSelfie(args) {
-        const bucket = FilterCollection.fromSelfie(FilterBucket, args);
-        if ( args.length > 2 && Array.isArray(args[2]) ) {
-            bucket.plainTrie = bidiTrie.createOne(args[2]);
+        return new FilterPlainTrie(bidiTrie.createOne(args[1]));
+    }
+};
+
+registerFilterClass(FilterPlainTrie);
+
+/******************************************************************************/
+
+const FilterBucket = class extends FilterCollection {
+    constructor(n = 0) {
+        super();
+        this.n = n;
+        this.$matchedUnit = 0;
+    }
+
+    get size() {
+        return this.n;
+    }
+
+    match() {
+        let i = this.i;
+        while ( i !== 0 ) {
+            if ( filterUnits[filterSequences[i+0]].match() ) {
+                this.$matchedUnit = filterSequences[i+0];
+                return true;
+            }
+            i = filterSequences[i+1];
         }
+        return false;
+    }
+
+    matchAndFetchModifiers(env) {
+        let i = this.i;
+        while ( i !== 0 ) {
+            env.iunit = filterSequences[i+0];
+            filterUnits[env.iunit].matchAndFetchModifiers(env);
+            i = filterSequences[i+1];
+        }
+    }
+
+    unshift(iunit) {
+        super.unshift(iunit);
+        this.n += 1;
+    }
+
+    shift() {
+        super.shift();
+        this.n -= 1;
+    }
+
+    logData(details) {
+        filterUnits[this.$matchedUnit].logData(details);
+    }
+
+    toSelfie() {
+        return [ this.fid, this.n, super.toSelfie() ];
+    }
+
+    static fromSelfie(args, bucket) {
+        if ( bucket === undefined ) {
+            bucket = new FilterBucket(args[1]);
+        }
+        return super.fromSelfie(args[2], bucket);
+    }
+
+    optimize(optimizeBits = 0b11) {
+        if ( this.n >= 3 && (optimizeBits & 0b01) !== 0 ) {
+            const f = this.optimizePatternTests();
+            if ( f !== undefined ) {
+                if ( this.i === 0 ) { return f; }
+                this.unshift(filterUnitFromFilter(f));
+            }
+        }
+        if ( this.n >= 10 && (optimizeBits & 0b10) !== 0 ) {
+            const f = this.optimizeOriginHitTests();
+            if ( f !== undefined ) {
+                if ( this.i === 0 ) { return f; }
+                this.unshift(filterUnitFromFilter(f));
+            }
+        }
+    }
+
+    optimizePatternTests() {
+        let n = 0;
+        let i = this.i;
+        do {
+            if ( filterUnits[filterSequences[i+0]].isBidiTrieable ) { n += 1; }
+            i = filterSequences[i+1];
+        } while ( i !== 0 && n < 3 );
+        if ( n < 3 ) { return; }
+        const ftrie = new FilterPlainTrie();
+        i = this.i;
+        let iprev = 0;
+        for (;;) {
+            const iunit = filterSequences[i+0];
+            const inext = filterSequences[i+1];
+            if ( filterUnits[iunit].isBidiTrieable ) {
+                ftrie.addUnitToTrie(iunit);
+                if ( iprev !== 0 ) {
+                    filterSequences[iprev+1] = inext;
+                } else {
+                    this.i = inext;
+                }
+                this.n -= 1;
+            } else {
+                iprev = i;
+            }
+            if ( inext === 0 ) { break; }
+            i = inext;
+        }
+        return ftrie;
+    }
+
+    optimizeOriginHitTests() {
+        let candidateCount = -10;
+        const shouldPreTest = this.forEach(iunit => {
+            if ( filterUnits[iunit].hasOriginHit !== true ) { return; }
+            candidateCount += 1;
+            if ( candidateCount === 0 ) { return true; }
+        });
+        if ( shouldPreTest !== true ) { return; }
+        const bucket = new FilterBucketOfOriginHits();
+        const domainOpts = [];
+        let i = this.i;
+        let iprev = 0;
+        for (;;) {
+            const iunit = filterSequences[i+0];
+            const inext = filterSequences[i+1];
+            const f = filterUnits[iunit];
+            if ( f.hasOriginHit ) {
+                domainOpts.push(f.domainOpt);
+                bucket.unshift(iunit);
+                if ( iprev !== 0 ) {
+                    filterSequences[iprev+1] = inext;
+                } else {
+                    this.i = inext;
+                }
+                this.n -= 1;
+            } else {
+                iprev = i;
+            }
+            if ( inext === 0 ) { break; }
+            i = inext;
+        }
+        bucket.originTestUnit =
+            filterFromCtor(FilterOriginHitSet, domainOpts.join('|'));
         return bucket;
     }
 };
 
-FilterBucket.prototype.plainTrie = null;
-FilterBucket.prototype.$matchedUnit = 0;
-FilterBucket.prototype.$matchedTrie = false;
-
 registerFilterClass(FilterBucket);
+
+/******************************************************************************/
+
+const FilterBucketOfOriginHits = class extends FilterBucket {
+    constructor(i = 0) {
+        super();
+        this.originTestUnit = i;
+    }
+
+    match() {
+        return filterUnits[this.originTestUnit].match() && super.match();
+    }
+
+    matchAndFetchModifiers(env) {
+        if ( filterUnits[this.originTestUnit].match() ) {
+            super.matchAndFetchModifiers(env);
+        }
+    }
+
+    toSelfie() {
+        return [ this.fid, this.originTestUnit, super.toSelfie() ];
+    }
+
+    static fromSelfie(args) {
+        const bucket = new FilterBucketOfOriginHits(args[1]);
+        return super.fromSelfie(args[2], bucket);
+    }
+};
+
+registerFilterClass(FilterBucketOfOriginHits);
 
 /******************************************************************************/
 
@@ -2260,14 +2375,11 @@ const FilterParser = class {
         this.modifyValue = undefined;
         this.invalid = false;
         this.pattern = '';
-        this.firstParty = false;
-        this.thirdParty = false;
         this.party = AnyParty;
         this.domainOpt = '';
         this.denyallowOpt = '';
         this.isPureHostname = false;
         this.isRegex = false;
-        this.redirect = 0;
         this.token = '*';
         this.tokenHash = this.noTokenHash;
         this.tokenBeg = 0;
@@ -2306,16 +2418,10 @@ const FilterParser = class {
     }
 
     parsePartyOption(firstParty, not) {
-        if ( firstParty ) {
-            not = !not;
-        }
         if ( not ) {
-            this.firstParty = true;
-            this.party = this.thirdParty ? AnyParty : FirstParty;
-        } else {
-            this.thirdParty = true;
-            this.party = this.firstParty ? AnyParty : ThirdParty;
+            firstParty = !firstParty;
         }
+        this.party |= firstParty ? FirstParty : ThirdParty;
     }
 
     parseHostnameList(parser, s, modeBits, out = []) {
@@ -2341,11 +2447,11 @@ const FilterParser = class {
     parseOptions(parser) {
         for ( let { id, val, not } of parser.netOptions() ) {
             switch ( id ) {
-            case parser.OPTToken3p:
-                this.parsePartyOption(false, not);
-                break;
             case parser.OPTToken1p:
                 this.parsePartyOption(true, not);
+                break;
+            case parser.OPTToken3p:
+                this.parsePartyOption(false, not);
                 break;
             case parser.OPTTokenAll:
                 this.parseTypeOption(-1);
@@ -2355,6 +2461,7 @@ const FilterParser = class {
                 this.badFilter = true;
                 break;
             case parser.OPTTokenCsp:
+                if ( this.modifyType !== undefined ) { return false; }
                 this.modifyType = parser.OPTTokenCsp;
                 if ( val !== undefined ) {
                     if ( this.reBadCSP.test(val) ) { return false; }
@@ -2391,14 +2498,21 @@ const FilterParser = class {
             // Used by Adguard:
             // https://kb.adguard.com/en/general/how-to-create-your-own-ad-filters#empty-modifier
             case parser.OPTTokenEmpty:
+                if ( this.modifyType !== undefined ) { return false; }
+                this.modifyType = parser.OPTTokenRedirect;
+                this.modifyValue = 'empty';
+                break;
             case parser.OPTTokenMp4:
-            case parser.OPTTokenRedirect:
-            case parser.OPTTokenRedirectRule:
-                if ( this.redirect !== 0 ) { return false; }
-                this.redirect = id === parser.OPTTokenRedirectRule ? 2 : 1;
+                if ( this.modifyType !== undefined ) { return false; }
+                this.modifyType = parser.OPTTokenRedirect;
+                this.modifyValue = 'noopmp4-1s';
                 break;
             case parser.OPTTokenQueryprune:
-                this.modifyType = parser.OPTTokenQueryprune;
+                // TODO: validate value
+            case parser.OPTTokenRedirect:
+            case parser.OPTTokenRedirectRule:
+                if ( this.modifyType !== undefined ) { return false; }
+                this.modifyType = id;
                 if ( val !== undefined ) {
                     this.modifyValue = val;
                 } else if ( this.action === AllowAction ) {
@@ -2416,6 +2530,9 @@ const FilterParser = class {
             }
         }
 
+        if ( this.party === AllParties ) {
+            this.party = AnyParty;
+        }
         // Negated network types? Toggle on all network type bits.
         // Negated non-network types can only toggle themselves.
         if ( (this.notTypes & allNetworkTypesBits) !== 0 ) {
@@ -2425,7 +2542,13 @@ const FilterParser = class {
             this.typeBits &= ~this.notTypes;
             if ( this.typeBits === 0 ) { return false; }
         }
-
+        // CSP directives implicitly apply only to document/subdocument.
+        if ( this.modifyType === parser.OPTTokenCsp ) {
+            if ( this.typeBits === 0 ) {
+                this.parseTypeOption(parser.OPTTokenDoc, false);
+                this.parseTypeOption(parser.OPTTokenFrame, false);
+            }
+        }
         // https://github.com/gorhill/uBlock/issues/2283
         //   Abort if type is only for unsupported types, otherwise
         //   toggle off `unsupported` bit.
@@ -2583,7 +2706,7 @@ const FilterParser = class {
             ) {
                 continue;
             }
-            if ( token.startsWith('b') ) {
+            if ( token.charCodeAt(0) === 0x62 /* 'b' */ ) {
                 const match = /\\+$/.exec(prefix);
                 if ( match !== null && (match[0].length & 1) !== 0 ) {
                     prefix += 'b';
@@ -2703,6 +2826,17 @@ const FilterContainer = function() {
     this.anyTokenHash = urlTokenizer.anyTokenHash;
     this.anyHTTPSTokenHash = urlTokenizer.anyHTTPSTokenHash;
     this.anyHTTPTokenHash = urlTokenizer.anyHTTPTokenHash;
+    this.optimizeTimerId = undefined;
+
+    // As long as CategoryCount is reasonably low, we will use an array to
+    // store buckets using category bits as index. If ever CategoryCount
+    // becomes too large, we can just go back to using a Map.
+    this.categories = (( ) => {
+        const out = [];
+        for ( let i = 0; i < CategoryCount; i++ ) { out[i] = undefined; }
+        return out;
+    })();
+
     this.reset();
 };
 
@@ -2725,7 +2859,7 @@ FilterContainer.prototype.reset = function() {
     this.discardedCount = 0;
     this.goodFilters = new Set();
     this.badFilters = new Set();
-    this.categories = new Map();
+    this.categories.fill(undefined);
 
     urlTokenizer.resetKnownTokens();
 
@@ -2735,8 +2869,14 @@ FilterContainer.prototype.reset = function() {
     bidiTrie.reset();
     filterArgsToUnit.clear();
 
-    filterUnits = filterUnits.slice(0, FILTER_UNITS_MIN);
+    filterUnits.length = FILTER_UNITS_MIN;
     filterSequenceWritePtr = FILTER_SEQUENCES_MIN;
+
+    // Cancel potentially pending optimization run.
+    if ( this.optimizeTimerId !== undefined ) {
+        self.cancelIdleCallback(this.optimizeTimerId);
+        this.optimizeTimerId = undefined;
+    }
 
     // Runtime registers
     this.$catBits = 0;
@@ -2748,9 +2888,7 @@ FilterContainer.prototype.reset = function() {
 
 FilterContainer.prototype.freeze = function() {
     const filterBucketId = FilterBucket.fid;
-    const redirectTypeValue = typeNameToTypeValue.redirect;
     const unserialize = µb.CompiledLineIO.unserialize;
-    const units = filterUnits;
 
     const t0 = Date.now();
 
@@ -2763,21 +2901,14 @@ FilterContainer.prototype.freeze = function() {
         const args = unserialize(line);
         const bits = args[0];
 
-        // Special cases: delegate to more specialized engines.
-        // Redirect engine.
-        if ( (bits & TypeBitsMask) === redirectTypeValue ) {
-            µb.redirectEngine.fromCompiledRule(args[1]);
-            continue;
-        }
-
         // Plain static filters.
         const tokenHash = args[1];
         const fdata = args[2];
 
-        let bucket = this.categories.get(bits);
+        let bucket = this.categories[bits];
         if ( bucket === undefined ) {
             bucket = new Map();
-            this.categories.set(bits, bucket);
+            this.categories[bits] = bucket;
         }
         let iunit = bucket.get(tokenHash);
 
@@ -2786,7 +2917,7 @@ FilterContainer.prototype.freeze = function() {
                 iunit = filterFromCtor(FilterHostnameDict);
                 bucket.set(this.dotTokenHash, iunit);
             }
-            units[iunit].add(fdata);
+            filterUnits[iunit].add(fdata);
             continue;
         }
 
@@ -2795,7 +2926,7 @@ FilterContainer.prototype.freeze = function() {
                 iunit = filterFromCtor(FilterJustOrigin);
                 bucket.set(this.anyTokenHash, iunit);
             }
-            units[iunit].add(fdata);
+            filterUnits[iunit].add(fdata);
             continue;
         }
 
@@ -2804,7 +2935,7 @@ FilterContainer.prototype.freeze = function() {
                 iunit = filterFromCtor(FilterHTTPSJustOrigin);
                 bucket.set(this.anyHTTPSTokenHash, iunit);
             }
-            units[iunit].add(fdata);
+            filterUnits[iunit].add(fdata);
             continue;
         }
 
@@ -2813,7 +2944,7 @@ FilterContainer.prototype.freeze = function() {
                 iunit = filterFromCtor(FilterHTTPJustOrigin);
                 bucket.set(this.anyHTTPTokenHash, iunit);
             }
-            units[iunit].add(fdata);
+            filterUnits[iunit].add(fdata);
             continue;
         }
 
@@ -2825,13 +2956,13 @@ FilterContainer.prototype.freeze = function() {
             bucket.set(tokenHash, inewunit);
             continue;
         }
-        let f = units[iunit];
+        let f = filterUnits[iunit];
         if ( f.fid === filterBucketId ) {
             f.unshift(inewunit);
             continue;
         }
         const ibucketunit = filterFromCtor(FilterBucket);
-        f = units[ibucketunit];
+        f = filterUnits[ibucketunit];
         f.unshift(iunit);
         f.unshift(inewunit);
         bucket.set(tokenHash, ibucketunit);
@@ -2839,23 +2970,33 @@ FilterContainer.prototype.freeze = function() {
 
     this.badFilters.clear();
     this.goodFilters.clear();
+    filterArgsToUnit.clear();
 
-    // Skip modify realm, since bidi-trie does not (yet) support matchAll().
-    for ( const [ catBits, bucket ] of this.categories ) {
-        if ( (catBits & ActionBitsMask) === ModifyAction ) { continue; }
-        for ( const iunit of bucket.values() ) {
-            const f = units[iunit];
-            if ( f instanceof FilterBucket === false ) { continue; }
-            const g = f.optimize();
-            if ( g !== undefined ) {
-                units[iunit] = g;
+    // Optimizing is not critical for the static network filtering engine to
+    // work properly, so defer this until later to allow for reduced delay to
+    // readiness when no valid selfie is available.
+    this.optimizeTimerId = self.requestIdleCallback(( ) => {
+        this.optimizeTimerId = undefined;
+        for ( let bits = 0, n = this.categories.length; bits < n; bits++ ) {
+            const bucket = this.categories[bits];
+            if ( bucket === undefined ) { continue; }
+            for ( const [ th, iunit ] of bucket ) {
+                const f = filterUnits[iunit];
+                if ( f instanceof FilterBucket === false ) { continue; }
+                const optimizeBits =
+                    (th === this.noTokenHash) ||
+                    (bits & ActionBitsMask) === ModifyAction
+                        ? 0b10
+                        : 0b01;
+                const g = f.optimize(optimizeBits);
+                if ( g !== undefined ) {
+                    filterUnits[iunit] = g;
+                }
             }
         }
-    }
-
-    FilterHostnameDict.optimize();
-    bidiTrieOptimize();
-    filterArgsToUnit.clear();
+        FilterHostnameDict.optimize();
+        bidiTrieOptimize();
+    }, { timeout: 15000 });
 
     log.info(`staticNetFilteringEngine.freeze() took ${Date.now()-t0} ms`);
 };
@@ -2865,8 +3006,10 @@ FilterContainer.prototype.freeze = function() {
 FilterContainer.prototype.toSelfie = function(path) {
     const categoriesToSelfie = ( ) => {
         const selfie = [];
-        for ( const [ catBits, bucket ] of this.categories ) {
-            selfie.push([ catBits, Array.from(bucket) ]);
+        for ( let bits = 0, n = this.categories.length; bits < n; bits++ ) {
+            const bucket = this.categories[bits];
+            if ( bucket === undefined ) { continue; }
+            selfie.push([ bits, Array.from(bucket) ]);
         }
         return selfie;
     };
@@ -2890,7 +3033,7 @@ FilterContainer.prototype.toSelfie = function(path) {
         µb.assets.put(
             `${path}/filterSequences`,
             µb.base64.encode(
-                filterSequences.buffer,
+                Uint32Array.from(filterSequences).buffer,
                 filterSequenceWritePtr << 2
             )
         ),
@@ -2939,10 +3082,10 @@ FilterContainer.prototype.fromSelfie = function(path) {
             const size = µb.base64.decodeSize(details.content) >> 2;
             if ( size === 0 ) { return false; }
             filterSequenceBufferResize(size);
-            filterSequences = µb.base64.decode(
-                details.content,
-                filterSequences.buffer
-            );
+            const buf32 = µb.base64.decode(details.content);
+            for ( let i = 0; i < size; i++ ) {
+                filterSequences[i] = buf32[i];
+            }
             filterSequenceWritePtr = size;
             return true;
         }),
@@ -2960,11 +3103,15 @@ FilterContainer.prototype.fromSelfie = function(path) {
             this.blockFilterCount = selfie.blockFilterCount;
             this.discardedCount = selfie.discardedCount;
             urlTokenizer.fromSelfie(selfie.urlTokenizer);
-            filterUnits = selfie.filterUnits.map(f =>
-                f !== null ? filterFromSelfie(f) : null
-            );
+            {
+                const fselfies = selfie.filterUnits;
+                for ( let i = 0, n = fselfies.length; i < n; i++ ) {
+                    const f = fselfies[i];
+                    filterUnits[i] = f !== null ? filterFromSelfie(f) : null;
+                }
+            }
             for ( const [ catBits, bucket ] of selfie.categories ) {
-                this.categories.set(catBits, new Map(bucket));
+                this.categories[catBits] = new Map(bucket);
             }
             return true;
         }),
@@ -2992,21 +3139,6 @@ FilterContainer.prototype.compile = function(parser, writer) {
             text: `Invalid network filter in ${who}: ${parser.raw}`
         });
         return false;
-    }
-
-    // Redirect rule
-    if ( parsed.redirect !== 0 ) {
-        const result = this.compileRedirectRule(parser.raw, parsed.badFilter, writer);
-        if ( result === false ) {
-            const who = writer.properties.get('assetKey') || '?';
-            µb.logger.writeOne({
-                realm: 'message',
-                type: 'error',
-                text: `Invalid redirect rule in ${who}: ${parser.raw}`
-            });
-            return false;
-        }
-        if ( parsed.redirect === 2 ) { return true; }
     }
 
     // Pure hostnames, use more efficient dictionary lookup
@@ -3099,9 +3231,24 @@ FilterContainer.prototype.compile = function(parser, writer) {
         units.push(FilterDenyAllow.compile(parsed));
     }
 
-    // Data
+    // Modifier
+    //
+    // IMPORTANT: the modifier unit MUST always appear first in a sequence.
+    //
+    // Reminder: A block filter is implicit with `redirect=` modifier.
     if ( parsed.modifyType !== undefined ) {
-        units.push(FilterModifier.compile(parsed));
+        if (
+            parsed.modifyType === parser.OPTTokenRedirect &&
+            (parsed.action & ActionBitsMask) !== AllowAction
+        ) {
+            this.compileToAtomicFilter(
+                parsed,
+                FilterCompositeAll.compile(units),
+                writer
+            );
+            parsed.modifyType = parser.OPTTokenRedirectRule;
+        }
+        units.unshift(FilterModifier.compile(parsed));
         parsed.action = ModifyAction;
         parsed.important = 0;
     }
@@ -3109,7 +3256,6 @@ FilterContainer.prototype.compile = function(parser, writer) {
     const fdata = units.length === 1
         ? units[0]
         : FilterCompositeAll.compile(units);
-
     this.compileToAtomicFilter(parsed, fdata, writer);
 
     return true;
@@ -3158,19 +3304,6 @@ FilterContainer.prototype.compileToAtomicFilter = function(
 
 /******************************************************************************/
 
-FilterContainer.prototype.compileRedirectRule = function(raw, badFilter, writer) {
-    const redirects = µb.redirectEngine.compileRuleFromStaticFilter(raw);
-    if ( Array.isArray(redirects) === false ) { return false; }
-    writer.select(badFilter ? 1 : 0);
-    const type = typeNameToTypeValue.redirect;
-    for ( const redirect of redirects ) {
-        writer.push([ type, redirect ]);
-    }
-    return true;
-};
-
-/******************************************************************************/
-
 FilterContainer.prototype.fromCompiledContent = function(reader) {
     // 0 = network filters
     reader.select(0);
@@ -3192,18 +3325,6 @@ FilterContainer.prototype.fromCompiledContent = function(reader) {
 
 /******************************************************************************/
 
-// TODO:
-//   Evaluate converting redirect directives in redirect engine into
-//   modifiers in static network filtering engine.
-//
-//   Advantages: no more syntax quirks, gain all performance benefits, ability
-//               to reverse-lookup list of redirect directive in logger.
-//
-//   Challenges: need to figure a way to calculate specificity so that the
-//               most specific redirect directive out of many can be
-//               identified (possibly based on total number of hostname labels
-//               seen at compile time).
-
 FilterContainer.prototype.matchAndFetchModifiers = function(
     fctxt,
     modifierType
@@ -3222,27 +3343,33 @@ FilterContainer.prototype.matchAndFetchModifiers = function(
     const catBits10 = ModifyAction | partyBits;
     const catBits11 = ModifyAction | typeBits | partyBits;
 
-    const bucket00 = this.categories.get(catBits00);
+    const bucket00 = this.categories[catBits00];
     const bucket01 = typeBits !== 0
-        ? this.categories.get(catBits01)
+        ? this.categories[catBits01]
         : undefined;
     const bucket10 = partyBits !== 0
-        ? this.categories.get(catBits10)
+        ? this.categories[catBits10]
         : undefined;
     const bucket11 = typeBits !== 0 && partyBits !== 0
-        ? this.categories.get(catBits11)
+        ? this.categories[catBits11]
         : undefined;
 
-    const modifierResults = [];
+    if (
+        bucket00 === undefined && bucket01 === undefined &&
+        bucket10 === undefined && bucket11 === undefined
+    ) {
+        return;
+    }
+
+    const results = [];
     const env = {
         modifier: vAPI.StaticFilteringParser.netOptionTokenIds.get(modifierType) || 0,
         bits: 0,
         th: 0,
         iunit: 0,
-        results: modifierResults,
+        results,
     };
 
-    const units = filterUnits;
     const tokenHashes = urlTokenizer.getTokens(bidiTrie);
     let i = 0;
     for (;;) {
@@ -3254,63 +3381,87 @@ FilterContainer.prototype.matchAndFetchModifiers = function(
             const iunit = bucket00.get(th);
             if ( iunit !== undefined ) {
                 env.bits = catBits00; env.iunit = iunit;
-                units[iunit].matchAndFetchModifiers(env);
+                filterUnits[iunit].matchAndFetchModifiers(env);
             }
         }
         if ( bucket01 !== undefined ) {
             const iunit = bucket01.get(th);
             if ( iunit !== undefined ) {
                 env.bits = catBits01; env.iunit = iunit;
-                units[iunit].matchAndFetchModifiers(env);
+                filterUnits[iunit].matchAndFetchModifiers(env);
             }
         }
         if ( bucket10 !== undefined ) {
             const iunit = bucket10.get(th);
             if ( iunit !== undefined ) {
                 env.bits = catBits10; env.iunit = iunit;
-                units[iunit].matchAndFetchModifiers(env);
+                filterUnits[iunit].matchAndFetchModifiers(env);
             }
         }
         if ( bucket11 !== undefined ) {
             const iunit = bucket11.get(th);
             if ( iunit !== undefined ) {
                 env.bits = catBits11; env.iunit = iunit;
-                units[iunit].matchAndFetchModifiers(env);
+                filterUnits[iunit].matchAndFetchModifiers(env);
             }
         }
         i += 2;
     }
 
-    if ( modifierResults.length === 0 ) { return; }
+    if ( results.length === 0 ) { return; }
+
+    // One single result is expected to be a common occurrence, and in such
+    // case there is no need to process exception vs. block, block important
+    // occurrences.
+    if ( results.length === 1 ) {
+        const result = results[0];
+        if ( (result.bits & ActionBitsMask) === AllowAction ) { return; }
+        return [ result ];
+    }
 
     const toAddImportant = new Map();
     const toAdd = new Map();
     const toRemove = new Map();
 
-    for ( const modifierResult of modifierResults ) {
-        const actionBits = modifierResult.bits & ActionBitsMask;
-        const modifyValue = modifierResult.modifier.value;
+    for ( const result of results ) {
+        const actionBits = result.bits & ActionBitsMask;
+        const modifyValue = result.modifier.value;
         if ( actionBits === BlockImportant ) {
-            toAddImportant.set(modifyValue, modifierResult);
+            toAddImportant.set(modifyValue, result);
         } else if ( actionBits === BlockAction ) {
-            toAdd.set(modifyValue, modifierResult);
+            toAdd.set(modifyValue, result);
         } else {
-            toRemove.set(modifyValue, modifierResult);
+            toRemove.set(modifyValue, result);
         }
     }
     if ( toAddImportant.size === 0 && toAdd.size === 0 ) { return; }
 
     // Remove entries overriden by important block filters.
-    for ( const key of toAddImportant.keys() ) {
-        toAdd.delete(key);
-        toRemove.delete(key);
+    if ( toAddImportant.size !== 0 ) {
+        for ( const key of toAddImportant.keys() ) {
+            toAdd.delete(key);
+            toRemove.delete(key);
+        }
     }
 
+    // Exception filters
+    //
+    // Remove excepted block filters and unused exception filters.
+    //
     // Special case, except-all:
     // - Except-all applies only if there is at least one normal block filters.
     // - Except-all does not apply to important block filters.
-    if ( toRemove.has('') ) {
-        if ( toAdd.size !== 0 ) {
+    if ( toRemove.size !== 0 ) {
+        if ( toRemove.has('') === false ) {
+            for ( const key of toRemove.keys() ) {
+                if ( toAdd.has(key) ) {
+                    toAdd.delete(key);
+                } else {
+                    toRemove.delete(key);
+                }
+            }
+        }
+        else if ( toAdd.size !== 0 ) {
             toAdd.clear();
             if ( toRemove.size !== 1 ) {
                 const entry = toRemove.get('');
@@ -3319,16 +3470,6 @@ FilterContainer.prototype.matchAndFetchModifiers = function(
             }
         } else {
             toRemove.clear();
-        }
-    }
-    // Remove excepted block filters and unused exception filters.
-    else {
-        for ( const key of toRemove.keys() ) {
-            if ( toAdd.has(key) ) {
-                toAdd.delete(key);
-            } else {
-                toRemove.delete(key);
-            }
         }
     }
 
@@ -3366,16 +3507,16 @@ FilterContainer.prototype.realmMatchString = function(
     const catBits11 = realmBits | typeBits | partyBits;
 
     const bucket00 = exactType === 0
-        ? this.categories.get(catBits00)
+        ? this.categories[catBits00]
         : undefined;
     const bucket01 = exactType !== 0 || typeBits !== 0
-        ? this.categories.get(catBits01)
+        ? this.categories[catBits01]
         : undefined;
     const bucket10 = exactType === 0 && partyBits !== 0
-        ? this.categories.get(catBits10)
+        ? this.categories[catBits10]
         : undefined;
     const bucket11 = (exactType !== 0 || typeBits !== 0) && partyBits !== 0
-        ? this.categories.get(catBits11)
+        ? this.categories[catBits11]
         : undefined;
 
     if (
@@ -3385,7 +3526,6 @@ FilterContainer.prototype.realmMatchString = function(
         return false;
     }
 
-    const units = filterUnits;
     let catBits = 0, iunit = 0;
 
     // Pure hostname-based filters
@@ -3393,25 +3533,25 @@ FilterContainer.prototype.realmMatchString = function(
     if (
         (bucket00 !== undefined) &&
         (iunit = bucket00.get(tokenHash) || 0) !== 0 &&
-        (units[iunit].match() === true)
+        (filterUnits[iunit].match() === true)
     ) {
         catBits = catBits00;
     } else if (
         (bucket01 !== undefined) &&
         (iunit = bucket01.get(tokenHash) || 0) !== 0 &&
-        (units[iunit].match() === true)
+        (filterUnits[iunit].match() === true)
     ) {
         catBits = catBits01;
     } else if (
         (bucket10 !== undefined) &&
         (iunit = bucket10.get(tokenHash) || 0) !== 0 &&
-        (units[iunit].match() === true)
+        (filterUnits[iunit].match() === true)
     ) {
         catBits = catBits10;
     } else if (
         (bucket11 !== undefined) &&
         (iunit = bucket11.get(tokenHash) || 0) !== 0 &&
-        (units[iunit].match() === true)
+        (filterUnits[iunit].match() === true)
     ) {
         catBits = catBits11;
     }
@@ -3426,7 +3566,7 @@ FilterContainer.prototype.realmMatchString = function(
             if (
                 (bucket00 !== undefined) &&
                 (iunit = bucket00.get(tokenHash) || 0) !== 0 &&
-                (units[iunit].match() === true)
+                (filterUnits[iunit].match() === true)
             ) {
                 catBits = catBits00;
                 break;
@@ -3434,7 +3574,7 @@ FilterContainer.prototype.realmMatchString = function(
             if (
                 (bucket01 !== undefined) &&
                 (iunit = bucket01.get(tokenHash) || 0) !== 0 &&
-                (units[iunit].match() === true)
+                (filterUnits[iunit].match() === true)
             ) {
                 catBits = catBits01;
                 break;
@@ -3442,7 +3582,7 @@ FilterContainer.prototype.realmMatchString = function(
             if (
                 (bucket10 !== undefined) &&
                 (iunit = bucket10.get(tokenHash) || 0) !== 0 &&
-                (units[iunit].match() === true)
+                (filterUnits[iunit].match() === true)
             ) {
                 catBits = catBits10;
                 break;
@@ -3450,7 +3590,7 @@ FilterContainer.prototype.realmMatchString = function(
             if (
                 (bucket11 !== undefined) &&
                 (iunit = bucket11.get(tokenHash) || 0) !== 0 &&
-                (units[iunit].match() === true)
+                (filterUnits[iunit].match() === true)
             ) {
                 catBits = catBits11;
                 break;
@@ -3554,6 +3694,70 @@ FilterContainer.prototype.matchString = function(fctxt, modifiers = 0) {
 
 /******************************************************************************/
 
+FilterContainer.prototype.redirectRequest = function(fctxt) {
+    const directives = this.matchAndFetchModifiers(fctxt, 'redirect-rule');
+    // No directive is the most common occurrence.
+    if ( directives === undefined ) { return; }
+    // A single directive should be the next most common occurrence.
+    if ( directives.length === 1 ) {
+        const directive = directives[0];
+        if ( (directive.bits & ActionBitsMask) === AllowAction ) {
+            return directive;
+        }
+        const modifier = directive.modifier;
+        if ( modifier.cache === undefined ) {
+            modifier.cache = this.parseRedirectRequestValue(modifier.value);
+        }
+        fctxt.redirectURL = µb.redirectEngine.tokenToURL(
+            fctxt,
+            modifier.cache.token
+        );
+        return directive;
+    }
+    // Multiple directives mean more work to do.
+    let winningDirective;
+    let winningPriority = 0;
+    for ( const directive of directives ) {
+        const modifier = directive.modifier;
+        const isException = (directive.bits & ActionBitsMask) === AllowAction;
+        if ( isException && modifier.value === '' ) {
+            winningDirective = directive;
+            break;
+        }
+        if ( modifier.cache === undefined ) {
+            modifier.cache = this.parseRedirectRequestValue(modifier.value);
+        }
+        if (
+            winningDirective === undefined ||
+            modifier.cache.priority > winningPriority
+        ) {
+            winningDirective = directive;
+            winningPriority = modifier.cache.priority;
+        }
+    }
+    if ( winningDirective === undefined ) { return; }
+    if ( (winningDirective.bits & ActionBitsMask) !== AllowAction ) {
+        fctxt.redirectURL = µb.redirectEngine.tokenToURL(
+            fctxt,
+            winningDirective.modifier.cache.token
+        );
+    }
+    return winningDirective;
+};
+
+FilterContainer.prototype.parseRedirectRequestValue = function(rawValue) {
+    let token = rawValue;
+    let priority = 0;
+    const match = /:(\d+)$/.exec(rawValue);
+    if ( match !== null ) {
+        token = rawValue.slice(0, match.index);
+        priority = parseInt(match[1], 10);
+    }
+    return { token, priority };
+};
+
+/******************************************************************************/
+
 FilterContainer.prototype.filterQuery = function(fctxt) {
     const directives = this.matchAndFetchModifiers(fctxt, 'queryprune');
     if ( directives === undefined ) { return; }
@@ -3564,17 +3768,21 @@ FilterContainer.prototype.filterQuery = function(fctxt) {
     const out = [];
     for ( const directive of directives ) {
         const modifier = directive.modifier;
+        const isException = (directive.bits & ActionBitsMask) === AllowAction;
+        if ( isException && modifier.value === '' ) {
+            out.push(directive);
+            break;
+        }
         if ( modifier.cache === undefined ) {
-            let retext = modifier.value;
-            if ( retext.startsWith('|') ) { retext = `^${retext.slice(1)}`; }
-            if ( retext.endsWith('|') ) { retext = `${retext.slice(0,-1)}$`; }
-            modifier.cache = new RegExp(retext);
+            modifier.cache = this.parseFilterPruneValue(modifier.value);
         }
         const re = modifier.cache;
         let filtered = false;
         for ( const [ key, value ] of params ) {
             if ( re.test(`${key}=${value}`) === false ) { continue; }
-            params.delete(key);
+            if ( isException === false ) {
+                params.delete(key);
+            }
             filtered = true;
         }
         if ( filtered ) {
@@ -3590,6 +3798,19 @@ FilterContainer.prototype.filterQuery = function(fctxt) {
     }
     return out;
 };
+
+FilterContainer.prototype.parseFilterPruneValue = function(rawValue) {
+    let retext = rawValue;
+    if ( retext.startsWith('|') ) { retext = `^${retext.slice(1)}`; }
+    if ( retext.endsWith('|') ) { retext = `${retext.slice(0,-1)}$`; }
+    try {
+        return new RegExp(retext);
+    } catch(ex) {
+    }
+    return /.^/;
+};
+
+/******************************************************************************/
 
 FilterContainer.prototype.hasQuery = function(fctxt) {
     urlTokenizer.setURL(fctxt.url);
@@ -3689,6 +3910,7 @@ FilterContainer.prototype.benchmark = async function(action, target) {
         fctxt.setURL(request.url);
         fctxt.setDocOriginFromURL(request.frameUrl);
         fctxt.setType(request.cpt);
+        this.redirectURL = undefined;
         const r = this.matchString(fctxt);
         matchCount += 1;
         if ( recorded !== undefined ) { recorded.push(r); }
@@ -3699,11 +3921,15 @@ FilterContainer.prototype.benchmark = async function(action, target) {
             print(`\turl=${fctxt.url}`);
             print(`\tdocOrigin=${fctxt.getDocOrigin()}`);
         }
-        if ( r !== 1 && this.hasQuery(fctxt) ) {
-            this.filterQuery(fctxt, 'queryprune');
-        }
-        if ( r !== 1 && fctxt.type === 'main_frame' || fctxt.type === 'sub_frame' ) {
-            this.matchAndFetchModifiers(fctxt, 'csp');
+        if ( r !== 1 ) {
+            if ( this.hasQuery(fctxt) ) {
+                this.filterQuery(fctxt, 'queryprune');
+            }
+            if ( fctxt.type === 'main_frame' || fctxt.type === 'sub_frame' ) {
+                this.matchAndFetchModifiers(fctxt, 'csp');
+            }
+        } else {
+            this.redirectRequest(fctxt);
         }
     }
     const t1 = self.performance.now();
@@ -3782,12 +4008,13 @@ FilterContainer.prototype.test = function(docURL, type, url) {
 */
 
 FilterContainer.prototype.bucketHistogram = function() {
-    const units = filterUnits;
     const results = [];
-    for ( const [ bits, category ] of this.categories ) {
+    for ( let bits = 0, n = this.categories.length; bits < n; bits++ ) {
+        const category = this.categories[bits];
+        if ( category === undefined ) { continue; }
         for ( const [ th, iunit ] of category ) {
             const token = urlTokenizer.stringFromTokenHash(th);
-            const f = units[iunit];
+            const f = filterUnits[iunit];
             if ( f instanceof FilterBucket ) {
                 results.push({ bits: bits.toString(16), token, size: f.size, f });
                 continue;
