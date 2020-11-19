@@ -671,6 +671,10 @@
     "message": "erlaubt",
     "description": "A keyword in the built-in row filtering expression"
   },
+  "loggerRowFiltererBuiltinModified": {
+    "message": "geändert",
+    "description": "A keyword in the built-in row filtering expression"
+  },
   "loggerRowFiltererBuiltin1p": {
     "message": "Aktuelle Domain",
     "description": "A keyword in the built-in row filtering expression"

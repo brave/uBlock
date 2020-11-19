@@ -749,7 +749,7 @@ self.addEventListener('hiddenSettingsChanged', ( ) => {
         return { assetKey, content: '' };
     }
 
-    const rawDetails = await this.assets.get(assetKey);
+    const rawDetails = await this.assets.get(assetKey, { silent: true });
     // Compiling an empty string results in an empty string.
     if ( rawDetails.content === '' ) {
         rawDetails.assetKey = assetKey;
@@ -768,10 +768,9 @@ self.addEventListener('hiddenSettingsChanged', ( ) => {
     // fetch the compiled content in case it has become available.
     const compiledDetails = await this.assets.get(compiledPath);
     if ( compiledDetails.content === '' ) {
-        compiledDetails.content = this.compileFilters(
-            rawDetails.content,
-            { assetKey: assetKey }
-        );
+        compiledDetails.content = this.compileFilters(rawDetails.content, {
+            assetKey
+        });
         this.assets.put(compiledPath, compiledDetails.content);
     }
 
@@ -783,6 +782,10 @@ self.addEventListener('hiddenSettingsChanged', ( ) => {
 
 // https://github.com/gorhill/uBlock/issues/3406
 //   Lower minimum update period to 1 day.
+// https://bugs.chromium.org/p/v8/issues/detail?id=2869
+//   orphanizeString is to work around String.slice() potentially causing
+//   the whole raw filter list to be held in memory just because we cut out
+//   the title as a substring.
 
 µBlock.extractFilterListMetadata = function(assetKey, raw) {
     const listEntry = this.availableFilterLists[assetKey];
@@ -791,27 +794,32 @@ self.addEventListener('hiddenSettingsChanged', ( ) => {
     const head = raw.slice(0, 1024);
     // https://github.com/gorhill/uBlock/issues/313
     // Always try to fetch the name if this is an external filter list.
-    if ( listEntry.title === '' || listEntry.group === 'custom' ) {
-        const matches = head.match(/(?:^|\n)(?:!|# )[\t ]*Title[\t ]*:([^\n]+)/i);
-        if ( matches !== null ) {
-            // https://bugs.chromium.org/p/v8/issues/detail?id=2869
-            //   orphanizeString is to work around String.slice()
-            //   potentially causing the whole raw filter list to be held in
-            //   memory just because we cut out the title as a substring.
-            listEntry.title = this.orphanizeString(matches[1].trim());
+    if ( listEntry.group === 'custom' ) {
+        let matches = head.match(/(?:^|\n)(?:!|# )[\t ]*Title[\t ]*:([^\n]+)/i);
+        const title = matches && matches[1].trim() || '';
+        if ( title !== '' && title !== listEntry.title ) {
+            listEntry.title = this.orphanizeString(title);
+            this.assets.registerAssetSource(assetKey, { title });
+        }
+        matches = head.match(/(?:^|\n)(?:!|# )[\t ]*Homepage[\t ]*:[\t ]*(https?:\/\/\S+)\s/i);
+        const supportURL = matches && matches[1] || '';
+        if ( supportURL !== '' && supportURL !== listEntry.supportURL ) {
+            listEntry.supportURL = this.orphanizeString(supportURL);
+            this.assets.registerAssetSource(assetKey, { supportURL });
         }
     }
     // Extract update frequency information
     const matches = head.match(/(?:^|\n)(?:!|# )[\t ]*Expires[\t ]*:[\t ]*(\d+)[\t ]*(h)?/i);
     if ( matches !== null ) {
-        let v = parseInt(matches[1], 10);
-        if ( isNaN(v) === false ) {
+        let updateAfter = parseInt(matches[1], 10);
+        if ( isNaN(updateAfter) === false ) {
             if ( matches[2] !== undefined ) {
-                v = Math.ceil(v / 24);
+                updateAfter = Math.ceil(updateAfter / 24);
             }
-            v = Math.max(v, 1);
-            if ( v !== listEntry.updateAfter ) {
-                this.assets.registerAssetSource(assetKey, { updateAfter: v });
+            updateAfter = Math.max(updateAfter, 1);
+            if ( updateAfter !== listEntry.updateAfter ) {
+                listEntry.updateAfter = updateAfter;
+                this.assets.registerAssetSource(assetKey, { updateAfter });
             }
         }
     }
@@ -830,26 +838,26 @@ self.addEventListener('hiddenSettingsChanged', ( ) => {
 
 /******************************************************************************/
 
-µBlock.compileFilters = function(rawText, details) {
+µBlock.compileFilters = function(rawText, details = {}) {
     const writer = new this.CompiledLineIO.Writer();
 
     // Populate the writer with information potentially useful to the
     // client compilers.
-    if ( details ) {
-        if ( details.assetKey ) {
-            writer.properties.set('assetKey', details.assetKey);
-        }
+    if ( details.assetKey ) {
+        writer.properties.set('assetKey', details.assetKey);
     }
-
+    const expertMode =
+        details.assetKey !== this.userFiltersPath ||
+        this.hiddenSettings.filterAuthorMode !== false;
     // Useful references:
     //    https://adblockplus.org/en/filter-cheatsheet
     //    https://adblockplus.org/en/filters
     const staticNetFilteringEngine = this.staticNetFilteringEngine;
     const staticExtFilteringEngine = this.staticExtFilteringEngine;
     const lineIter = new this.LineIterator(this.preparseDirectives.prune(rawText));
-    const parser = new vAPI.StaticFilteringParser();
+    const parser = new vAPI.StaticFilteringParser({ expertMode });
 
-    parser.setMaxTokenLength(this.urlTokenizer.MAX_TOKEN_LENGTH);
+    parser.setMaxTokenLength(staticNetFilteringEngine.MAX_TOKEN_LENGTH);
 
     while ( lineIter.eot() === false ) {
         let line = lineIter.next();
@@ -1386,10 +1394,9 @@ self.addEventListener('hiddenSettingsChanged', ( ) => {
                     if ( this.badLists.has(details.assetKey) === false ) {
                         this.assets.put(
                             'compiled/' + details.assetKey,
-                            this.compileFilters(
-                                details.content,
-                                { assetKey: details.assetKey }
-                            )
+                            this.compileFilters(details.content, {
+                                assetKey: details.assetKey
+                            })
                         );
                     }
                 }

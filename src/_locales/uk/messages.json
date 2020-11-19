@@ -671,6 +671,10 @@
     "message": "дозволений",
     "description": "A keyword in the built-in row filtering expression"
   },
+  "loggerRowFiltererBuiltinModified": {
+    "message": "modified",
+    "description": "A keyword in the built-in row filtering expression"
+  },
   "loggerRowFiltererBuiltin1p": {
     "message": "основний",
     "description": "A keyword in the built-in row filtering expression"
@@ -856,7 +860,7 @@
     "description": "English: Contributors"
   },
   "aboutSourceCode": {
-    "message": "Джерельний код",
+    "message": "Вихідний код",
     "description": "Link text to source code repo"
   },
   "aboutTranslations": {
@@ -1064,7 +1068,7 @@
     "description": "short for 'gigabytes'"
   },
   "clickToLoad": {
-    "message": "Click to load",
+    "message": "Натисніть, щоб завантажити",
     "description": "Message used in frame placeholders"
   },
   "dummy": {

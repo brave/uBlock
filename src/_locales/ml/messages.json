@@ -24,7 +24,7 @@
     "description": "Label for button to ignore unsaved changes"
   },
   "settingsPageName": {
-    "message": "സെറ്റിംഗ്സ്",
+    "message": "ക്രമീകരണം",
     "description": "appears as tab name in dashboard"
   },
   "3pPageName": {
@@ -669,6 +669,10 @@
   },
   "loggerRowFiltererBuiltinAllowed": {
     "message": "അനുവദനീയമാണ്",
+    "description": "A keyword in the built-in row filtering expression"
+  },
+  "loggerRowFiltererBuiltinModified": {
+    "message": "തിരുത്തപ്പെട്ടത്",
     "description": "A keyword in the built-in row filtering expression"
   },
   "loggerRowFiltererBuiltin1p": {

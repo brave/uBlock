@@ -39,10 +39,13 @@ body {
 #frameURL {
     font-family: monospace;
     font-size: 90%;
-    overflow: hidden;
+    overflow-y: auto;
     word-break: break-all;
     }
-
+#frameURL > a {
+    font-size: 1rem;
+    }
+    
 #clickToLoad {
     cursor: default;
     margin-bottom: 1em;

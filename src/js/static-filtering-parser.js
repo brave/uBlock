@@ -102,6 +102,7 @@ const Parser = class {
         this.netOptionsIterator = new NetOptionsIterator(this);
         this.extOptionsIterator = new ExtOptionsIterator(this);
         this.maxTokenLength = Number.MAX_SAFE_INTEGER;
+        this.expertMode = options.expertMode !== false;
         this.reIsLocalhostRedirect = /(?:0\.0\.0\.0|(?:broadcast|local)host|local|ip6-\w+)(?:[^\w.-]|$)/;
         this.reHostname = /^[^\x00-\x24\x26-\x29\x2B\x2C\x2F\x3A-\x40\x5B-\x5E\x60\x7B-\x7F]+/;
         this.reHostsSink = /^[\w-.:\[\]]+$/;
@@ -866,6 +867,7 @@ const Parser = class {
         return i;
     }
 
+    // Important: the from-to indices are inclusive.
     strFromSlices(from, to) {
         return this.raw.slice(
             this.slices[from+1],
@@ -2280,14 +2282,19 @@ const NetOptionsIterator = class {
             if (
                 descriptor === undefined ||
                 hasBits(descriptor, OPTNotSupported) ||
-                ltok !== lopt && hasNoBits(descriptor, OPTCanNegate) ||
-                this.exception && hasBits(descriptor, OPTBlockOnly) ||
-                this.exception === false && hasBits(descriptor, OPTAllowOnly) ||
-                assigned && hasNoBits(descriptor, OPTMustAssign) ||
-                assigned === false && hasBits(descriptor, OPTMustAssign) && (
-                    this.exception === false ||
-                    hasNoBits(descriptor, OPTAllowMayAssign)
-                )
+                ltok !== lopt &&
+                    hasNoBits(descriptor, OPTCanNegate) ||
+                this.exception &&
+                    hasBits(descriptor, OPTBlockOnly) ||
+                this.exception === false &&
+                    hasBits(descriptor, OPTAllowOnly) ||
+                assigned &&
+                    hasNoBits(descriptor, OPTMustAssign) ||
+                assigned === false &&
+                    hasBits(descriptor, OPTMustAssign) && (
+                        this.exception === false ||
+                        hasNoBits(descriptor, OPTAllowMayAssign)
+                    )
             ) {
                 descriptor = OPTTokenInvalid;
             }
@@ -2396,10 +2403,20 @@ const NetOptionsIterator = class {
         // `queryprune=`:  only for network requests.
         {
             const i = this.tokenPos[OPTTokenQueryprune];
-            if ( i !== -1 && hasBits(allBits, OPTNonNetworkType) ) {
-                optSlices[i] = OPTTokenInvalid;
-                if ( this.interactive ) {
-                    this.parser.errorSlices(optSlices[i+1], optSlices[i+5]);
+            if ( i !== -1 ) {
+                if (
+                    this.parser.expertMode === false ||
+                    hasBits(allBits, OPTNonNetworkType)
+                ) {
+                    optSlices[i] = OPTTokenInvalid;
+                    if ( this.interactive ) {
+                        this.parser.errorSlices(optSlices[i+1], optSlices[i+5]);
+                    }
+                } else if ( this.validateQueryPruneArg(i) === false ) {
+                    optSlices[i] = OPTTokenInvalid;
+                    if ( this.interactive ) {
+                        this.parser.errorSlices(optSlices[i+4], optSlices[i+5]);
+                    }
                 }
             }
         }
@@ -2441,6 +2458,20 @@ const NetOptionsIterator = class {
         }
         this.readPtr = i + 6;
         return this;
+    }
+    validateQueryPruneArg(i) {
+        let val = this.parser.strFromSlices(
+            this.optSlices[i+4],
+            this.optSlices[i+5] - 3
+        );
+        if ( val.startsWith('|') ) { val = `^${val.slice(1)}`; }
+        if ( val.endsWith('|') ) { val = `${val.slice(0,-1)}$`; }
+        try {
+            void new RegExp(val);
+        } catch(ex) {
+            return false;
+        }
+        return true;
     }
 };
 
