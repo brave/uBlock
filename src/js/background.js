@@ -61,9 +61,10 @@ const µBlock = (( ) => { // jshint ignore:line
         debugScriptletInjector: false,
         disableWebAssembly: false,
         extensionUpdateForceReload: false,
+        filterAuthorMode: false,
+        filterOnHeaders: false,
         ignoreRedirectFilters: false,
         ignoreScriptInjectFilters: false,
-        filterAuthorMode: false,
         loggerPopupType: 'popup',
         manualUpdateAssetFetchPeriod: 500,
         popupFontSize: 'unset',
@@ -139,8 +140,8 @@ const µBlock = (( ) => { // jshint ignore:line
 
         // Read-only
         systemSettings: {
-            compiledMagic: 34,  // Increase when compiled format changes
-            selfieMagic: 34,    // Increase when selfie format changes
+            compiledMagic: 37,  // Increase when compiled format changes
+            selfieMagic: 37,    // Increase when selfie format changes
         },
 
         // https://github.com/uBlockOrigin/uBlock-issues/issues/759#issuecomment-546654501
