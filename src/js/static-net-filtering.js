@@ -3639,9 +3639,11 @@ FilterContainer.prototype.compile = function(parser, writer) {
         return false;
     }
 
-    // 0 = network filters
-    // 1 = network filters: bad filters
-    writer.select(parsed.badFilter ? 1 : 0);
+    writer.select(
+        parsed.badFilter
+            ? µb.compiledNetworkSection + µb.compiledBadSubsection
+            : µb.compiledNetworkSection
+    );
 
     // Reminder:
     //   `redirect=` is a combination of a `redirect-rule` filter and a
@@ -3808,8 +3810,7 @@ FilterContainer.prototype.compileToAtomicFilter = function(
 /******************************************************************************/
 
 FilterContainer.prototype.fromCompiledContent = function(reader) {
-    // 0 = network filters
-    reader.select(0);
+    reader.select(µb.compiledNetworkSection);
     while ( reader.next() ) {
         this.acceptedCount += 1;
         if ( this.goodFilters.has(reader.line) ) {
@@ -3819,8 +3820,7 @@ FilterContainer.prototype.fromCompiledContent = function(reader) {
         }
     }
 
-    // 1 = network filters: bad filter directives
-    reader.select(1);
+    reader.select(µb.compiledNetworkSection + µb.compiledBadSubsection);
     while ( reader.next() ) {
         this.badFilters.add(reader.line);
     }
@@ -4236,12 +4236,13 @@ FilterContainer.prototype.redirectRequest = function(fctxt) {
     const directives = this.matchAndFetchModifiers(fctxt, 'redirect-rule');
     // No directive is the most common occurrence.
     if ( directives === undefined ) { return; }
+    const highest = directives.length - 1;
     // More than a single directive means more work.
-    if ( directives.length !== 1 ) {
+    if ( highest !== 0 ) {
         directives.sort(FilterContainer.compareRedirectRequests);
     }
     // Redirect to highest-ranked directive
-    const directive = directives[directives.length - 1];
+    const directive = directives[highest];
     if ( (directive.bits & AllowAction) === 0 ) {
         const { token } =
             FilterContainer.parseRedirectRequestValue(directive.modifier);
@@ -4260,8 +4261,13 @@ FilterContainer.parseRedirectRequestValue = function(modifier) {
 };
 
 FilterContainer.compareRedirectRequests = function(a, b) {
-    if ( (a.bits & AllowAction) !== 0 ) { return -1; }
-    if ( (b.bits & AllowAction) !== 0 ) { return 1; }
+    const abits = a.bits, bbits = b.bits;
+    if ( abits !== bbits ) {
+        if ( (abits & Important) !== 0 ) { return 1; }
+        if ( (bbits & Important) !== 0 ) { return -1; }
+        if ( (abits & AllowAction) !== 0 ) { return -1; }
+        if ( (bbits & AllowAction) !== 0 ) { return 1; }
+    }
     const { token: atok, priority: aint } =
         FilterContainer.parseRedirectRequestValue(a.modifier);
     if ( µb.redirectEngine.hasToken(atok) === false ) { return -1; }

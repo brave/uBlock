@@ -1,6 +1,6 @@
 {
   "extName": {
-    "message": "uBlock₀",
+    "message": "uBlock Origin",
     "description": "extension name."
   },
   "extShortDesc": {
@@ -1026,6 +1026,10 @@
   "genericBytes": {
     "message": "位元組",
     "description": ""
+  },
+  "contextMenuBlockElementInFrame": {
+    "message": "阻擋框架中的內容…",
+    "description": "An entry in the browser's contextual menu"
   },
   "contextMenuTemporarilyAllowLargeMediaElements": {
     "message": "暫時允許大型媒體元素",

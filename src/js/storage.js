@@ -733,12 +733,18 @@ self.addEventListener('hiddenSettingsChanged', ( ) => {
 µBlock.getCompiledFilterList = async function(assetKey) {
     const compiledPath = 'compiled/' + assetKey;
 
+    // https://github.com/uBlockOrigin/uBlock-issues/issues/1365
+    //   Verify that the list version matches that of the current compiled
+    //   format.
     if (
         this.compiledFormatChanged === false &&
         this.badLists.has(assetKey) === false
     ) {
-        let compiledDetails = await this.assets.get(compiledPath);
-        if ( compiledDetails.content !== '' ) {
+        const compiledDetails = await this.assets.get(compiledPath);
+        if (
+            parseInt(compiledDetails.content, 10) ===
+            this.systemSettings.compiledMagic
+        ) {
             compiledDetails.assetKey = assetKey;
             return compiledDetails;
         }
@@ -763,19 +769,11 @@ self.addEventListener('hiddenSettingsChanged', ( ) => {
         return { assetKey, content: '' };
     }
 
-    // Fetching the raw content may cause the compiled content to be
-    // generated somewhere else in uBO, hence we try one last time to
-    // fetch the compiled content in case it has become available.
-    const compiledDetails = await this.assets.get(compiledPath);
-    if ( compiledDetails.content === '' ) {
-        compiledDetails.content = this.compileFilters(rawDetails.content, {
-            assetKey
-        });
-        this.assets.put(compiledPath, compiledDetails.content);
-    }
+    const compiledContent =
+        this.compileFilters(rawDetails.content, { assetKey });
+    this.assets.put(compiledPath, compiledContent);
 
-    compiledDetails.assetKey = assetKey;
-    return compiledDetails;
+    return { assetKey, content: compiledContent };
 };
 
 /******************************************************************************/
@@ -886,7 +884,13 @@ self.addEventListener('hiddenSettingsChanged', ( ) => {
         staticNetFilteringEngine.compile(parser, writer);
     }
 
-    return writer.toString();
+    // https://github.com/uBlockOrigin/uBlock-issues/issues/1365
+    //   Embed version into compiled list itself: it is encoded in as the
+    //   first digits followed by a whitespace.
+    const compiledContent
+        = `${this.systemSettings.compiledMagic}\n` + writer.toString();
+
+    return compiledContent;
 };
 
 /******************************************************************************/
@@ -897,7 +901,7 @@ self.addEventListener('hiddenSettingsChanged', ( ) => {
 
 µBlock.applyCompiledFilters = function(rawText, firstparty) {
     if ( rawText === '' ) { return; }
-    let reader = new this.CompiledLineIO.Reader(rawText);
+    const reader = new this.CompiledLineIO.Reader(rawText);
     this.staticNetFilteringEngine.fromCompiledContent(reader);
     this.staticExtFilteringEngine.fromCompiledContent(reader, {
         skipGenericCosmetic: this.userSettings.ignoreGenericCosmeticFilters,

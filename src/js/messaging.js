@@ -154,7 +154,7 @@ const onMessage = function(request, sender, callback) {
     case 'launchElementPicker':
         // Launched from some auxiliary pages, clear context menu coords.
         µb.epickerArgs.mouse = false;
-        µb.elementPickerExec(request.tabId, request.targetURL, request.zap);
+        µb.elementPickerExec(request.tabId, 0, request.targetURL, request.zap);
         break;
 
     case 'gotoURL':
@@ -182,7 +182,9 @@ const onMessage = function(request, sender, callback) {
     case 'uiStyles':
         response = {
             uiStyles: µb.hiddenSettings.uiStyles,
-            uiTheme: µb.hiddenSettings.uiTheme,
+            uiTheme: vAPI.webextFlavor.soup.has('devbuild')
+                ? µb.hiddenSettings.uiTheme
+                : 'unset',
         };
         break;
 
@@ -1201,13 +1203,17 @@ const onMessage = function(request, sender, callback) {
         break;
 
     case 'getAutoCompleteDetails':
-        response = {
-            redirectResources: µb.redirectEngine.getResourceDetails(),
-            preparseDirectiveTokens: µb.preparseDirectives.getTokens(),
-            preparseDirectiveHints: µb.preparseDirectives.getHints(),
-            originHints: getOriginHints(),
-            expertMode: µb.hiddenSettings.filterAuthorMode,
-        };
+        response = {};
+        if ( (request.hintUpdateToken || 0) === 0 ) {
+            response.redirectResources = µb.redirectEngine.getResourceDetails();
+            response.preparseDirectiveTokens = µb.preparseDirectives.getTokens();
+            response.preparseDirectiveHints = µb.preparseDirectives.getHints();
+            response.expertMode = µb.hiddenSettings.filterAuthorMode;
+        }
+        if ( request.hintUpdateToken !== µb.pageStoresToken ) {
+            response.originHints = getOriginHints();
+            response.hintUpdateToken = µb.pageStoresToken;
+        }
         break;
 
     case 'getRules':

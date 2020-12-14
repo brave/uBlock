@@ -121,7 +121,7 @@ const redirectableResources = new Map([
         data: 'text',
     } ],
     [ 'noop-0.1s.mp3', {
-        alias: 'noopmp3-0.1s',
+        alias: [ 'noopmp3-0.1s', 'abp-resource:blank-mp3' ],
         data: 'blob',
     } ],
     [ 'noop-1s.mp4', {
@@ -132,7 +132,7 @@ const redirectableResources = new Map([
         alias: 'noopframe',
     } ],
     [ 'noop.js', {
-        alias: 'noopjs',
+        alias: [ 'noopjs', 'abp-resource:blank-js' ],
         data: 'text',
     } ],
     [ 'noop.txt', {
@@ -291,11 +291,11 @@ RedirectEngine.prototype.freeze = function() {
 
 /******************************************************************************/
 
-RedirectEngine.prototype.tokenToURL = function(fctxt, token) {
-    const asDataURI = token.charCodeAt(0) === 0x25 /* '%' */;
-    if ( asDataURI ) {
-        token = token.slice(1);
-    }
+RedirectEngine.prototype.tokenToURL = function(
+    fctxt,
+    token,
+    asDataURI = false
+) {
     const entry = this.resources.get(this.aliases.get(token) || token);
     if ( entry === undefined ) { return; }
     this.resourceNameRegister = token;
@@ -305,6 +305,7 @@ RedirectEngine.prototype.tokenToURL = function(fctxt, token) {
 /******************************************************************************/
 
 RedirectEngine.prototype.hasToken = function(token) {
+    if ( token === 'none' ) { return true; }
     const asDataURI = token.charCodeAt(0) === 0x25 /* '%' */;
     if ( asDataURI ) {
         token = token.slice(1);
@@ -374,11 +375,11 @@ RedirectEngine.prototype.resourcesFromString = function(text) {
 
         if ( line.startsWith('/// ') ) {
             if ( details === undefined ) {
-                details = {};
+                details = [];
             }
             const [ prop, value ] = line.slice(4).trim().split(/\s+/);
             if ( value !== undefined ) {
-                details[prop] = value;
+                details.push({ prop, value });
             }
             continue;
         }
@@ -400,8 +401,11 @@ RedirectEngine.prototype.resourcesFromString = function(text) {
             RedirectEntry.fromContent(mime, content)
         );
 
-        if ( details instanceof Object && details.alias ) {
-            this.aliases.set(details.alias, name);
+        if ( Array.isArray(details) ) {
+            for ( const { prop, value } of details ) {
+                if ( prop !== 'alias' ) { continue; }
+                this.aliases.set(value, name);
+            }
         }
 
         fields = undefined;
@@ -460,7 +464,12 @@ RedirectEngine.prototype.loadBuiltinResources = function() {
             params: details.params,
         });
         this.resources.set(name, entry);
-        if ( details.alias !== undefined ) {
+        if ( details.alias === undefined ) { return; }
+        if ( Array.isArray(details.alias) ) {
+            for ( const alias of details.alias ) {
+                this.aliases.set(alias, name);
+            }
+        } else {
             this.aliases.set(details.alias, name);
         }
     };

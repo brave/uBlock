@@ -1164,13 +1164,15 @@ const Parser = class {
 
     static parseRedirectValue(arg) {
         let token = arg.trim();
-        let priority = 10;
-        const match = /:\d+$/.exec(token);
+        let priority = 0;
+        const asDataURI = token.charCodeAt(0) === 0x25 /* '%' */;
+        if ( asDataURI ) { token = token.slice(1); }
+        const match = /:-?\d+$/.exec(token);
         if ( match !== null ) {
-            token = token.slice(0, match.index);
             priority = parseInt(token.slice(match.index + 1), 10);
+            token = token.slice(0, match.index);
         }
-        return { token, priority };
+        return { token, priority, asDataURI };
     }
 
     static parseQueryPruneValue(arg) {
@@ -2181,6 +2183,7 @@ const netOptionTokenDescriptors = new Map([
     [ 'queryprune', OPTTokenQueryprune | OPTMayAssign | OPTModifierType | OPTNonCspableType | OPTNonRedirectableType ],
         [ 'removeparam', OPTTokenQueryprune | OPTMayAssign | OPTModifierType | OPTNonCspableType | OPTNonRedirectableType ],
     [ 'redirect', OPTTokenRedirect | OPTMustAssign | OPTAllowMayAssign | OPTModifierType ],
+        [ 'rewrite', OPTTokenRedirect | OPTMustAssign | OPTAllowMayAssign | OPTModifierType ],
     [ 'redirect-rule', OPTTokenRedirectRule | OPTMustAssign | OPTAllowMayAssign | OPTModifierType | OPTNonCspableType ],
     [ 'script', OPTTokenScript | OPTCanNegate | OPTNetworkType | OPTModifiableType | OPTRedirectableType | OPTNonCspableType ],
     [ 'shide', OPTTokenShide | OPTNonNetworkType | OPTNonCspableType | OPTNonRedirectableType ],
@@ -2239,6 +2242,7 @@ Parser.netOptionTokenIds = new Map([
     [ 'queryprune', OPTTokenQueryprune ],
         [ 'removeparam', OPTTokenQueryprune ],
     [ 'redirect', OPTTokenRedirect ],
+        [ 'rewrite', OPTTokenRedirect ],
     [ 'redirect-rule', OPTTokenRedirectRule ],
     [ 'script', OPTTokenScript ],
     [ 'shide', OPTTokenShide ],

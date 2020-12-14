@@ -100,7 +100,7 @@
     "description": "For the new mobile-friendly popup design"
   },
   "popupBlockedSinceInstall_v2": {
-    "message": "Blockerat sen installationen",
+    "message": "Blockerad sedan installation",
     "description": "For the new mobile-friendly popup design"
   },
   "popupDomainsConnected_v2": {
@@ -1026,6 +1026,10 @@
   "genericBytes": {
     "message": "byte",
     "description": ""
+  },
+  "contextMenuBlockElementInFrame": {
+    "message": "Blockera element i ramar...",
+    "description": "An entry in the browser's contextual menu"
   },
   "contextMenuTemporarilyAllowLargeMediaElements": {
     "message": "Tillåt tillfälligt stora medieelement",

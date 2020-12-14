@@ -35,6 +35,7 @@ const scriptletNames = new Map();
 const preparseDirectiveTokens = new Map();
 const preparseDirectiveHints = [];
 const originHints = [];
+let hintHelperRegistered = false;
 
 /******************************************************************************/
 
@@ -184,10 +185,10 @@ CodeMirror.defineMode('ubo-static-filtering', function() {
         // Warn about unknown redirect tokens.
         if (
             string.charCodeAt(pos - 1) === 0x3D /* '=' */ &&
-            /[$,]redirect(-rule)?=$/.test(string.slice(0, pos))
+            /[$,](redirect(-rule)?|rewrite)=$/.test(string.slice(0, pos))
         ) {
             style = 'value';
-            let end = parser.skipUntil(
+            const end = parser.skipUntil(
                 parserSlot,
                 parser.commentSpan.i,
                 parser.BITComma
@@ -362,25 +363,37 @@ CodeMirror.defineMode('ubo-static-filtering', function() {
             return style !== '' ? style : null;
         },
         setHints: function(details) {
-            for ( const [ name, desc ] of details.redirectResources ) {
-                const displayText = desc.aliasOf !== ''
-                    ? `${name} (${desc.aliasOf})`
-                    : '';
-                if ( desc.canRedirect ) {
-                    redirectNames.set(name, displayText);
-                }
-                if ( desc.canInject && name.endsWith('.js') ) {
-                    scriptletNames.set(name.slice(0, -3), displayText);
+            if ( Array.isArray(details.redirectResources) ) {
+                for ( const [ name, desc ] of details.redirectResources ) {
+                    const displayText = desc.aliasOf !== ''
+                        ? `${name} (${desc.aliasOf})`
+                        : '';
+                    if ( desc.canRedirect ) {
+                        redirectNames.set(name, displayText);
+                    }
+                    if ( desc.canInject && name.endsWith('.js') ) {
+                        scriptletNames.set(name.slice(0, -3), displayText);
+                    }
                 }
             }
-            details.preparseDirectiveTokens.forEach(([ a, b ]) => {
-                preparseDirectiveTokens.set(a, b);
-            });
-            preparseDirectiveHints.push(...details.preparseDirectiveHints);
-            for ( const hint of details.originHints ) {
-                originHints.push(hint);
+            if ( Array.isArray(details.preparseDirectiveTokens)) {
+                details.preparseDirectiveTokens.forEach(([ a, b ]) => {
+                    preparseDirectiveTokens.set(a, b);
+                });
             }
-            initHints();
+            if ( Array.isArray(details.preparseDirectiveHints)) {
+                preparseDirectiveHints.push(...details.preparseDirectiveHints);
+            }
+            if ( Array.isArray(details.originHints) ) {
+                originHints.length = 0;
+                for ( const hint of details.originHints ) {
+                    originHints.push(hint);
+                }
+            }
+            if ( hintHelperRegistered === false ) {
+                hintHelperRegistered = true;
+                initHints();
+            }
         },
         get parser() {
             return parser;
@@ -405,6 +418,12 @@ const initHints = function() {
             return (item[1] & 0b01) !== 0;
         })
     );
+    const excludedHints = new Set([
+        'genericblock',
+        'object-subrequest',
+        'rewrite',
+        'webrtc',
+    ]);
 
     const pickBestHints = function(cursor, seedLeft, seedRight, hints) {
         const seed = (seedLeft + seedRight).trim();
@@ -458,6 +477,7 @@ const initHints = function() {
         const isException = parser.isException();
         const hints = [];
         for ( let [ text, bits ] of parser.netOptionTokenDescriptors ) {
+            if ( excludedHints.has(text) ) { continue; }
             if ( isNegated && (bits & parser.OPTCanNegate) === 0 ) { continue; }
             if ( isException ) {
                 if ( (bits & parser.OPTBlockOnly) !== 0 ) { continue; }
@@ -475,6 +495,7 @@ const initHints = function() {
     const getNetRedirectHints = function(cursor, seedLeft, seedRight) {
         const hints = [];
         for ( const text of redirectNames.keys() ) {
+            if ( text.startsWith('abp-resource:') ) { continue; }
             hints.push(text);
         }
         return pickBestHints(cursor, seedLeft, seedRight, hints);
@@ -482,7 +503,10 @@ const initHints = function() {
 
     const getNetHints = function(cursor, line) {
         const beg = cursor.ch;
-        if ( parser.optionsSpan.len === 0 ) {
+        if (
+            parser.optionsAnchorSpan.len === 0 &&
+            line.endsWith('$') === false
+        ) {
             if ( /[^\w\x80-\xF4#,.-]/.test(line) === false ) {
                 return getOriginHints(cursor, line);
             }
@@ -498,7 +522,7 @@ const initHints = function() {
         if ( assignPos === -1 ) {
             return getNetOptionHints(cursor, matchLeft[0], matchRight[0]);
         }
-        if ( /^redirect(-rule)?=/.test(matchLeft[0]) ) {
+        if ( /^(redirect(-rule)?|rewrite)=/.test(matchLeft[0]) ) {
             return getNetRedirectHints(
                 cursor,
                 matchLeft[0].slice(assignPos + 1),
