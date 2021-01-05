@@ -114,8 +114,11 @@ const onVersionReady = function(lastVersion) {
     if ( lastVersionInt === 0 ) { return; }
 
     // https://github.com/LiCybora/NanoDefenderFirefox/issues/196
-    //   Toggle on the blocking of CSP reports by default.
-    if ( lastVersionInt <= 1031003011 ) {
+    //   Toggle on the blocking of CSP reports by default for Firefox.
+    if (
+        vAPI.webextFlavor.soup.has('firefox') &&
+        lastVersionInt <= 1031003011
+    ) {
         µb.sessionSwitches.toggle('no-csp-reports', '*', 1);
         µb.permanentSwitches.toggle('no-csp-reports', '*', 1);
         µb.saveHostnameSwitches();
@@ -130,10 +133,23 @@ const onVersionReady = function(lastVersion) {
 // Whitelist in memory.
 // Whitelist parser needs PSL to be ready.
 // gorhill 2014-12-15: not anymore
+//
+// https://github.com/uBlockOrigin/uBlock-issues/issues/1433
+//   Allow admins to add their own trusted-site directives.
 
-const onNetWhitelistReady = function(netWhitelistRaw) {
+const onNetWhitelistReady = function(netWhitelistRaw, adminExtra) {
     if ( typeof netWhitelistRaw === 'string' ) {
         netWhitelistRaw = netWhitelistRaw.split('\n');
+    }
+    // Append admin-controlled trusted-site directives
+    if (
+        adminExtra instanceof Object &&
+        Array.isArray(adminExtra.trustedSiteDirectives)
+    ) {
+        for ( const directive of adminExtra.trustedSiteDirectives ) {
+            µb.netWhitelistDefault.push(directive);
+            netWhitelistRaw.push(directive);
+        }
     }
     µb.netWhitelist = µb.whitelistFromArray(netWhitelistRaw);
     µb.netWhitelistModifyTime = Date.now();
@@ -187,7 +203,7 @@ const onCacheSettingsReady = async function(fetched) {
 
 /******************************************************************************/
 
-const onFirstFetchReady = function(fetched) {
+const onFirstFetchReady = function(fetched, adminExtra) {
     // https://github.com/uBlockOrigin/uBlock-issues/issues/507
     //   Firefox-specific: somehow `fetched` is undefined under certain
     //   circumstances even though we asked to load with default values.
@@ -199,7 +215,7 @@ const onFirstFetchReady = function(fetched) {
     fromFetch(µb.localSettings, fetched);
     onUserSettingsReady(fetched);
     fromFetch(µb.restoreBackupSettings, fetched);
-    onNetWhitelistReady(fetched.netWhitelist);
+    onNetWhitelistReady(fetched.netWhitelist, adminExtra);
     onVersionReady(fetched.version);
 };
 
@@ -223,7 +239,6 @@ const fromFetch = function(to, fetched) {
 const createDefaultProps = function() {
     const fetchableProps = {
         'dynamicFilteringString': [
-            'no-csp-reports: * true',
             'behind-the-scene * * noop',
             'behind-the-scene * image noop',
             'behind-the-scene * 3p noop',
@@ -243,6 +258,10 @@ const createDefaultProps = function() {
         'netWhitelist': µb.netWhitelistDefault,
         'version': '0.0.0.0'
     };
+    // https://github.com/LiCybora/NanoDefenderFirefox/issues/196
+    if ( vAPI.webextFlavor.soup.has('firefox') ) {
+        fetchableProps.hostnameSwitchesString += '\nno-csp-reports: * true';
+    }
     toFetch(µb.localSettings, fetchableProps);
     toFetch(µb.userSettings, fetchableProps);
     toFetch(µb.restoreBackupSettings, fetchableProps);
@@ -277,6 +296,9 @@ try {
     );
     log.info(`Backend storage for cache will be ${cacheBackend}`);
 
+    const adminExtra = await vAPI.adminStorage.get('toAdd');
+    log.info(`Extra admin settings ready ${Date.now()-vAPI.T0} ms after launch`);
+
     // https://github.com/uBlockOrigin/uBlock-issues/issues/1365
     //   Wait for onCacheSettingsReady() to be fully ready.
     await Promise.all([
@@ -291,7 +313,7 @@ try {
         }),
         vAPI.storage.get(createDefaultProps()).then(fetched => {
             log.info(`First fetch ready ${Date.now()-vAPI.T0} ms after launch`);
-            onFirstFetchReady(fetched);
+            onFirstFetchReady(fetched, adminExtra);
         }),
         µb.loadPublicSuffixList().then(( ) => {
             log.info(`PSL ready ${Date.now()-vAPI.T0} ms after launch`);

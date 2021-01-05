@@ -58,6 +58,7 @@ const redirectableResources = new Map([
     } ],
     [ 'amazon_ads.js', {
         alias: 'amazon-adsystem.com/aax2/amzn_ads.js',
+        data: 'text',
     } ],
     [ 'amazon_apstag.js', {
     } ],
@@ -72,30 +73,36 @@ const redirectableResources = new Map([
     } ],
     [ 'doubleclick_instream_ad_status.js', {
         alias: 'doubleclick.net/instream/ad_status.js',
+        data: 'text',
     } ],
     [ 'empty', {
         data: 'text',   // Important!
     } ],
     [ 'google-analytics_analytics.js', {
         alias: 'google-analytics.com/analytics.js',
+        data: 'text',
     } ],
     [ 'google-analytics_cx_api.js', {
         alias: 'google-analytics.com/cx/api.js',
     } ],
     [ 'google-analytics_ga.js', {
         alias: 'google-analytics.com/ga.js',
+        data: 'text',
     } ],
     [ 'google-analytics_inpage_linkid.js', {
         alias: 'google-analytics.com/inpage_linkid.js',
     } ],
     [ 'googlesyndication_adsbygoogle.js', {
         alias: 'googlesyndication.com/adsbygoogle.js',
+        data: 'text',
     } ],
     [ 'googletagmanager_gtm.js', {
         alias: 'googletagmanager.com/gtm.js',
+        data: 'text',
     } ],
     [ 'googletagservices_gpt.js', {
         alias: 'googletagservices.com/gpt.js',
+        data: 'text',
     } ],
     [ 'hd-main.js', {
     } ],
@@ -139,6 +146,10 @@ const redirectableResources = new Map([
         alias: 'nooptext',
         data: 'text',
     } ],
+    [ 'noop-vmap1.0.xml', {
+        alias: 'noopvmap-1.0',
+        data: 'text',
+    } ],
     [ 'outbrain-widget.js', {
         alias: 'widgets.outbrain.com/outbrain.js',
     } ],
@@ -166,6 +177,7 @@ const extToMimeMap = new Map([
     [  'mp4', 'video/mp4' ],
     [  'png', 'image/png' ],
     [  'txt', 'text/plain' ],
+    [  'xml', 'text/xml' ],
 ]);
 
 const typeToMimeMap = new Map([
@@ -336,18 +348,20 @@ RedirectEngine.prototype.resourceContentFromName = function(name, mime) {
 
 /******************************************************************************/
 
-// TODO: combine same key-redirect pairs into a single regex.
-
 // https://github.com/uBlockOrigin/uAssets/commit/deefe875551197d655f79cb540e62dfc17c95f42
 //   Consider 'none' a reserved keyword, to be used to disable redirection.
+// https://github.com/uBlockOrigin/uBlock-issues/issues/1419
+//   Append newlines to raw text to ensure processing of trailing resource.
 
 RedirectEngine.prototype.resourcesFromString = function(text) {
-    const lineIter = new µBlock.LineIterator(removeTopCommentBlock(text));
+    const lineIter = new µBlock.LineIterator(
+        removeTopCommentBlock(text) + '\n\n'
+    );
     const reNonEmptyLine = /\S/;
     let fields, encoded, details;
 
     while ( lineIter.eot() === false ) {
-        let line = lineIter.next();
+        const line = lineIter.next();
         if ( line.startsWith('#') ) { continue; }
         if ( line.startsWith('// ') ) { continue; }
 
@@ -389,18 +403,16 @@ RedirectEngine.prototype.resourcesFromString = function(text) {
             continue;
         }
 
+        // No more data, add the resource.
         const name = this.aliases.get(fields[0]) || fields[0];
         const mime = fields[1];
         const content = µBlock.orphanizeString(
             fields.slice(2).join(encoded ? '' : '\n')
         );
-
-        // No more data, add the resource.
         this.resources.set(
             name,
             RedirectEntry.fromContent(mime, content)
         );
-
         if ( Array.isArray(details) ) {
             for ( const { prop, value } of details ) {
                 if ( prop !== 'alias' ) { continue; }
@@ -410,22 +422,6 @@ RedirectEngine.prototype.resourcesFromString = function(text) {
 
         fields = undefined;
         details = undefined;
-    }
-
-    // Process pending resource data.
-    if ( fields !== undefined ) {
-        const name = fields[0];
-        const mime = fields[1];
-        const content = µBlock.orphanizeString(
-            fields.slice(2).join(encoded ? '' : '\n')
-        );
-        this.resources.set(
-            name,
-            RedirectEntry.fromContent(mime, content)
-        );
-        if ( details instanceof Object && details.alias ) {
-            this.aliases.set(details.alias, name);
-        }
     }
 
     this.modifyTime = Date.now();

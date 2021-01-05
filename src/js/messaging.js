@@ -627,7 +627,13 @@ const retrieveContentScriptParameters = function(sender, request) {
     response.specificCosmeticFilters =
         µb.cosmeticFilteringEngine.retrieveSpecificSelectors(request, response);
 
-    if ( µb.canInjectScriptletsNow === false ) {
+    // https://github.com/uBlockOrigin/uBlock-issues/issues/688#issuecomment-748179731
+    //   For non-network URIs, scriptlet injection is deferred to here. The
+    //   effective URL is available here in `request.url`.
+    if (
+        µb.canInjectScriptletsNow === false ||
+        µb.URI.isNetworkURI(sender.frameURL) === false
+    ) {
         response.scriptlets = µb.scriptletFilteringEngine.retrieve(request);
     }
 
@@ -926,6 +932,16 @@ const backupUserData = async function() {
 const restoreUserData = async function(request) {
     const userData = request.userData;
 
+    // https://github.com/LiCybora/NanoDefenderFirefox/issues/196
+    //   Backup data could be from Chromium platform or from an older
+    //   Firefox version.
+    if (
+        vAPI.webextFlavor.soup.has('firefox') &&
+        vAPI.app.intFromVersion(userData.version) <= 1031003011
+    ) {
+        userData.hostnameSwitchesString += '\nno-csp-reports: * true';
+    }
+
     // https://github.com/chrisaljoudi/uBlock/issues/1102
     //   Ensure all currently cached assets are flushed from storage AND memory.
     µb.assets.rmrf();
@@ -1048,7 +1064,7 @@ const getLists = async function(callback) {
 // TODO: also return origin of embedded frames?
 const getOriginHints = function() {
     const punycode = self.punycode;
-    const out = [];
+    const out = new Set();
     for ( const tabId of µb.pageStores.keys() ) {
         if ( tabId === -1 ) { continue; }
         const tabContext = µb.tabContextManager.lookup(tabId);
@@ -1056,11 +1072,11 @@ const getOriginHints = function() {
         let { rootDomain, rootHostname } = tabContext;
         if ( rootDomain.endsWith('-scheme') ) { continue; }
         const isPunycode = rootHostname.includes('xn--');
-        out.push(isPunycode ? punycode.toUnicode(rootDomain) : rootDomain);
+        out.add(isPunycode ? punycode.toUnicode(rootDomain) : rootDomain);
         if ( rootHostname === rootDomain ) { continue; }
-        out.push(isPunycode ? punycode.toUnicode(rootHostname) : rootHostname);
+        out.add(isPunycode ? punycode.toUnicode(rootHostname) : rootHostname);
     }
-    return out;
+    return Array.from(out);
 };
 
 // My rules
@@ -1242,8 +1258,9 @@ const onMessage = function(request, sender, callback) {
 
     case 'readHiddenSettings':
         response = {
-            current: µb.hiddenSettings,
-            default: µb.hiddenSettingsDefault,
+            'default': µb.hiddenSettingsDefault,
+            'admin': µb.hiddenSettingsAdmin,
+            'current': µb.hiddenSettings,
         };
         break;
 
