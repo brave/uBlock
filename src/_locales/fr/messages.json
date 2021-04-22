@@ -267,6 +267,14 @@
     "message": "Version",
     "description": "Example of use: Version 1.26.4"
   },
+  "popup3pScriptFilterTip": {
+    "message": "↑ : Accentuer les lignes qui ont des scripts tiers",
+    "description": "Tooltip shown when hovering small filtering widget in '3rd-party scripts' cell"
+  },
+  "popup3pFrameFilterTip": {
+    "message": "↑ : Accentuer les lignes qui ont des cadres tiers",
+    "description": "Tooltip shown when hovering small filtering widget in '3rd-party frames' cell"
+  },
   "pickerCreate": {
     "message": "Créer",
     "description": "English: Create"

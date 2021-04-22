@@ -267,6 +267,14 @@
     "message": "Version",
     "description": "Example of use: Version 1.26.4"
   },
+  "popup3pScriptFilterTip": {
+    "message": "↑: Zeilen hervorheben, die Skripte von Drittanbietern enthalten",
+    "description": "Tooltip shown when hovering small filtering widget in '3rd-party scripts' cell"
+  },
+  "popup3pFrameFilterTip": {
+    "message": "↑: Zeilen hervorheben, die Frames von Drittanbietern enthalten",
+    "description": "Tooltip shown when hovering small filtering widget in '3rd-party frames' cell"
+  },
   "pickerCreate": {
     "message": "Erzeugen",
     "description": "English: Create"

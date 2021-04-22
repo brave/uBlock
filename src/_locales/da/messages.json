@@ -267,6 +267,14 @@
     "message": "Version",
     "description": "Example of use: Version 1.26.4"
   },
+  "popup3pScriptFilterTip": {
+    "message": "↑: Fremhæv rækker med tredjeparts-scripts",
+    "description": "Tooltip shown when hovering small filtering widget in '3rd-party scripts' cell"
+  },
+  "popup3pFrameFilterTip": {
+    "message": "↑: Fremhæv rækker med tredjeparts-rammer",
+    "description": "Tooltip shown when hovering small filtering widget in '3rd-party frames' cell"
+  },
   "pickerCreate": {
     "message": "Opret",
     "description": "English: Create"

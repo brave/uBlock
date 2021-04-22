@@ -267,6 +267,14 @@
     "message": "பதிப்பு",
     "description": "Example of use: Version 1.26.4"
   },
+  "popup3pScriptFilterTip": {
+    "message": "↑: 3 வது-கட்சி ஸ்கிரிப்டுகளைக் கொண்ட வரிசைகளை வலியுறுத்துக",
+    "description": "Tooltip shown when hovering small filtering widget in '3rd-party scripts' cell"
+  },
+  "popup3pFrameFilterTip": {
+    "message": "↑: 3 வது கட்சி பிரேம்கள் கொண்டிருக்கும் வரிசைகளை வலியுறுத்துகின்றன",
+    "description": "Tooltip shown when hovering small filtering widget in '3rd-party frames' cell"
+  },
   "pickerCreate": {
     "message": "உருவாக்கு",
     "description": "English: Create"
@@ -372,7 +380,7 @@
     "description": "background information: https://github.com/gorhill/uBlock/issues/3150"
   },
   "settingsUncloakCnamePrompt": {
-    "message": "Uncloak canonical names",
+    "message": "நியமன பெயர்களை அவிழ்த்து விடுங்கள்",
     "description": "background information: https://github.com/uBlockOrigin/uBlock-issues/issues/1513"
   },
   "settingsLastRestorePrompt": {

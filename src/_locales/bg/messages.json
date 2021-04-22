@@ -267,6 +267,14 @@
     "message": "Версия",
     "description": "Example of use: Version 1.26.4"
   },
+  "popup3pScriptFilterTip": {
+    "message": "↑: Подчертаване на редовете, които имат скриптове на 3-ти страни",
+    "description": "Tooltip shown when hovering small filtering widget in '3rd-party scripts' cell"
+  },
+  "popup3pFrameFilterTip": {
+    "message": "↑: Подчертаване на редовете, които имат рамки на 3-ти страни",
+    "description": "Tooltip shown when hovering small filtering widget in '3rd-party frames' cell"
+  },
   "pickerCreate": {
     "message": "Създаване",
     "description": "English: Create"

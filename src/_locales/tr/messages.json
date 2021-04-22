@@ -88,7 +88,7 @@
     "description": "Example: 15 (13%)"
   },
   "popupBlockedSinceInstallPrompt": {
-    "message": "kurulumdan bu yana",
+    "message": "kurulumdan beri",
     "description": "English: since install"
   },
   "popupOr": {
@@ -266,6 +266,14 @@
   "popupVersion": {
     "message": "Sürüm",
     "description": "Example of use: Version 1.26.4"
+  },
+  "popup3pScriptFilterTip": {
+    "message": "↑: 3. taraf betikler içeren satırları vurgula",
+    "description": "Tooltip shown when hovering small filtering widget in '3rd-party scripts' cell"
+  },
+  "popup3pFrameFilterTip": {
+    "message": "↑: 3. taraf çerçeve içeren satırları vurgula",
+    "description": "Tooltip shown when hovering small filtering widget in '3rd-party frames' cell"
   },
   "pickerCreate": {
     "message": "Oluştur",

@@ -267,6 +267,14 @@
     "message": "Versió",
     "description": "Example of use: Version 1.26.4"
   },
+  "popup3pScriptFilterTip": {
+    "message": "Emfatitza les files que contenen scripts de tercers",
+    "description": "Tooltip shown when hovering small filtering widget in '3rd-party scripts' cell"
+  },
+  "popup3pFrameFilterTip": {
+    "message": "Emfatitza les files que contenen marcs de tercers",
+    "description": "Tooltip shown when hovering small filtering widget in '3rd-party frames' cell"
+  },
   "pickerCreate": {
     "message": "Crear",
     "description": "English: Create"

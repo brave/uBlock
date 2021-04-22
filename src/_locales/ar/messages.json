@@ -267,6 +267,14 @@
     "message": "نسخة",
     "description": "Example of use: Version 1.26.4"
   },
+  "popup3pScriptFilterTip": {
+    "message": "أكِّد على الصفوف التي تحتوي على نصوص برمجية من جهات خارجية",
+    "description": "Tooltip shown when hovering small filtering widget in '3rd-party scripts' cell"
+  },
+  "popup3pFrameFilterTip": {
+    "message": "قم بتأكيد الصفوف التي تحتوي على إطارات من جهات خارجية",
+    "description": "Tooltip shown when hovering small filtering widget in '3rd-party frames' cell"
+  },
   "pickerCreate": {
     "message": "إنشاء",
     "description": "English: Create"
@@ -372,7 +380,7 @@
     "description": "background information: https://github.com/gorhill/uBlock/issues/3150"
   },
   "settingsUncloakCnamePrompt": {
-    "message": "Uncloak canonical names",
+    "message": "فك الأسماء المتعارف عليها",
     "description": "background information: https://github.com/uBlockOrigin/uBlock-issues/issues/1513"
   },
   "settingsLastRestorePrompt": {

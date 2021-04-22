@@ -267,6 +267,14 @@
     "message": "సంస్కరణ",
     "description": "Example of use: Version 1.26.4"
   },
+  "popup3pScriptFilterTip": {
+    "message": "↑: 3 వ పార్టీ స్క్రిప్ట్స్ కలిగి ఉన్న వరుసలను నొక్కి చెప్పండి",
+    "description": "Tooltip shown when hovering small filtering widget in '3rd-party scripts' cell"
+  },
+  "popup3pFrameFilterTip": {
+    "message": "↑: 3 వ పార్టీ ఫ్రేమ్లను కలిగి ఉన్న వరుసలను నొక్కి చెప్పండి",
+    "description": "Tooltip shown when hovering small filtering widget in '3rd-party frames' cell"
+  },
   "pickerCreate": {
     "message": "సృష్టించు",
     "description": "English: Create"
@@ -372,7 +380,7 @@
     "description": "background information: https://github.com/gorhill/uBlock/issues/3150"
   },
   "settingsUncloakCnamePrompt": {
-    "message": "Uncloak canonical names",
+    "message": "కానానికల్ పేర్లను తెరవండి",
     "description": "background information: https://github.com/uBlockOrigin/uBlock-issues/issues/1513"
   },
   "settingsLastRestorePrompt": {
