@@ -268,7 +268,7 @@
     "description": "Example of use: Version 1.26.4"
   },
   "popup3pScriptFilterTip": {
-    "message": "↑: 3. taraf betikler içeren satırları vurgula",
+    "message": "↑: 3. taraf betik içeren satırları vurgula",
     "description": "Tooltip shown when hovering small filtering widget in '3rd-party scripts' cell"
   },
   "popup3pFrameFilterTip": {
@@ -1041,6 +1041,10 @@
   },
   "contextMenuBlockElementInFrame": {
     "message": "Çerçevedeki ögeyi engelle...",
+    "description": "An entry in the browser's contextual menu"
+  },
+  "contextMenuSubscribeToList": {
+    "message": "Süzgeç listesine abone ol...",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuTemporarilyAllowLargeMediaElements": {

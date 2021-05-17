@@ -112,11 +112,11 @@
     "description": "English: Click to open the dashboard"
   },
   "popupTipZapper": {
-    "message": "Gå til elementdræber&shy;tilstand",
+    "message": "Gå til elementdræber­tilstand",
     "description": "Tooltip for the element-zapper icon in the popup panel"
   },
   "popupTipPicker": {
-    "message": "Gå til elementvælger&shy;tilstand",
+    "message": "Gå til elementvælger­tilstand",
     "description": "English: Enter element picker mode"
   },
   "popupTipLog": {
@@ -1041,6 +1041,10 @@
   },
   "contextMenuBlockElementInFrame": {
     "message": "Blokér element i ramme...",
+    "description": "An entry in the browser's contextual menu"
+  },
+  "contextMenuSubscribeToList": {
+    "message": "Abonnér på filterliste...",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuTemporarilyAllowLargeMediaElements": {
