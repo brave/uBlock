@@ -847,6 +847,10 @@
     "message": "Markdown",
     "description": "Label for radio-button to pick export text format"
   },
+  "aboutPrivacyPolicy": {
+    "message": "Политика конфиденциальности",
+    "description": "Link to privacy policy on GitHub (English)"
+  },
   "aboutChangelog": {
     "message": "Список изменений",
     "description": ""
@@ -1044,7 +1048,7 @@
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuSubscribeToList": {
-    "message": "Подписка на список фильтров…",
+    "message": "Подписаться на список фильтров...",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuTemporarilyAllowLargeMediaElements": {

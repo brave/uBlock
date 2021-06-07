@@ -81,13 +81,13 @@
         get: function() {
             validate();
             return desc instanceof Object
-                ? desc.get()
+                ? desc.get.call(owner)
                 : value;
         },
         set: function(a) {
             validate();
             if ( desc instanceof Object ) {
-                desc.set(a);
+                desc.set.call(owner, a);
             } else {
                 value = a;
             }
@@ -307,6 +307,7 @@
 
 /// addEventListener-defuser.js
 /// alias aeld.js
+// https://github.com/uBlockOrigin/uAssets/issues/9123#issuecomment-848255120
 (function() {
     let needle1 = '{{1}}';
     if ( needle1 === '' || needle1 === '{{1}}' ) {
@@ -330,8 +331,12 @@
         self.EventTarget.prototype.addEventListener,
         {
             apply: function(target, thisArg, args) {
-                const type = String(args[0]);
-                const handler = String(args[1]);
+                let type, handler;
+                try {
+                    type = String(args[0]);
+                    handler = String(args[1]);
+                } catch(ex) {
+                }
                 if (
                     needle1.test(type) === false ||
                     needle2.test(handler) === false
@@ -346,14 +351,19 @@
 
 /// addEventListener-logger.js
 /// alias aell.js
+// https://github.com/uBlockOrigin/uAssets/issues/9123#issuecomment-848255120
 (function() {
     const log = console.log.bind(console);
     self.EventTarget.prototype.addEventListener = new Proxy(
         self.EventTarget.prototype.addEventListener,
         {
             apply: function(target, thisArg, args) {
-                const type = String(args[0]);
-                const handler = String(args[1]);
+                let type, handler;
+                try {
+                    type = String(args[0]);
+                    handler = String(args[1]);
+                } catch(ex) {
+                }
                 log('uBO: addEventListener("%s", %s)', type, handler);
                 return target.apply(thisArg, args);
             }
@@ -754,7 +764,10 @@
     if ( selector === '' || selector === '{{2}}' ) {
         selector = '.' + tokens.map(a => CSS.escape(a)).join(',.');
     }
+    let behavior = '{{3}}';
+    let timer;
     const rmclass = function() {
+        timer = undefined;
         try {
             const nodes = document.querySelectorAll(selector);
             for ( const node of nodes ) {
@@ -763,14 +776,39 @@
         } catch(ex) {
         }
     };
-    if ( document.readyState === 'loading' ) {
-        window.addEventListener(
-            'DOMContentLoaded',
-            rmclass,
-            { capture: true, once: true }
-        );
-    } else {
+    const mutationHandler = mutations => {
+        if ( timer !== undefined ) { return; }
+        let skip = true;
+        for ( let i = 0; i < mutations.length && skip; i++ ) {
+            const { type, addedNodes, removedNodes } = mutations[i];
+            if ( type === 'attributes' ) { skip = false; }
+            for ( let j = 0; j < addedNodes.length && skip; j++ ) {
+                if ( addedNodes[j].nodeType === 1 ) { skip = false; break; }
+            }
+            for ( let j = 0; j < removedNodes.length && skip; j++ ) {
+                if ( removedNodes[j].nodeType === 1 ) { skip = false; break; }
+            }
+        }
+        if ( skip ) { return; }
+        timer = self.requestIdleCallback(rmclass, { timeout: 67 });
+    };
+    const start = ( ) => {
         rmclass();
+        if ( /\bstay\b/.test(behavior) === false ) { return; }
+        const observer = new MutationObserver(mutationHandler);
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: [ 'class' ],
+            childList: true,
+            subtree: true,
+        });
+    };
+    if ( document.readyState !== 'complete' && /\bcomplete\b/.test(behavior) ) {
+        self.addEventListener('load', start, { once: true });
+    } else if ( document.readyState === 'loading' ) {
+        self.addEventListener('DOMContentLoaded', start, { once: true });
+    } else {
+        start();
     }
 })();
 
@@ -821,6 +859,12 @@
         cValue = true;
     } else if ( cValue === 'null' ) {
         cValue = null;
+    } else if ( cValue === "''" ) {
+        cValue = '';
+    } else if ( cValue === '[]' ) {
+        cValue = [];
+    } else if ( cValue === '{}' ) {
+        cValue = {};
     } else if ( cValue === 'noopFunc' ) {
         cValue = function(){};
     } else if ( cValue === 'trueFunc' ) {
@@ -831,8 +875,6 @@
         cValue = parseFloat(cValue);
         if ( isNaN(cValue) ) { return; }
         if ( Math.abs(cValue) > 0x7FFF ) { return; }
-    } else if ( cValue === "''" ) {
-        cValue = '';
     } else {
         return;
     }

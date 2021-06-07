@@ -847,6 +847,10 @@
     "message": "Markdown",
     "description": "Label for radio-button to pick export text format"
   },
+  "aboutPrivacyPolicy": {
+    "message": "Integritetspolicy",
+    "description": "Link to privacy policy on GitHub (English)"
+  },
   "aboutChangelog": {
     "message": "Ändringslogg",
     "description": ""
@@ -920,7 +924,7 @@
     "description": "English: Network error: {{msg}}"
   },
   "subscriberConfirm": {
-    "message": "Lägg till följande webbadress till din anpassade filterlista?\n\nTitel: \"{{title}}\"\nWebbadress: {{url}}",
+    "message": "Lägg till följande webbadress till dina anpassade filterlistor?\n\nTitel: \"{{title}}\"\nWebbadress: {{url}}",
     "description": "No longer used"
   },
   "subscribeButton": {
@@ -1044,7 +1048,7 @@
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuSubscribeToList": {
-    "message": "Subscribe to filter list...",
+    "message": "Prenumerera på filterlista...",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuTemporarilyAllowLargeMediaElements": {
