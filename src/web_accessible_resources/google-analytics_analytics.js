@@ -24,9 +24,6 @@
     // https://developers.google.com/analytics/devguides/collection/analyticsjs/
     const noopfn = function() {
     };
-    const noopnullfn = function() {
-        return null;
-    };
     //
     const Tracker = function() {
     };
@@ -64,7 +61,9 @@
     ga.create = function() {
         return new Tracker();
     };
-    ga.getByName = noopnullfn;
+    ga.getByName = function() {
+        return new Tracker();
+    };
     ga.getAll = function() {
         return [];
     };
@@ -85,16 +84,20 @@
                 setTimeout(item.eventCallback, 1);
             };
             if ( Array.isArray(dl) ) {
-                for ( const item of dl ) {
+                dl.push = item => doCallback(item);
+                const q = dl.slice();
+                dl.length = 0;
+                for ( const item of q ) {
                     doCallback(item);
                 }
             }
-            dl.push = item => doCallback(item);
         }
     }
     // empty ga queue
     if ( gaQueue instanceof Function && Array.isArray(gaQueue.q) ) {
-        for ( const entry of gaQueue.q ) {
+        const q = gaQueue.q.slice();
+        gaQueue.q.length = 0;
+        for ( const entry of q ) {
             ga(...entry);
         }
     }
