@@ -891,6 +891,14 @@
     "message": "Dış bağımlılıklar (GPLv3-uyumlu):",
     "description": "Shown in the About pane"
   },
+  "aboutCDNs": {
+    "message": "uBO'nun kendi filtre listeleri ücretsiz olarak şu <a href=\"https://wikipedia.org/wiki/Content_delivery_network\">CDN'lerde</a> barındırılır:",
+    "description": "Shown in the About pane"
+  },
+  "aboutCDNsInfo": {
+    "message": "Bir filtre listesinin güncellenmesi gerektiğinde rastgele seçilen bir CDN kullanılır",
+    "description": "Shown in the About pane"
+  },
   "aboutBackupDataButton": {
     "message": "Dosyaya yedekle",
     "description": "Text for button to create a backup of all settings"

@@ -891,6 +891,14 @@
     "message": "Externe Abhängigkeiten (GPLv3-kompatibel):",
     "description": "Shown in the About pane"
   },
+  "aboutCDNs": {
+    "message": "Die uBO-eigenen Filterlisten werden auf den folgenden <a href=\"https://wikipedia.org/wiki/Content_delivery_network\">CDNs</a> frei zur Verfügung gestellt:",
+    "description": "Shown in the About pane"
+  },
+  "aboutCDNsInfo": {
+    "message": "Ein zufällig ausgewähltes CDN wird verwendet, wenn eine Filterliste aktualisiert werden muss",
+    "description": "Shown in the About pane"
+  },
   "aboutBackupDataButton": {
     "message": "Backup in eine Datei",
     "description": "Text for button to create a backup of all settings"

@@ -848,7 +848,7 @@
     "description": "Label for radio-button to pick export text format"
   },
   "aboutPrivacyPolicy": {
-    "message": "Politika e privatësisë",
+    "message": "Politikat e konfidencialitetit",
     "description": "Link to privacy policy on GitHub (English)"
   },
   "aboutChangelog": {
@@ -889,6 +889,14 @@
   },
   "aboutDependencies": {
     "message": "Programet kushtëzuese (sipas GPLv3):",
+    "description": "Shown in the About pane"
+  },
+  "aboutCDNs": {
+    "message": "Listat e filtrave të uBO mundësohen falas në <a href=\"https://wikipedia.org/wiki/Content_delivery_network\">CDN-të</a> e mëposhtme:",
+    "description": "Shown in the About pane"
+  },
+  "aboutCDNsInfo": {
+    "message": "Një CDN e zgjedhur në mënyrë rastësore do të përdoret kur një listë filtrash ka nevojë për përditësim",
     "description": "Shown in the About pane"
   },
   "aboutBackupDataButton": {

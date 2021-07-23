@@ -891,6 +891,14 @@
     "message": "وابستگی‌های خارجی (سازگار با GPLv3):",
     "description": "Shown in the About pane"
   },
+  "aboutCDNs": {
+    "message": "لیست‌های فیلتر اصلی uBlock Origin به صورت آزاد در <a href=\"https://wikipedia.org/wiki/Content_delivery_network\">این شبکه‌های تحویل محتوا</a> میزبانی می‌شوند.",
+    "description": "Shown in the About pane"
+  },
+  "aboutCDNsInfo": {
+    "message": "وقتی که لازم باشد تا یک لیست فیلتر  به روزرسانی شود، از یکی از  شبکه‌های تحویل محتوا به صورت تصادفی استفاده می‌شود",
+    "description": "Shown in the About pane"
+  },
   "aboutBackupDataButton": {
     "message": "پشتیبان گیری در فایل",
     "description": "Text for button to create a backup of all settings"

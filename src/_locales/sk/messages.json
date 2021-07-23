@@ -891,6 +891,14 @@
     "message": "Externé závislosti (kompatibilné s GPLv3):",
     "description": "Shown in the About pane"
   },
+  "aboutCDNs": {
+    "message": "Vlastné zoznamy filtrov uBO sú voľne dostupné na týchto stránkach <a href=\"https://wikipedia.org/wiki/Content_delivery_network\">CDN</a>",
+    "description": "Shown in the About pane"
+  },
+  "aboutCDNsInfo": {
+    "message": "Keď bude potrebné aktualizovať zoznam filtrov, použije sa náhodne vybraná sieť CDN",
+    "description": "Shown in the About pane"
+  },
   "aboutBackupDataButton": {
     "message": "Zálohovať do súboru",
     "description": "Text for button to create a backup of all settings"

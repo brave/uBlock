@@ -891,6 +891,14 @@
     "message": "Välised sõltuvused (ühilduvad GPLv3-ga):",
     "description": "Shown in the About pane"
   },
+  "aboutCDNs": {
+    "message": "uBO enda filtriloendid on vabalt hostitud järgnevates <a href=\"https://et.wikipedia.org/wiki/Sisuedastusv%C3%B5rk\">sisuedastusvõrkudes</a>:",
+    "description": "Shown in the About pane"
+  },
+  "aboutCDNsInfo": {
+    "message": "Filtriloendi uuendamiseks kasutatakse juhuslikult valitud sisuedastusvõrku",
+    "description": "Shown in the About pane"
+  },
   "aboutBackupDataButton": {
     "message": "Varunda faili",
     "description": "Text for button to create a backup of all settings"

@@ -891,6 +891,14 @@
     "message": "Externí závislosti (kompatibilní s GPLv3):",
     "description": "Shown in the About pane"
   },
+  "aboutCDNs": {
+    "message": "Vlastní seznamy filtrů uBO jsou volně hostovány na následujících <a href=\"https://wikipedia.org/wiki/Content_delivery_network\">CDN</a>:",
+    "description": "Shown in the About pane"
+  },
+  "aboutCDNsInfo": {
+    "message": "Při aktualizaci seznamu filtrů se použije náhodně vybraná síť CDN.",
+    "description": "Shown in the About pane"
+  },
   "aboutBackupDataButton": {
     "message": "Zálohovat do souboru...",
     "description": "Text for button to create a backup of all settings"

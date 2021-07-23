@@ -891,6 +891,14 @@
     "message": "Спољне зависности (компатибилно са GPLv3):",
     "description": "Shown in the About pane"
   },
+  "aboutCDNs": {
+    "message": "Сопствене листе филтера uBO-a се слободно хостују на следећим <a href=\"https://wikipedia.org/wiki/Content_delivery_network\">CDN-овима</a>:",
+    "description": "Shown in the About pane"
+  },
+  "aboutCDNsInfo": {
+    "message": "Насумично одабрани CDN се користи када листу филтера треба ажурирати",
+    "description": "Shown in the About pane"
+  },
   "aboutBackupDataButton": {
     "message": "Сачувај резервну копију у датотеку",
     "description": "Text for button to create a backup of all settings"
