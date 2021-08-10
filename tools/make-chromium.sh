@@ -2,6 +2,8 @@
 #
 # This script assumes a linux environment
 
+set -e
+
 echo "*** uBlock0.chromium: Creating web store package"
 
 DES=dist/build/uBlock0.chromium
@@ -13,9 +15,9 @@ bash ./tools/copy-common-files.sh  $DES
 
 # Chromium-specific
 echo "*** uBlock0.chromium: Copying chromium-specific files"
-cp platform/chromium/*.js          $DES/js/
-cp platform/chromium/*.html        $DES/
-cp platform/chromium/*.json        $DES/
+cp platform/chromium/*.js   $DES/js/
+cp platform/chromium/*.html $DES/
+cp platform/chromium/*.json $DES/
 
 # Chrome store-specific
 cp -R $DES/_locales/nb $DES/_locales/no

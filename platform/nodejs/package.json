@@ -1,0 +1,31 @@
+{
+  "name": "@gorhill/ubo-core",
+  "version": "0.1.8",
+  "description": "To create a working instance of uBlock Origin's static network filtering engine",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "build": "node build.js",
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gorhill/uBlock.git"
+  },
+  "keywords": [
+    "uBlock",
+    "uBO",
+    "adblock",
+    "trie"
+  ],
+  "author": "Raymond Hill",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/gorhill/uBlock/issues"
+  },
+  "homepage": "https://github.com/gorhill/uBlock#readme",
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.14.4"
+  }
+}

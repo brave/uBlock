@@ -2,10 +2,12 @@
 #
 # This script assumes a linux environment
 
+set -e
+
 echo "*** uBlock: Importing from Crowdin archive"
 
 SRC=~/Downloads/crowdin
-rm -r $SRC
+rm -r $SRC || true
 unzip -q ~/Downloads/uBlock\ \(translations\).zip -d $SRC
 
 DES=./src/_locales

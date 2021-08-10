@@ -22,6 +22,28 @@
 'use strict';
 
 /******************************************************************************/
+
+import contextMenu from './contextmenu.js';
+import logger from './logger.js';
+import scriptletFilteringEngine from './scriptlet-filtering.js';
+import staticNetFilteringEngine from './static-net-filtering.js';
+import µb from './background.js';
+import { PageStore } from './pagestore.js';
+
+import {
+    sessionFirewall,
+    sessionSwitches,
+    sessionURLFiltering,
+} from './filtering-engines.js';
+
+import {
+    domainFromHostname,
+    hostnameFromURI,
+    isNetworkURI,
+    originFromURI,
+} from './uri-utils.js';
+
+/******************************************************************************/
 /******************************************************************************/
 
 // https://github.com/gorhill/httpswitchboard/issues/303
@@ -33,26 +55,30 @@
 //   hostname. This way, for a specific scheme you can create scope with
 //   rules which will apply only to that scheme.
 
-µBlock.normalizePageURL = function(tabId, pageURL) {
-    if ( tabId < 0 ) {
-        return 'http://behind-the-scene/';
-    }
-    const uri = this.URI.set(pageURL);
-    const scheme = uri.scheme;
-    if ( scheme === 'https' || scheme === 'http' ) {
-        return uri.normalizedURI();
-    }
+µb.normalizeTabURL = (( ) => {
+    const tabURLNormalizer = new URL('about:blank');
 
-    let fakeHostname = scheme + '-scheme';
+    return (tabId, tabURL) => {
+        if ( tabId < 0 ) {
+            return 'http://behind-the-scene/';
+        }
+        tabURLNormalizer.href = tabURL;
+        const protocol = tabURLNormalizer.protocol.slice(0, -1);
+        if ( protocol === 'https' || protocol === 'http' ) {
+            return tabURLNormalizer.href;
+        }
 
-    if ( uri.hostname !== '' ) {
-        fakeHostname = uri.hostname + '.' + fakeHostname;
-    } else if ( scheme === 'about' && uri.path !== '' ) {
-        fakeHostname = uri.path + '.' + fakeHostname;
-    }
+        let fakeHostname = protocol + '-scheme';
 
-    return `http://${fakeHostname}/`;
-};
+        if ( tabURLNormalizer.hostname !== '' ) {
+            fakeHostname = tabURLNormalizer.hostname + '.' + fakeHostname;
+        } else if ( protocol === 'about' && protocol.pathname !== '' ) {
+            fakeHostname = tabURLNormalizer.pathname + '.' + fakeHostname;
+        }
+
+        return `http://${fakeHostname}/`;
+    };
+})();
 
 /******************************************************************************/
 
@@ -78,9 +104,7 @@
 // c: close opener
 // d: close target
 
-µBlock.onPopupUpdated = (( ) => {
-    const µb = µBlock;
-
+const onPopupUpdated = (( ) => {
     // https://github.com/gorhill/uBlock/commit/1d448b85b2931412508aa01bf899e0b6f0033626#commitcomment-14944764
     //   See if two URLs are different, disregarding scheme -- because the
     //   scheme can be unilaterally changed by the browser.
@@ -114,7 +138,7 @@
         //   Don't block if uBO is turned off in popup's context
         if (
             µb.getNetFilteringSwitch(targetURL) === false ||
-            µb.getNetFilteringSwitch(µb.normalizePageURL(0, targetURL)) === false
+            µb.getNetFilteringSwitch(µb.normalizeTabURL(0, targetURL)) === false
         ) {
             return 0;
         }
@@ -147,13 +171,13 @@
             //   popunders.
             if (
                 popupType === 'popup' &&
-                µb.sessionSwitches.evaluateZ(
+                sessionSwitches.evaluateZ(
                     'no-popups',
                     fctxt.getTabHostname()
                 )
             ) {
                 fctxt.filter = {
-                    raw: 'no-popups: ' + µb.sessionSwitches.z + ' true',
+                    raw: 'no-popups: ' + sessionSwitches.z + ' true',
                     result: 1,
                     source: 'switch'
                 };
@@ -163,16 +187,16 @@
             // https://github.com/gorhill/uBlock/issues/581
             //   Take into account popup-specific rules in dynamic URL
             //   filtering, OR generic allow rules.
-            let result = µb.sessionURLFiltering.evaluateZ(
+            let result = sessionURLFiltering.evaluateZ(
                 fctxt.getTabHostname(),
                 targetURL,
                 popupType
             );
             if (
-                result === 1 && µb.sessionURLFiltering.type === popupType ||
+                result === 1 && sessionURLFiltering.type === popupType ||
                 result === 2
             ) {
-                fctxt.filter = µb.sessionURLFiltering.toLogData();
+                fctxt.filter = sessionURLFiltering.toLogData();
                 return result;
             }
 
@@ -180,21 +204,21 @@
             //   Take into account `allow` rules in dynamic filtering: `block`
             //   rules are ignored, as block rules are not meant to block
             //   specific types like `popup` (just like with static filters).
-            result = µb.sessionFirewall.evaluateCellZY(
+            result = sessionFirewall.evaluateCellZY(
                 fctxt.getTabHostname(),
                 fctxt.getHostname(),
                 popupType
             );
             if ( result === 2 ) {
-                fctxt.filter = µb.sessionFirewall.toLogData();
+                fctxt.filter = sessionFirewall.toLogData();
                 return 2;
             }
         }
 
         fctxt.type = popupType;
-        const result = µb.staticNetFilteringEngine.matchString(fctxt, 0b0001);
+        const result = staticNetFilteringEngine.matchRequest(fctxt, 0b0001);
         if ( result !== 0 ) {
-            fctxt.filter = µb.staticNetFilteringEngine.toLogData();
+            fctxt.filter = staticNetFilteringEngine.toLogData();
             return result;
         }
 
@@ -207,14 +231,13 @@
         popunderHostname,
         result
     ) {
-        if (
-            fctxt.filter === undefined ||
-            fctxt.filter !== 'static' ||
-            fctxt.filter.token === µb.staticNetFilteringEngine.noTokenHash
-        ) {
+        if ( fctxt.filter === undefined || fctxt.filter !== 'static' ) {
             return 0;
         }
-        if ( fctxt.filter.token === µb.staticNetFilteringEngine.dotTokenHash ) {
+        if ( fctxt.filter.isUntokenized() ) {
+            return 0;
+        }
+        if ( fctxt.filter.isPureHostname() ) {
             return result;
         }
         const re = new RegExp(fctxt.filter.regex, 'i');
@@ -257,7 +280,7 @@
         //   For now, a "broad" filter is one which does not touch any part of
         //   the hostname part of the opener URL.
         let popunderURL = rootOpenerURL,
-            popunderHostname = µb.URI.hostnameFromURI(popunderURL);
+            popunderHostname = hostnameFromURI(popunderURL);
         if ( popunderHostname === '' ) { return 0; }
 
         result = mapPopunderResult(
@@ -270,7 +293,7 @@
 
         // https://github.com/gorhill/uBlock/issues/1598
         //   Try to find a match against origin part of the opener URL.
-        popunderURL = µb.URI.originFromURI(popunderURL);
+        popunderURL = originFromURI(popunderURL);
         if ( popunderURL === '' ) { return 0; }
 
         return mapPopunderResult(
@@ -305,7 +328,7 @@
         // https://github.com/gorhill/uBlock/issues/1538
         if (
             µb.getNetFilteringSwitch(
-                µb.normalizePageURL(openerTabId, rootOpenerURL)
+                µb.normalizeTabURL(openerTabId, rootOpenerURL)
             ) === false
         ) {
             return;
@@ -342,7 +365,7 @@
 
         // Log only for when there was a hit against an actual filter (allow or block).
         // https://github.com/gorhill/uBlock/issues/2776
-        if ( µb.logger.enabled ) {
+        if ( logger.enabled ) {
             fctxt.setRealm('network').setType(popupType);
             if ( popupType === 'popup' ) {
                 fctxt.setURL(targetURL)
@@ -448,8 +471,7 @@ housekeep itself.
 
 */
 
-µBlock.tabContextManager = (( ) => {
-    const µb = µBlock;
+µb.tabContextManager = (( ) => {
     const tabContexts = new Map();
 
     // https://github.com/chrisaljoudi/uBlock/issues/1001
@@ -509,7 +531,7 @@ housekeep itself.
             if ( targetTabId === candidate.opener.tabId ) {
                 candidate.opener.popunder = true;
             }
-            const result = await µb.onPopupUpdated(tabId, candidate.opener);
+            const result = onPopupUpdated(tabId, candidate.opener);
             if ( result === true ) {
                 candidate.destroy();
             } else {
@@ -662,11 +684,11 @@ housekeep itself.
         }
         const stackEntry = this.stack[this.stack.length - 1];
         this.rawURL = stackEntry.url;
-        this.normalURL = µb.normalizePageURL(this.tabId, this.rawURL);
-        this.origin = µb.URI.originFromURI(this.normalURL);
-        this.rootHostname = µb.URI.hostnameFromURI(this.origin);
+        this.normalURL = µb.normalizeTabURL(this.tabId, this.rawURL);
+        this.origin = originFromURI(this.normalURL);
+        this.rootHostname = hostnameFromURI(this.origin);
         this.rootDomain =
-            µb.URI.domainFromHostname(this.rootHostname) ||
+            domainFromHostname(this.rootHostname) ||
             this.rootHostname;
     };
 
@@ -794,10 +816,10 @@ housekeep itself.
         const entry = new TabContext(vAPI.noTabId);
         entry.stack.push(new StackEntry('', true));
         entry.rawURL = '';
-        entry.normalURL = µb.normalizePageURL(entry.tabId);
-        entry.origin = µb.URI.originFromURI(entry.normalURL);
-        entry.rootHostname = µb.URI.hostnameFromURI(entry.origin);
-        entry.rootDomain = µb.URI.domainFromHostname(entry.rootHostname);
+        entry.normalURL = µb.normalizeTabURL(entry.tabId);
+        entry.origin = originFromURI(entry.normalURL);
+        entry.rootHostname = hostnameFromURI(entry.origin);
+        entry.rootDomain = domainFromHostname(entry.rootHostname);
     }
 
     // Context object, typically to be used to feed filtering engines.
@@ -849,20 +871,20 @@ vAPI.Tabs = class extends vAPI.Tabs {
         super.onActivated(details);
         if ( vAPI.isBehindTheSceneTabId(details.tabId) ) { return; }
         // https://github.com/uBlockOrigin/uBlock-issues/issues/680
-        µBlock.updateToolbarIcon(details.tabId);
-        µBlock.contextMenu.update(details.tabId);
+        µb.updateToolbarIcon(details.tabId);
+        contextMenu.update(details.tabId);
     }
 
     onClosed(tabId) {
         super.onClosed(tabId);
         if ( vAPI.isBehindTheSceneTabId(tabId) ) { return; }
-        µBlock.unbindTabFromPageStore(tabId);
-        µBlock.contextMenu.update();
+        µb.unbindTabFromPageStore(tabId);
+        contextMenu.update();
     }
 
     onCreated(details) {
         super.onCreated(details);
-        µBlock.tabContextManager.onTabCreated(details);
+        µb.tabContextManager.onTabCreated(details);
     }
 
     // When the DOM content of root frame is loaded, this means the tab
@@ -880,7 +902,6 @@ vAPI.Tabs = class extends vAPI.Tabs {
     //   is not available at this point.
     onNavigation(details) {
         super.onNavigation(details);
-        const µb = µBlock;
         const { frameId, tabId, url } = details;
         if ( frameId === 0 ) {
             µb.tabContextManager.commit(tabId, url);
@@ -894,10 +915,10 @@ vAPI.Tabs = class extends vAPI.Tabs {
         pageStore.setFrameURL(details);
         if (
             µb.canInjectScriptletsNow &&
-            µb.URI.isNetworkURI(url) &&
+            isNetworkURI(url) &&
             pageStore.getNetFilteringSwitch()
         ) {
-            µb.scriptletFilteringEngine.injectNow(details);
+            scriptletFilteringEngine.injectNow(details);
         }
     }
 
@@ -909,8 +930,8 @@ vAPI.Tabs = class extends vAPI.Tabs {
         super.onUpdated(tabId, changeInfo, tab);
         if ( !tab.url || tab.url === '' ) { return; }
         if ( !changeInfo.url ) { return; }
-        µBlock.tabContextManager.commit(tabId, changeInfo.url);
-        µBlock.bindTabToPageStore(tabId, 'tabUpdated', tab);
+        µb.tabContextManager.commit(tabId, changeInfo.url);
+        µb.bindTabToPageStore(tabId, 'tabUpdated', tab);
     }
 };
 
@@ -921,7 +942,7 @@ vAPI.tabs = new vAPI.Tabs();
 
 // Create an entry for the tab if it doesn't exist.
 
-µBlock.bindTabToPageStore = function(tabId, context, details = undefined) {
+µb.bindTabToPageStore = function(tabId, context, details = undefined) {
     this.updateToolbarIcon(tabId, 0b111);
 
     // Do not create a page store for URLs which are of no interests
@@ -935,7 +956,7 @@ vAPI.tabs = new vAPI.Tabs();
 
     // Tab is not bound
     if ( pageStore === undefined ) {
-        pageStore = this.PageStore.factory(tabId, details);
+        pageStore = PageStore.factory(tabId, details);
         this.pageStores.set(tabId, pageStore);
         this.pageStoresToken = Date.now();
         return pageStore;
@@ -966,7 +987,7 @@ vAPI.tabs = new vAPI.Tabs();
 
 /******************************************************************************/
 
-µBlock.unbindTabFromPageStore = function(tabId) {
+µb.unbindTabFromPageStore = function(tabId) {
     const pageStore = this.pageStores.get(tabId);
     if ( pageStore === undefined ) { return; }
     pageStore.dispose();
@@ -976,11 +997,11 @@ vAPI.tabs = new vAPI.Tabs();
 
 /******************************************************************************/
 
-µBlock.pageStoreFromTabId = function(tabId) {
+µb.pageStoreFromTabId = function(tabId) {
     return this.pageStores.get(tabId) || null;
 };
 
-µBlock.mustPageStoreFromTabId = function(tabId) {
+µb.mustPageStoreFromTabId = function(tabId) {
     return this.pageStores.get(tabId) || this.pageStores.get(vAPI.noTabId);
 };
 
@@ -993,19 +1014,19 @@ vAPI.tabs = new vAPI.Tabs();
 //   the document context (if present) of the network request.
 
 {
-    const NoPageStore = class extends µBlock.PageStore {
+    const NoPageStore = class extends PageStore {
         getNetFilteringSwitch(fctxt) {
             if ( fctxt ) {
                 const docOrigin = fctxt.getDocOrigin();
                 if ( docOrigin ) {
-                    return µBlock.getNetFilteringSwitch(docOrigin);
+                    return µb.getNetFilteringSwitch(docOrigin);
                 }
             }
             return super.getNetFilteringSwitch();
         }
     };
     const pageStore = new NoPageStore(vAPI.noTabId);
-    µBlock.pageStores.set(pageStore.tabId, pageStore);
+    µb.pageStores.set(pageStore.tabId, pageStore);
     pageStore.title = vAPI.i18n('logBehindTheScene');
 }
 
@@ -1013,8 +1034,7 @@ vAPI.tabs = new vAPI.Tabs();
 
 // Update visual of extension icon.
 
-µBlock.updateToolbarIcon = (( ) => {
-    const µb = µBlock;
+µb.updateToolbarIcon = (( ) => {
     const tabIdToDetails = new Map();
 
     const computeBadgeColor = (bits) => {
@@ -1103,11 +1123,11 @@ vAPI.tabs = new vAPI.Tabs();
     const checkTab = async tabId => {
         const tab = await vAPI.tabs.get(tabId);
         if ( tab instanceof Object && tab.discarded !== true ) { return; }
-        µBlock.unbindTabFromPageStore(tabId);
+        µb.unbindTabFromPageStore(tabId);
     };
 
     const pageStoreJanitor = function() {
-        const tabIds = Array.from(µBlock.pageStores.keys()).sort();
+        const tabIds = Array.from(µb.pageStores.keys()).sort();
         if ( pageStoreJanitorSampleAt >= tabIds.length ) {
             pageStoreJanitorSampleAt = 0;
         }

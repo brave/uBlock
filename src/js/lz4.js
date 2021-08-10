@@ -23,6 +23,10 @@
 
 'use strict';
 
+/******************************************************************************/
+
+import µb from './background.js';
+
 /*******************************************************************************
 
     Experimental support for storage compression.
@@ -31,9 +35,6 @@
     https://github.com/uBlockOrigin/uBlock-issues/issues/141#issuecomment-407737186
 
 **/
-
-{
-// >>>> Start of private namespace
 
 /******************************************************************************/
 
@@ -45,7 +46,7 @@ let ttlTimer;
 let ttlDelay = 60000;
 
 const init = function() {
-    ttlDelay = µBlock.hiddenSettings.autoUpdateAssetFetchPeriod * 1000 + 15000;
+    ttlDelay = µb.hiddenSettings.autoUpdateAssetFetchPeriod * 1000 + 15000;
     if ( lz4CodecInstance === null ) {
         return Promise.resolve(null);
     }
@@ -54,7 +55,7 @@ const init = function() {
     }
     if ( pendingInitialization === undefined ) {
         let flavor;
-        if ( µBlock.hiddenSettings.disableWebAssembly === true ) {
+        if ( µb.hiddenSettings.disableWebAssembly === true ) {
             flavor = 'js';
         }
         pendingInitialization = lz4BlockCodec.createInstance(flavor)
@@ -154,7 +155,7 @@ const decodeValue = function(inputArray) {
     return s;
 };
 
-µBlock.lz4Codec = {
+const lz4Codec = {
     // Arguments:
     //   dataIn: must be a string
     // Returns:
@@ -199,5 +200,6 @@ const decodeValue = function(inputArray) {
 
 /******************************************************************************/
 
-// <<<< End of private namespace
-}
+export default lz4Codec;
+
+/******************************************************************************/

@@ -13,8 +13,9 @@
 
 /*! Home: https://github.com/gorhill/publicsuffixlist.js -- GPLv3 APLv2 */
 
-/* jshint browser:true, esversion:6, laxbreak:true, undef:true, unused:true */
-/* globals WebAssembly, console, exports:true, module */
+/* globals WebAssembly, exports:true, module */
+
+'use strict';
 
 /*******************************************************************************
 
@@ -44,8 +45,6 @@
 
 (function(context) {
 // >>>>>>>> start of anonymous namespace
-
-'use strict';
 
 /*******************************************************************************
 
@@ -81,13 +80,11 @@ let hostnameArg = EMPTY_STRING;
 /******************************************************************************/
 
 const fireChangedEvent = function() {
-    if (
-        window instanceof Object &&
-        window.dispatchEvent instanceof Function &&
-        window.CustomEvent instanceof Function
-    ) {
-        window.dispatchEvent(new CustomEvent('publicSuffixListChanged'));
-    }
+    if ( typeof window !== 'object' ) { return; }
+    if ( window instanceof Object === false ) { return; }
+    if ( window.dispatchEvent instanceof Function === false ) { return; }
+    if ( window.CustomEvent instanceof Function === false ) { return; }
+    window.dispatchEvent(new CustomEvent('publicSuffixListChanged'));
 };
 
 /******************************************************************************/
@@ -530,56 +527,33 @@ const fromSelfie = function(selfie, decoder) {
 // The WASM module is entirely optional, the JS implementation will be
 // used should the WASM module be unavailable for whatever reason.
 
-const enableWASM = (function() {
-    // The directory from which the current script was fetched should also
-    // contain the related WASM file. The script is fetched from a trusted
-    // location, and consequently so will be the related WASM file.
-    let workingDir;
-    {
-        const url = new URL(document.currentScript.src);
-        const match = /[^\/]+$/.exec(url.pathname);
-        if ( match !== null ) {
-            url.pathname = url.pathname.slice(0, match.index);
-        }
-        workingDir = url.href;
-    }
+const enableWASM = (( ) => {
+    let wasmPromise;
 
-    let memory;
-
-    return function() {
-        if ( getPublicSuffixPosWASM instanceof Function ) {
-            return Promise.resolve(true);
-        }
-
-        if (
-            typeof WebAssembly !== 'object' ||
-            typeof WebAssembly.instantiateStreaming !== 'function'
-        ) {
-            return Promise.resolve(false);
-        }
-
+    const getWasmInstance = async function(wasmModuleFetcher, path) {
+        if ( typeof WebAssembly !== 'object' ) { return false; }
         // The wasm code will work only if CPU is natively little-endian,
         // as we use native uint32 array in our js code.
         const uint32s = new Uint32Array(1);
         const uint8s = new Uint8Array(uint32s.buffer);
         uint32s[0] = 1;
-        if ( uint8s[0] !== 1 ) {
-            return Promise.resolve(false);
-        }
+        if ( uint8s[0] !== 1 ) { return false; }
 
-        return fetch(
-            workingDir + 'wasm/publicsuffixlist.wasm',
-            { mode: 'same-origin' }
-        ).then(response => {
+        try {
+            const module = await wasmModuleFetcher(`${path}publicsuffixlist`);
+            if (  module instanceof WebAssembly.Module === false ) {
+                return false;
+            }
             const pageCount = pslBuffer8 !== undefined
                 ? pslBuffer8.byteLength + 0xFFFF >>> 16
                 : 1;
-            memory = new WebAssembly.Memory({ initial: pageCount });
-            return WebAssembly.instantiateStreaming(
-                response,
-                { imports: { memory: memory } }
-            );
-        }).then(({ instance }) => {
+            const memory = new WebAssembly.Memory({ initial: pageCount });
+            const instance = await WebAssembly.instantiate(module, {
+                imports: { memory }
+            });
+            if (  instance instanceof WebAssembly.Instance === false ) {
+                return false;
+            }
             const curPageCount = memory.buffer.byteLength >>> 16;
             const newPageCount = pslBuffer8 !== undefined
                 ? pslBuffer8.byteLength + 0xFFFF >>> 16
@@ -597,12 +571,19 @@ const enableWASM = (function() {
             wasmMemory = memory;
             getPublicSuffixPosWASM = instance.exports.getPublicSuffixPos;
             getPublicSuffixPos = getPublicSuffixPosWASM;
-            memory = undefined;
             return true;
-        }).catch(reason => {
+        } catch(reason) {
             console.info(reason);
-            return false;
-        });
+        }
+        return false;
+    };
+
+    return async function(wasmModuleFetcher, path) {
+        if ( getPublicSuffixPosWASM instanceof Function ) { return true; }
+        if ( wasmPromise instanceof Promise === false ) {
+            wasmPromise = getWasmInstance(wasmModuleFetcher, path);
+        }
+        return wasmPromise;
     };
 })();
 
@@ -624,8 +605,6 @@ const disableWASM = function() {
 
 /******************************************************************************/
 
-context = context || window;
-
 context.publicSuffixList = {
     version: '2.0',
     parse,
@@ -644,4 +623,14 @@ if ( typeof module !== 'undefined' ) {
 /******************************************************************************/
 
 // <<<<<<<< end of anonymous namespace
-})(this);
+})(
+    (root => {
+        if ( root !== undefined ) { return root; }
+        // jshint ignore:start
+        if ( typeof self !== 'undefined' ) { return self; }
+        if ( typeof window !== 'undefined' ) { return window; }
+        if ( typeof global !== 'undefined' ) { return global; }
+        // jshint ignore:end
+        throw new Error('unable to locate global object');
+    })(this)
+);

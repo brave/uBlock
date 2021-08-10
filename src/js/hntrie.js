@@ -19,14 +19,9 @@
     Home: https://github.com/gorhill/uBlock
 */
 
-/* globals WebAssembly */
+/* globals self */
 
 'use strict';
-
-// *****************************************************************************
-// start of local namespace
-
-{
 
 /*******************************************************************************
 
@@ -189,21 +184,21 @@ const HNTrieContainer = class {
         let ineedle = buf8[255];
         let icell = buf32[iroot+0];
         if ( icell === 0 ) { return -1; }
+        let c = 0, v = 0, i0 = 0, n = 0;
         for (;;) {
             if ( ineedle === 0 ) { return -1; }
             ineedle -= 1;
-            let c = buf8[ineedle];
-            let v, i0;
+            c = buf8[ineedle];
             // find first segment with a first-character match
             for (;;) {
                 v = buf32[icell+2];
-                i0 = char0 + (v & 0x00FFFFFF);
+                i0 = char0 + (v >>> 8);
                 if ( buf8[i0] === c ) { break; }
                 icell = buf32[icell+0];
                 if ( icell === 0 ) { return -1; }
             }
             // all characters in segment must match
-            let n = v >>> 24;
+            n = v & 0x7F;
             if ( n > 1 ) {
                 n -= 1;
                 if ( n > ineedle ) { return -1; }
@@ -215,17 +210,17 @@ const HNTrieContainer = class {
                     i0 += 1;
                 } while ( i0 < i1 );
             }
+            // boundary at end of segment?
+            if ( (v & 0x80) !== 0 ) {
+                if ( ineedle === 0 || buf8[ineedle-1] === 0x2E /* '.' */ ) {
+                    return ineedle;
+                }
+            }
             // next segment
             icell = buf32[icell+1];
             if ( icell === 0 ) { break; }
-            if ( buf32[icell+2] === 0 ) {
-                if ( ineedle === 0 || buf8[ineedle-1] === 0x2E ) {
-                    return ineedle;
-                }
-                icell = buf32[icell+1];
-            }
         }
-        return ineedle === 0 || buf8[ineedle-1] === 0x2E ? ineedle : -1;
+        return -1;
     }
 
     createOne(args) {
@@ -261,39 +256,31 @@ const HNTrieContainer = class {
         let icell = this.buf32[iroot+0];
         // special case: first node in trie
         if ( icell === 0 ) {
-            this.buf32[iroot+0] = this.addCell(0, 0, this.addSegment(lhnchar));
+            this.buf32[iroot+0] = this.addLeafCell(lhnchar);
             return 1;
         }
         //
         const char0 = this.buf32[CHAR0_SLOT];
-        let inext;
+        let isegchar, lsegchar, boundaryBit, inext;
         // find a matching cell: move down
         for (;;) {
-            const vseg = this.buf32[icell+2];
-            // skip boundary cells
-            if ( vseg === 0 ) {
-                // remainder is at label boundary? if yes, no need to add
-                // the rest since the shortest match is always reported
-                if ( this.buf[lhnchar-1] === 0x2E /* '.' */ ) { return -1; }
-                icell = this.buf32[icell+1];
-                continue;
-            }
-            let isegchar0 = char0 + (vseg & 0x00FFFFFF);
+            const v = this.buf32[icell+2];
+            let isegchar0 = char0 + (v >>> 8);
             // if first character is no match, move to next descendant
             if ( this.buf[isegchar0] !== this.buf[lhnchar-1] ) {
                 inext = this.buf32[icell+0];
                 if ( inext === 0 ) {
-                    this.buf32[icell+0] = this.addCell(0, 0, this.addSegment(lhnchar));
+                    this.buf32[icell+0] = this.addLeafCell(lhnchar);
                     return 1;
                 }
                 icell = inext;
                 continue;
             }
             // 1st character was tested
-            let isegchar = 1;
+            isegchar = 1;
             lhnchar -= 1;
             // find 1st mismatch in rest of segment
-            const lsegchar = vseg >>> 24;
+            lsegchar = v & 0x7F;
             if ( lsegchar !== 1 ) {
                 for (;;) {
                     if ( isegchar === lsegchar ) { break; }
@@ -303,49 +290,50 @@ const HNTrieContainer = class {
                     lhnchar -= 1;
                 }
             }
+            boundaryBit = v & 0x80;
             // all segment characters matched
             if ( isegchar === lsegchar ) {
-                inext = this.buf32[icell+1];
                 // needle remainder: no
                 if ( lhnchar === 0 ) {
-                    // boundary cell already present
-                    if ( inext === 0 || this.buf32[inext+2] === 0 ) { return 0; }
-                    // need boundary cell
-                    this.buf32[icell+1] = this.addCell(0, inext, 0);
+                    // boundary: yes, already present
+                    if ( boundaryBit !== 0 ) { return 0; }
+                    // boundary: no, mark as boundary
+                    this.buf32[icell+2] = v | 0x80;
                 }
                 // needle remainder: yes
                 else {
+                    // remainder is at label boundary? if yes, no need to add
+                    // the rest since the shortest match is always reported
+                    if ( boundaryBit !== 0 ) {
+                        if ( this.buf[lhnchar-1] === 0x2E /* '.' */ ) { return -1; }
+                    }
+                    inext = this.buf32[icell+1];
                     if ( inext !== 0 ) {
                         icell = inext;
                         continue;
                     }
-                    // remainder is at label boundary? if yes, no need to add
-                    // the rest since the shortest match is always reported
-                    if ( this.buf[lhnchar-1] === 0x2E /* '.' */ ) { return -1; }
-                    // boundary cell + needle remainder
-                    inext = this.addCell(0, 0, 0);
-                    this.buf32[icell+1] = inext;
-                    this.buf32[inext+1] = this.addCell(0, 0, this.addSegment(lhnchar));
+                    // add needle remainder
+                    this.buf32[icell+1] = this.addLeafCell(lhnchar);
                 }
             }
             // some segment characters matched
             else {
                 // split current cell
                 isegchar0 -= char0;
-                this.buf32[icell+2] = isegchar << 24 | isegchar0;
+                this.buf32[icell+2] = isegchar0 << 8 | isegchar;
                 inext = this.addCell(
                     0,
                     this.buf32[icell+1],
-                    lsegchar - isegchar << 24 | isegchar0 + isegchar
+                    isegchar0 + isegchar << 8 | boundaryBit | lsegchar - isegchar
                 );
                 this.buf32[icell+1] = inext;
-                // needle remainder: no = need boundary cell
-                if ( lhnchar === 0 ) {
-                    this.buf32[icell+1] = this.addCell(0, inext, 0);
+                // needle remainder: yes, need new cell for remaining characters
+                if ( lhnchar !== 0 ) {
+                    this.buf32[inext+0] = this.addLeafCell(lhnchar);
                 }
-                // needle remainder: yes = need new cell for remaining characters
+                // needle remainder: no, need boundary cell
                 else {
-                    this.buf32[inext+0] = this.addCell(0, 0, this.addSegment(lhnchar));
+                    this.buf32[icell+2] |= 0x80;
                 }
             }
             return 1;
@@ -461,21 +449,29 @@ const HNTrieContainer = class {
         return n === hr || hn.charCodeAt(hl-1) === 0x2E /* '.' */;
     }
 
-    async enableWASM() {
-        if ( typeof WebAssembly !== 'object' ) { return false; }
-        if ( this.wasmMemory instanceof WebAssembly.Memory ) { return true; }
-        const module = await getWasmModule();
-        if ( module instanceof WebAssembly.Module === false ) { return false; }
-        const memory = new WebAssembly.Memory({ initial: 2 });
-        const instance = await WebAssembly.instantiate(module, {
+    async enableWASM(wasmModuleFetcher, path) {
+        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/globalThis
+        const globals = (( ) => {
+            if ( typeof self !== 'undefined' ) { return self; }
+            // jshint ignore:start
+            if ( typeof globalThis !== 'undefined' ) { return globalThis; }
+            if ( typeof global !== 'undefined' ) { return global; }
+            // jshint ignore:end
+            return {};
+        })();
+        const WASM = globals.WebAssembly || null;
+        if ( WASM === null ) { return false; }
+        if ( this.wasmMemory instanceof WASM.Memory ) { return true; }
+        const module = await getWasmModule(wasmModuleFetcher, path);
+        if ( module instanceof WASM.Module === false ) { return false; }
+        const memory = new WASM.Memory({ initial: 2 });
+        const instance = await WASM.instantiate(module, {
             imports: {
                 memory,
                 growBuf: this.growBuf.bind(this, 24, 256)
             }
         });
-        if ( instance instanceof WebAssembly.Instance === false ) {
-            return false;
-        }
+        if ( instance instanceof WASM.Instance === false ) { return false; }
         this.wasmMemory = memory;
         const curPageCount = memory.buffer.byteLength >>> 16;
         const newPageCount = roundToPageSize(this.buf.byteLength) >>> 16;
@@ -488,6 +484,7 @@ const HNTrieContainer = class {
         this.buf32 = new Uint32Array(this.buf.buffer);
         this.matches = this.matchesWASM = instance.exports.matches;
         this.add = this.addWASM = instance.exports.add;
+        return true;
     }
 
     //--------------------------------------------------------------------------
@@ -504,16 +501,33 @@ const HNTrieContainer = class {
         return icell;
     }
 
-    addSegment(lsegchar) {
+    addLeafCell(lsegchar) {
+        const r = this.buf32[TRIE1_SLOT] >>> 2;
+        let i = r;
+        while ( lsegchar > 127 ) {
+            this.buf32[i+0] = 0;
+            this.buf32[i+1] = i + 3;
+            this.buf32[i+2] = this.addSegment(lsegchar, lsegchar - 127);
+            lsegchar -= 127;
+            i += 3;
+        }
+        this.buf32[i+0] = 0;
+        this.buf32[i+1] = 0;
+        this.buf32[i+2] = this.addSegment(lsegchar, 0) | 0x80;
+        this.buf32[TRIE1_SLOT] = i + 3 << 2;
+        return r;
+    }
+
+    addSegment(lsegchar, lsegend) {
         if ( lsegchar === 0 ) { return 0; }
         let char1 = this.buf32[CHAR1_SLOT];
         const isegchar = char1 - this.buf32[CHAR0_SLOT];
         let i = lsegchar;
         do {
             this.buf[char1++] = this.buf[--i];
-        } while ( i !== 0 );
+        } while ( i !== lsegend );
         this.buf32[CHAR1_SLOT] = char1;
-        return (lsegchar << 24) | isegchar;
+        return isegchar << 8 | lsegchar - lsegend;
     }
 
     growBuf(trieGrow, charGrow) {
@@ -540,10 +554,7 @@ const HNTrieContainer = class {
 
     resizeBuf(bufLen, char0) {
         bufLen = roundToPageSize(bufLen);
-        if (
-            bufLen === this.buf.length &&
-            char0 === this.buf32[CHAR0_SLOT]
-        ) {
+        if ( bufLen === this.buf.length && char0 === this.buf32[CHAR0_SLOT] ) {
             return;
         }
         const charDataLen = this.buf32[CHAR1_SLOT] - this.buf32[CHAR0_SLOT];
@@ -723,8 +734,8 @@ HNTrieContainer.prototype.HNTrieRef = class {
                         this.forks.push(idown, this.charPtr);
                     }
                     const v = this.container.buf32[this.icell+2];
-                    let i0 = this.container.buf32[CHAR0_SLOT] + (v & 0x00FFFFFF);
-                    const i1 = i0 + (v >>> 24);
+                    let i0 = this.container.buf32[CHAR0_SLOT] + (v >>> 8);
+                    const i1 = i0 + (v & 0x7F);
                     while ( i0 < i1 ) {
                         this.charPtr -= 1;
                         this.charBuf[this.charPtr] = this.container.buf[i0];
@@ -772,34 +783,10 @@ HNTrieContainer.prototype.HNTrieRef.prototype.needle = '';
 const getWasmModule = (( ) => {
     let wasmModulePromise;
 
-    // The directory from which the current script was fetched should also
-    // contain the related WASM file. The script is fetched from a trusted
-    // location, and consequently so will be the related WASM file.
-    let workingDir;
-    {
-        const url = new URL(document.currentScript.src);
-        const match = /[^\/]+$/.exec(url.pathname);
-        if ( match !== null ) {
-            url.pathname = url.pathname.slice(0, match.index);
-        }
-        workingDir = url.href;
-    }
-
-    return async function() {
+    return async function(wasmModuleFetcher, path) {
         if ( wasmModulePromise instanceof Promise ) {
             return wasmModulePromise;
         }
-
-        if (
-            typeof WebAssembly !== 'object' ||
-            typeof WebAssembly.compileStreaming !== 'function'
-        ) {
-            return;
-        }
-
-        // Soft-dependency on vAPI so that the code here can be used outside of
-        // uBO (i.e. tests, benchmarks)
-        if ( typeof vAPI === 'object' && vAPI.canWASM !== true ) { return; }
 
         // The wasm module will work only if CPU is natively little-endian,
         // as we use native uint32 array in our js code.
@@ -808,13 +795,8 @@ const getWasmModule = (( ) => {
         uint32s[0] = 1;
         if ( uint8s[0] !== 1 ) { return; }
 
-        wasmModulePromise = fetch(
-            workingDir + 'wasm/hntrie.wasm',
-            { mode: 'same-origin' }
-        ).then(
-            WebAssembly.compileStreaming
-        ).catch(reason => {
-            log.info(reason);
+        wasmModulePromise = wasmModuleFetcher(`${path}hntrie`).catch(reason => {
+            console.info(reason);
         });
 
         return wasmModulePromise;
@@ -823,9 +805,4 @@ const getWasmModule = (( ) => {
 
 /******************************************************************************/
 
-µBlock.HNTrieContainer = HNTrieContainer;
-
-// end of local namespace
-// *****************************************************************************
-
-}
+export default HNTrieContainer;

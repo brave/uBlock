@@ -26,13 +26,10 @@
 
 /******************************************************************************/
 
-{
-// >>>>> start of local scope
+import { ubolog } from './console.js';
 
 /******************************************************************************/
-/******************************************************************************/
 
-const browser = self.browser;
 const manifest = browser.runtime.getManifest();
 
 vAPI.cantWebsocket =
@@ -42,7 +39,7 @@ vAPI.cantWebsocket =
 vAPI.canWASM = vAPI.webextFlavor.soup.has('chromium') === false;
 if ( vAPI.canWASM === false ) {
     const csp = manifest.content_security_policy;
-    vAPI.canWASM = csp !== undefined && csp.indexOf("'wasm-eval'") !== -1;
+    vAPI.canWASM = csp !== undefined && csp.indexOf("'unsafe-eval'") !== -1;
 }
 
 vAPI.supportsUserStylesheets = vAPI.webextFlavor.soup.has('user_stylesheet');
@@ -1143,7 +1140,7 @@ vAPI.messaging = {
         }
 
         // Auxiliary process to main process: no handler
-        log.info(
+        ubolog(
             `vAPI.messaging.onPortMessage > unhandled request: ${JSON.stringify(request.msg)}`,
             request
         );
@@ -1717,11 +1714,5 @@ vAPI.cloud = (( ) => {
 
     return { push, pull, used, getOptions, setOptions };
 })();
-
-/******************************************************************************/
-/******************************************************************************/
-
-// <<<<< end of local scope
-}
 
 /******************************************************************************/

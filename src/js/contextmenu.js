@@ -23,7 +23,11 @@
 
 /******************************************************************************/
 
-µBlock.contextMenu = (( ) => {
+import µb from './background.js';
+
+/******************************************************************************/
+
+const contextMenu = (( ) => {
 
 /******************************************************************************/
 
@@ -57,8 +61,8 @@ const onBlockElement = function(details, tab) {
         }
     }
 
-    µBlock.epickerArgs.mouse = true;
-    µBlock.elementPickerExec(tab.id, 0, `${tagName}\t${src}`);
+    µb.epickerArgs.mouse = true;
+    µb.elementPickerExec(tab.id, 0, `${tagName}\t${src}`);
 };
 
 /******************************************************************************/
@@ -66,8 +70,8 @@ const onBlockElement = function(details, tab) {
 const onBlockElementInFrame = function(details, tab) {
     if ( tab === undefined ) { return; }
     if ( /^https?:\/\//.test(details.frameUrl) === false ) { return; }
-    µBlock.epickerArgs.mouse = false;
-    µBlock.elementPickerExec(tab.id, details.frameId);
+    µb.epickerArgs.mouse = false;
+    µb.elementPickerExec(tab.id, details.frameId);
 };
 
 /******************************************************************************/
@@ -83,7 +87,7 @@ const onSubscribeToList = function(details) {
     const url = parsedURL.searchParams.get('location');
     if ( url === null ) { return; }
     const title = parsedURL.searchParams.get('title') || '?';
-    const hash = µBlock.selectedFilterLists.indexOf(parsedURL) !== -1
+    const hash = µb.selectedFilterLists.indexOf(parsedURL) !== -1
         ? '#subscribed'
         : '';
     vAPI.tabs.open({
@@ -100,7 +104,7 @@ const onSubscribeToList = function(details) {
 
 const onTemporarilyAllowLargeMediaElements = function(details, tab) {
     if ( tab === undefined ) { return; }
-    let pageStore = µBlock.pageStoreFromTabId(tab.id);
+    const pageStore = µb.pageStoreFromTabId(tab.id);
     if ( pageStore === null ) { return; }
     pageStore.temporarilyAllowLargeMediaElements(true);
 };
@@ -162,8 +166,8 @@ let currentBits = 0;
 
 const update = function(tabId = undefined) {
     let newBits = 0;
-    if ( µBlock.userSettings.contextMenuEnabled && tabId !== undefined ) {
-        const pageStore = µBlock.pageStoreFromTabId(tabId);
+    if ( µb.userSettings.contextMenuEnabled && tabId !== undefined ) {
+        const pageStore = µb.pageStoreFromTabId(tabId);
         if ( pageStore && pageStore.getNetFilteringSwitch() ) {
             if ( pageStore.shouldApplySpecificCosmeticFilters(0) ) {
                 newBits |= 0b0001;
@@ -202,7 +206,7 @@ const update = function(tabId = undefined) {
 //   looked up after closing a window.
 
 vAPI.contextMenu.onMustUpdate = async function(tabId = undefined) {
-    if ( µBlock.userSettings.contextMenuEnabled === false ) {
+    if ( µb.userSettings.contextMenuEnabled === false ) {
         return update();
     }
     if ( tabId !== undefined ) {
@@ -218,3 +222,9 @@ return { update: vAPI.contextMenu.onMustUpdate };
 /******************************************************************************/
 
 })();
+
+/******************************************************************************/
+
+export default contextMenu;
+
+/******************************************************************************/

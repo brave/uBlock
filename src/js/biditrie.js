@@ -19,14 +19,9 @@
     Home: https://github.com/gorhill/uBlock
 */
 
-/* globals WebAssembly */
+/* globals WebAssembly vAPI */
 
 'use strict';
-
-// *****************************************************************************
-// start of local namespace
-
-{
 
 /*******************************************************************************
 
@@ -130,7 +125,7 @@ const toSegmentInfo = (aL, l, r) => ((r - l) << 24) | (aL + l);
 const roundToPageSize = v => (v + PAGE_SIZE-1) & ~(PAGE_SIZE-1);
 
 
-µBlock.BidiTrieContainer = class {
+const BidiTrieContainer = class {
 
     constructor(extraHandler) {
         const len = PAGE_SIZE * 4;
@@ -228,7 +223,7 @@ const roundToPageSize = v => (v + PAGE_SIZE-1) & ~(PAGE_SIZE-1);
             }
             if ( al === aR ) { return 0; }
         }
-        return 0;
+        return 0; // eslint-disable-line no-unreachable
     }
 
     matchesLeft(icell, ar, r) {
@@ -272,7 +267,7 @@ const roundToPageSize = v => (v + PAGE_SIZE-1) & ~(PAGE_SIZE-1);
                 if ( icell === 0 ) { return 0; }
             }
         }
-        return 0;
+        return 0; // eslint-disable-line no-unreachable
     }
 
     matchesExtra(l, r, ix) {
@@ -518,6 +513,7 @@ const roundToPageSize = v => (v + PAGE_SIZE-1) & ~(PAGE_SIZE-1);
                     }
                     // TODO: we should never reach here because there will
                     // always be a boundary cell.
+                    // eslint-disable-next-line no-debugger
                     debugger; // jshint ignore:line
                     // boundary cell + needle remainder
                     inext = this.addCell(0, 0, 0);
@@ -697,10 +693,10 @@ const roundToPageSize = v => (v + PAGE_SIZE-1) & ~(PAGE_SIZE-1);
         return -1;
     }
 
-    async enableWASM() {
+    async enableWASM(wasmModuleFetcher, path) {
         if ( typeof WebAssembly !== 'object' ) { return false; }
         if ( this.wasmMemory instanceof WebAssembly.Memory ) { return true; }
-        const module = await getWasmModule();
+        const module = await getWasmModule(wasmModuleFetcher, path);
         if ( module instanceof WebAssembly.Module === false ) { return false; }
         const memory = new WebAssembly.Memory({
             initial: roundToPageSize(this.buf8.length) >>> 16
@@ -828,7 +824,7 @@ const roundToPageSize = v => (v + PAGE_SIZE-1) & ~(PAGE_SIZE-1);
 
 */
 
-µBlock.BidiTrieContainer.prototype.STrieRef = class {
+BidiTrieContainer.prototype.STrieRef = class {
     constructor(container, iroot, size) {
         this.container = container;
         this.iroot = iroot;
@@ -930,30 +926,12 @@ const roundToPageSize = v => (v + PAGE_SIZE-1) & ~(PAGE_SIZE-1);
 const getWasmModule = (( ) => {
     let wasmModulePromise;
 
-    // The directory from which the current script was fetched should also
-    // contain the related WASM file. The script is fetched from a trusted
-    // location, and consequently so will be the related WASM file.
-    let workingDir;
-    {
-        const url = new URL(document.currentScript.src);
-        const match = /[^\/]+$/.exec(url.pathname);
-        if ( match !== null ) {
-            url.pathname = url.pathname.slice(0, match.index);
-        }
-        workingDir = url.href;
-    }
-
-    return async function() {
+    return async function(wasmModuleFetcher, path) {
         if ( wasmModulePromise instanceof Promise ) {
             return wasmModulePromise;
         }
 
-        if (
-            typeof WebAssembly !== 'object' ||
-            typeof WebAssembly.compileStreaming !== 'function'
-        ) {
-            return;
-        }
+        if ( typeof WebAssembly !== 'object' ) { return; }
 
         // Soft-dependency on vAPI so that the code here can be used outside of
         // uBO (i.e. tests, benchmarks)
@@ -966,20 +944,14 @@ const getWasmModule = (( ) => {
         uint32s[0] = 1;
         if ( uint8s[0] !== 1 ) { return; }
 
-        wasmModulePromise = fetch(
-            workingDir + 'wasm/biditrie.wasm',
-            { mode: 'same-origin' }
-        ).then(
-            WebAssembly.compileStreaming
-        ).catch(reason => {
-            log.info(reason);
+        wasmModulePromise = wasmModuleFetcher(`${path}biditrie`).catch(reason => {
+            console.info(reason);
         });
 
         return wasmModulePromise;
     };
 })();
 
-// end of local namespace
-// *****************************************************************************
+/******************************************************************************/
 
-}
+export { BidiTrieContainer };
