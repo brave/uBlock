@@ -829,6 +829,7 @@ FilterContainer.prototype.retrieveGenericSelectors = function(request) {
     if ( this.acceptedCount === 0 ) { return; }
     if ( !request.ids && !request.classes ) { return; }
 
+    const { safeOnly = false } = request;
     //console.time('cosmeticFilteringEngine.retrieveGenericSelectors');
 
     const simpleSelectors = this.$simpleSet;
@@ -841,25 +842,26 @@ FilterContainer.prototype.retrieveGenericSelectors = function(request) {
         const entry = this.lowlyGeneric[type];
         const selectors = request[entry.canonical];
         if ( Array.isArray(selectors) === false ) { continue; }
-        for ( let selector of selectors ) {
-            if ( entry.simple.has(selector) === false ) { continue; }
-            const bucket = entry.complex.get(selector);
-            if ( bucket !== undefined ) {
-                if ( Array.isArray(bucket) ) {
-                    for ( const selector of bucket ) {
-                        if ( previousHits.has(selector) === false ) {
-                            complexSelectors.add(selector);
-                        }
-                    }
-                } else if ( previousHits.has(bucket) === false ) {
-                    complexSelectors.add(bucket);
-                }
-            } else {
-                selector = entry.prefix + selector;
-                if ( previousHits.has(selector) === false ) {
-                    simpleSelectors.add(selector);
-                }
+        for ( const identifier of selectors ) {
+            if ( entry.simple.has(identifier) === false ) { continue; }
+            const bucket = entry.complex.get(identifier);
+            if ( typeof bucket === 'string' ) {
+                if ( previousHits.has(bucket) ) { continue; }
+                complexSelectors.add(bucket);
+                continue;
             }
+            const simpleSelector = entry.prefix + identifier;
+            if ( Array.isArray(bucket) ) {
+                for ( const complexSelector of bucket ) {
+                    if ( previousHits.has(complexSelector) ) { continue; }
+                    if ( safeOnly && complexSelector === simpleSelector ) { continue; }
+                    complexSelectors.add(complexSelector);
+                }
+                continue;
+            }
+            if ( previousHits.has(simpleSelector) ) { continue; }
+            if ( safeOnly ) { continue; }
+            simpleSelectors.add(simpleSelector);
         }
     }
 

@@ -1,12 +1,15 @@
 {
   "name": "@gorhill/ubo-core",
-  "version": "0.1.8",
+  "version": "0.1.10",
   "description": "To create a working instance of uBlock Origin's static network filtering engine",
   "type": "module",
   "main": "index.js",
   "scripts": {
     "build": "node build.js",
-    "test": "node test.js"
+    "lint": "eslint js/ *.js tests/*.js",
+    "test": "c8 --include=index.js --include=js/**/*.js node test.js --mocha",
+    "test-full-battery": "c8 --include=index.js --include=js/**/*.js node test.js --mocha --full-battery",
+    "check-leaks": "mocha --check-leaks tests/leaks.js"
   },
   "repository": {
     "type": "git",
@@ -27,5 +30,12 @@
   "engines": {
     "node": ">=14.0.0",
     "npm": ">=6.14.4"
+  },
+  "devDependencies": {
+    "c8": "^7.8.0",
+    "eslint": "^7.32.0",
+    "esm-world": "0.1.1",
+    "mocha": "^9.0.3",
+    "scaling-palm-tree": "github:mjethani/scaling-palm-tree#15cf1ab37e038771e1ff8005edc46d95f176739f"
   }
 }

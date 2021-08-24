@@ -25,16 +25,13 @@
 
 /******************************************************************************/
 
-import '../lib/publicsuffixlist/publicsuffixlist.js';
+import publicSuffixList from '../lib/publicsuffixlist/publicsuffixlist.js';
 
-import globals from './globals.js';
 import { hostnameFromURI } from './uri-utils.js';
 
 import './codemirror/ubo-dynamic-filtering.js';
 
 /******************************************************************************/
-
-const publicSuffixList = globals.publicSuffixList;
 
 const hostnameToDomainMap = new Map();
 
@@ -382,8 +379,8 @@ const onFilterChanged = (( ) => {
     };
 
     return function() {
-        if ( timer !== undefined ) { globals.cancelIdleCallback(timer); }
-        timer = globals.requestIdleCallback(process, { timeout: 773 });
+        if ( timer !== undefined ) { self.cancelIdleCallback(timer); }
+        timer = self.requestIdleCallback(process, { timeout: 773 });
     };
 })();
 
@@ -555,8 +552,8 @@ const onTextChanged = (( ) => {
     };
 
     return function(now) {
-        if ( timer !== undefined ) { globals.cancelIdleCallback(timer); }
-        timer = now ? process() : globals.requestIdleCallback(process, { timeout: 57 });
+        if ( timer !== undefined ) { self.cancelIdleCallback(timer); }
+        timer = now ? process() : self.requestIdleCallback(process, { timeout: 57 });
     };
 })();
 
@@ -625,11 +622,11 @@ const editSaveHandler = function() {
 
 /******************************************************************************/
 
-globals.cloud.onPush = function() {
+self.cloud.onPush = function() {
     return thePanes.orig.original.join('\n');
 };
 
-globals.cloud.onPull = function(data, append) {
+self.cloud.onPull = function(data, append) {
     if ( typeof data !== 'string' ) { return; }
     applyDiff(
         false,
@@ -640,7 +637,7 @@ globals.cloud.onPull = function(data, append) {
 
 /******************************************************************************/
 
-globals.hasUnsavedData = function() {
+self.hasUnsavedData = function() {
     return mergeView.editor().isClean(cleanEditToken) === false;
 };
 

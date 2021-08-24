@@ -25,9 +25,7 @@
 
 /******************************************************************************/
 
-import '../lib/regexanalyzer/regex.js';
-
-import globals from './globals.js';
+import Regex from '../lib/regexanalyzer/regex.js';
 
 /*******************************************************************************
 
@@ -121,7 +119,7 @@ const Parser = class {
         // https://github.com/uBlockOrigin/uBlock-issues/issues/1146
         //   From https://codemirror.net/doc/manual.html#option_specialChars
         this.reInvalidCharacters = /[\x00-\x1F\x7F-\x9F\xAD\u061C\u200B-\u200F\u2028\u2029\uFEFF\uFFF9-\uFFFC]/;
-        this.punycoder = new URL(globals.location);
+        this.punycoder = new URL('https://ublock0.invalid/');
         // TODO: mind maxTokenLength
         this.reGoodRegexToken
             = /[^\x01%0-9A-Za-z][%0-9A-Za-z]{7,}|[^\x01%0-9A-Za-z][%0-9A-Za-z]{1,6}[^\x01%0-9A-Za-z]/;
@@ -1588,6 +1586,7 @@ Parser.prototype.SelectorCompiler = class {
                 raw.push(`:has(${this.decompileProcedural(task[1])})`);
                 break;
             case ':has-text':
+            case ':matches-path':
                 if ( Array.isArray(task[1]) ) {
                     value = `/${task[1][0]}/${task[1][1]}`;
                 } else {
@@ -1596,7 +1595,7 @@ Parser.prototype.SelectorCompiler = class {
                         value = `/${task[1]}/`;
                     }
                 }
-                raw.push(`:has-text(${value})`);
+                raw.push(`${task[0]}(${value})`);
                 break;
             case ':matches-css':
             case ':matches-css-after':
@@ -1793,6 +1792,8 @@ Parser.prototype.SelectorCompiler = class {
             return this.compileCSSDeclaration(args);
         case ':matches-css-before':
             return this.compileCSSDeclaration(args);
+        case ':matches-path':
+            return this.compileText(args);
         case ':min-text-length':
             return this.compileInteger(args);
         case ':not':
@@ -1826,6 +1827,7 @@ Parser.prototype.proceduralOperatorTokens = new Map([
     [ 'matches-css', 0b11 ],
     [ 'matches-css-after', 0b11 ],
     [ 'matches-css-before', 0b11 ],
+    [ 'matches-path', 0b01 ],
     [ 'min-text-length', 0b01 ],
     [ 'not', 0b01 ],
     [ 'nth-ancestor', 0b00 ],
@@ -2894,7 +2896,6 @@ Parser.regexUtils = Parser.prototype.regexUtils = (( ) => {
         return '\x01';
     };
 
-    const Regex = globals.Regex;
     if (
         Regex instanceof Object === false ||
         Regex.Analyzer instanceof Object === false

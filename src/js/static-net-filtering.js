@@ -25,7 +25,7 @@
 
 /******************************************************************************/
 
-import globals from './globals.js';
+import { queueTask, dropTask } from './tasks.js';
 import HNTrieContainer from './hntrie.js';
 import { sparseBase64 } from './base64-custom.js';
 import { BidiTrieContainer } from './biditrie.js';
@@ -596,6 +596,42 @@ const FilterTrue = class {
 };
 
 registerFilterClass(FilterTrue);
+
+/******************************************************************************/
+
+// The only purpose of this class is so that the `important` filter
+// option is added to the logged raw filter.
+
+const FilterImportant = class {
+    match() {
+        return true;
+    }
+
+    logData(details) {
+        details.options.unshift('important');
+    }
+
+    toSelfie() {
+        return FilterImportant.compile();
+    }
+
+    static compile() {
+        return [ FilterImportant.fid ];
+    }
+
+    static fromCompiled() {
+        return new FilterImportant();
+    }
+
+    static fromSelfie() {
+        return new FilterImportant();
+    }
+
+    static keyFromArgs() {
+    }
+};
+
+registerFilterClass(FilterImportant);
 
 /******************************************************************************/
 
@@ -3431,10 +3467,27 @@ class FilterCompiler {
             this.action = (this.action & ~ActionBitsMask) | ModifyAction;
         }
 
-        const fdata = units.length === 1
-            ? units[0]
-            : FilterCompositeAll.compile(units);
-        this.compileToAtomicFilter(fdata, writer);
+        this.compileToAtomicFilter(
+            units.length === 1
+                ? units[0]
+                : FilterCompositeAll.compile(units),
+            writer
+        );
+
+        // Add block-important filters to the block realm, so as to avoid
+        // to unconditionally match against the block-important realm for
+        // every network request. Block-important filters are quite rare so
+        // the block-important realm should be checked when and only when
+        // there is a matched exception filter, which important filters are
+        // meant to override.
+        if ( (this.action & ActionBitsMask) === BlockImportant ) {
+            this.action &= ~Important;
+            units.push(FilterImportant.compile());
+            this.compileToAtomicFilter(
+                FilterCompositeAll.compile(units),
+                writer
+            );
+        }
     }
 
     compileToAtomicFilter(fdata, writer) {
@@ -3487,8 +3540,11 @@ FilterCompiler.prototype.FILTER_UNSUPPORTED = 2;
 /******************************************************************************/
 
 const FilterContainer = function() {
+    this.compilerVersion = '1';
+    this.selfieVersion = '1';
+
     this.MAX_TOKEN_LENGTH = MAX_TOKEN_LENGTH;
-    this.optimizeTimerId = undefined;
+    this.optimizeTaskId = undefined;
     // As long as CategoryCount is reasonably low, we will use an array to
     // store buckets using category bits as index. If ever CategoryCount
     // becomes too large, we can just go back to using a Map.
@@ -3534,9 +3590,9 @@ FilterContainer.prototype.reset = function() {
     filterSequenceWritePtr = FILTER_SEQUENCES_MIN;
 
     // Cancel potentially pending optimization run.
-    if ( this.optimizeTimerId !== undefined ) {
-        globals.cancelIdleCallback(this.optimizeTimerId);
-        this.optimizeTimerId = undefined;
+    if ( this.optimizeTaskId !== undefined ) {
+        dropTask(this.optimizeTaskId);
+        this.optimizeTaskId = undefined;
     }
 
     // Runtime registers
@@ -3634,20 +3690,20 @@ FilterContainer.prototype.freeze = function() {
     // Optimizing is not critical for the static network filtering engine to
     // work properly, so defer this until later to allow for reduced delay to
     // readiness when no valid selfie is available.
-    if ( this.optimizeTimerId === undefined ) {
-        this.optimizeTimerId = globals.requestIdleCallback(( ) => {
-            this.optimizeTimerId = undefined;
+    if ( this.optimizeTaskId === undefined ) {
+        this.optimizeTaskId = queueTask(( ) => {
+            this.optimizeTaskId = undefined;
             this.optimize();
-        }, { timeout: 5000 });
+        });
     }
 };
 
 /******************************************************************************/
 
 FilterContainer.prototype.optimize = function() {
-    if ( this.optimizeTimerId !== undefined ) {
-        globals.cancelIdleCallback(this.optimizeTimerId);
-        this.optimizeTimerId = undefined;
+    if ( this.optimizeTaskId !== undefined ) {
+        dropTask(this.optimizeTaskId);
+        this.optimizeTaskId = undefined;
     }
 
     for ( let bits = 0, n = this.categories.length; bits < n; bits++ ) {
@@ -3718,6 +3774,7 @@ FilterContainer.prototype.toSelfie = function(storage, path) {
         storage.put(
             `${path}/main`,
             JSON.stringify({
+                version: this.selfieVersion,
                 processedFilterCount: this.processedFilterCount,
                 acceptedCount: this.acceptedCount,
                 rejectedCount: this.rejectedCount,
@@ -3781,6 +3838,7 @@ FilterContainer.prototype.fromSelfie = function(storage, path) {
             } catch (ex) {
             }
             if ( selfie instanceof Object === false ) { return false; }
+            if ( selfie.version !== this.selfieVersion ) { return false; }
             this.processedFilterCount = selfie.processedFilterCount;
             this.acceptedCount = selfie.acceptedCount;
             this.rejectedCount = selfie.rejectedCount;
@@ -4202,15 +4260,14 @@ FilterContainer.prototype.matchRequest = function(fctxt, modifiers = 0) {
     $docEntity.reset();
     $requestHostname = fctxt.getHostname();
 
-    // Important block realm.
-    if ( this.realmMatchString(BlockImportant, typeValue, partyBits) ) {
-        return 1;
-    }
-
-    // Evaluate block realm before allow realm.
+    // Evaluate block realm before allow realm, and allow realm before
+    // block-important realm, i.e. by order of likelihood of a match.
     const r = this.realmMatchString(BlockAction, typeValue, partyBits);
     if ( r || (modifiers & 0b0010) !== 0 ) {
         if ( this.realmMatchString(AllowAction, typeValue, partyBits) ) {
+            if ( this.realmMatchString(BlockImportant, typeValue, partyBits) ) {
+                return 1;
+            }
             return 2;
         }
         if ( r ) { return 1; }
@@ -4310,7 +4367,7 @@ FilterContainer.prototype.filterQuery = function(fctxt) {
     let hpos = url.indexOf('#', qpos + 1);
     if ( hpos === -1 ) { hpos = url.length; }
     const params = new Map(
-        new globals.URLSearchParams(url.slice(qpos + 1, hpos))
+        new URLSearchParams(url.slice(qpos + 1, hpos))
     );
     const inParamCount = params.size;
     const out = [];

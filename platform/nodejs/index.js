@@ -19,6 +19,8 @@
     Home: https://github.com/gorhill/uBlock
 */
 
+/* globals WebAssembly */
+
 'use strict';
 
 /******************************************************************************/
@@ -31,10 +33,9 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-import './lib/punycode.js';
-import './lib/publicsuffixlist/publicsuffixlist.js';
+import punycode from './lib/punycode.js';
+import publicSuffixList from './lib/publicsuffixlist/publicsuffixlist.js';
 
-import globals from './js/globals.js';
 import snfe from './js/static-net-filtering.js';
 import { FilteringContext } from './js/filtering-context.js';
 import { LineIterator } from './js/text-utils.js';
@@ -57,11 +58,11 @@ async function enableWASM() {
     const wasmModuleFetcher = function(path) {
         const require = createRequire(import.meta.url); // jshint ignore:line
         const wasm = new Uint8Array(require(`${path}.wasm.json`));
-        return globals.WebAssembly.compile(wasm);
+        return WebAssembly.compile(wasm);
     };
     try {
         const results = await Promise.all([
-            globals.publicSuffixList.enableWASM(wasmModuleFetcher, './lib/publicsuffixlist/wasm/'),
+            publicSuffixList.enableWASM(wasmModuleFetcher, './lib/publicsuffixlist/wasm/'),
             snfe.enableWASM(wasmModuleFetcher, './js/wasm/'),
         ]);
         return results.every(a => a === true);
@@ -75,8 +76,8 @@ async function enableWASM() {
 
 function pslInit(raw) {
     if ( typeof raw === 'string' && raw.trim() !== '' ) {
-        globals.publicSuffixList.parse(raw, globals.punycode.toASCII);
-        return globals.publicSuffixList;
+        publicSuffixList.parse(raw, punycode.toASCII);
+        return publicSuffixList;
     }
 
     // Use serialized version if available
@@ -91,18 +92,20 @@ function pslInit(raw) {
         }
     }
     if ( serialized !== null ) {
-        globals.publicSuffixList.fromSelfie(serialized);
-        return globals.publicSuffixList;
+        publicSuffixList.fromSelfie(serialized);
+        return publicSuffixList;
     }
 
-    const require = createRequire(import.meta.url); // jshint ignore:line
-    raw = require('./data/effective_tld_names.json');
+    raw = readFileSync(
+        resolve(__dirname, './assets/thirdparties/publicsuffix.org/list/effective_tld_names.dat'),
+        'utf8'
+    );
     if ( typeof raw !== 'string' || raw.trim() === '' ) {
         console.error('Unable to populate public suffix list');
         return;
     }
-    globals.publicSuffixList.parse(raw, globals.punycode.toASCII);
-    return globals.publicSuffixList;
+    publicSuffixList.parse(raw, punycode.toASCII);
+    return publicSuffixList;
 }
 
 /******************************************************************************/
@@ -144,11 +147,15 @@ function compileList({ name, raw }, compiler, writer, options = {}) {
 /******************************************************************************/
 
 async function useLists(lists, options = {}) {
+    if ( useLists.promise !== null ) {
+        throw new Error('Pending useLists() operation');
+    }
+
     // Remove all filters
     snfe.reset();
 
     if ( Array.isArray(lists) === false || lists.length === 0 ) {
-        return snfe;
+        return;
     }
 
     let compiler = null;
@@ -172,14 +179,16 @@ async function useLists(lists, options = {}) {
         promises.push(promise.then(list => consumeList(list)));
     }
 
-    await Promise.all(promises);
+    useLists.promise = Promise.all(promises);
+    await useLists.promise;
+    useLists.promise = null;
 
     // Commit changes
     snfe.freeze();
     snfe.optimize();
-
-    return snfe;
 }
+
+useLists.promise = null;
 
 /******************************************************************************/
 
@@ -203,22 +212,30 @@ class MockStorage {
 }
 
 const fctx = new FilteringContext();
-let snfeInstance = null;
+let snfeProxyInstance = null;
 
 class StaticNetFilteringEngine {
     constructor() {
-        if ( snfeInstance !== null ) {
+        if ( snfeProxyInstance !== null ) {
             throw new Error('Only a single instance is supported.');
         }
-        snfeInstance = this;
+        snfeProxyInstance = this;
     }
 
-    async useLists(lists) {
-        await useLists(lists);
+    useLists(lists) {
+        return useLists(lists);
     }
 
     matchRequest(details) {
         return snfe.matchRequest(fctx.fromDetails(details));
+    }
+
+    matchAndFetchModifiers(details, modifier) {
+        return snfe.matchAndFetchModifiers(fctx.fromDetails(details), modifier);
+    }
+
+    hasQuery(details) {
+        return snfe.hasQuery(details);
     }
 
     toLogData() {
@@ -252,6 +269,12 @@ class StaticNetFilteringEngine {
         }
 
         return instance;
+    }
+
+    static async release() {
+        if ( snfeProxyInstance === null ) { return; }
+        snfeProxyInstance = null;
+        await useLists([]);
     }
 }
 

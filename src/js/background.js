@@ -23,7 +23,6 @@
 
 /******************************************************************************/
 
-import globals from './globals.js';
 import logger from './logger.js';
 import { FilteringContext } from './filtering-context.js';
 
@@ -154,7 +153,7 @@ const µBlock = {  // jshint ignore:line
 
     // Read-only
     systemSettings: {
-        compiledMagic: 37,  // Increase when compiled format changes
+        compiledMagic: 38,  // Increase when compiled format changes
         selfieMagic: 38,    // Increase when selfie format changes
     },
 
@@ -337,7 +336,7 @@ const µBlock = {  // jshint ignore:line
 
 µBlock.filteringContext = new µBlock.FilteringContext();
 
-globals.µBlock = µBlock;
+self.µBlock = µBlock;
 
 /******************************************************************************/
 
