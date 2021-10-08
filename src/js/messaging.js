@@ -36,10 +36,10 @@ import staticExtFilteringEngine from './static-ext-filtering.js';
 import staticFilteringReverseLookup from './reverselookup.js';
 import staticNetFilteringEngine from './static-net-filtering.js';
 import µb from './background.js';
+import webRequest from './traffic.js';
 import { denseBase64 } from './base64-custom.js';
 import { redirectEngine } from './redirect-engine.js';
 import { StaticFilteringParser } from './static-filtering-parser.js';
-import { webRequest } from './traffic.js';
 
 import {
     permanentFirewall,
@@ -129,7 +129,11 @@ const onMessage = function(request, sender, callback) {
         return;
 
     case 'scriptlet':
-        µb.scriptlets.inject(request.tabId, request.scriptlet, callback);
+        vAPI.tabs.executeScript(request.tabId, {
+            file: `/js/scriptlets/${request.scriptlet}.js`
+        }).then(result => {
+            callback(result);
+        });
         return;
 
     case 'sfneBenchmark':
@@ -225,11 +229,12 @@ const onMessage = function(request, sender, callback) {
 
     case 'userSettings':
         response = µb.changeUserSettings(request.name, request.value);
-        if (
-            vAPI.net.canUncloakCnames !== true &&
-            response instanceof Object
-        ) {
-            response.cnameUncloakEnabled = undefined;
+        if ( response instanceof Object ) {
+            if ( vAPI.net.canUncloakCnames !== true ) {
+                response.cnameUncloakEnabled = undefined;
+            }
+            response.canLeakLocalIPAddresses =
+                vAPI.browserSettings.canLeakLocalIPAddresses === true;
         }
         break;
 

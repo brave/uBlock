@@ -72,6 +72,7 @@ const hiddenSettingsDefault = {
     filterOnHeaders: false,
     loggerPopupType: 'popup',
     manualUpdateAssetFetchPeriod: 500,
+    modifyWebextFlavor: 'unset',
     popupFontSize: 'unset',
     popupPanelDisabledSections: 0,
     popupPanelLockedSections: 0,
@@ -153,8 +154,8 @@ const µBlock = {  // jshint ignore:line
 
     // Read-only
     systemSettings: {
-        compiledMagic: 38,  // Increase when compiled format changes
-        selfieMagic: 38,    // Increase when selfie format changes
+        compiledMagic: 39,  // Increase when compiled format changes
+        selfieMagic: 39,    // Increase when selfie format changes
     },
 
     // https://github.com/uBlockOrigin/uBlock-issues/issues/759#issuecomment-546654501

@@ -30,7 +30,7 @@ import { createWorld } from 'esm-world';
 import './_common.js';
 
 describe('SNFE', () => {
-    for ( let wasm of [ false, true ] ) {
+    for ( let wasm of [ false/*, true*/ ] ) {
         context(`${wasm ? 'Wasm on' : 'Wasm off'}`, () => {
             let module = null;
             let engine = null;
@@ -230,6 +230,86 @@ describe('SNFE', () => {
 
                     const serialized = await engine.serialize();
                     await engine.deserialize(serialized);
+                });
+            });
+
+
+            describe('Filter matching', () => {
+                beforeEach(async () => {
+                    engine = await module.StaticNetFilteringEngine.create();
+                });
+
+                it('should match pure-hostname block filter', async () => {
+                    await engine.useLists([
+                        { name: 'test', raw: '||example.net^' },
+                    ]);
+                    const r = engine.matchRequest({
+                        originURL: 'https://www.example.com/',
+                        type: 'image',
+                        url: 'https://www.example.net/',
+                    });
+                    assert.strictEqual(r, 1);
+                });
+
+                it('should match pure-hostname exception filter', async () => {
+                    await engine.useLists([
+                        { name: 'test', raw: '||example.net^\n@@||example.net^' },
+                    ]);
+                    const r = engine.matchRequest({
+                        originURL: 'https://www.example.com/',
+                        type: 'image',
+                        url: 'https://www.example.net/',
+                    });
+                    assert.strictEqual(r, 2);
+                });
+
+                it('should match pure-hostname block-important filter', async () => {
+                    await engine.useLists([
+                        { name: 'test', raw: '@@||example.net^\n||example.net^$important' },
+                    ]);
+                    const r = engine.matchRequest({
+                        originURL: 'https://www.example.com/',
+                        type: 'image',
+                        url: 'https://www.example.net/',
+                    });
+                    assert.strictEqual(r, 1);
+                    assert(engine.isBlockImportant());
+                });
+
+                it('should detect the filter is block-important', async () => {
+                    await engine.useLists([
+                        { name: 'test', raw: '||example.net^$important' },
+                    ]);
+                    engine.matchRequest({
+                        originURL: 'https://www.example.com/',
+                        type: 'image',
+                        url: 'https://www.example.net/',
+                    });
+                    assert(engine.isBlockImportant());
+                });
+
+                it('should block all except stylesheets #1', async () => {
+                    await engine.useLists([
+                        { name: 'test', raw: '||example.com^$~stylesheet,all' },
+                    ]);
+                    const r = engine.matchRequest({
+                        originURL: 'https://www.example.com/',
+                        type: 'stylesheet',
+                        url: 'https://www.example.com/',
+                    });
+                    assert.strictEqual(r, 0);
+                });
+
+                it('should block all except stylesheets #2', async () => {
+                    await engine.useLists([
+                        { name: 'test', raw: '||example.com^$all,~stylesheet' },
+                    ]);
+                    const r = engine.matchRequest({
+                        originURL: 'https://www.example.com/',
+                        type: 'stylesheet',
+                        url: 'https://www.example.com/',
+                    });
+                    assert.strictEqual(r, 0);
                 });
             });
         });

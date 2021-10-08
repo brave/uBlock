@@ -135,8 +135,6 @@ const allTypesBits =
     1 << (typeNameToTypeValue['main_frame'] >>> TypeBitsOffset) - 1 |
     1 << (typeNameToTypeValue['inline-font'] >>> TypeBitsOffset) - 1 |
     1 << (typeNameToTypeValue['inline-script'] >>> TypeBitsOffset) - 1;
-const documentTypeBit = 
-    1 << (typeNameToTypeValue['main_frame'] >>> TypeBitsOffset) - 1;
 const unsupportedTypeBit =
     1 << (typeNameToTypeValue['unsupported'] >>> TypeBitsOffset) - 1;
 
@@ -161,6 +159,8 @@ const typeValueToTypeName = [
     'inline-font',
     'inline-script',
     'cname',
+    '',
+    '',
     'webrtc',
     'unsupported',
 ];
@@ -186,6 +186,7 @@ const     EMPTY_TOKEN_HASH = 0xF0000000;
 // See the following as short-lived registers, used during evaluation. They are
 // valid until the next evaluation.
 
+let $requestTypeValue = 0;
 let $requestURL = '';
 let $requestURLRaw = '';
 let $requestHostname = '';
@@ -194,6 +195,7 @@ let $docDomain = '';
 let $tokenBeg = 0;
 let $patternMatchLeft = 0;
 let $patternMatchRight = 0;
+let $isBlockImportant = false;
 
 const $docEntity = {
     entity: undefined,
@@ -297,9 +299,6 @@ class LogData {
             isRegex: false,
         };
         filterUnits[iunit].logData(logData);
-        if ( (categoryBits & Important) !== 0 ) {
-            logData.options.unshift('important');
-        }
         if ( (categoryBits & ThirdParty) !== 0 ) {
             logData.options.unshift('3p');
         } else if ( (categoryBits & FirstParty) !== 0 ) {
@@ -604,7 +603,7 @@ registerFilterClass(FilterTrue);
 
 const FilterImportant = class {
     match() {
-        return true;
+        return ($isBlockImportant = true);
     }
 
     logData(details) {
@@ -1268,6 +1267,57 @@ FilterRegex.prototype.matchCase = false;
 FilterRegex.isSlow = true;
 
 registerFilterClass(FilterRegex);
+
+/******************************************************************************/
+
+// stylesheet: 1 => bit 0
+// image: 2 => bit 1
+// object: 3 => bit 2
+// script: 4 => bit 3
+// ...
+
+const FilterNotType = class {
+    constructor(notTypeBits) {
+        this.notTypeBits = notTypeBits;
+    }
+
+    match() {
+        return $requestTypeValue !== 0 &&
+            (this.notTypeBits & (1 << ($requestTypeValue - 1))) === 0;
+    }
+
+    logData(details) {
+        let bits = this.notTypeBits;
+        for ( let i = 1; bits !== 0 && i < typeValueToTypeName.length; i++ ) {
+            const bit = 1 << (i - 1);
+            if ( (bits & bit) === 0 ) { continue; }
+            bits &= ~bit;
+            details.options.push(`~${typeValueToTypeName[i]}`);
+        }
+    }
+
+    toSelfie() {
+        return [ this.fid, this.notTypeBits ];
+    }
+
+    static compile(details) {
+        return [ FilterNotType.fid, details.notTypeBits ];
+    }
+
+    static fromCompiled(args) {
+        return new FilterNotType(args[1]);
+    }
+
+    static fromSelfie(args) {
+        return new FilterNotType(args[1]);
+    }
+
+    static keyFromArgs(args) {
+        return `${args[1]}`;
+    }
+};
+
+registerFilterClass(FilterNotType);
 
 /******************************************************************************/
 
@@ -2903,13 +2953,20 @@ class FilterCompiler {
     // Be ready to handle multiple negated types
 
     processTypeOption(id, not) {
-        const typeBit = id !== -1
-            ? this.tokenIdToNormalizedType.get(id)
-            : allTypesBits;
+        if ( id !== -1 ) {
+            const typeBit = this.tokenIdToNormalizedType.get(id);
+            if ( not ) {
+                this.notTypeBits |= typeBit;
+            } else {
+                this.typeBits |= typeBit;
+            }
+            return;
+        }
+        // `all` option
         if ( not ) {
-            this.notTypeBits |= typeBit;
+            this.notTypeBits |= allTypesBits;
         } else {
-            this.typeBits |= typeBit;
+            this.typeBits |= allTypesBits;
         }
     }
 
@@ -3013,6 +3070,7 @@ class FilterCompiler {
                 break;
             case this.parser.OPTTokenImportant:
                 if ( this.action === AllowAction ) { return false; }
+                this.optionUnitBits |= this.IMPORTANT_BIT;
                 this.action = BlockImportant;
                 break;
             // Used by Adguard:
@@ -3085,14 +3143,12 @@ class FilterCompiler {
         //   - no network type is present -- i.e. all network types are
         //     implicitly toggled on
         if ( this.notTypeBits !== 0 ) {
-            if (
-                (this.notTypeBits & allNetworkTypesBits) !== 0 ||
-                (this.typeBits & allNetworkTypesBits) === 0
-            ) {
-                this.typeBits |= allNetworkTypesBits;
+            if ( (this.typeBits && allNetworkTypesBits) === allNetworkTypesBits ) {
+                this.typeBits &= ~this.notTypeBits | allNetworkTypesBits;
+            } else {
+                this.typeBits &= ~this.notTypeBits;
             }
-            this.typeBits &= ~this.notTypeBits;
-            if ( this.typeBits === 0 ) { return false; }
+            this.optionUnitBits |= this.NOT_TYPE_BIT;
         }
 
         // CSP directives implicitly apply only to document/subdocument.
@@ -3434,6 +3490,11 @@ class FilterCompiler {
             units.push(FilterAnchorRight.compile());
         }
 
+        // Not types
+        if ( this.notTypeBits !== 0 ) {
+            units.push(FilterNotType.compile(this));
+        }
+
         // Strict partiness
         if ( this.strictParty !== 0 ) {
             units.push(FilterStrictParty.compile(this));
@@ -3459,6 +3520,14 @@ class FilterCompiler {
             this.action |= HEADERS;
         }
 
+        // Important
+        //
+        // IMPORTANT: must always appear at the end of the sequence, so as to
+        // ensure $isBlockImportant is set only for matching filters.
+        if ( (this.optionUnitBits & this.IMPORTANT_BIT) !== 0 ) {
+            units.push(FilterImportant.compile());
+        }
+
         // Modifier
         //
         // IMPORTANT: the modifier unit MUST always appear first in a sequence
@@ -3482,7 +3551,6 @@ class FilterCompiler {
         // meant to override.
         if ( (this.action & ActionBitsMask) === BlockImportant ) {
             this.action &= ~Important;
-            units.push(FilterImportant.compile());
             this.compileToAtomicFilter(
                 FilterCompositeAll.compile(units),
                 writer
@@ -3499,15 +3567,14 @@ class FilterCompiler {
             writer.push([ catBits, this.tokenHash, fdata ]);
             return;
         }
-        // If all network types are set, create a typeless filter
-        if (
-            (typeBits & allNetworkTypesBits) === allNetworkTypesBits &&
-            (this.notTypeBits & documentTypeBit) === 0
-        ) {
+        // If all network types are set, create a typeless filter. Excluded
+        // network types are tested at match time, se we act as if they are
+        // set.
+        if ( (typeBits & allNetworkTypesBits) === allNetworkTypesBits ) {
             writer.push([ catBits, this.tokenHash, fdata ]);
             typeBits &= ~allNetworkTypesBits;
+            if ( typeBits === 0 ) { return; }
         }
-
         // One filter per specific types
         let bitOffset = 1;
         do {
@@ -3524,13 +3591,15 @@ class FilterCompiler {
     }
 }
 
-FilterCompiler.prototype.DOMAIN_BIT       = 0b00000001;
-FilterCompiler.prototype.DENYALLOW_BIT    = 0b00000010;
-FilterCompiler.prototype.HEADER_BIT       = 0b00000100;
-FilterCompiler.prototype.STRICT_PARTY_BIT = 0b00001000;
-FilterCompiler.prototype.CSP_BIT          = 0b00010000;
-FilterCompiler.prototype.QUERYPRUNE_BIT   = 0b00100000;
-FilterCompiler.prototype.REDIRECT_BIT     = 0b01000000;
+FilterCompiler.prototype.DOMAIN_BIT       = 0b000000001;
+FilterCompiler.prototype.DENYALLOW_BIT    = 0b000000010;
+FilterCompiler.prototype.HEADER_BIT       = 0b000000100;
+FilterCompiler.prototype.STRICT_PARTY_BIT = 0b000001000;
+FilterCompiler.prototype.CSP_BIT          = 0b000010000;
+FilterCompiler.prototype.QUERYPRUNE_BIT   = 0b000100000;
+FilterCompiler.prototype.REDIRECT_BIT     = 0b001000000;
+FilterCompiler.prototype.NOT_TYPE_BIT     = 0b010000000;
+FilterCompiler.prototype.IMPORTANT_BIT    = 0b100000000;
 
 FilterCompiler.prototype.FILTER_OK          = 0;
 FilterCompiler.prototype.FILTER_INVALID     = 1;
@@ -3896,14 +3965,16 @@ FilterContainer.prototype.matchAndFetchModifiers = function(
     fctxt,
     modifierType
 ) {
+    const typeBits = typeNameToTypeValue[fctxt.type] || otherTypeBitValue;
+
     $requestURL = urlTokenizer.setURL(fctxt.url);
     $requestURLRaw = fctxt.url;
     $docHostname = fctxt.getDocHostname();
     $docDomain = fctxt.getDocDomain();
     $docEntity.reset();
     $requestHostname = fctxt.getHostname();
+    $requestTypeValue = (typeBits & TypeBitsMask) >>> TypeBitsOffset;
 
-    const typeBits = typeNameToTypeValue[fctxt.type] || otherTypeBitValue;
     const partyBits = fctxt.is3rdPartyToDoc() ? ThirdParty : FirstParty;
 
     const catBits00 = ModifyAction;
@@ -4192,6 +4263,8 @@ FilterContainer.prototype.matchRequestReverse = function(type, url) {
     // Prime tokenizer: we get a normalized URL in return.
     $requestURL = urlTokenizer.setURL(url);
     $requestURLRaw = url;
+    $requestTypeValue = (typeBits & TypeBitsMask) >>> TypeBitsOffset;
+    $isBlockImportant = false;
     this.$filterUnit = 0;
 
     // These registers will be used by various filters
@@ -4234,17 +4307,17 @@ FilterContainer.prototype.matchRequestReverse = function(type, url) {
  * @returns {integer} 0=no match, 1=block, 2=allow (exeption)
  */
 FilterContainer.prototype.matchRequest = function(fctxt, modifiers = 0) {
-    let typeValue = typeNameToTypeValue[fctxt.type];
+    let typeBits = typeNameToTypeValue[fctxt.type];
     if ( modifiers === 0 ) {
-        if ( typeValue === undefined ) {
-            typeValue = otherTypeBitValue;
-        } else if ( typeValue === 0 || typeValue > otherTypeBitValue ) {
+        if ( typeBits === undefined ) {
+            typeBits = otherTypeBitValue;
+        } else if ( typeBits === 0 || typeBits > otherTypeBitValue ) {
             modifiers |= 0b0001;
         }
     }
     if ( (modifiers & 0b0001) !== 0 ) {
-        if ( typeValue === undefined ) { return 0; }
-        typeValue |= 0x80000000;
+        if ( typeBits === undefined ) { return 0; }
+        typeBits |= 0x80000000;
     }
 
     const partyBits = fctxt.is3rdPartyToDoc() ? ThirdParty : FirstParty;
@@ -4259,13 +4332,16 @@ FilterContainer.prototype.matchRequest = function(fctxt, modifiers = 0) {
     $docDomain = fctxt.getDocDomain();
     $docEntity.reset();
     $requestHostname = fctxt.getHostname();
+    $requestTypeValue = (typeBits & TypeBitsMask) >>> TypeBitsOffset;
+    $isBlockImportant = false;
 
     // Evaluate block realm before allow realm, and allow realm before
     // block-important realm, i.e. by order of likelihood of a match.
-    const r = this.realmMatchString(BlockAction, typeValue, partyBits);
+    const r = this.realmMatchString(BlockAction, typeBits, partyBits);
     if ( r || (modifiers & 0b0010) !== 0 ) {
-        if ( this.realmMatchString(AllowAction, typeValue, partyBits) ) {
-            if ( this.realmMatchString(BlockImportant, typeValue, partyBits) ) {
+        if ( $isBlockImportant ) { return 1; }
+        if ( this.realmMatchString(AllowAction, typeBits, partyBits) ) {
+            if ( this.realmMatchString(BlockImportant, typeBits, partyBits) ) {
                 return 1;
             }
             return 2;
@@ -4278,7 +4354,7 @@ FilterContainer.prototype.matchRequest = function(fctxt, modifiers = 0) {
 /******************************************************************************/
 
 FilterContainer.prototype.matchHeaders = function(fctxt, headers) {
-    const typeValue = typeNameToTypeValue[fctxt.type] || otherTypeBitValue;
+    const typeBits = typeNameToTypeValue[fctxt.type] || otherTypeBitValue;
     const partyBits = fctxt.is3rdPartyToDoc() ? ThirdParty : FirstParty;
 
     // Prime tokenizer: we get a normalized URL in return.
@@ -4291,13 +4367,14 @@ FilterContainer.prototype.matchHeaders = function(fctxt, headers) {
     $docDomain = fctxt.getDocDomain();
     $docEntity.reset();
     $requestHostname = fctxt.getHostname();
+    $requestTypeValue = (typeBits & TypeBitsMask) >>> TypeBitsOffset;
     $httpHeaders.init(headers);
 
     let r = 0;
-    if ( this.realmMatchString(HEADERS | BlockImportant, typeValue, partyBits) ) {
+    if ( this.realmMatchString(HEADERS | BlockImportant, typeBits, partyBits) ) {
         r = 1;
-    } else if ( this.realmMatchString(HEADERS | BlockAction, typeValue, partyBits) ) {
-        r = this.realmMatchString(HEADERS | AllowAction, typeValue, partyBits)
+    } else if ( this.realmMatchString(HEADERS | BlockAction, typeBits, partyBits) ) {
+        r = this.realmMatchString(HEADERS | AllowAction, typeBits, partyBits)
             ? 2
             : 1;
     }
@@ -4469,7 +4546,7 @@ FilterContainer.prototype.toLogData = function() {
 /******************************************************************************/
 
 FilterContainer.prototype.isBlockImportant = function() {
-    return (this.$catBits & ActionBitsMask) === BlockImportant;
+    return this.$filterUnit !== 0 && $isBlockImportant;
 };
 
 /******************************************************************************/

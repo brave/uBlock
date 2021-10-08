@@ -723,6 +723,27 @@
 })();
 
 
+/// refresh-defuser.js
+// https://www.reddit.com/r/uBlockOrigin/comments/q0frv0/while_reading_a_sports_article_i_was_redirected/hf7wo9v/
+(function() {
+    const arg1 = '{{1}}';
+    const defuse = ( ) => {
+        const meta = document.querySelector('meta[http-equiv="refresh" i][content]');
+        if ( meta === null ) { return; }
+        const s = arg1 === '' || arg1 === '{{1}}'
+            ? meta.getAttribute('content')
+            : arg1;
+        const ms = Math.max(parseFloat(s) || 0, 0) * 1000;
+        setTimeout(( ) => { window.stop(); }, ms);
+    };
+    if ( document.readyState === 'loading' ) {
+        document.addEventListener('DOMContentLoaded', defuse, { once: true });
+    } else {
+        defuse();
+    }
+})();
+
+
 /// remove-attr.js
 /// alias ra.js
 (function() {
@@ -1538,38 +1559,31 @@
 })();
 
 
-// https://github.com/uBlockOrigin/uAssets/issues/5184
 /// twitch-videoad.js
+// https://github.com/uBlockOrigin/uAssets/issues/5184
+// https://github.com/pixeltris/TwitchAdSolutions/commit/6be4c5313035
 (function() {
     if ( /(^|\.)twitch\.tv$/.test(document.location.hostname) === false ) { return; }
-    var realFetch = window.fetch;
-    window.fetch = function(input) {
-        if ( arguments.length >= 2 && typeof input === 'string' && input.includes('/access_token') ) {
-            var url = new URL(arguments[0]);
-            url.searchParams.delete('platform');
-            arguments[0] = url.href;
+    window.fetch = new Proxy(window.fetch, {
+        apply: function(target, thisArg, args) {
+            const [ url, init ] = args;
+            if (
+                typeof url === 'string' &&
+                url.includes('gql') &&
+                init instanceof Object &&
+                init.headers instanceof Object
+            ) {
+                const { headers } = init;
+                if ( typeof headers['X-Device-Id'] === 'string' ) {
+                    headers['X-Device-Id'] = 'twitch-web-wall-mason';
+                }
+                if ( typeof headers['Device-ID'] === 'string' ) {
+                    headers['Device-ID'] = 'twitch-web-wall-mason';
+                }
+            }
+            return Reflect.apply(target, thisArg, args);
         }
-        return realFetch.apply(this, arguments);
-    };
-})();
-
-
-// https://github.com/uBlockOrigin/uAssets/issues/2912
-/// fingerprint2.js
-(function() {
-    let browserId = '';
-    for ( let i = 0; i < 8; i++ ) {
-        browserId += (Math.random() * 0x10000 + 0x1000 | 0).toString(16).slice(-4);
-    }
-    const fp2 = function(){};
-    fp2.get = function(opts, cb) {
-        if ( !cb  ) { cb = opts; }
-        setTimeout(( ) => { cb(browserId, []); }, 1);
-    };
-    fp2.prototype = {
-        get: fp2.get
-    };
-    window.Fingerprint2 = fp2;
+    });
 })();
 
 
