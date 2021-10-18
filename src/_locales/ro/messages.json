@@ -55,6 +55,10 @@
     "message": "Despre",
     "description": "appears as tab name in dashboard"
   },
+  "supportPageName": {
+    "message": "Support",
+    "description": "appears as tab name in dashboard"
+  },
   "assetViewerPageName": {
     "message": "uBlock₀ — Vizualizator de resurse",
     "description": "Title for the asset viewer page"
@@ -847,6 +851,70 @@
     "message": "Marcaj",
     "description": "Label for radio-button to pick export text format"
   },
+  "supportOpenButton": {
+    "message": "Deschide",
+    "description": "Text for button which open an external webpage in Support pane"
+  },
+  "supportS1H": {
+    "message": "Documentație",
+    "description": "Header of 'Documentation' section in Support pane"
+  },
+  "supportS1P1": {
+    "message": "Citește documentația de la <code>uBlock/wiki</code> pentru a învăța totul despre caracteristicile uBlock Origin.",
+    "description": "First paragraph of 'Documentation' section in Support pane"
+  },
+  "supportS2H": {
+    "message": "Întrebări și ajutor",
+    "description": "Header of 'Questions and support' section in Support pane"
+  },
+  "supportS2P1": {
+    "message": "Răspunsuri la întrebări și alte informații de ajutor sunt disponibile pe subreddit-ul <code>/r/uBlockOrigin</code>.",
+    "description": "First paragraph of 'Questions and support' section in Support pane"
+  },
+  "supportS3H": {
+    "message": "Probleme cu filtrele/website-ul este defect",
+    "description": "Header of 'Filter issues' section in Support pane"
+  },
+  "supportS3P1": {
+    "message": "Raportați probleme cu filtrele pe anumite site-uri în <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"><code>uBlockOrigin/uAssets</code> centralizatorul de probleme</span>. Necesită un cont GitHub.",
+    "description": "First paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS3P2": {
+    "message": ">Important:</b> Evitați să folosiți alte extensii cu același scop ca uBlock Origin, deoarece pot exista probleme cu filtrele pe anumite site-uri.",
+    "description": "Second paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS3P3": {
+    "message": "<b>Sfat:</b> Asigurați-vă că filtrele sunt actualizate. <span data-url=\"logger-ui.html#_\">Registrul cu înregistrări</span> este unealta principală pentru diagnosticarea problemelor cu filtrele.",
+    "description": "Third paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS4H": {
+    "message": "Raportare defecte",
+    "description": "Header of 'Bug report' section in Support pane"
+  },
+  "supportS4P1": {
+    "message": "Raportați probleme cu uBlock Origin în <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\"><code>uBlockOrigin/uBlock-issue</code>centralizatorul de probleme</span>. Necesită un cont GitHub.",
+    "description": "First paragraph of 'Bug report' section in Support pane"
+  },
+  "supportS5H": {
+    "message": "Informații pentru depanare",
+    "description": "Header of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS5P1": {
+    "message": "Mai jos sunt informații care îi pot ajuta pe voluntarii care încearcă să vă ajute în rezolvarea problemelor.",
+    "description": "First paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS5P2": {
+    "message": "<b>Important:</b> Informațiile potențial private sau sensibile sunt redactate implicit. Aceasta poate face mai dificilă rezolvarea problemelor.",
+    "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportRedact": {
+    "message": "Redactează",
+    "description": "Text for 'Redact' button"
+  },
+  "supportUnredact": {
+    "message": "Anulează redactarea",
+    "description": "Text for 'Unredact' button"
+  },
   "aboutPrivacyPolicy": {
     "message": "Politică de confidențialitate",
     "description": "Link to privacy policy on GitHub (English)"
@@ -854,18 +922,6 @@
   "aboutChangelog": {
     "message": "Jurnal de modificări",
     "description": ""
-  },
-  "aboutWiki": {
-    "message": "Wiki",
-    "description": "English: project' wiki on GitHub"
-  },
-  "aboutSupport": {
-    "message": "Suport",
-    "description": "A link for where to get support"
-  },
-  "aboutIssues": {
-    "message": "Jurnal cu probleme",
-    "description": "Text for a link to official issue tracker"
   },
   "aboutCode": {
     "message": "Cod sursă (GPLv3)",
@@ -1074,6 +1130,10 @@
   "genericCopyToClipboard": {
     "message": "Copiază în clipboard",
     "description": "Label for buttons used to copy something to the clipboard"
+  },
+  "genericSelectAll": {
+    "message": "Selectează tot",
+    "description": "Label for buttons used to select all text in editor"
   },
   "toggleBlockingProfile": {
     "message": "Comutați profilul de blocare",

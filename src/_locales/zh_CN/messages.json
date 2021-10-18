@@ -55,6 +55,10 @@
     "message": "关于",
     "description": "appears as tab name in dashboard"
   },
+  "supportPageName": {
+    "message": "支持",
+    "description": "appears as tab name in dashboard"
+  },
   "assetViewerPageName": {
     "message": "uBlock₀ — 资源查看器",
     "description": "Title for the asset viewer page"
@@ -847,6 +851,70 @@
     "message": "Markdown",
     "description": "Label for radio-button to pick export text format"
   },
+  "supportOpenButton": {
+    "message": "打开",
+    "description": "Text for button which open an external webpage in Support pane"
+  },
+  "supportS1H": {
+    "message": "使用说明",
+    "description": "Header of 'Documentation' section in Support pane"
+  },
+  "supportS1P1": {
+    "message": "请至 <code>uBlock/wiki</code> 参阅 uBlock Origin 的所有功用以及使用说明。",
+    "description": "First paragraph of 'Documentation' section in Support pane"
+  },
+  "supportS2H": {
+    "message": "疑难解答",
+    "description": "Header of 'Questions and support' section in Support pane"
+  },
+  "supportS2P1": {
+    "message": "若想进行普通的咨询或是需要其他帮助，请至 Reddit 的 <code>/r/uBlockOrigin</code> 板块寻求解答。",
+    "description": "First paragraph of 'Questions and support' section in Support pane"
+  },
+  "supportS3H": {
+    "message": "过滤规则或者网页的问题",
+    "description": "Header of 'Filter issues' section in Support pane"
+  },
+  "supportS3P1": {
+    "message": "将有关特定网站的过滤规则问题反馈至 <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"><code>uBlockOrigin/uAssets</code> 问题跟踪器</span>。需要 GitHub 账号。",
+    "description": "First paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS3P2": {
+    "message": "<b>重要：</b>避免同时使用类似 uBlock Origin 的过滤软件，这可能导致在特定的网站上遇到过滤规则问题。",
+    "description": "Second paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS3P3": {
+    "message": "<b>小提示：</b>确保在使用最新的过滤规则列表。<span data-url=\"logger-ui.html#_\">日志记录器</span>是诊断过滤规则问题的首选工具。",
+    "description": "Third paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS4H": {
+    "message": "错误报告",
+    "description": "Header of 'Bug report' section in Support pane"
+  },
+  "supportS4P1": {
+    "message": "将 uBlock Origin 本身的问题反馈至 <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\"><code>uBlockOrigin/uBlock-issue</code> 问题跟踪器</span>。需要 GitHub 账号。",
+    "description": "First paragraph of 'Bug report' section in Support pane"
+  },
+  "supportS5H": {
+    "message": "故障排查相关信息",
+    "description": "Header of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS5P1": {
+    "message": "以下生成的技术报告或有助于他人帮你解决问题。",
+    "description": "First paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS5P2": {
+    "message": "<b>注意：</b>可能涉及隐私的内容已经过删改，需手动取消。删改部分有可能包括解决问题的关键信息。",
+    "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportRedact": {
+    "message": "自动删改",
+    "description": "Text for 'Redact' button"
+  },
+  "supportUnredact": {
+    "message": "取消删改",
+    "description": "Text for 'Unredact' button"
+  },
   "aboutPrivacyPolicy": {
     "message": "隐私政策",
     "description": "Link to privacy policy on GitHub (English)"
@@ -854,18 +922,6 @@
   "aboutChangelog": {
     "message": "变更日志",
     "description": ""
-  },
-  "aboutWiki": {
-    "message": "Wiki",
-    "description": "English: project' wiki on GitHub"
-  },
-  "aboutSupport": {
-    "message": "支持",
-    "description": "A link for where to get support"
-  },
-  "aboutIssues": {
-    "message": "问题反馈",
-    "description": "Text for a link to official issue tracker"
   },
   "aboutCode": {
     "message": "源代码 (GPLv3)",
@@ -1074,6 +1130,10 @@
   "genericCopyToClipboard": {
     "message": "复制到剪贴板",
     "description": "Label for buttons used to copy something to the clipboard"
+  },
+  "genericSelectAll": {
+    "message": "全选",
+    "description": "Label for buttons used to select all text in editor"
   },
   "toggleBlockingProfile": {
     "message": "切换拦截方案",

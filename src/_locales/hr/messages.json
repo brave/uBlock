@@ -55,6 +55,10 @@
     "message": "O programu",
     "description": "appears as tab name in dashboard"
   },
+  "supportPageName": {
+    "message": "Podrška",
+    "description": "appears as tab name in dashboard"
+  },
   "assetViewerPageName": {
     "message": "uBlock₀ — Preglednik svojstva",
     "description": "Title for the asset viewer page"
@@ -847,6 +851,70 @@
     "message": "Markdown",
     "description": "Label for radio-button to pick export text format"
   },
+  "supportOpenButton": {
+    "message": "Otvori",
+    "description": "Text for button which open an external webpage in Support pane"
+  },
+  "supportS1H": {
+    "message": "Dokumentacija",
+    "description": "Header of 'Documentation' section in Support pane"
+  },
+  "supportS1P1": {
+    "message": "Pročitajte dokumentaciju na <code>uBlock/wiki</code> kako bi ste saznali uBlock Origin mogućnosti.",
+    "description": "First paragraph of 'Documentation' section in Support pane"
+  },
+  "supportS2H": {
+    "message": "Pitanja i podrška",
+    "description": "Header of 'Questions and support' section in Support pane"
+  },
+  "supportS2P1": {
+    "message": "Odgovori na pitanja i druge vrste podrške nalaze se na subreddit <code>r/uBlockOrigin</code>.",
+    "description": "First paragraph of 'Questions and support' section in Support pane"
+  },
+  "supportS3H": {
+    "message": "Filter problemi/website je pao",
+    "description": "Header of 'Filter issues' section in Support pane"
+  },
+  "supportS3P1": {
+    "message": "Prijavite probleme s filtriranjem određenih web stranica <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"><code>uBlockOrigin/uAssets</code> alatki za praćenje problema</span >. Potreban je GitHub račun.",
+    "description": "First paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS3P2": {
+    "message": "<b>Važno:</b> Izbjegavajte korištenje drugih blokera slične namjene u isto vrijeme s uBlock Origin-om jer to može uzrokovati probleme s filtriranjem na određenim web stranicama.",
+    "description": "Second paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS3P3": {
+    "message": "<b>Savjeti:</b> Provjerite jesu li vaše liste filtera ažurirane. <span data-url=\"logger-ui.html#_\">Zapisnik</span> je primarni alat za dijagnosticiranje problema povezanih s filterima.",
+    "description": "Third paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS4H": {
+    "message": "Prijava greške",
+    "description": "Header of 'Bug report' section in Support pane"
+  },
+  "supportS4P1": {
+    "message": "Prijavite probleme sa samim uBlock Origin-om na <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\"><code>uBlockOrigin/uBlock-problem</code> alatki za praćenje problema</span >. Potreban je GitHub račun.",
+    "description": "First paragraph of 'Bug report' section in Support pane"
+  },
+  "supportS5H": {
+    "message": "Informacije o rješavanju problema",
+    "description": "Header of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS5P1": {
+    "message": "U nastavku se nalaze tehničke informacije koje bi mogle biti korisne kada vam volonteri pokušavaju pomoći u rješavanju problema.",
+    "description": "First paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS5P2": {
+    "message": "<b>Važno:</b> Potencijalno privatni ili osjetljivi podaci redigirani su prema zadanim postavkama. Redaktirane informacije mogu otežati rješavanje problema.",
+    "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportRedact": {
+    "message": "Redigiraj",
+    "description": "Text for 'Redact' button"
+  },
+  "supportUnredact": {
+    "message": "Vratiti na prijašnje",
+    "description": "Text for 'Unredact' button"
+  },
   "aboutPrivacyPolicy": {
     "message": "Pravila privatnosti",
     "description": "Link to privacy policy on GitHub (English)"
@@ -854,18 +922,6 @@
   "aboutChangelog": {
     "message": "Popis promjena",
     "description": ""
-  },
-  "aboutWiki": {
-    "message": "Wiki",
-    "description": "English: project' wiki on GitHub"
-  },
-  "aboutSupport": {
-    "message": "Podrška",
-    "description": "A link for where to get support"
-  },
-  "aboutIssues": {
-    "message": "Praćenje problema",
-    "description": "Text for a link to official issue tracker"
   },
   "aboutCode": {
     "message": "Izvorni kôd (GPLv3)",
@@ -1074,6 +1130,10 @@
   "genericCopyToClipboard": {
     "message": "Kopiraj u međuspremnik",
     "description": "Label for buttons used to copy something to the clipboard"
+  },
+  "genericSelectAll": {
+    "message": "Odaberi sve",
+    "description": "Label for buttons used to select all text in editor"
   },
   "toggleBlockingProfile": {
     "message": "Uključi/isključi profil za blokiranje",

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>uBlock Origin — Support</title>
+
+<link rel="stylesheet" href="lib/codemirror/lib/codemirror.css">
+
+<link rel="stylesheet" href="css/themes/default.css">
+<link rel="stylesheet" href="css/common.css">
+<link rel="stylesheet" href="css/dashboard-common.css">
+<link rel="stylesheet" href="css/support.css">
+<link rel="stylesheet" href="css/codemirror.css">
+</head>
+
+<body class="redacted">
+
+<div class="body">
+    <div class="supportEntry">
+        <div>
+            <h3 data-i18n="supportS1H"></h3>
+            <p data-i18n="supportS1P1">
+        </div>
+        <div>
+            <button type="button" data-url="https://github.com/gorhill/uBlock/wiki" data-i18n="supportOpenButton"></button>
+        </div>
+    </div>
+    <hr>
+    <div class="supportEntry">
+        <div>
+            <h3 data-i18n="supportS2H"></h3>
+            <p data-i18n="supportS2P1">
+        </div>
+        <div>
+            <button type="button" data-url="https://old.reddit.com/r/uBlockOrigin/" data-i18n="supportOpenButton"></button>
+        </div>
+    </div>
+    <hr>
+    <div class="supportEntry">
+        <div>
+            <h3 data-i18n="supportS3H"></h3>
+            <p data-i18n="supportS3P1">
+            <p data-i18n="supportS3P2">
+            <p data-i18n="supportS3P3">
+        </div>
+        <div>
+            <button id="filterReport" type="button" data-url="https://github.com/uBlockOrigin/uAssets/issues/new?template=bug_report_from_ubo.yml" data-i18n="supportOpenButton"></button>
+        </div>
+    </div>
+    <hr>
+    <div class="supportEntry">
+        <div>
+            <h3 data-i18n="supportS4H"></h3>
+            <p data-i18n="supportS4P1">
+        </div>
+        <div>
+            <button id="bugReport" type="button" data-url="https://github.com/uBlockOrigin/uBlock-issues/issues/new?template=bug_report_from_ubo.yml" data-i18n="supportOpenButton"></button>
+        </div>
+    </div>
+    <hr>
+    <h3 data-i18n="supportS5H"></h3>
+    <p data-i18n="supportS5P1">
+    <p data-i18n="supportS5P2">
+    <p><button id="redactButton" type="button" data-i18n="supportRedact"></button><button id="unredactButton" type="button" data-i18n="supportUnredact"></button><button id="selectAllButton" type="button" data-i18n="genericSelectAll"></button>
+    <div id="supportData" class="codeMirrorContainer"></div>
+</div>
+
+<script src="lib/codemirror/lib/codemirror.js"></script>
+<script src="lib/codemirror/addon/selection/active-line.js"></script>
+
+<script src="js/vapi.js"></script>
+<script src="js/vapi-common.js"></script>
+<script src="js/vapi-client.js"></script>
+<script src="js/udom.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/dashboard-common.js"></script>
+<script src="js/support.js"></script>
+
+</body>
+</html>

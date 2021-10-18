@@ -1170,7 +1170,7 @@ const modifyRuleset = function(details) {
     }
 };
 
-// Shortcuts pane
+// Shortcuts
 const getShortcuts = function(callback) {
     if ( µb.canUseShortcuts === false ) {
         return callback([]);
@@ -1204,6 +1204,132 @@ const setShortcut = function(details) {
     vAPI.storage.set({ commandShortcuts: Array.from(µb.commandShortcuts) });
 };
 
+// Support
+const getSupportData = async function() {
+    const diffArrays = function(modified, original) {
+        const modifiedSet = new Set(modified);
+        const originalSet = new Set(original);
+        let added = [];
+        let removed = [];
+        for ( const item of modifiedSet ) {
+            if ( originalSet.has(item) ) { continue; }
+            added.push(item);
+        }
+        for ( const item of originalSet ) {
+            if ( modifiedSet.has(item) ) { continue; }
+            removed.push(item);
+        }
+        if ( added.length === 0 ) {
+            added = undefined;
+        }
+        if ( removed.length === 0 ) {
+            removed = undefined;
+        }
+        if ( added !== undefined || removed !== undefined ) {
+            return { added, removed };
+        }
+    };
+
+    const modifiedUserSettings = µb.getModifiedSettings(
+        µb.userSettings,
+        µb.userSettingsDefault
+    );
+
+    const modifiedHiddenSettings = µb.getModifiedSettings(
+        µb.hiddenSettings,
+        µb.hiddenSettingsDefault
+    );
+
+    let filterset = [];
+    const userFilters = await µb.loadUserFilters();
+    for ( const line of userFilters.content.split(/\s*\n+\s*/) ) {
+        if ( /^($|![^#])/.test(line) ) { continue; }
+        filterset.push(line);
+    }
+
+    const lists = µb.availableFilterLists;
+    let defaultListset = {};
+    let addedListset = {};
+    let removedListset = {};
+    for ( const listKey in lists ) {
+        if ( lists.hasOwnProperty(listKey) === false ) { continue; }
+        const list = lists[listKey];
+        if ( list.content !== 'filters' ) { continue; }
+        const used = µb.selectedFilterLists.includes(listKey);
+        const listDetails = {};
+        if ( used ) {
+            if ( typeof list.entryCount === 'number' ) {
+                listDetails['filters used/total'] =
+                    `${list.entryUsedCount} / ${list.entryCount}`;
+            }
+            if ( typeof list.writeTime === 'number' ) {
+                const last = Math.floor((
+                    list.writeTime -
+                    Date.now()
+                ) / 864000) / 100;
+                const next = Math.floor((
+                    list.writeTime +
+                    list.updateAfter * 86400000 -
+                    Date.now()
+                ) / 864000) / 100;
+                listDetails['updated last/next (days)'] = `${last} / ${next}`;
+            }
+        }
+        if ( list.isDefault ) {
+            if ( used ) {
+                defaultListset[listKey] = listDetails;
+            } else {
+                removedListset[listKey] = null;
+            }
+        } else if ( used ) {
+            addedListset[listKey] = listDetails;
+        }
+    }
+    if ( Object.keys(defaultListset).length === 0 ) {
+        defaultListset = undefined;
+    }
+    if ( Object.keys(addedListset).length === 0 ) {
+        addedListset = undefined;
+    }
+    if ( Object.keys(removedListset).length === 0 ) {
+        removedListset = undefined;
+    }
+
+    return {
+        browserFlavor: Array.from(vAPI.webextFlavor.soup).join(' '),
+        browserVersion: vAPI.webextFlavor.major,
+        extensionId: vAPI.webextFlavor.soup.has('firefox') === false
+            ? vAPI.i18n('@@extension_id')
+            : undefined,
+        extensionName: vAPI.app.name,
+        extensionVersion: vAPI.app.version,
+        modifiedUserSettings,
+        modifiedHiddenSettings,
+        listset: {
+            removed: removedListset,
+            added: addedListset,
+            default: defaultListset,
+        },
+        trustedset: diffArrays(
+            µb.arrayFromWhitelist(µb.netWhitelist),
+            µb.netWhitelistDefault
+        ),
+        filterset,
+        switchRuleset: diffArrays(
+            sessionSwitches.toArray(),
+            µb.hostnameSwitchesDefault
+        ),
+        hostRuleset: diffArrays(
+            sessionFirewall.toArray(),
+            µb.dynamicFilteringDefault
+        ),
+        urlRuleset: diffArrays(
+            sessionURLFiltering.toArray(),
+            []
+        ),
+    };
+};
+
 const onMessage = function(request, sender, callback) {
     // Async
     switch ( request.what ) {
@@ -1222,6 +1348,13 @@ const onMessage = function(request, sender, callback) {
 
     case 'getShortcuts':
         return getShortcuts(callback);
+
+    case 'getSupportData': {
+        getSupportData().then(response => {
+            callback(response);
+        });
+        return;
+    }
 
     case 'readUserFilters':
         return µb.loadUserFilters().then(result => {

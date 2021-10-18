@@ -232,7 +232,7 @@ const domLayout = (function() {
     };
 
     const domNodeFactory = function(level, node) {
-        var localName = node.localName;
+        const localName = node.localName;
         if ( skipTagNames.has(localName) ) { return null; }
         // skip uBlock's own nodes
         if ( node.classList.contains(sessionId) ) { return null; }
@@ -245,14 +245,14 @@ const domLayout = (function() {
     // Collect layout data.
 
     const getLayoutData = function() {
-        var layout = [];
-        var stack = [];
-        var node = document.documentElement;
-        var domNode;
-        var lvl = 0;
+        const layout = [];
+        const stack = [];
+        let lvl = 0;
+        let node = document.documentElement;
+        if ( node === null ) { return layout; }
 
         for (;;) {
-            domNode = domNodeFactory(lvl, node);
+            const domNode = domNodeFactory(lvl, node);
             if ( domNode !== null ) {
                 layout.push(domNode);
             }
@@ -264,15 +264,17 @@ const domLayout = (function() {
                 continue;
             }
             // sibling
-            if ( node.nextElementSibling === null ) {
-                do {
-                    node = stack.pop();
+            if ( node instanceof Element ) {
+                if ( node.nextElementSibling === null ) {
+                    do {
+                        node = stack.pop();
+                        if ( !node ) { break; }
+                        lvl -= 1;
+                    } while ( node.nextElementSibling === null );
                     if ( !node ) { break; }
-                    lvl -= 1;
-                } while ( node.nextElementSibling === null );
-                if ( !node ) { break; }
+                }
+                node = node.nextElementSibling;
             }
-            node = node.nextElementSibling;
         }
 
         return layout;
@@ -547,7 +549,9 @@ const cosmeticFilterMapper = (function() {
 
     const reset = function() {
         roRedNodes.clear();
-        incremental(document.documentElement);
+        if ( document.documentElement !== null ) {
+            incremental(document.documentElement);
+        }
     };
 
     const shutdown = function() {
@@ -812,7 +816,7 @@ const shutdown = function() {
     domLayout.shutdown();
     vAPI.MessagingConnection.disconnectFrom(loggerConnectionId);
     window.removeEventListener('scroll', onScrolled, true);
-    document.documentElement.removeChild(pickerRoot);
+    pickerRoot.remove();
     pickerRoot = svgRoot = null;
 };
 
@@ -977,7 +981,7 @@ pickerRoot.style.cssText = [
 ].join(' !important;\n');
 
 pickerRoot.addEventListener('load', ev => { bootstrap(ev); });
-document.documentElement.appendChild(pickerRoot);
+(document.documentElement || document).appendChild(pickerRoot);
 
 /******************************************************************************/
 

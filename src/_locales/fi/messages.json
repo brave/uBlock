@@ -55,6 +55,10 @@
     "message": "Tietoja",
     "description": "appears as tab name in dashboard"
   },
+  "supportPageName": {
+    "message": "Tuki",
+    "description": "appears as tab name in dashboard"
+  },
   "assetViewerPageName": {
     "message": "uBlock₀ — Elementtien valitsin",
     "description": "Title for the asset viewer page"
@@ -776,7 +780,7 @@
     "description": "Used in the static filtering wizard"
   },
   "loggerStaticFilteringSentencePartNotImportant": {
-    "message": "paitsi jos",
+    "message": "paitsi kun",
     "description": "Used in the static filtering wizard"
   },
   "loggerStaticFilteringSentencePartImportant": {
@@ -847,6 +851,70 @@
     "message": "Koodi",
     "description": "Label for radio-button to pick export text format"
   },
+  "supportOpenButton": {
+    "message": "Avaa",
+    "description": "Text for button which open an external webpage in Support pane"
+  },
+  "supportS1H": {
+    "message": "Käyttöohjeet",
+    "description": "Header of 'Documentation' section in Support pane"
+  },
+  "supportS1P1": {
+    "message": "Lue ohjeet kohteesta <code>uBlock/wiki</code> tutustuaksesi uBlock Originin kaikkiin ominaisuuksiin.",
+    "description": "First paragraph of 'Documentation' section in Support pane"
+  },
+  "supportS2H": {
+    "message": "Kysymykset ja tuki",
+    "description": "Header of 'Questions and support' section in Support pane"
+  },
+  "supportS2P1": {
+    "message": "Vastauksia kysymyksiin ja muuta tukea on saatavilla  <code>/r/uBlockOrigin</code>-subredditissa.",
+    "description": "First paragraph of 'Questions and support' section in Support pane"
+  },
+  "supportS3H": {
+    "message": "Suodata ongelmia/sivusto on hajonnut",
+    "description": "Header of 'Filter issues' section in Support pane"
+  },
+  "supportS3P1": {
+    "message": "Ilmoita suodatusongelmista tietyillä verkkosivustoilla <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"><code>uBlockOrigin/uAssets</code>-vikaseurannassa</span>. Vaatii GitHub-tilin.",
+    "description": "First paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS3P2": {
+    "message": "<b>Tärkeää:</b> Vältä muiden vastaavien estotyökalujen käyttöä samaan aikaan uBlock Originin kanssa, koska se saattaa aiheuttaa ongelmia joillakin sivustoilla.",
+    "description": "Second paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS3P3": {
+    "message": "<b>Vinkkejä:</b> Varmista, että suodatinlistasi ovat ajan tasalla. <span data-url=\"logger-ui.html#_\">Verkkopyyntöjen loki</span> on pääasiallinen työkalu suodatinaiheisten ongelmien selvitykseen.",
+    "description": "Third paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS4H": {
+    "message": "Virheraportti",
+    "description": "Header of 'Bug report' section in Support pane"
+  },
+  "supportS4P1": {
+    "message": "Ilmoita uBlock Originin ongelmista <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\"><code>uBlockOrigin/uBlock-issue</code> -vikaseurannassa</span>. Vaatii GitHub-tilin.",
+    "description": "First paragraph of 'Bug report' section in Support pane"
+  },
+  "supportS5H": {
+    "message": "Vianmääritystiedot",
+    "description": "Header of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS5P1": {
+    "message": "Alla on teknisiä tietoja, jotka saattavat olla hyödyllisiä kun vapaaehtoiset pyrkivät avustamaan ongelmasi ratkaisussa.",
+    "description": "First paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS5P2": {
+    "message": "<b>Tärkeää:</b> Mahdolliset yksityiset ja arkaluonteiset tiedot poistetaan oletuksena. Tietojen puuttuminen saattaa vaikeuttaa ongelman ratkaisemista.",
+    "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportRedact": {
+    "message": "Poista",
+    "description": "Text for 'Redact' button"
+  },
+  "supportUnredact": {
+    "message": "Palauta",
+    "description": "Text for 'Unredact' button"
+  },
   "aboutPrivacyPolicy": {
     "message": "Tietosuojakäytäntö",
     "description": "Link to privacy policy on GitHub (English)"
@@ -854,18 +922,6 @@
   "aboutChangelog": {
     "message": "Muutosloki",
     "description": ""
-  },
-  "aboutWiki": {
-    "message": "Wiki",
-    "description": "English: project' wiki on GitHub"
-  },
-  "aboutSupport": {
-    "message": "Tuki",
-    "description": "A link for where to get support"
-  },
-  "aboutIssues": {
-    "message": "Ongelmien seuranta",
-    "description": "Text for a link to official issue tracker"
   },
   "aboutCode": {
     "message": "Lähdekoodi (GPLv3)",
@@ -1074,6 +1130,10 @@
   "genericCopyToClipboard": {
     "message": "Kopioi leikepöydälle",
     "description": "Label for buttons used to copy something to the clipboard"
+  },
+  "genericSelectAll": {
+    "message": "Valitse kaikki",
+    "description": "Label for buttons used to select all text in editor"
   },
   "toggleBlockingProfile": {
     "message": "Valitse esto-profiili",

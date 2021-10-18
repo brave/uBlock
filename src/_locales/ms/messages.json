@@ -55,6 +55,10 @@
     "message": "Mengenai",
     "description": "appears as tab name in dashboard"
   },
+  "supportPageName": {
+    "message": "Sokongan",
+    "description": "appears as tab name in dashboard"
+  },
   "assetViewerPageName": {
     "message": "uBlock₀ — Pertonton aset",
     "description": "Title for the asset viewer page"
@@ -464,7 +468,7 @@
     "description": "English: Regions, languages"
   },
   "3pGroupCustom": {
-    "message": "Kustom",
+    "message": "Tersuai",
     "description": "English: Custom"
   },
   "3pImport": {
@@ -847,6 +851,70 @@
     "message": "Penurunan harga",
     "description": "Label for radio-button to pick export text format"
   },
+  "supportOpenButton": {
+    "message": "Buka",
+    "description": "Text for button which open an external webpage in Support pane"
+  },
+  "supportS1H": {
+    "message": "Pendokumenan",
+    "description": "Header of 'Documentation' section in Support pane"
+  },
+  "supportS1P1": {
+    "message": "Baca pendokumenan di <code>uBlock/wiki</code>  untuk belajar tentang kesemua ciri-ciri uBlock Origin.",
+    "description": "First paragraph of 'Documentation' section in Support pane"
+  },
+  "supportS2H": {
+    "message": "Soalan dan sokongan",
+    "description": "Header of 'Questions and support' section in Support pane"
+  },
+  "supportS2P1": {
+    "message": "Menjawab soalan dan pelbagai sokongan disediakan di subreddit <code>/r/uBlockOrigin</code>.",
+    "description": "First paragraph of 'Questions and support' section in Support pane"
+  },
+  "supportS3H": {
+    "message": "Masalah penapisan/laman web rosak",
+    "description": "Header of 'Filter issues' section in Support pane"
+  },
+  "supportS3P1": {
+    "message": "Laporkan masalah penapisan di laman web tertentu di <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"><code>uBlockOrigin/uAssets</code> pengesan masalah</span>. Memerlukan akaun GitHub.",
+    "description": "First paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS3P2": {
+    "message": "<b>Penting:</b> Elakkan menggunakan penyekat-penyekat lain yang serupa dengan uBlock Origin, kerana ia menimbulkan masalah penapis di laman web tertentu.",
+    "description": "Second paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS3P3": {
+    "message": "<b>Tip:</b> Pastikan senarai penapis kamu dikemaskinikan <span data-url=\"logger-ui.html#_\">\tPencatat</span> adalah peralatan utama untuk memeriksa masalah yang berkaitan penapis.",
+    "description": "Third paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS4H": {
+    "message": "Laporan pepijat",
+    "description": "Header of 'Bug report' section in Support pane"
+  },
+  "supportS4P1": {
+    "message": "Laporkan masalah dengan uBlock Origin sendiri ke <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\"><code>uBlockOrigin/uBlock-issue</code> pengesan masalah</span>. Memerlukan akaun GitHub.",
+    "description": "First paragraph of 'Bug report' section in Support pane"
+  },
+  "supportS5H": {
+    "message": "Informasi Pencarisilapan",
+    "description": "Header of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS5P1": {
+    "message": "Berikut adalah maklumat teknikal yang mungkin berguna ketika sukarelawan berusaha membantu anda menyelesaikan masalah.",
+    "description": "First paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS5P2": {
+    "message": "<b>Penting:</b>Maklumat yang bersifat sensitif dan peribadi dihitamkan secara lalai. Maklumat yang dihitamkan berkemungkinan sukar untuk menyelesaikan masalah. ",
+    "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportRedact": {
+    "message": "Hitamkan",
+    "description": "Text for 'Redact' button"
+  },
+  "supportUnredact": {
+    "message": "Nyahhitamkan",
+    "description": "Text for 'Unredact' button"
+  },
   "aboutPrivacyPolicy": {
     "message": "Dasar privasi",
     "description": "Link to privacy policy on GitHub (English)"
@@ -854,18 +922,6 @@
   "aboutChangelog": {
     "message": "Catatan perubahan",
     "description": ""
-  },
-  "aboutWiki": {
-    "message": "Wiki",
-    "description": "English: project' wiki on GitHub"
-  },
-  "aboutSupport": {
-    "message": "Sokongan",
-    "description": "A link for where to get support"
-  },
-  "aboutIssues": {
-    "message": "Pengesan masalah",
-    "description": "Text for a link to official issue tracker"
   },
   "aboutCode": {
     "message": "Kod sumber (GPLv3)",
@@ -968,7 +1024,7 @@
     "description": "Firefox/Fennec-specific: Show Dashboard"
   },
   "showNetworkLogButton": {
-    "message": "Tunjukkan Logger",
+    "message": "Tunjukkan Pencatat",
     "description": "Firefox/Fennec-specific: Show Logger"
   },
   "fennecMenuItemBlockingOff": {
@@ -1028,7 +1084,7 @@
     "description": ""
   },
   "cloudDeviceNamePrompt": {
-    "message": "Nama alat ini:",
+    "message": "Nama peranti ini:",
     "description": "used as a prompt for the user to provide a custom device name"
   },
   "advancedSettingsWarning": {
@@ -1044,11 +1100,11 @@
     "description": "for generic 'Apply changes' buttons"
   },
   "genericRevert": {
-    "message": "membalikkan",
+    "message": "Membalikkan",
     "description": "for generic 'Revert' buttons"
   },
   "genericBytes": {
-    "message": "byte",
+    "message": "bait",
     "description": ""
   },
   "contextMenuBlockElementInFrame": {
@@ -1074,6 +1130,10 @@
   "genericCopyToClipboard": {
     "message": "Salin ke papan keratan",
     "description": "Label for buttons used to copy something to the clipboard"
+  },
+  "genericSelectAll": {
+    "message": "Pilih semua",
+    "description": "Label for buttons used to select all text in editor"
   },
   "toggleBlockingProfile": {
     "message": "Togol profil penyekat",

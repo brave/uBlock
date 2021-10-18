@@ -55,6 +55,10 @@
     "message": "Относно",
     "description": "appears as tab name in dashboard"
   },
+  "supportPageName": {
+    "message": "Поддръжка",
+    "description": "appears as tab name in dashboard"
+  },
   "assetViewerPageName": {
     "message": "uBlock₀ — Активи",
     "description": "Title for the asset viewer page"
@@ -847,6 +851,70 @@
     "message": "Markdown",
     "description": "Label for radio-button to pick export text format"
   },
+  "supportOpenButton": {
+    "message": "Отваряне",
+    "description": "Text for button which open an external webpage in Support pane"
+  },
+  "supportS1H": {
+    "message": "Документация",
+    "description": "Header of 'Documentation' section in Support pane"
+  },
+  "supportS1P1": {
+    "message": "Прочетете документацията в <code>uBlock/wiki</code>, за да научите повече за всички функции на uBlock Origin.",
+    "description": "First paragraph of 'Documentation' section in Support pane"
+  },
+  "supportS2H": {
+    "message": "Въпроси и поддръжка",
+    "description": "Header of 'Questions and support' section in Support pane"
+  },
+  "supportS2P1": {
+    "message": "Отговори на въпроси и други видове помощ се предоставят в Reddit <code>/r/uBlockOrigin</code>",
+    "description": "First paragraph of 'Questions and support' section in Support pane"
+  },
+  "supportS3H": {
+    "message": "Проблеми с филтъра/уебсайтът е счупен",
+    "description": "Header of 'Filter issues' section in Support pane"
+  },
+  "supportS3P1": {
+    "message": "Докладвайте за проблеми с филтъра с конкретни уебсайтове в <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"><code>uBlockOrigin/uAssets</code> проследяване на проблеми</span>. Изисква се акаунт в GitHub.",
+    "description": "First paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS3P2": {
+    "message": "<b>Важно:</b> Избягвайте да използвате други блокери с подобно предназначение заедно с uBlock Origin, тъй като това може да доведе до проблеми с филтрирането на определени уебсайтове.",
+    "description": "Second paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS3P3": {
+    "message": "<b>Съвети:</b> Уверете се, че списъците ви с филтри са актуални. <span data-url=\"logger-ui.html#_\">Дневникът</span> е основният инструмент за диагностициране на проблеми, свързани с филтрите.",
+    "description": "Third paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS4H": {
+    "message": "Доклад за грешка",
+    "description": "Header of 'Bug report' section in Support pane"
+  },
+  "supportS4P1": {
+    "message": "Докладвайте за проблеми със самия uBlock Origin в <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\"><code>uBlockOrigin/uBlock-issue</code> проследяване на проблеми</span>. Изисква се акаунт в GitHub.",
+    "description": "First paragraph of 'Bug report' section in Support pane"
+  },
+  "supportS5H": {
+    "message": "Информация за отстраняване на неизправности",
+    "description": "Header of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS5P1": {
+    "message": "По-долу е представена техническа информация, която може да е полезна, когато доброволците се опитват да ви помогнат да разрешите даден проблем.",
+    "description": "First paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS5P2": {
+    "message": "<b>Важно:</b> Потенциално лична или чувствителна информация се редактира по подразбиране. Редактираната информация може да затрудни решаването на даден проблем.",
+    "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportRedact": {
+    "message": "Редактиран вид",
+    "description": "Text for 'Redact' button"
+  },
+  "supportUnredact": {
+    "message": "Нередактиран вид",
+    "description": "Text for 'Unredact' button"
+  },
   "aboutPrivacyPolicy": {
     "message": "Политика за поверителност",
     "description": "Link to privacy policy on GitHub (English)"
@@ -854,18 +922,6 @@
   "aboutChangelog": {
     "message": "Списък с промени",
     "description": ""
-  },
-  "aboutWiki": {
-    "message": "Wiki",
-    "description": "English: project' wiki on GitHub"
-  },
-  "aboutSupport": {
-    "message": "Поддръжка",
-    "description": "A link for where to get support"
-  },
-  "aboutIssues": {
-    "message": "Проследяване и докладване на проблеми",
-    "description": "Text for a link to official issue tracker"
   },
   "aboutCode": {
     "message": "Изходен код (GPLv3)",
@@ -1074,6 +1130,10 @@
   "genericCopyToClipboard": {
     "message": "Копиране в клипборда",
     "description": "Label for buttons used to copy something to the clipboard"
+  },
+  "genericSelectAll": {
+    "message": "Избиране на всичко",
+    "description": "Label for buttons used to select all text in editor"
   },
   "toggleBlockingProfile": {
     "message": "Превключване на профила за блокиране",

@@ -55,6 +55,10 @@
     "message": "Sobre",
     "description": "appears as tab name in dashboard"
   },
+  "supportPageName": {
+    "message": "Suporte",
+    "description": "appears as tab name in dashboard"
+  },
   "assetViewerPageName": {
     "message": "uBlock₀ — Visualizador de recursos",
     "description": "Title for the asset viewer page"
@@ -847,6 +851,70 @@
     "message": "Markdown",
     "description": "Label for radio-button to pick export text format"
   },
+  "supportOpenButton": {
+    "message": "Abrir",
+    "description": "Text for button which open an external webpage in Support pane"
+  },
+  "supportS1H": {
+    "message": "Documentação",
+    "description": "Header of 'Documentation' section in Support pane"
+  },
+  "supportS1P1": {
+    "message": "Leia a documentação em <code>uBlock/wiki</code> para saber sobre todos os recursos do uBlock Origin.",
+    "description": "First paragraph of 'Documentation' section in Support pane"
+  },
+  "supportS2H": {
+    "message": "Perguntas e Suporte",
+    "description": "Header of 'Questions and support' section in Support pane"
+  },
+  "supportS2P1": {
+    "message": "Respostas a perguntas e outros tipos de suporte de ajuda são fornecidas no subreddit <code>/r/uBlockOrigin</code>.",
+    "description": "First paragraph of 'Questions and support' section in Support pane"
+  },
+  "supportS3H": {
+    "message": "Problemas de filtro/website está quebrado",
+    "description": "Header of 'Filter issues' section in Support pane"
+  },
+  "supportS3P1": {
+    "message": "Reportar problemas de filtro com websites específicos no <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\">rastreador de problemas <code>uBlockOrigin/uAssets</code>.</span>. Requer uma conta GitHub.",
+    "description": "First paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS3P2": {
+    "message": "<b>Importante:</b> Evite usar outros bloqueadores com propósito similar com uBlock Origin, isso pode causar problemas com filtros em websites específicos.",
+    "description": "Second paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS3P3": {
+    "message": "<b>Dicas:</b> Esteja certo que sua lista de filtros está atualizada. <span data-url=\"logger-ui.html#_\">Os logs</span> são a principal ferramenta para diagnosticar problemas relacionados a filtros.",
+    "description": "Third paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS4H": {
+    "message": "Relatório de erro",
+    "description": "Header of 'Bug report' section in Support pane"
+  },
+  "supportS4P1": {
+    "message": "Relate problemas com o próprio uBlock Origin no <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\">rastreador de problemas <code>uBlockOrigin/uBlock-issue</code></span>. Requer uma conta GitHub.",
+    "description": "First paragraph of 'Bug report' section in Support pane"
+  },
+  "supportS5H": {
+    "message": "Informação sobre Soluções de Problemas",
+    "description": "Header of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS5P1": {
+    "message": "Abaixo estão informações técnicas que podem ser úteis quando voluntários tentarem ajudá-lo a resolver um problema.",
+    "description": "First paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS5P2": {
+    "message": "<b>Importante:</b> Informações potencialmente privadas ou confidenciais são removidas por padrão. As informações removidas podem dificultar a solução de um problema.",
+    "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportRedact": {
+    "message": "Redigir",
+    "description": "Text for 'Redact' button"
+  },
+  "supportUnredact": {
+    "message": "Não redigir",
+    "description": "Text for 'Unredact' button"
+  },
   "aboutPrivacyPolicy": {
     "message": "Política de privacidade",
     "description": "Link to privacy policy on GitHub (English)"
@@ -854,18 +922,6 @@
   "aboutChangelog": {
     "message": "Registro de alterações",
     "description": ""
-  },
-  "aboutWiki": {
-    "message": "Documentação",
-    "description": "English: project' wiki on GitHub"
-  },
-  "aboutSupport": {
-    "message": "Suporte",
-    "description": "A link for where to get support"
-  },
-  "aboutIssues": {
-    "message": "Rastreador de problemas",
-    "description": "Text for a link to official issue tracker"
   },
   "aboutCode": {
     "message": "Código-fonte (GPLv3)",
@@ -1074,6 +1130,10 @@
   "genericCopyToClipboard": {
     "message": "Copiar para a área de transferência",
     "description": "Label for buttons used to copy something to the clipboard"
+  },
+  "genericSelectAll": {
+    "message": "Selecionar tudo",
+    "description": "Label for buttons used to select all text in editor"
   },
   "toggleBlockingProfile": {
     "message": "Alternar perfil de bloqueio",

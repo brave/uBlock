@@ -55,6 +55,10 @@
     "message": "O doplnku",
     "description": "appears as tab name in dashboard"
   },
+  "supportPageName": {
+    "message": "Podpora",
+    "description": "appears as tab name in dashboard"
+  },
   "assetViewerPageName": {
     "message": "uBlock₀ — Zobrazenie zdrojov",
     "description": "Title for the asset viewer page"
@@ -847,6 +851,70 @@
     "message": "Formátované",
     "description": "Label for radio-button to pick export text format"
   },
+  "supportOpenButton": {
+    "message": "Otvoriť",
+    "description": "Text for button which open an external webpage in Support pane"
+  },
+  "supportS1H": {
+    "message": "Dokumentácia",
+    "description": "Header of 'Documentation' section in Support pane"
+  },
+  "supportS1P1": {
+    "message": "Prečítajte si dokumentáciu na <code>uBlock/wiki</code> a dozviete sa o všetkých funkciách uBlock Origin.",
+    "description": "First paragraph of 'Documentation' section in Support pane"
+  },
+  "supportS2H": {
+    "message": "Otázky a podpora",
+    "description": "Header of 'Questions and support' section in Support pane"
+  },
+  "supportS2P1": {
+    "message": "Odpovede na otázky a iné druhy podpory pomoci sa poskytujú na subreddite <code>/r/uBlockOrigin</code>.",
+    "description": "First paragraph of 'Questions and support' section in Support pane"
+  },
+  "supportS3H": {
+    "message": "Problémy s filtrom/webová stránka je nefunkčná",
+    "description": "Header of 'Filter issues' section in Support pane"
+  },
+  "supportS3P1": {
+    "message": "Nahlásenie problémov s filtrom s konkrétnymi webovými stránkami na <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"><code>uBlockOrigin/uAssets</code> issue tracker</span>. Vyžaduje sa GitHub účet.",
+    "description": "First paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS3P2": {
+    "message": "<b>Dôležité:</b> Vyhnite sa používaniu iných podobne zameraných blokátorov spolu s uBlock Origin, pretože to môže spôsobiť problémy s filtrovaním na konkrétnych webových stránkach.",
+    "description": "Second paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS3P3": {
+    "message": "<b>Tipy:</b> Uistite sa, že je váš zoznam filtrov aktuálny. <span data-url=\"logger-ui.html#_\">Záznamenávač</span> je primárnym nástrojom na diagnostiku problémov súvisiacich s filtrami.",
+    "description": "Third paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS4H": {
+    "message": "Nahlásiť chybu",
+    "description": "Header of 'Bug report' section in Support pane"
+  },
+  "supportS4P1": {
+    "message": "Nahlásenie problémov so samotným uBlock Origin na <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\"><code>uBlockOrigin/uBlock-issue</code> issue tracker</span>. Vyžaduje sa GitHub účet.",
+    "description": "First paragraph of 'Bug report' section in Support pane"
+  },
+  "supportS5H": {
+    "message": "Informácie o riešení problémov",
+    "description": "Header of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS5P1": {
+    "message": "Nasledujú technické informácie, ktoré môžu byť užitočné, keď sa vám dobrovoľníci pokúšajú pomôcť vyriešiť problém.",
+    "description": "First paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS5P2": {
+    "message": "<b>Dôležité:</b> Potenciálne súkromné alebo citlivé informácie sú štandardne upravované. Upravené informácie môžu sťažiť riešenie problému.",
+    "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportRedact": {
+    "message": "Upravovať",
+    "description": "Text for 'Redact' button"
+  },
+  "supportUnredact": {
+    "message": "Neupravovať",
+    "description": "Text for 'Unredact' button"
+  },
   "aboutPrivacyPolicy": {
     "message": "Zásady ochrany osobných údajov",
     "description": "Link to privacy policy on GitHub (English)"
@@ -854,18 +922,6 @@
   "aboutChangelog": {
     "message": "Zoznam zmien",
     "description": ""
-  },
-  "aboutWiki": {
-    "message": "Wiki",
-    "description": "English: project' wiki on GitHub"
-  },
-  "aboutSupport": {
-    "message": "Podpora",
-    "description": "A link for where to get support"
-  },
-  "aboutIssues": {
-    "message": "Zoznam problémov",
-    "description": "Text for a link to official issue tracker"
   },
   "aboutCode": {
     "message": "Zdrojový kód (GPLv3)",
@@ -1074,6 +1130,10 @@
   "genericCopyToClipboard": {
     "message": "Kopírovať do schránky",
     "description": "Label for buttons used to copy something to the clipboard"
+  },
+  "genericSelectAll": {
+    "message": "Označiť všetko",
+    "description": "Label for buttons used to select all text in editor"
   },
   "toggleBlockingProfile": {
     "message": "Prepnúť profil blokovania",

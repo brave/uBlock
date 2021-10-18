@@ -55,6 +55,10 @@
     "message": "Про програму",
     "description": "appears as tab name in dashboard"
   },
+  "supportPageName": {
+    "message": "Підтримка",
+    "description": "appears as tab name in dashboard"
+  },
   "assetViewerPageName": {
     "message": "uBlock₀ – Переглядач ресурсів",
     "description": "Title for the asset viewer page"
@@ -847,6 +851,70 @@
     "message": "Markdown",
     "description": "Label for radio-button to pick export text format"
   },
+  "supportOpenButton": {
+    "message": "Відкрити",
+    "description": "Text for button which open an external webpage in Support pane"
+  },
+  "supportS1H": {
+    "message": "Документація",
+    "description": "Header of 'Documentation' section in Support pane"
+  },
+  "supportS1P1": {
+    "message": "Прочитайте документацію у <code>uBlock/вікі</code>, щоб дізнатися про всі функції uBlock Origin. ",
+    "description": "First paragraph of 'Documentation' section in Support pane"
+  },
+  "supportS2H": {
+    "message": "Запитання та підтримка",
+    "description": "Header of 'Questions and support' section in Support pane"
+  },
+  "supportS2P1": {
+    "message": "Відповіді на запитання та інші види підтримки довідки надаються на <code>/r/uBlockOrigin</code>.",
+    "description": "First paragraph of 'Questions and support' section in Support pane"
+  },
+  "supportS3H": {
+    "message": "Фільтр проблем/вебсайтів пошкоджено",
+    "description": "Header of 'Filter issues' section in Support pane"
+  },
+  "supportS3P1": {
+    "message": "Повідомити про проблеми фільтра на певних вебсайтах до <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\">відстежувача проблем<code>uBlockOrigin/uAssets</code></span>. Потрібен обліковий запис GitHub.",
+    "description": "First paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS3P2": {
+    "message": "<b>Важливо:</b> Уникайте використання інших блокувальників аналогічного призначення разом із uBlock Origin, оскільки це може спричинити проблеми з фільтрами на певних вебсайтах.",
+    "description": "Second paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS3P3": {
+    "message": "<b>Поради:</b> Переконайтеся, що списки фільтрів оновлено. <span data-url=\"logger-ui.html#_\">Журнал</span> — основний засіб визначення проблем пов'язаних з фільтром.",
+    "description": "Third paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS4H": {
+    "message": "Звіт про ваду",
+    "description": "Header of 'Bug report' section in Support pane"
+  },
+  "supportS4P1": {
+    "message": "Повідомити про проблеми самого uBlock Origin <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\">відстежувач проблем <code>uBlockOrigin/uBlock-issue</code>. Потрібен обліковий запис GitHub.",
+    "description": "First paragraph of 'Bug report' section in Support pane"
+  },
+  "supportS5H": {
+    "message": "Інформація про усунення несправностей",
+    "description": "Header of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS5P1": {
+    "message": "Внизу наведено технічні дані, які можуть бути корисними, коли волонтери намагатимуться допомогти вам розв'язати проблему.",
+    "description": "First paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS5P2": {
+    "message": "<b>Важливо:</b> Потенційно приватні або конфіденційні дані типово редаговані. Редаговані дані можуть ускладнити розв'язання проблеми.",
+    "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportRedact": {
+    "message": "Редагувати",
+    "description": "Text for 'Redact' button"
+  },
+  "supportUnredact": {
+    "message": "Скасувати редагування",
+    "description": "Text for 'Unredact' button"
+  },
   "aboutPrivacyPolicy": {
     "message": "Політика конфіденційності",
     "description": "Link to privacy policy on GitHub (English)"
@@ -854,18 +922,6 @@
   "aboutChangelog": {
     "message": "Журнал змін",
     "description": ""
-  },
-  "aboutWiki": {
-    "message": "Вікі",
-    "description": "English: project' wiki on GitHub"
-  },
-  "aboutSupport": {
-    "message": "Підтримка",
-    "description": "A link for where to get support"
-  },
-  "aboutIssues": {
-    "message": "Відстеження проблем",
-    "description": "Text for a link to official issue tracker"
   },
   "aboutCode": {
     "message": "Джерельний код (GPLv3)",
@@ -1072,8 +1128,12 @@
     "description": "Tooltip for the button used to lock scrolling between the views in the 'My rules' pane"
   },
   "genericCopyToClipboard": {
-    "message": "Скопіювати до буферу",
+    "message": "Скопіювати до буферу обміну",
     "description": "Label for buttons used to copy something to the clipboard"
+  },
+  "genericSelectAll": {
+    "message": "Вибрати все",
+    "description": "Label for buttons used to select all text in editor"
   },
   "toggleBlockingProfile": {
     "message": "Перемкнути профіль блокування",

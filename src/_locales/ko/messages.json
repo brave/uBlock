@@ -55,6 +55,10 @@
     "message": "정보",
     "description": "appears as tab name in dashboard"
   },
+  "supportPageName": {
+    "message": "지원",
+    "description": "appears as tab name in dashboard"
+  },
   "assetViewerPageName": {
     "message": "uBlock₀ — Asset 뷰어",
     "description": "Title for the asset viewer page"
@@ -847,6 +851,70 @@
     "message": "마크다운",
     "description": "Label for radio-button to pick export text format"
   },
+  "supportOpenButton": {
+    "message": "열기",
+    "description": "Text for button which open an external webpage in Support pane"
+  },
+  "supportS1H": {
+    "message": "문서",
+    "description": "Header of 'Documentation' section in Support pane"
+  },
+  "supportS1P1": {
+    "message": "<code>uBlock/wiki</code>의 문서를 읽고 uBlock Origin의 모든 기능에 대해 알아보세요.",
+    "description": "First paragraph of 'Documentation' section in Support pane"
+  },
+  "supportS2H": {
+    "message": "질문 및 지원",
+    "description": "Header of 'Questions and support' section in Support pane"
+  },
+  "supportS2P1": {
+    "message": "질문에 대한 답변 및 기타 도움 지원은 <code>/r/uBlockOrigin</code> 서브레딧에서 제공됩니다.",
+    "description": "First paragraph of 'Questions and support' section in Support pane"
+  },
+  "supportS3H": {
+    "message": "필터 문제/웹사이트가 망가짐",
+    "description": "Header of 'Filter issues' section in Support pane"
+  },
+  "supportS3P1": {
+    "message": "특정 웹사이트에서 발생하는 필터 이슈는 <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"><code>uBlockOrigin/uAssets</code> 이슈 트래커</span>에 보고해주세요. GitHub 계정이 필요합니다.",
+    "description": "First paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS3P2": {
+    "message": "<b>중요:</b> uBlock Origin과 유사한 목적의 다른 차단기를 함께 사용하지 마세요. 특정 웹사이트에서 필터 문제가 발생할 수 있습니다.",
+    "description": "Second paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS3P3": {
+    "message": "<b>팁:</b> 필터 목록이 최신 버전인지 확인하세요. <span data-url=\"logger-ui.html#_\">로거</span>는 필터 관련 문제를 진단하는 데에 사용되는 기본적인 도구입니다.",
+    "description": "Third paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS4H": {
+    "message": "오류 신고",
+    "description": "Header of 'Bug report' section in Support pane"
+  },
+  "supportS4P1": {
+    "message": "uBlock Origin 자체에 대한 이슈는 <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\"><code>uBlockOrigin/uBlock-issue</code> 이슈 트래커</span>에 보고해주세요. GitHub 계정이 필요합니다.",
+    "description": "First paragraph of 'Bug report' section in Support pane"
+  },
+  "supportS5H": {
+    "message": "문제 해결 정보",
+    "description": "Header of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS5P1": {
+    "message": "다음은 자원 봉사자들이 문제를 해결하는 데에 도움을 줄 때 유용할 수 있는 기술적인 정보입니다.",
+    "description": "First paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS5P2": {
+    "message": "<b>중요:</b> 잠재적으로 개인 정보이거나 민감한 정보는 기본적으로 지워집니다. 정보가 지워지면 문제 해결이 더 어려워질 수도 있습니다.",
+    "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportRedact": {
+    "message": "지우기",
+    "description": "Text for 'Redact' button"
+  },
+  "supportUnredact": {
+    "message": "지우지 않기",
+    "description": "Text for 'Unredact' button"
+  },
   "aboutPrivacyPolicy": {
     "message": "개인정보취급방침",
     "description": "Link to privacy policy on GitHub (English)"
@@ -854,18 +922,6 @@
   "aboutChangelog": {
     "message": "변경사항",
     "description": ""
-  },
-  "aboutWiki": {
-    "message": "위키",
-    "description": "English: project' wiki on GitHub"
-  },
-  "aboutSupport": {
-    "message": "지원",
-    "description": "A link for where to get support"
-  },
-  "aboutIssues": {
-    "message": "이슈 트래커",
-    "description": "Text for a link to official issue tracker"
   },
   "aboutCode": {
     "message": "소스 코드 (GPLv3)",
@@ -1074,6 +1130,10 @@
   "genericCopyToClipboard": {
     "message": "클립보드에 복사",
     "description": "Label for buttons used to copy something to the clipboard"
+  },
+  "genericSelectAll": {
+    "message": "모두 선택",
+    "description": "Label for buttons used to select all text in editor"
   },
   "toggleBlockingProfile": {
     "message": "차단 프로필 전환",

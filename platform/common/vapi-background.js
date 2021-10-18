@@ -410,16 +410,6 @@ vAPI.Tabs = class {
             return;
         }
 
-        // https://github.com/gorhill/uBlock/issues/3053#issuecomment-332276818
-        //   Do not try to lookup uBO's own pages with FF 55 or less.
-        if (
-            vAPI.webextFlavor.soup.has('firefox') &&
-            vAPI.webextFlavor.major < 56
-        ) {
-            this.create(targetURL, details);
-            return;
-        }
-
         // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/query#Parameters
         //   "Note that fragment identifiers are not matched."
         //   Fragment identifiers ARE matched -- we need to remove the fragment.
@@ -534,9 +524,12 @@ vAPI.Tabs = class {
     }
 
     onUpdatedHandler(tabId, changeInfo, tab) {
+        // Ignore uninteresting update events
+        const { status = '', title = '', url = '' } = changeInfo;
+        if ( status === '' && title === '' && url === '' ) { return; }
         // https://github.com/gorhill/uBlock/issues/3073
         //   Fall back to `tab.url` when `changeInfo.url` is not set.
-        if ( typeof changeInfo.url !== 'string' ) {
+        if ( url === '' ) {
             changeInfo.url = tab && tab.url;
         }
         if ( changeInfo.url ) {

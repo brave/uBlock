@@ -55,6 +55,10 @@
     "message": "Hakkında",
     "description": "appears as tab name in dashboard"
   },
+  "supportPageName": {
+    "message": "Destek",
+    "description": "appears as tab name in dashboard"
+  },
   "assetViewerPageName": {
     "message": "uBlock₀ — Kaynak görüntüleyici",
     "description": "Title for the asset viewer page"
@@ -847,6 +851,70 @@
     "message": "Markdown",
     "description": "Label for radio-button to pick export text format"
   },
+  "supportOpenButton": {
+    "message": "Aç",
+    "description": "Text for button which open an external webpage in Support pane"
+  },
+  "supportS1H": {
+    "message": "Belgeler",
+    "description": "Header of 'Documentation' section in Support pane"
+  },
+  "supportS1P1": {
+    "message": "uBlock Origin'in tüm özellikleri ile igili bilgi edinmek için <code>uBlock/wiki</code> adresindeki belgeri okuyun.",
+    "description": "First paragraph of 'Documentation' section in Support pane"
+  },
+  "supportS2H": {
+    "message": "Sorular ve destek",
+    "description": "Header of 'Questions and support' section in Support pane"
+  },
+  "supportS2P1": {
+    "message": "Sorulara cevaplar ve diğer türlü yardım desteği <code>/r/uBlockOrigin</code> subreddit'inde sunulmaktadır.",
+    "description": "First paragraph of 'Questions and support' section in Support pane"
+  },
+  "supportS3H": {
+    "message": "Filtre sorunları/websitesi bozuk",
+    "description": "Header of 'Filter issues' section in Support pane"
+  },
+  "supportS3P1": {
+    "message": "Belirli websiteleriyle ilgili filtre sorunlarını  <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"><code>uBlockOrigin/uAssets</code> sorun izleyicisine</span> bildirin. Github hesabı gerektirir.",
+    "description": "First paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS3P2": {
+    "message": "<b>Önemli:</b> uBlock Origin'le birlikte, belirli websitelerinde filtre sorunlarına neden olabileceği için, diğer benzer amaçlı engellicileri kullanmaktan kaçının.",
+    "description": "Second paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS3P3": {
+    "message": "<b>İpuçları:</b> Filtre listenizin güncelliğinden emin olun. <span data-url=\"logger-ui.html#_\">Günlükçü</span> filtre bağlantılı sorunları tanılamada temel araçtır.",
+    "description": "Third paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS4H": {
+    "message": "Hata raporu",
+    "description": "Header of 'Bug report' section in Support pane"
+  },
+  "supportS4P1": {
+    "message": "uBlock Origin'in kendisiyle ilgili sorunlarını <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\"><code>uBlockOrigin/uBlock-issue</code> sorun izleyicisine</span> bildirin. Github hesabı gerektirir.",
+    "description": "First paragraph of 'Bug report' section in Support pane"
+  },
+  "supportS5H": {
+    "message": "Hata Giderme Bilgisi",
+    "description": "Header of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS5P1": {
+    "message": "Aşağıdaki, gönüllüler size bir sorunu çözmede yardım etmeye çalışırken, faydalı olabilecek teknik bilgidir.",
+    "description": "First paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS5P2": {
+    "message": "<b>Önemli:</b> Olası gizli ve hassas bilgiler öntanımlı olarak kısaltılır. Kısaltılmış bilgiler bir sorunu çözmeyi zorlaştırabilir.",
+    "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportRedact": {
+    "message": "Kısalt",
+    "description": "Text for 'Redact' button"
+  },
+  "supportUnredact": {
+    "message": "Kısaltma",
+    "description": "Text for 'Unredact' button"
+  },
   "aboutPrivacyPolicy": {
     "message": "Gizlilik ilkesi",
     "description": "Link to privacy policy on GitHub (English)"
@@ -854,18 +922,6 @@
   "aboutChangelog": {
     "message": "Değişiklik günlüğü",
     "description": ""
-  },
-  "aboutWiki": {
-    "message": "Viki",
-    "description": "English: project' wiki on GitHub"
-  },
-  "aboutSupport": {
-    "message": "Destek",
-    "description": "A link for where to get support"
-  },
-  "aboutIssues": {
-    "message": "Sorun izleyici",
-    "description": "Text for a link to official issue tracker"
   },
   "aboutCode": {
     "message": "Kaynak kodu (GPLv3)",
@@ -1074,6 +1130,10 @@
   "genericCopyToClipboard": {
     "message": "Panoya kopyala",
     "description": "Label for buttons used to copy something to the clipboard"
+  },
+  "genericSelectAll": {
+    "message": "Tümünü seç",
+    "description": "Label for buttons used to select all text in editor"
   },
   "toggleBlockingProfile": {
     "message": "Engelleme profilini aç/kapa",

@@ -55,6 +55,10 @@
     "message": "Om",
     "description": "appears as tab name in dashboard"
   },
+  "supportPageName": {
+    "message": "Support",
+    "description": "appears as tab name in dashboard"
+  },
   "assetViewerPageName": {
     "message": "uBlock₀ — Visning af aktiver",
     "description": "Title for the asset viewer page"
@@ -847,6 +851,70 @@
     "message": "Markdown",
     "description": "Label for radio-button to pick export text format"
   },
+  "supportOpenButton": {
+    "message": "Åbn",
+    "description": "Text for button which open an external webpage in Support pane"
+  },
+  "supportS1H": {
+    "message": "Dokumentation",
+    "description": "Header of 'Documentation' section in Support pane"
+  },
+  "supportS1P1": {
+    "message": "Læs dokumentationen på <code> uBlock/wiki</code> for at få mere at vide om alle uBlock Origin-funktionerne.",
+    "description": "First paragraph of 'Documentation' section in Support pane"
+  },
+  "supportS2H": {
+    "message": "Spørgsmål og Support",
+    "description": "Header of 'Questions and support' section in Support pane"
+  },
+  "supportS2P1": {
+    "message": "Svar på spørgsmål samt andre former for hjælp/support er tilgængelig via subreddit<code>/r/uBlockOrigin</code>.",
+    "description": "First paragraph of 'Questions and support' section in Support pane"
+  },
+  "supportS3H": {
+    "message": "Filterproblemer/websted er ødelagt",
+    "description": "Header of 'Filter issues' section in Support pane"
+  },
+  "supportS3P1": {
+    "message": "Anmeld filterproblemer med bestemte websteder til <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"><code>uBlockOrigin/uAssets</code>-problemsporing</span>. Kræver en GitHub-konto.",
+    "description": "First paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS3P2": {
+    "message": "<b>Vigtigt:</b> Undgå brug af andre blockere med lign. formål sammen med uBlock Origin, da dette kan medføre filterproblemer på visse websteder.",
+    "description": "Second paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS3P3": {
+    "message": "<b>Tip:</b> Sørg for, at dine filterlister er opdaterede. <span data-url=\"logger-ui.html#_\">Loggeren</span> er det primære værktøj til diagnosticering af filterrelaterede problemer.",
+    "description": "Third paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS4H": {
+    "message": "Fejlrapport",
+    "description": "Header of 'Bug report' section in Support pane"
+  },
+  "supportS4P1": {
+    "message": "Anmeld problemer med selve uBlock Origin via <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\"><code>uBlockOrigin/uBlock-issue</code> problemsporingen</span>. Kræver en GitHub-konto.",
+    "description": "First paragraph of 'Bug report' section in Support pane"
+  },
+  "supportS5H": {
+    "message": "Fejlfindingsinformation",
+    "description": "Header of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS5P1": {
+    "message": "Nedenfor findes tekniske oplysninger, som kan være nyttige, når frivillige forsøger at hjælpe dig med at løse et problem.",
+    "description": "First paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS5P2": {
+    "message": "<b>Vigtigt:</b> Potentielt fortrolige eller sensitive oplysninger bortredigeres som standard, hvilket kan gøre problemløsningen vanskeligere.",
+    "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportRedact": {
+    "message": "Bortredigér",
+    "description": "Text for 'Redact' button"
+  },
+  "supportUnredact": {
+    "message": "Bortredigér ikke",
+    "description": "Text for 'Unredact' button"
+  },
   "aboutPrivacyPolicy": {
     "message": "Fortrolighedspolitik",
     "description": "Link to privacy policy on GitHub (English)"
@@ -854,18 +922,6 @@
   "aboutChangelog": {
     "message": "Ændringslog",
     "description": ""
-  },
-  "aboutWiki": {
-    "message": "Wiki",
-    "description": "English: project' wiki on GitHub"
-  },
-  "aboutSupport": {
-    "message": "Support",
-    "description": "A link for where to get support"
-  },
-  "aboutIssues": {
-    "message": "Problemsporer",
-    "description": "Text for a link to official issue tracker"
   },
   "aboutCode": {
     "message": "Kildekode (GPLv3)",
@@ -1074,6 +1130,10 @@
   "genericCopyToClipboard": {
     "message": "Kopiér til Udklipsholder",
     "description": "Label for buttons used to copy something to the clipboard"
+  },
+  "genericSelectAll": {
+    "message": "Vælg alt",
+    "description": "Label for buttons used to select all text in editor"
   },
   "toggleBlockingProfile": {
     "message": "Slå blokeringsprofil til/fra",

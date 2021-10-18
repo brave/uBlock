@@ -788,7 +788,7 @@
         rmattr();
         if ( /\bstay\b/.test(behavior) === false ) { return; }
         const observer = new MutationObserver(mutationHandler);
-        observer.observe(document.documentElement, {
+        observer.observe(document, {
             attributes: true,
             attributeFilter: tokens,
             childList: true,
@@ -847,7 +847,7 @@
         rmclass();
         if ( /\bstay\b/.test(behavior) === false ) { return; }
         const observer = new MutationObserver(mutationHandler);
-        observer.observe(document.documentElement, {
+        observer.observe(document, {
             attributes: true,
             attributeFilter: [ 'class' ],
             childList: true,
@@ -1534,28 +1534,28 @@
 
 /// damoh-defuser.js
 (function() {
-    var handled = new WeakSet();
-    var asyncTimer;
-    var cleanVideo = function() {
+    const handled = new WeakSet();
+    let asyncTimer;
+    const cleanVideo = function() {
         asyncTimer = undefined;
-        var v = document.querySelector('video');
+        const v = document.querySelector('video');
         if ( v === null ) { return; }
         if ( handled.has(v) ) { return; }
         handled.add(v);
         v.pause();
         v.controls = true;
-        var el = v.querySelector('meta[itemprop="contentURL"][content]');
+        let el = v.querySelector('meta[itemprop="contentURL"][content]');
         if ( el === null ) { return; }
         v.src = el.getAttribute('content');
         el = v.querySelector('meta[itemprop="thumbnailUrl"][content]');
         if ( el !== null ) { v.poster = el.getAttribute('content'); }
     };
-    var cleanVideoAsync = function() {
+    const cleanVideoAsync = function() {
         if ( asyncTimer !== undefined ) { return; }
         asyncTimer = window.requestAnimationFrame(cleanVideo);
     };
-    var observer = new MutationObserver(cleanVideoAsync);
-    observer.observe(document.documentElement, { childList: true, subtree: true });
+    const observer = new MutationObserver(cleanVideoAsync);
+    observer.observe(document, { childList: true, subtree: true });
 })();
 
 
@@ -1571,7 +1571,9 @@
                 typeof url === 'string' &&
                 url.includes('gql') &&
                 init instanceof Object &&
-                init.headers instanceof Object
+                init.headers instanceof Object &&
+                typeof init.body === 'string' &&
+                init.body.includes('PlaybackAccessToken')
             ) {
                 const { headers } = init;
                 if ( typeof headers['X-Device-Id'] === 'string' ) {

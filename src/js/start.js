@@ -353,19 +353,9 @@ const fromFetch = function(to, fetched) {
 
 const createDefaultProps = function() {
     const fetchableProps = {
-        'dynamicFilteringString': [
-            'behind-the-scene * * noop',
-            'behind-the-scene * image noop',
-            'behind-the-scene * 3p noop',
-            'behind-the-scene * inline-script noop',
-            'behind-the-scene * 1p-script noop',
-            'behind-the-scene * 3p-script noop',
-            'behind-the-scene * 3p-frame noop',
-        ].join('\n'),
+        'dynamicFilteringString': µb.dynamicFilteringDefault.join('\n'),
         'urlFilteringString': '',
-        'hostnameSwitchesString': [
-            'no-large-media: behind-the-scene false',
-        ].join('\n'),
+        'hostnameSwitchesString': µb.hostnameSwitchesDefault.join('\n'),
         'lastRestoreFile': '',
         'lastRestoreTime': 0,
         'lastBackupFile': '',
@@ -373,10 +363,6 @@ const createDefaultProps = function() {
         'netWhitelist': µb.netWhitelistDefault,
         'version': '0.0.0.0'
     };
-    // https://github.com/LiCybora/NanoDefenderFirefox/issues/196
-    if ( vAPI.webextFlavor.soup.has('firefox') ) {
-        fetchableProps.hostnameSwitchesString += '\nno-csp-reports: * true';
-    }
     toFetch(µb.localSettings, fetchableProps);
     toFetch(µb.restoreBackupSettings, fetchableProps);
     return fetchableProps;
@@ -390,7 +376,7 @@ try {
     ubolog(`Admin settings ready ${Date.now()-vAPI.T0} ms after launch`);
 
     await µb.loadHiddenSettings();
-    onHiddenSettingsReady();
+    await onHiddenSettingsReady();
     ubolog(`Hidden settings ready ${Date.now()-vAPI.T0} ms after launch`);
 
     const adminExtra = await vAPI.adminStorage.get('toAdd');
