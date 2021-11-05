@@ -5,7 +5,7 @@ on:
     - cron:  '0 9 * * *'
 
 jobs:
-  get-version:
+  checkForChanges:
     runs-on: ubuntu-latest
     env:
       FILES_TO_CHECK: "assets/resources/scriptlets.js|web_accessible_resources/|js/redirect-engine.js"
