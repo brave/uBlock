@@ -1,0 +1,3 @@
+assets/resources/scriptlets.js @pes10k
+src/web_accessible_resources/* @pes10k
+src/js/redirect-engine.js @pes10k
