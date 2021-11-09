@@ -1256,33 +1256,32 @@ const getSupportData = async function() {
         const list = lists[listKey];
         if ( list.content !== 'filters' ) { continue; }
         const used = µb.selectedFilterLists.includes(listKey);
-        const listDetails = {};
+        const listDetails = [];
         if ( used ) {
             if ( typeof list.entryCount === 'number' ) {
-                listDetails['filters used/total'] =
-                    `${list.entryUsedCount} / ${list.entryCount}`;
+                listDetails.push(`${list.entryCount}-${list.entryCount-list.entryUsedCount}`);
             }
             if ( typeof list.writeTime === 'number' ) {
-                const last = Math.floor((
-                    list.writeTime -
-                    Date.now()
-                ) / 864000) / 100;
-                const next = Math.floor((
-                    list.writeTime +
-                    list.updateAfter * 86400000 -
-                    Date.now()
-                ) / 864000) / 100;
-                listDetails['updated last/next (days)'] = `${last} / ${next}`;
+                const delta = (Date.now() - list.writeTime) / 1000 | 0;
+                const days = (delta / 86400) | 0;
+                const hours = (delta % 86400) / 3600 | 0;
+                const minutes = (delta % 3600) / 60 | 0;
+                const parts = [];
+                if ( days > 0 ) { parts.push(`${days}d`); }
+                if ( hours > 0 ) { parts.push(`${hours}h`); }
+                if ( minutes > 0 ) { parts.push(`${minutes}m`); }
+                if ( parts.length === 0 ) { parts.push('now'); }
+                listDetails.push(parts.join('.'));
             }
         }
         if ( list.isDefault ) {
             if ( used ) {
-                defaultListset[listKey] = listDetails;
+                defaultListset[listKey] = listDetails.join(', ');
             } else {
                 removedListset[listKey] = null;
             }
         } else if ( used ) {
-            addedListset[listKey] = listDetails;
+            addedListset[listKey] = listDetails.join(', ');
         }
     }
     if ( Object.keys(defaultListset).length === 0 ) {
@@ -1305,7 +1304,7 @@ const getSupportData = async function() {
         extensionVersion: vAPI.app.version,
         modifiedUserSettings,
         modifiedHiddenSettings,
-        listset: {
+        'listset (total-discarded, last updated)': {
             removed: removedListset,
             added: addedListset,
             default: defaultListset,
@@ -1864,6 +1863,8 @@ const onMessage = function(request, sender, callback) {
         const hash = µb.selectedFilterLists.indexOf(request.location) !== -1
             ? '#subscribed'
             : '';
+        // https://github.com/uBlockOrigin/uBlock-issues/issues/1797
+        if ( /^(file|https?):\/\//.test(url) === false ) { break; }
         vAPI.tabs.open({
             url: `/asset-viewer.html?url=${url}&title=${title}&subscribe=1${hash}`,
             select: true,

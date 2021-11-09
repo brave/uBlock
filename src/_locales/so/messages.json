@@ -4,1079 +4,1079 @@
     "description": "extension name."
   },
   "extShortDesc": {
-    "message": "Më në fund, një bllokues efikas që nuk e rëndon procesorin dhe memorien.",
+    "message": "Ugu dambeyntii, xannibaado hufan. Ku fudud oo ku saabsan CPU iyo xusuusta.",
     "description": "this will be in the Chrome web store: must be 132 characters or less"
   },
   "dashboardName": {
-    "message": "uBlock₀ — Paneli i kontrollit",
+    "message": "uBlock? - Dashboard",
     "description": "English: uBlock₀ — Dashboard"
   },
   "dashboardUnsavedWarning": {
-    "message": "Kujdes! Nuk keni ruajtur ndryshimet",
+    "message": "Digniin! Waxaad leedahay isbedelo aan la keydin",
     "description": "A warning in the dashboard when navigating away from unsaved changes"
   },
   "dashboardUnsavedWarningStay": {
-    "message": "Pres",
+    "message": "Joog",
     "description": "Label for button to prevent navigating away from unsaved changes"
   },
   "dashboardUnsavedWarningIgnore": {
-    "message": "Shpërfill",
+    "message": "Iska daa",
     "description": "Label for button to ignore unsaved changes"
   },
   "settingsPageName": {
-    "message": "Parametrat",
+    "message": "Dejinta",
     "description": "appears as tab name in dashboard"
   },
   "3pPageName": {
-    "message": "Listat e filtrave",
+    "message": "Liisaska sifee",
     "description": "appears as tab name in dashboard"
   },
   "1pPageName": {
-    "message": "Filtrat e mi",
+    "message": "filtarradayda",
     "description": "appears as tab name in dashboard"
   },
   "rulesPageName": {
-    "message": "Rregullat e mia",
+    "message": "Xeerarkayga",
     "description": "appears as tab name in dashboard"
   },
   "whitelistPageName": {
-    "message": "Faqet e besuara",
+    "message": "Goobaha lagu kalsoon yahay",
     "description": "appears as tab name in dashboard"
   },
   "shortcutsPageName": {
-    "message": "Shkurtoret",
+    "message": "Jid gaaban",
     "description": "appears as tab name in dashboard"
   },
   "statsPageName": {
-    "message": "uBlock₀ — Regjistri i kërkesave",
+    "message": "uBlock? - Logger",
     "description": "Title for the logger window"
   },
   "aboutPageName": {
-    "message": "Info",
+    "message": "Ku saabsan",
     "description": "appears as tab name in dashboard"
   },
   "supportPageName": {
-    "message": "Ndihma teknike",
+    "message": "Taageero",
     "description": "appears as tab name in dashboard"
   },
   "assetViewerPageName": {
-    "message": "uBlock₀ — Ilustruesi i aseteve",
+    "message": "uBlock? - Daawaha hantida",
     "description": "Title for the asset viewer page"
   },
   "advancedSettingsPageName": {
-    "message": "Parametra të avancuar",
+    "message": "Dejinta horumarsan",
     "description": "Title for the advanced settings page"
   },
   "popupPowerSwitchInfo": {
-    "message": "Ç/Aktivizoj uBlock₀ te ky uebsajti.\n\nKlikimi+Ctrl e çaktivizon uBlock₀ vetëm te kjo faqja.",
+    "message": "Guji: dami/damar uBlock? goobtan. ",
     "description": "English: Click: disable/enable uBlock₀ for this site.\n\nCtrl+click: disable uBlock₀ only on this page."
   },
   "popupPowerSwitchInfo1": {
-    "message": "Çaktivizoj uBlock₀ te ky uebsajti.\n\nKlikimi+Ctrl e çaktivizon uBlock₀ vetëm te kjo faqja.",
+    "message": "Click to disable uBlock₀ for this site.\n\nCtrl+click to disable uBlock₀ only on this page.",
     "description": "Message to be read by screen readers"
   },
   "popupPowerSwitchInfo2": {
-    "message": "Aktivizoj uBlock₀ te ky uebsajti.",
+    "message": "Ctrl+guji: dami uBlock? kaliya boggan.",
     "description": "Message to be read by screen readers"
   },
   "popupBlockedRequestPrompt": {
-    "message": "kërkesa të bllokuara",
+    "message": "Guji si aad u joojiso uBlock? ee goobtan. ",
     "description": "English: requests blocked"
   },
   "popupBlockedOnThisPagePrompt": {
-    "message": "te kjo faqja",
+    "message": "on this page",
     "description": "English: on this page"
   },
   "popupBlockedStats": {
-    "message": "{{count}} ose {{percent}}%",
+    "message": "Ctrl+guji si aad u joojiso uBlock? kaliya boggan.",
     "description": "Example: 15 (13%)"
   },
   "popupBlockedSinceInstallPrompt": {
-    "message": "që prej instalimit",
+    "message": "Guji si aad awood ugu siiso uBlock? goobtan.",
     "description": "English: since install"
   },
   "popupOr": {
-    "message": "ose",
+    "message": "codsiyada la xannibay",
     "description": "English: or"
   },
   "popupBlockedOnThisPage_v2": {
-    "message": "Te kjo faqja janë bllokuar",
+    "message": "boggan",
     "description": "For the new mobile-friendly popup design"
   },
   "popupBlockedSinceInstall_v2": {
-    "message": "Nga fillimi janë bllokuar",
+    "message": "{{count}} ({{boqolkiiba}}%)",
     "description": "For the new mobile-friendly popup design"
   },
   "popupDomainsConnected_v2": {
-    "message": "Domenet që janë lidhur",
+    "message": "tan iyo markii la rakibo",
     "description": "For the new mobile-friendly popup design"
   },
   "popupTipDashboard": {
-    "message": "Hap panelin e kontrollit",
+    "message": "ama",
     "description": "English: Click to open the dashboard"
   },
   "popupTipZapper": {
-    "message": "Asgjësuesi i elementeve",
+    "message": "Xiray boggan",
     "description": "Tooltip for the element-zapper icon in the popup panel"
   },
   "popupTipPicker": {
-    "message": "Përzgjedhësi i elementeve",
+    "message": "Xirmay tan iyo markii la rakibay",
     "description": "English: Enter element picker mode"
   },
   "popupTipLog": {
-    "message": "Regjistri i kërkesave",
+    "message": "Domains ku xiran",
     "description": "Tooltip used for the logger icon in the panel"
   },
   "popupTipNoPopups": {
-    "message": "Zh/Bllokoj të gjitha dritaret automatike te uebsajti",
+    "message": "Fur dashboard-ka",
     "description": "Tooltip for the no-popups per-site switch"
   },
   "popupTipNoPopups1": {
-    "message": "Bllokoj të gjitha dritaret automatike te uebsajti",
+    "message": "Geli qaabka zapper element",
     "description": "Tooltip for the no-popups per-site switch"
   },
   "popupTipNoPopups2": {
-    "message": "Zhbllokoj të gjitha dritaret automatike te uebsajti",
+    "message": "Geli qaabka xulashada walxaha",
     "description": "Tooltip for the no-popups per-site switch"
   },
   "popupTipNoLargeMedia": {
-    "message": "Zh/Bllokoj elementet e mëdha multimediale te uebsajti",
+    "message": "Fur qoraha",
     "description": "Tooltip for the no-large-media per-site switch"
   },
   "popupTipNoLargeMedia1": {
-    "message": "Bllokoj elementet e mëdha multimediale te uebsajti",
+    "message": "Bedeli xannibaadda dhammaan soo-baxayaasha goobtan",
     "description": "Tooltip for the no-large-media per-site switch"
   },
   "popupTipNoLargeMedia2": {
-    "message": "Zbllokoj elementet e mëdha multimediale te uebsajti",
+    "message": "Guji si aad u xannibto dhammaan popup-yada goobtan",
     "description": "Tooltip for the no-large-media per-site switch"
   },
   "popupTipNoCosmeticFiltering": {
-    "message": "Ç/Aktivizoj filtrat kozmetikë te uebsajti",
+    "message": "Guji si aadan mar dambe u xannibin dhammaan soo-bandhigyada goobtan",
     "description": "Tooltip for the no-cosmetic-filtering per-site switch"
   },
   "popupTipNoCosmeticFiltering1": {
-    "message": "Çaktivizoj filtrat kozmetikë te uebsajti",
+    "message": "U beddel xannibaadda walxaha waaweyn ee warbaahinta ee goobtan",
     "description": "Tooltip for the no-cosmetic-filtering per-site switch"
   },
   "popupTipNoCosmeticFiltering2": {
-    "message": "Aktivizoj filtrat kozmetikë te uebsajti",
+    "message": "Guji si aad u xannibto qaybaha warbaahinta waaweyn ee boggan",
     "description": "Tooltip for the no-cosmetic-filtering per-site switch"
   },
   "popupTipNoRemoteFonts": {
-    "message": "Zh/Bllokoj modelet e jashtme shkronjore te uebsajti",
+    "message": "Guji si aanad mar dambe u xannibin qaybaha warbaahinta waaweyn ee boggan",
     "description": "Tooltip for the no-remote-fonts per-site switch"
   },
   "popupTipNoRemoteFonts1": {
-    "message": "Bllokoj modelet e jashtme shkronjore te uebsajti",
+    "message": "U beddel shaandhaynta qurxinta goobtan",
     "description": "Tooltip for the no-remote-fonts per-site switch"
   },
   "popupTipNoRemoteFonts2": {
-    "message": "Zhbllokoj modelet e jashtme shkronjore te uebsajti",
+    "message": "Guji si aad u joojiso shaandhaynta isqurxinta ee goobtan",
     "description": "Tooltip for the no-remote-fonts per-site switch"
   },
   "popupTipNoScripting1": {
-    "message": "Çaktivizoj JavaScript-in te uebsajti",
+    "message": "Guji si aad awood ugu siiso shaandhaynta goobtan",
     "description": "Tooltip for the no-scripting per-site switch"
   },
   "popupTipNoScripting2": {
-    "message": "Nuk e çaktivizoj më JavaScript-in te uebsajti",
+    "message": "U beddel xannibaadda xarfaha fog ee boggan",
     "description": "Tooltip for the no-scripting per-site switch"
   },
   "popupNoPopups_v2": {
-    "message": "Dritaret automatike",
+    "message": "Guji si aad u xannibto farta fog ee goobtan",
     "description": "Caption for the no-popups per-site switch"
   },
   "popupNoLargeMedia_v2": {
-    "message": "Elementet e mëdha multimediale",
+    "message": "Guji si aadan mar dambe u xannibin farta fog ee goobtan",
     "description": "Caption for the no-large-media per-site switch"
   },
   "popupNoCosmeticFiltering_v2": {
-    "message": "Filtrat kozmetikë",
+    "message": "Guji si aad JavaScript uga joojiso goobtan",
     "description": "Caption for the no-cosmetic-filtering per-site switch"
   },
   "popupNoRemoteFonts_v2": {
-    "message": "Modelet e jashtme shkronjore",
+    "message": "Guji si aad mar dambe u damin JavaScript ee goobtan",
     "description": "Caption for the no-remote-fonts per-site switch"
   },
   "popupNoScripting_v2": {
-    "message": "JavaScript",
+    "message": "daaqadaha soo booda",
     "description": "Caption for the no-scripting per-site switch"
   },
   "popupMoreButton_v2": {
-    "message": "Të tjera",
+    "message": "Qaybaha warbaahinta waaweyn",
     "description": "Label to be used to show popup panel sections"
   },
   "popupLessButton_v2": {
-    "message": "Më pak",
+    "message": "Shaandhaynta qurxinta",
     "description": "Label to be used to hide popup panel sections"
   },
   "popupTipGlobalRules": {
-    "message": "Rregullat globale: rregullat në këtë shtyllë aplikohen për të gjitha uebsajtet.",
+    "message": "Farta fog",
     "description": "Tooltip when hovering the top-most cell of the global-rules column."
   },
   "popupTipLocalRules": {
-    "message": "Rregullat lokale: rregullat në këtë shtyllë aplikohen vetëm për këtë uebsajtin dhe kanë më përparësi se rregullat globale.",
+    "message": "JavaScript",
     "description": "Tooltip when hovering the top-most cell of the local-rules column."
   },
   "popupTipSaveRules": {
-    "message": "Ruaj gjithnjë ndryshimet.",
+    "message": "Wax badan",
     "description": "Tooltip when hovering over the padlock in the dynamic filtering pane."
   },
   "popupTipRevertRules": {
-    "message": "Kthej ndryshimet.",
+    "message": "In ka yar",
     "description": "Tooltip when hovering over the eraser in the dynamic filtering pane."
   },
   "popupAnyRulePrompt": {
-    "message": "të gjitha",
+    "message": "Xeerarka caalamiga ah: tiirkan waxaa loogu talagalay xeerar khuseeya dhammaan bogagga.",
     "description": ""
   },
   "popupImageRulePrompt": {
-    "message": "imazhet",
+    "message": "Xeerarka maxalliga ah: tiirkan waxaa loogu talagalay xeerar khuseeya goobta hadda jirta oo keliya. ",
     "description": ""
   },
   "popup3pAnyRulePrompt": {
-    "message": "palët e treta",
+    "message": "Xeerarka maxalliga ah ayaa meesha ka saaraya xeerarka caalamiga ah.",
     "description": ""
   },
   "popup3pPassiveRulePrompt": {
-    "message": "CSS/imazhet nga palët e treta",
+    "message": "Guji si aad isbeddelkaaga uga dhigto mid joogto ah.",
     "description": ""
   },
   "popupInlineScriptRulePrompt": {
-    "message": "skriptet e integruara",
+    "message": "Guji si aad u soo celiso isbedeladaada",
     "description": ""
   },
   "popup1pScriptRulePrompt": {
-    "message": "skriptet nga pala kryesore",
+    "message": "dhammaan",
     "description": ""
   },
   "popup3pScriptRulePrompt": {
-    "message": "skriptet nga palët e treta",
+    "message": "sawiro",
     "description": ""
   },
   "popup3pFrameRulePrompt": {
-    "message": "kuadrot nga palët e treta",
+    "message": "xisbiga 3aad",
     "description": ""
   },
   "popupHitDomainCountPrompt": {
-    "message": "domenet që janë lidhur",
+    "message": "CSS/sawirrada xisbiga 3aad",
     "description": "appears in popup"
   },
   "popupHitDomainCount": {
-    "message": "{{count}} nga {{total}}",
+    "message": "xarfaha xariiqda",
     "description": "appears in popup"
   },
   "popupVersion": {
-    "message": "Versioni",
+    "message": "Qoraallada xisbiga 1-aad",
     "description": "Example of use: Version 1.26.4"
   },
   "popup3pScriptFilterTip": {
-    "message": "↑: Theksoj rreshtat me skripte nga palët e treta",
+    "message": "Qoraallada xisbiga 3aad",
     "description": "Tooltip shown when hovering small filtering widget in '3rd-party scripts' cell"
   },
   "popup3pFrameFilterTip": {
-    "message": "↑: Theksoj rreshtat me kuadro nga palët e treta",
+    "message": "meeraha xisbiga 3aad",
     "description": "Tooltip shown when hovering small filtering widget in '3rd-party frames' cell"
   },
   "pickerCreate": {
-    "message": "Krijoj",
+    "message": "domains ku xiran",
     "description": "English: Create"
   },
   "pickerPick": {
-    "message": "Përzgjedh",
+    "message": "{{tirinta}} ka baxsan {{ total}}",
     "description": "English: Pick"
   },
   "pickerQuit": {
-    "message": "Mbyll",
+    "message": "Nooca",
     "description": "English: Quit"
   },
   "pickerPreview": {
-    "message": "Parashikoj",
+    "message": "?: Xooga saar safafka leh meeraha xisbiga 3aad",
     "description": "Element picker preview mode: will cause the elements matching the current filter to be removed from the page"
   },
   "pickerNetFilters": {
-    "message": "Filtrat e rrjetit",
+    "message": "?: Xooga saar safafka leh meeraha xisbiga 3aad",
     "description": "English: header for a type of filter in the element picker dialog"
   },
   "pickerCosmeticFilters": {
-    "message": "Filtrat kozmetikë",
+    "message": "Abuur",
     "description": "English: Cosmetic filters"
   },
   "pickerCosmeticFiltersHint": {
-    "message": "Kliko, Kliko me Ctrl",
+    "message": "Dooro",
     "description": "English: Click, Ctrl-click"
   },
   "pickerContextMenuEntry": {
-    "message": "Bllokoj elementin",
+    "message": "Jooji",
     "description": "An entry in the browser's contextual menu"
   },
   "settingsCollapseBlockedPrompt": {
-    "message": "Fsheh treguesin e elementeve të bllokuara",
+    "message": "Horudhac",
     "description": "English: Hide placeholders of blocked elements"
   },
   "settingsIconBadgePrompt": {
-    "message": "Shfaq te ikona numrin e kërkesave të bllokuara",
+    "message": "Shabakadda shabkada",
     "description": "English: Show the number of blocked requests on the icon"
   },
   "settingsTooltipsPrompt": {
-    "message": "Çaktivizoj përshkrimet e shkurtra",
+    "message": "Shaandhooyinka qurxinta",
     "description": "A checkbox in the Settings pane"
   },
   "settingsContextMenuPrompt": {
-    "message": "Përdor menunë kontekstuale sipas rrethanave",
+    "message": "Guji, Ctrl-guji",
     "description": "English: Make use of context menu where appropriate"
   },
   "settingsColorBlindPrompt": {
-    "message": "Përshtat ngjyrat për daltonikët",
+    "message": "Cunsurka xannibi...",
     "description": "English: Color-blind friendly"
   },
   "settingsCloudStorageEnabledPrompt": {
-    "message": "Aktivizoj renë informatike",
+    "message": "Qari meel-hayeyaasha walxaha xanniban",
     "description": ""
   },
   "settingsAdvancedUserPrompt": {
-    "message": "Kam njohuri të avancuara (<a href='https://github.com/gorhill/uBlock/wiki/Advanced-user-features'>Lexim i detyruar</a>)",
+    "message": "Ku muuji tirada codsiyada la xannibay ee sumadda",
     "description": ""
   },
   "settingsAdvancedUserSettings": {
-    "message": "parametra të avancuar",
+    "message": "Dami tilmaanta aaladaha",
     "description": "For the tooltip of a link which gives access to advanced settings"
   },
   "settingsPrefetchingDisabledPrompt": {
-    "message": "Çaktivizoj kërkesat paraprake (për të evituar çdo lidhje me kërkesat e bllokuara)",
+    "message": "Isticmaal macnaha guud marka ay habboon tahay",
     "description": "English: "
   },
   "settingsHyperlinkAuditingDisabledPrompt": {
-    "message": "Çaktivizoj analizën e lidhjeve hipertekstuale",
+    "message": "Midab-indho la'aan saaxiibtinimo",
     "description": "English: "
   },
   "settingsWebRTCIPAddressHiddenPrompt": {
-    "message": "Nuk lejoj WebRTC-në që të zbulojë adresat IP lokale",
+    "message": "Daar taageerada kaydinta daruuraha",
     "description": "English: "
   },
   "settingPerSiteSwitchGroup": {
-    "message": "Vlerat standarde",
+    "message": "Waxaan ahay isticmaale horumarsan (<a href='https://github.com/gorhill/uBlock/wiki/Advanced-user-features'>akhris loo baahan yahay</a>)",
     "description": ""
   },
   "settingPerSiteSwitchGroupSynopsis": {
-    "message": "Këto vlera mund të ndryshohen për çdo faqe",
+    "message": "goobaha horumarsan",
     "description": ""
   },
   "settingsNoCosmeticFilteringPrompt": {
-    "message": "Çaktivizoj filtrat kozmetikë",
+    "message": "Dami soo-keenista ka hor (si looga hortago xidhiidh kasta ee codsiyada shabakada la xidhay)",
     "description": ""
   },
   "settingsNoLargeMediaPrompt": {
-    "message": "Bllokoj elementet multimediale më të mëdha se {{input}} KB",
+    "message": "Jooji xisaabinta hyperlink",
     "description": ""
   },
   "settingsNoRemoteFontsPrompt": {
-    "message": "Bllokoj modelet e jashtme shkronjore",
+    "message": "Ka ilaali WebRTC inay soo daadato cinwaannada IP-ga maxalliga ah",
     "description": ""
   },
   "settingsNoScriptingPrompt": {
-    "message": "Çaktivizoj JavaScript-in",
+    "message": "Dabeecada aan caadiga ahayn",
     "description": "The default state for the per-site no-scripting switch"
   },
   "settingsNoCSPReportsPrompt": {
-    "message": "Bllokoj raportet e CSP-së",
+    "message": "Dabeecadahan aan caadiga ahayn waa laga gudbi karaa si ku saleysan goob kasta",
     "description": "background information: https://github.com/gorhill/uBlock/issues/3150"
   },
   "settingsUncloakCnamePrompt": {
-    "message": "Demaskoj emrat kanonikë",
+    "message": "Dami shaandhaynta qurxinta",
     "description": "background information: https://github.com/uBlockOrigin/uBlock-issues/issues/1513"
   },
   "settingsLastRestorePrompt": {
-    "message": "Rindërtimi i fundit:",
+    "message": "Jooji walxaha warbaahinta ee ka weyn {{input}} KB",
     "description": "English: Last restore:"
   },
   "settingsLastBackupPrompt": {
-    "message": "Kopja e fundit:",
+    "message": "Jooji xarfaha fogfog",
     "description": "English: Last backup:"
   },
   "3pListsOfBlockedHostsPrompt": {
-    "message": "{{netFilterCount}} filtra rrjeti ＋ {{cosmeticFilterCount}} filtra kozmetikë nga:",
+    "message": "Dami JavaScript",
     "description": "Appears at the top of the _3rd-party filters_ pane"
   },
   "3pListsOfBlockedHostsPerListStats": {
-    "message": "përdor {{used}} nga {{total}}",
+    "message": "Jooji warbixinnada CSP",
     "description": "Appears aside each filter list in the _3rd-party filters_ pane"
   },
   "3pAutoUpdatePrompt1": {
-    "message": "Përditësoj automatikisht filtrat",
+    "message": "Ka fur magacyada canonical",
     "description": "A checkbox in the _3rd-party filters_ pane"
   },
   "3pUpdateNow": {
-    "message": "Përditësoj tani",
+    "message": "Soo celinta u dambaysay:",
     "description": "A button in the in the _3rd-party filters_ pane"
   },
   "3pPurgeAll": {
-    "message": "Heq të gjitha stoqet",
+    "message": "Kaydka u dambeeya:",
     "description": "A button in the in the _3rd-party filters_ pane"
   },
   "3pParseAllABPHideFiltersPrompt1": {
-    "message": "Analizoj dhe zbatoj filtrat kozmetikë",
+    "message": "filtarrada shabkada {{netFilterCount}} ? {{cosmeticFilterCount}} filtarrada qurxinta ee:",
     "description": "English: Parse and enforce Adblock+ element hiding filters."
   },
   "3pParseAllABPHideFiltersInfo": {
-    "message": "Filtrat kozmetikë shërbejnë për të fshehur nga ana vizive elementet e padëshirueshme të faqes të cilat nuk bllokohen me metodën standarde të filtrimit sipas kërkesës.",
+    "message": "{{la isticmaalay}} la isticmaalay {{ total}}",
     "description": "Describes the purpose of the 'Parse and enforce cosmetic filters' feature."
   },
   "3pIgnoreGenericCosmeticFilters": {
-    "message": "Nuk marr parasysh filtrat kozmetikë jospecifikë",
+    "message": "Si otomaatig ah u cusbooneysii liisaska shaandhada",
     "description": "This will cause uBO to ignore all generic cosmetic filters."
   },
   "3pIgnoreGenericCosmeticFiltersInfo": {
-    "message": "Filtrat kozmetikë jospecifikë janë filtra të cilët aplikohen për të gjitha faqet e internetit. Aktivizimi i këtij opsioni eliminon peshën e tepërt te memoria dhe procesori.\n\nKy opsion rekomandohet për aparatet kompjuterike jo shumë të shpejta.",
+    "message": "Cusbooneysii hadda",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
   },
   "3pListsOfBlockedHostsHeader": {
-    "message": "Lista e hosteve të bllokuara",
+    "message": "Lists of blocked hosts",
     "description": "English: Lists of blocked hosts"
   },
   "3pApplyChanges": {
-    "message": "Ruaj ndryshimet",
+    "message": "Kala saar oo dhaqan geli filtarrada qurxinta",
     "description": "English: Apply changes"
   },
   "3pGroupDefault": {
-    "message": "Lokalë",
+    "message": "Shaandhooyinka isqurxintu waxay u adeegaan inay ku qariyaan walxaha ku jira bogga shabakadda kuwaas oo loo arko inay dhib ku yihiin aragga, oo aanay xannibi karin matoorada shaandhaynta ku salaysan codsiga shabakadda.",
     "description": "Header for the uBlock filters section in 'Filter lists pane'"
   },
   "3pGroupAds": {
-    "message": "Reklamat",
+    "message": "Iska daa filtarrada guud ee qurxinta",
     "description": "English: Ads"
   },
   "3pGroupPrivacy": {
-    "message": "Privatësia",
+    "message": "Shaandhooyinka isqurxinta guud waa filtarrada qurxinta kuwaas oo loogu talagalay in lagu dabaqo dhammaan shabakadaha internetka. Awood u yeelashada doorashadan waxay meesha ka saaraysaa xusuusta iyo dusha sare ee CPU ee lagu daray boggaga internetka taasoo ka dhalatay maaraynta filtarrada isqurxinta guud. ",
     "description": "English: Privacy"
   },
   "3pGroupMalware": {
-    "message": "Domenet e dëmshme",
+    "message": "Malware domains",
     "description": "English: Malware domains"
   },
   "3pGroupAnnoyances": {
-    "message": "Elementet e bezdisshme",
+    "message": "Waxaa lagu talinayaa in lagu suurtageliyo doorashadan aaladaha awoodda yar.",
     "description": "The header identifying the filter lists in the category 'annoyances'"
   },
   "3pGroupMultipurpose": {
-    "message": "Për qëllime të ndryshme",
+    "message": "Liisaska martida la xannibay",
     "description": "English: Multipurpose"
   },
   "3pGroupRegions": {
-    "message": "Sipas rajonit, gjuhës",
+    "message": "Codso isbeddelada",
     "description": "English: Regions, languages"
   },
   "3pGroupCustom": {
-    "message": "Personalizoj",
+    "message": "Lagu dhex dhisay",
     "description": "English: Custom"
   },
   "3pImport": {
-    "message": "Importoj...",
+    "message": "Xayeysiisyada",
     "description": "The label for the checkbox used to import external filter lists"
   },
   "3pExternalListsHint": {
-    "message": "Një URL për rresht. Nuk do të merren parasysh adresat e pasakta.",
+    "message": "Qarsoodi",
     "description": "Short information about how to use the textarea to import external filter lists by URL"
   },
   "3pExternalListObsolete": {
-    "message": "E vjetër.",
+    "message": "Goobaha Malware",
     "description": "used as a tooltip for the out-of-date icon beside a list"
   },
   "3pViewContent": {
-    "message": "shfaq përmbajtjen",
+    "message": "Cadhada",
     "description": "used as a tooltip for eye icon beside a list"
   },
   "3pLastUpdate": {
-    "message": "Përditësimi i fundit: {{ago}}.\nKlikoni për ta kryer vetë përditësimin.",
+    "message": "Ujeedo badan",
     "description": "used as a tooltip for the clock icon beside a list"
   },
   "3pUpdating": {
-    "message": "Po përditësohet...",
+    "message": "Gobollada, luqadaha",
     "description": "used as a tooltip for the spinner icon beside a list"
   },
   "3pNetworkError": {
-    "message": "Një problem me rrjetin kompjuterik pengoi përditësimin e informacionit.",
+    "message": "Caadiyan",
     "description": "used as a tooltip for error icon beside a list"
   },
   "1pFormatHint": {
-    "message": "Një filtër për rresht. Filtri mund të jetë thjesht emri i një hosti ose i ngjashëm me ata që përdor EasyList. Nuk do të merren parasysh rreshtat që fillojnë me <code>!</code>.",
+    "message": "Soo deji...",
     "description": "Short information about how to create custom filters"
   },
   "1pImport": {
-    "message": "Importoj dhe shtoj",
+    "message": "Hal URL laynkiiba. URL-yada aan ansax ahayn waa la iska indho-tiraa aamusnaan.",
     "description": "English: Import and append"
   },
   "1pExport": {
-    "message": "Eksportoj",
+    "message": "Waqtigii dhacay",
     "description": "English: Export"
   },
   "1pExportFilename": {
-    "message": "my-ublock-static-filters_{{datetime}}.txt",
+    "message": "fiiri nuxurka",
     "description": "English: my-ublock-static-filters_{{datetime}}.txt"
   },
   "1pApplyChanges": {
-    "message": "Ruaj ndryshimet",
+    "message": "Cusbooneysii ugu dambeysay: {{ago}} ",
     "description": "English: Apply changes"
   },
   "rulesPermanentHeader": {
-    "message": "Rregullat e përhershme",
+    "message": "Guji si aad u qasbi cusbooneysiinta",
     "description": "header"
   },
   "rulesTemporaryHeader": {
-    "message": "Rregullat e përkohshme",
+    "message": "Cusbooneysiinta...",
     "description": "header"
   },
   "rulesRevert": {
-    "message": "Rikthej",
+    "message": "Cilad shabakadeed ayaa ka hor istaagtay in kheyraadka la cusboonaysiiyo.",
     "description": "This will remove all temporary rules"
   },
   "rulesCommit": {
-    "message": "Aplikoj",
+    "message": "Hal filter halkii sadar Shaandheeyaha wuxuu noqon karaa magaca martida loo yahay ee cad, ama shaandhada ku habboon Adblock Plus. Khadadka horgalayaasha leh <code>!</code> waa la iska indhatiraa",
     "description": "This will persist temporary rules"
   },
   "rulesEdit": {
-    "message": "Modifikoj",
+    "message": "Soo deji oo ku dheji",
     "description": "Will enable manual-edit mode (textarea)"
   },
   "rulesEditSave": {
-    "message": "Regjistroj",
+    "message": "Dhoofinta",
     "description": "Will save manually-edited content and exit manual-edit mode"
   },
   "rulesEditDiscard": {
-    "message": "Anuloj",
+    "message": "my-ublock-static-filters_{{datetime}}.txt",
     "description": "Will discard manually-edited content and exit manual-edit mode"
   },
   "rulesImport": {
-    "message": "Importoj nga skedari...",
+    "message": "Codso isbeddelada",
     "description": ""
   },
   "rulesExport": {
-    "message": "Eksportoj në skedar",
+    "message": "Xeerarka joogtada ah",
     "description": ""
   },
   "rulesDefaultFileName": {
-    "message": "my-ublock-dynamic-rules_{{datetime}}.txt",
+    "message": "Xeerarka ku meel gaadhka ah",
     "description": "default file name to use"
   },
   "rulesHint": {
-    "message": "Lista e rregullave për filtrimin dinamik.",
+    "message": "Soo noqo",
     "description": "English: List of your dynamic filtering rules."
   },
   "rulesFormatHint": {
-    "message": "Rregullat e sintaksës: <code>burimi destinacioni lloji veprimi</code> (<a href='https://github.com/gorhill/uBlock/wiki/Dynamic-filtering:-rule-syntax'>dokumentimi i plotë</a>).",
+    "message": "Ballanqaad",
     "description": "English: dynamic rule syntax and full documentation."
   },
   "rulesSort": {
-    "message": "Rendit:",
+    "message": "Wax ka beddel",
     "description": "English: label for sort option."
   },
   "rulesSortByType": {
-    "message": "Lloji i rregullit",
+    "message": "Badbaadin",
     "description": "English: a sort option for list of rules."
   },
   "rulesSortBySource": {
-    "message": "Burimi",
+    "message": "Tuur",
     "description": "English: a sort option for list of rules."
   },
   "rulesSortByDestination": {
-    "message": "Destinacioni",
+    "message": "Ka soo deji faylka...",
     "description": "English: a sort option for list of rules."
   },
   "whitelistPrompt": {
-    "message": "Kjo listë paraqet faqet e besuara në të cilat uBlock Origin duhet çaktivizuar. Një element për rresht. Nuk do të merren parasysh udhëzimet e pasakta.",
+    "message": "U Dhoofinta faylka",
     "description": "The name of the trusted sites pane."
   },
   "whitelistImport": {
-    "message": "Importoj dhe shtoj",
+    "message": "my-ublock-dynamic-rules_{{datetime}}.txt",
     "description": "English: Import and append"
   },
   "whitelistExport": {
-    "message": "Eksportoj",
+    "message": "Liiska xeerarka shaandhaynta firfircoon.",
     "description": "English: Export"
   },
   "whitelistExportFilename": {
-    "message": "my-ublock-trusted-sites_{{datetime}}.txt",
+    "message": "Xeerka syntax: <code> nooca goobta loo socdo</code> (<a href='https://github.com/gorhill/uBlock/wiki/Dynamic-filtering:-rule-syntax'>full documents</a> ).",
     "description": "The default filename to use for import/export purpose"
   },
   "whitelistApply": {
-    "message": "Ruaj ndryshimet",
+    "message": "Kala sooc:",
     "description": "English: Apply changes"
   },
   "logRequestsHeaderType": {
-    "message": "Lloji",
+    "message": "Nooca qaanuunka",
     "description": "English: Type"
   },
   "logRequestsHeaderDomain": {
-    "message": "Domeni",
+    "message": "Xigasho",
     "description": "English: Domain"
   },
   "logRequestsHeaderURL": {
-    "message": "URL",
+    "message": "Meesha loo socdo",
     "description": "English: URL"
   },
   "logRequestsHeaderFilter": {
-    "message": "Filtri",
+    "message": "Awaamiirta goobta lagu kalsoon yahay ayaa tilmaamaysa boggaga internetka ee uBlock Origin waa in la curyaamiyo. Hal gelitaan halkii sadar. Awaamiirta aan ansax ahayn si aamusnaan ah ayaa loo indhatiraa oo faallo looga bixin doonaa.",
     "description": "English: Filter"
   },
   "logAll": {
-    "message": "Të gjitha",
+    "message": "Soo deji oo ku dheji",
     "description": "Appears in the logger's tab selector"
   },
   "logBehindTheScene": {
-    "message": "Në prapaskenë",
+    "message": "Dhoofinta",
     "description": "Pretty name for behind-the-scene network requests"
   },
   "loggerCurrentTab": {
-    "message": "Skeda aktuale",
+    "message": "my-ublock-trusted-sites_{{datetime}}.txt",
     "description": "Appears in the logger's tab selector"
   },
   "loggerReloadTip": {
-    "message": "Freskoj përmbajtjen e skedës",
+    "message": "Codso isbeddelada",
     "description": "Tooltip for the reload button in the logger page"
   },
   "loggerDomInspectorTip": {
-    "message": "Ç/Aktivizoj strukturën DOM",
+    "message": "Nooca",
     "description": "Tooltip for the DOM inspector button in the logger page"
   },
   "loggerPopupPanelTip": {
-    "message": "Ç/Aktivizoj panelin automatik",
+    "message": "Domain",
     "description": "Tooltip for the popup panel button in the logger page"
   },
   "loggerInfoTip": {
-    "message": "uBlock Origin wiki: Regjistri i kërkesave",
+    "message": "URL",
     "description": "Tooltip for the top-right info label in the logger page"
   },
   "loggerClearTip": {
-    "message": "Pastroj regjistrin",
+    "message": "Shaandhayso",
     "description": "Tooltip for the eraser in the logger page; used to blank the content of the logger"
   },
   "loggerPauseTip": {
-    "message": "Ndërpres regjistrimin (nuk pranohen të dhënat e reja)",
+    "message": "Dhammaan",
     "description": "Tooltip for the pause button in the logger page"
   },
   "loggerUnpauseTip": {
-    "message": "Rifilloj regjistrimin",
+    "message": "Shaxda",
     "description": "Tooltip for the play button in the logger page"
   },
   "loggerRowFiltererButtonTip": {
-    "message": "Ç/Aktivizoj filtrat e regjistrit",
+    "message": "tab hadda",
     "description": "Tooltip for the row filterer button in the logger page"
   },
   "logFilterPrompt": {
-    "message": "filtroni zërat në regjistër",
+    "message": "Dib u soo rar nuxurka tab",
     "description": "Placeholder string for logger output filtering input field"
   },
   "loggerRowFiltererBuiltinTip": {
-    "message": "Opsionet e filtrimit të regjistrit",
+    "message": "Bedeli kormeeraha DOM",
     "description": "Tooltip for the button to bring up logger output filtering options"
   },
   "loggerRowFiltererBuiltinNot": {
-    "message": "Jo",
+    "message": "Beddel guddiga soo booda",
     "description": "A keyword in the built-in row filtering expression"
   },
   "loggerRowFiltererBuiltinEventful": {
-    "message": "plot ngjarje",
+    "message": "eventful",
     "description": "A keyword in the built-in row filtering expression: all items corresponding to uBO doing something (blocked, allowed, redirected, etc.)"
   },
   "loggerRowFiltererBuiltinBlocked": {
-    "message": "e bllokuar",
+    "message": "Nadiifi logger",
     "description": "A keyword in the built-in row filtering expression"
   },
   "loggerRowFiltererBuiltinAllowed": {
-    "message": "e autorizuar",
+    "message": "Jooji logger (ka tuur dhammaan xogta soo socota)",
     "description": "A keyword in the built-in row filtering expression"
   },
   "loggerRowFiltererBuiltinModified": {
-    "message": "e modifikuar",
+    "message": "Jooji gooyaha",
     "description": "A keyword in the built-in row filtering expression"
   },
   "loggerRowFiltererBuiltin1p": {
-    "message": "palët kryesore",
+    "message": "Beddel shaandhaynta logger",
     "description": "A keyword in the built-in row filtering expression"
   },
   "loggerRowFiltererBuiltin3p": {
-    "message": "palët e treta",
+    "message": "shaandhayso waxa ku jira logger",
     "description": "A keyword in the built-in row filtering expression"
   },
   "loggerEntryDetailsHeader": {
-    "message": "Detajet",
+    "message": "Xulashada shaandhaynta Logger",
     "description": "Small header to identify the 'Details' pane for a specific logger entry"
   },
   "loggerEntryDetailsFilter": {
-    "message": "Filtri",
+    "message": "Maya",
     "description": "Label to identify a filter field"
   },
   "loggerEntryDetailsFilterList": {
-    "message": "Lista e filtrave",
+    "message": "dhacdo",
     "description": "Label to identify a filter list field"
   },
   "loggerEntryDetailsRule": {
-    "message": "Rregulla",
+    "message": "xannibay",
     "description": "Label to identify a rule field"
   },
   "loggerEntryDetailsContext": {
-    "message": "Konteksti",
+    "message": "ogol yahay",
     "description": "Label to identify a context field (typically a hostname)"
   },
   "loggerEntryDetailsRootContext": {
-    "message": "Konteksti bazë",
+    "message": "wax laga beddelay",
     "description": "Label to identify a root context field (typically a hostname)"
   },
   "loggerEntryDetailsPartyness": {
-    "message": "Palët",
+    "message": "xisbiga 1aad",
     "description": "Label to identify a field providing partyness information"
   },
   "loggerEntryDetailsType": {
-    "message": "Lloji",
+    "message": "xisbiga 3aad",
     "description": "Label to identify the type of an entry"
   },
   "loggerEntryDetailsURL": {
-    "message": "URL",
+    "message": "Faahfaahin",
     "description": "Label to identify the URL of an entry"
   },
   "loggerURLFilteringHeader": {
-    "message": "Filtrimi sipas URL",
+    "message": "Shaandhayso",
     "description": "Small header to identify the dynamic URL filtering section"
   },
   "loggerURLFilteringContextLabel": {
-    "message": "Konteksti:",
+    "message": "Liiska kala shaandheynta",
     "description": "Label for the context selector"
   },
   "loggerURLFilteringTypeLabel": {
-    "message": "Lloji:",
+    "message": "Xeer",
     "description": "Label for the type selector"
   },
   "loggerStaticFilteringHeader": {
-    "message": "Filtrimi statik",
+    "message": "Dulucda",
     "description": "Small header to identify the static filtering section"
   },
   "loggerStaticFilteringSentence": {
-    "message": "{{action}} kërkesat e {{type}} {{br}}që korrespondojnë me adresën {{url}} {{br}}dhe që e kanë origjinën {{origin}},{{br}}{{importance}} ekziston një filtër përjashtues i njëjtë.",
+    "message": "macnaha guud",
     "description": "Used in the static filtering wizard"
   },
   "loggerStaticFilteringSentencePartBlock": {
-    "message": "Bllokoj",
+    "message": "Xaflada",
     "description": "Used in the static filtering wizard"
   },
   "loggerStaticFilteringSentencePartAllow": {
-    "message": "Autorizoj",
+    "message": "Nooca",
     "description": "Used in the static filtering wizard"
   },
   "loggerStaticFilteringSentencePartType": {
-    "message": "llojit “{{type}}”",
+    "message": "URL",
     "description": "Used in the static filtering wizard"
   },
   "loggerStaticFilteringSentencePartAnyType": {
-    "message": "çdo lloji",
+    "message": "Xeerka URL",
     "description": "Used in the static filtering wizard"
   },
   "loggerStaticFilteringSentencePartOrigin": {
-    "message": "nga “{{origin}}”",
+    "message": "Dulucda:",
     "description": "Used in the static filtering wizard"
   },
   "loggerStaticFilteringSentencePartAnyOrigin": {
-    "message": "ngado",
+    "message": "Nooca:",
     "description": "Used in the static filtering wizard"
   },
   "loggerStaticFilteringSentencePartNotImportant": {
-    "message": "përveçse kur",
+    "message": "Shaandheeyaha taagan",
     "description": "Used in the static filtering wizard"
   },
   "loggerStaticFilteringSentencePartImportant": {
-    "message": "edhe kur",
+    "message": "{{action}} codsiyada shabakada {{type}} {{br}} URL kee u dhigma {{url}} {{br}}oo asal ahaan ka soo jeeda {{asalka}},{{br}}{{{muhiimada} } waxaa jira shaandheyn ka reeban oo ku habboon.",
     "description": "Used in the static filtering wizard"
   },
   "loggerStaticFilteringFinderSentence1": {
-    "message": "Filtri statik <code>{{filter}}</code> gjendet në:",
+    "message": "Block",
     "description": "Below this sentence, the filter list(s) in which the filter was found"
   },
   "loggerStaticFilteringFinderSentence2": {
-    "message": "Nuk u gjet filtri statik në asnjërën prej listave aktive",
+    "message": "Allow",
     "description": "Message to show when a filter cannot be found in any filter lists"
   },
   "loggerSettingDiscardPrompt": {
-    "message": "Do të fshihen automatikisht zërat në regjistër që nuk plotësojnë këto tre kushte:",
+    "message": "ku qor \"{{type}}\"",
     "description": "Logger setting: A sentence to describe the purpose of the settings below"
   },
   "loggerSettingPerEntryMaxAge": {
-    "message": "Ruaj zërat e {{input}} minutave të fundit",
+    "message": "nooc kasta",
     "description": "A logger setting"
   },
   "loggerSettingPerTabMaxLoads": {
-    "message": "Ruaj jo më shumë se {{input}} faqe të reja për skedë",
+    "message": "ka \"{{asalka}}\"",
     "description": "A logger setting"
   },
   "loggerSettingPerTabMaxEntries": {
-    "message": "Ruaj jo më shumë se {{input}} zëra për skedë",
+    "message": "meel kasta ka yimid",
     "description": "A logger setting"
   },
   "loggerSettingPerEntryLineCount": {
-    "message": "Në pamjen e zgjeruar përdor {{input}} rreshta për zë",
+    "message": "marka laga reebo",
     "description": "A logger setting"
   },
   "loggerSettingHideColumnsPrompt": {
-    "message": "Fsheh shtyllat:",
+    "message": "xataa haddii",
     "description": "Logger settings: a sentence to describe the purpose of the checkboxes below"
   },
   "loggerSettingHideColumnTime": {
-    "message": "{{input}} Ora",
+    "message": "Shaandheeyaha taagan <code>{{filter}}</code> ayaa laga helay:",
     "description": "A label for the time column"
   },
   "loggerSettingHideColumnFilter": {
-    "message": "{{input}} Filtri/rregulla",
+    "message": "Shaandhaynta taagan lagama helin mid ka mid ah liisaska shaandhaynta hadda karti u leh",
     "description": "A label for the filter or rule column"
   },
   "loggerSettingHideColumnContext": {
-    "message": "{{input}} Konteksti",
+    "message": "Gelida Logger ee aan buuxin dhammaan saddexda shuruudood ee hoose si toos ah ayaa loo tuurayaa:",
     "description": "A label for the context column"
   },
   "loggerSettingHideColumnPartyness": {
-    "message": "{{input}} Palët",
+    "message": "Kaydi gelida daqiiqadihii ugu dambeeyay {{Input}}",
     "description": "A label for the partyness column"
   },
   "loggerExportFormatList": {
-    "message": "Listë",
+    "message": "Ilaali ugu badnaan {{input}} culayska bogga tabkiiba",
     "description": "Label for radio-button to pick export format"
   },
   "loggerExportFormatTable": {
-    "message": "Tabelë",
+    "message": "Ilaali ugu badnaan {{input}} gelinta tab kasta",
     "description": "Label for radio-button to pick export format"
   },
   "loggerExportEncodePlain": {
-    "message": "E paformatuar",
+    "message": "Isticmaal {{input}} khadadka gelistaba qaab si toosan loo fidiyay",
     "description": "Label for radio-button to pick export text format"
   },
   "loggerExportEncodeMarkdown": {
-    "message": "Markdown",
+    "message": "Qari tiirarka:",
     "description": "Label for radio-button to pick export text format"
   },
   "supportOpenButton": {
-    "message": "Hap",
+    "message": "{{Input}} Waqtiga",
     "description": "Text for button which open an external webpage in Support pane"
   },
   "supportS1H": {
-    "message": "Dokumentacioni",
+    "message": "{{input}} Shaandhayso/xukun",
     "description": "Header of 'Documentation' section in Support pane"
   },
   "supportS1P1": {
-    "message": "Lexoni <code>uBlock/wiki</code> që të mësoni më shumë mbi funksionet e uBlock Origin.",
+    "message": "{{Input}} Dulucda",
     "description": "First paragraph of 'Documentation' section in Support pane"
   },
   "supportS2H": {
-    "message": "Pyetjet dhe ndihma teknike",
+    "message": "{{Input}} Xaflada",
     "description": "Header of 'Questions and support' section in Support pane"
   },
   "supportS2P1": {
-    "message": "Në forumin e dedikuar Reddit <code>/r/uBlockOrigin</code> mund të bëni pyetje dhe të kërkoni çdolloj ndihme tjetër.",
+    "message": "Liiska",
     "description": "First paragraph of 'Questions and support' section in Support pane"
   },
   "supportS3H": {
-    "message": "Problemet me filtrat/faqet me defekte",
+    "message": "Miis",
     "description": "Header of 'Filter issues' section in Support pane"
   },
   "supportS3P1": {
-    "message": "Problemet e disa faqeve me filtrat duhen raportuar në ditarin e problemeve <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"><code>uBlockOrigin/uAssets</code></span>. Duhet një konto GitHub.",
+    "message": "Cad",
     "description": "First paragraph of 'Filter issues' section in Support pane"
   },
   "supportS3P2": {
-    "message": "<b>Vërejtje:</b> uBlock Origin nuk duhet përdorur njëkohësisht me aplikacionet e ngjashme bllokuese, pasi disa faqe mund të kenë probleme me filtrat.",
+    "message": "Markdown",
     "description": "Second paragraph of 'Filter issues' section in Support pane"
   },
   "supportS3P3": {
-    "message": "<b>Këshilla:</b> Sigurohuni që listat e filtrave janë të përditësuara. <span data-url=\"logger-ui.html#_\">Regjistri</span> është instrumenti kryesor për të diagnostikuar problemet me filtrat.",
+    "message": "Furan",
     "description": "Third paragraph of 'Filter issues' section in Support pane"
   },
   "supportS4H": {
-    "message": "Raportimi i problemeve",
+    "message": "Dukumeenti",
     "description": "Header of 'Bug report' section in Support pane"
   },
   "supportS4P1": {
-    "message": "Problemet e uBlock Origin duhen raportuar në ditarin e problemeve <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\"><code>uBlockOrigin/uBlock-issue</code></span>. Duhet një konto GitHub.",
+    "message": "Ka akhri dukumeentiga <code>uBlock/wiki</code> si aad wax uga ogaato dhammaan astaamaha uBlock Origin.",
     "description": "First paragraph of 'Bug report' section in Support pane"
   },
   "supportS5H": {
-    "message": "Diagnostikimi i problemeve",
+    "message": "Su'aalo iyo taageero",
     "description": "Header of 'Troubleshooting Information' section in Support pane"
   },
   "supportS5P1": {
-    "message": "Informacioni teknik i mëposhtëm mund t'u shërbejë personave që përpiqen t'ju ndihmojnë për zgjidhjen e një problemi.",
+    "message": "Jawaabaha su'aalaha iyo noocyada kale ee taageerada caawimada waxaa lagu bixiyaa subreddit <code>/r/uBlockOrigin</code>.",
     "description": "First paragraph of 'Troubleshooting Information' section in Support pane"
   },
   "supportS5P2": {
-    "message": "<b>Vërejtje:</b> Informacionet me sfond privat dhe delikat censurohen automatikisht. Informacioni i censuruar mund ta vështirësojë zgjidhjen e një problemi.",
+    "message": "Arrimaha shaandhaynta/mareegaha ayaa jabay",
     "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
   },
   "supportRedact": {
-    "message": "Censuroj",
+    "message": "Ka warbixi arrimaha shaandhaynta shabakadaha gaarka ah <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"><code>uBlockOrigin/uAssets</code> soo saara raadraacayaasha</span >. Wuxuu u baahan yahay akoon GitHub",
     "description": "Text for 'Redact' button"
   },
   "supportUnredact": {
-    "message": "Nuk censuroj",
+    "message": "<b>Muhiim:</b> Iska ilaali isticmaalka xannibaadaha kale ee la midka ah oo ay la socdaan uBlock Origin, sababtoo ah tani waxay sababi kartaa arrimo shaandhaynta shabakadaha gaarka ah.",
     "description": "Text for 'Unredact' button"
   },
   "aboutPrivacyPolicy": {
-    "message": "Politikat e konfidencialitetit",
+    "message": "<b>Talooyin:</b> Hubi in liisaska shaandhayntaadu ay cusub yihiin. <span data-url=\"logger-ui.html#_\">Logger</span> waa aaladda koowaad ee lagu baadho arrimaha shaandhada la xiriira.",
     "description": "Link to privacy policy on GitHub (English)"
   },
   "aboutChangelog": {
-    "message": "Ditari i ndryshimeve",
+    "message": "Warbixinta cayayaanka",
     "description": ""
   },
   "aboutCode": {
-    "message": "Materiali burimor (GPLv3)",
+    "message": "Ka warbixi arrimaha uBlock Origin laftiisa <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\"><code>uBlockOrigin/uBlock-issue</code> arin tracker</span>. Wuxuu u baahan yahay akoon GitHub",
     "description": "English: Source code (GPLv3)"
   },
   "aboutContributors": {
-    "message": "Kontribuesit",
+    "message": "Macluumaadka Cilad-bixinta",
     "description": "English: Contributors"
   },
   "aboutSourceCode": {
-    "message": "Materiali burimor",
+    "message": "Hoos waxaa ah macluumaadka farsamada oo laga yaabo inay faa'iido leedahay marka tabaruceyaashu ay isku dayayaan inay kaa caawiyaan xallinta dhibaatada.",
     "description": "Link text to source code repo"
   },
   "aboutTranslations": {
-    "message": "Përkthimet",
+    "message": "<b>Muhiim:</b> Macluumaad gaar ah ama mid xasaasi ah ayaa si toos ah wax looga beddelay. Macluumaadka dib loo habeeyey ayaa laga yaabaa inay sii adkeeyaan xallinta mushkiladda.",
     "description": "Link text to translations repo"
   },
   "aboutFilterLists": {
-    "message": "Listat e filtrave",
+    "message": "Dib u habeyn",
     "description": "Link text to uBO's own filter lists repo"
   },
   "aboutDependencies": {
-    "message": "Programet kushtëzuese (sipas GPLv3):",
+    "message": "Aan waxba laga beddelin",
     "description": "Shown in the About pane"
   },
   "aboutCDNs": {
-    "message": "Listat e filtrave të uBO mundësohen falas në <a href=\"https://wikipedia.org/wiki/Content_delivery_network\">CDN-të</a> e mëposhtme:",
+    "message": "Qaanuunka Arrimaha Khaaska ah",
     "description": "Shown in the About pane"
   },
   "aboutCDNsInfo": {
-    "message": "CDN-ja do të zgjidhet rastësisht kur ndonjë listë duhet përditësuar.",
+    "message": "Changelog",
     "description": "Shown in the About pane"
   },
   "aboutBackupDataButton": {
-    "message": "Kopjoj në skedar",
+    "message": "Koodhka isha (GPLv3)",
     "description": "Text for button to create a backup of all settings"
   },
   "aboutBackupFilename": {
-    "message": "my-ublock-backup_{{datetime}}.txt",
+    "message": "Wax ku darsaday",
     "description": "English: my-ublock-backup_{{datetime}}.txt"
   },
   "aboutRestoreDataButton": {
-    "message": "Rindërtoj sipas skedarit...",
+    "message": "Source code",
     "description": "English: Restore from file..."
   },
   "aboutResetDataButton": {
-    "message": "Kthej parametrat fillestarë...",
+    "message": "Turjumaada",
     "description": "English: Reset to default settings..."
   },
   "aboutRestoreDataConfirm": {
-    "message": "Të gjithë parametrat do të mbishkruhen me të dhënat e kopjuara më {{time}}, dhe uBlock₀ do të hapet përsëri.\n\nTë mbishkruhen parametrat aktualë?",
+    "message": "Liisaska sifee",
     "description": "Message asking user to confirm restore"
   },
   "aboutRestoreDataError": {
-    "message": "Të dhënat nuk lexohen ose mund të jenë dëmtuar",
+    "message": "Ku tiirsanaanta dibadda (GPLv3-ku habboon):",
     "description": "Message to display when an error occurred during restore"
   },
   "aboutResetDataConfirm": {
-    "message": "Të gjithë parametrat do të fshihen dhe uBlock₀ do të hapet përsëri.\n\nTë kthehen parametrat origjinalë?",
+    "message": "Liisaska shaandhaynta uBO ayaa si xor ah loogu martigaliyay kuwa soo socda <a href=\"https://wikipedia.org/wiki/Content_delivery_network\">CDNs</a>:",
     "description": "Message asking user to confirm reset"
   },
   "errorCantConnectTo": {
-    "message": "Problem me rrjetin kompjuterik: {{msg}}",
+    "message": "CDN si aan kala sooc lahayn loo soo doortay ayaa la isticmaalaa marka liiska shaandhada loo baahan yahay in la cusboonaysiiyo",
     "description": "English: Network error: {{msg}}"
   },
   "subscriberConfirm": {
-    "message": "Të shtohet adresa në listën e personalizuar të filtrave?\n\nTitulli: \"{{title}}\"\nURL: {{url}}",
+    "message": "Ku soo celi faylka",
     "description": "No longer used"
   },
   "subscribeButton": {
-    "message": "Abonohem",
+    "message": "my-ublock-backup_{{datetime}}.txt",
     "description": "For the button used to subscribe to a filter list"
   },
   "elapsedOneMinuteAgo": {
-    "message": "një minutë më parë",
+    "message": "Ka soo celi faylka...",
     "description": "English: a minute ago"
   },
   "elapsedManyMinutesAgo": {
-    "message": "{{value}} minuta më parë",
+    "message": "Dib u deji dejinta caadiga ah...",
     "description": "English: {{value}} minutes ago"
   },
   "elapsedOneHourAgo": {
-    "message": "një orë më parë",
+    "message": "Dhammaan dejimahaaga waa lagu beddeli doonaa iyadoo la adeegsanayo xogta la xoojiyay {{waqtiga}}, iyo uBlock? ayaa dib u bilaaban doona. ",
     "description": "English: an hour ago"
   },
   "elapsedManyHoursAgo": {
-    "message": "{{value}} orë më parë",
+    "message": "{{value}} hours ago",
     "description": "English: {{value}} hours ago"
   },
   "elapsedOneDayAgo": {
-    "message": "një ditë më parë",
+    "message": "Dib u qor dhammaan dejimaha jira adiga oo isticmaalaya xogta la taageeray?",
     "description": "English: a day ago"
   },
   "elapsedManyDaysAgo": {
-    "message": "{{value}} ditë më parë",
+    "message": "Xogta lama akhrin karo ama waa khalad",
     "description": "English: {{value}} days ago"
   },
   "showDashboardButton": {
-    "message": "Paneli i kontrollit",
+    "message": "Dhammaan dejimahaaga waa laga saari doonaa, oo uBlock? dib ayuu u bilaabi doonaa. ",
     "description": "Firefox/Fennec-specific: Show Dashboard"
   },
   "showNetworkLogButton": {
-    "message": "Regjistri i kërkesave",
+    "message": "Show Logger",
     "description": "Firefox/Fennec-specific: Show Logger"
   },
   "fennecMenuItemBlockingOff": {
-    "message": "fikur",
+    "message": "Dib u deji uBlock? u dejisay dejinta warshadda?",
     "description": "Firefox-specific: appears as 'uBlock₀ (off)'"
   },
   "docblockedPrompt1": {
-    "message": "uBlock Origin po pengon hapjen e faqes:",
+    "message": "Cilada shabakada: {{msg}}",
     "description": "Used in the strict-blocking page"
   },
   "docblockedPrompt2": {
-    "message": "Për shkak të filtrit",
+    "message": "uBlock?: Ku dar URL-kan soo socda liisaska shaandhaynta gaarka ah? ",
     "description": "Used in the strict-blocking page"
   },
   "docblockedNoParamsPrompt": {
-    "message": "pa parametra",
+    "message": "without parameters",
     "description": "label to be used for the parameter-less URL: https://cloud.githubusercontent.com/assets/585534/9832014/bfb1b8f0-593b-11e5-8a27-fba472a5529a.png"
   },
   "docblockedFoundIn": {
-    "message": "Gjendet në:",
+    "message": "Ciwaanka: \"{{ciwaanka}}\" ",
     "description": "English: List of filter list names follows"
   },
   "docblockedBack": {
-    "message": "Kthehem",
+    "message": "URL: {{url}}",
     "description": "English: Go back"
   },
   "docblockedClose": {
-    "message": "Mbyll dritaren",
+    "message": "Subscribe dheh",
     "description": "English: Close this window"
   },
   "docblockedProceed": {
-    "message": "Zhbllokoj mënyrën strikte për {{hostname}}",
+    "message": "hal daqiiqo ka hor",
     "description": "English: Disable strict blocking for {{hostname}} ..."
   },
   "docblockedDisableTemporary": {
-    "message": "Përkohësisht",
+    "message": "{{value}} daqiiqo kahor",
     "description": "English: Temporarily"
   },
   "docblockedDisablePermanent": {
-    "message": "Gjithnjë",
+    "message": "saacad ka hor",
     "description": "English: Permanently"
   },
   "cloudPush": {
-    "message": "Eksportoj në renë informatike",
+    "message": "{{value}} saac kahor",
     "description": "tooltip"
   },
   "cloudPull": {
-    "message": "Importoj nga reja informatike",
+    "message": "maalin ka hor",
     "description": "tooltip"
   },
   "cloudPullAndMerge": {
-    "message": "Importoj nga reja informatike dhe bashkoj me parametrat aktualë",
+    "message": "{{value}} maalmo kahor",
     "description": "tooltip"
   },
   "cloudNoData": {
@@ -1084,83 +1084,83 @@
     "description": ""
   },
   "cloudDeviceNamePrompt": {
-    "message": "Emri i aparatit:",
+    "message": "Muuji Logger",
     "description": "used as a prompt for the user to provide a custom device name"
   },
   "advancedSettingsWarning": {
-    "message": "Kujdes! Mbani ju përgjegjësi nëse i ndryshoni parametrat e avancuar.",
+    "message": "off",
     "description": "A warning to users at the top of 'Advanced settings' page"
   },
   "genericSubmit": {
-    "message": "Parashtroj",
+    "message": "UBlock Origin ayaa ka diiday bogga soo socda in la soo raro:",
     "description": "for generic 'Submit' buttons"
   },
   "genericApplyChanges": {
-    "message": "Ruaj ndryshimet",
+    "message": "shaandhada soo socota awgeed",
     "description": "for generic 'Apply changes' buttons"
   },
   "genericRevert": {
-    "message": "Rikthej",
+    "message": "aan xuduud lahayn",
     "description": "for generic 'Revert' buttons"
   },
   "genericBytes": {
-    "message": "bajt",
+    "message": "Laga helay:",
     "description": ""
   },
   "contextMenuBlockElementInFrame": {
-    "message": "Bllokoj elementin në kuadër...",
+    "message": "Ku noqo",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuSubscribeToList": {
-    "message": "Abonohem në listën e filtrave...",
+    "message": "Xir daaqadan",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuTemporarilyAllowLargeMediaElements": {
-    "message": "Autorizoj përkohësisht elementet e mëdha multimediale",
+    "message": "Dami xannibaadda adag ee {{hostname}}",
     "description": "A context menu entry, present when large media elements have been blocked on the current site"
   },
   "shortcutCapturePlaceholder": {
-    "message": "Vendosni kombinimin",
+    "message": "Si ku meel gaar ah",
     "description": "Placeholder string for input field used to capture a keyboard shortcut"
   },
   "genericMergeViewScrollLock": {
-    "message": "Ç/Aktivizoj lëvizjen me rrëshqitje",
+    "message": "Si joogto ah",
     "description": "Tooltip for the button used to lock scrolling between the views in the 'My rules' pane"
   },
   "genericCopyToClipboard": {
-    "message": "Kopjoj në memorie",
+    "message": "U dhoofi kaydinta daruuraha",
     "description": "Label for buttons used to copy something to the clipboard"
   },
   "genericSelectAll": {
-    "message": "Përzgjedh të gjitha",
+    "message": "Ka soo deji kaydinta daruuraha",
     "description": "Label for buttons used to select all text in editor"
   },
   "toggleBlockingProfile": {
-    "message": "Ç/Aktivizoj profilin e bllokimit",
+    "message": "Ka soo deji kaydinta daruuraha oo ku biir goobaha hadda jira",
     "description": "Label for keyboard shortcut used to toggle blocking profile"
   },
   "relaxBlockingMode": {
-    "message": "Dobësoj mënyrën e bllokimit",
+    "message": "... ",
     "description": "Label for keyboard shortcut used to relax blocking mode (meant to replace 'Toggle blocking profile')"
   },
   "storageUsed": {
-    "message": "Hapësira e përdorur: {{value}} {{unit}}",
+    "message": "...",
     "description": " In Setting pane, renders as (example): Storage used: 13.2 MB"
   },
   "KB": {
-    "message": "KB",
+    "message": "Qalabkan magaca:",
     "description": "short for 'kilobytes'"
   },
   "MB": {
-    "message": "MB",
+    "message": "Digniin! Beddel goobahan horumarsan khatartaada.",
     "description": "short for 'megabytes'"
   },
   "GB": {
-    "message": "GB",
+    "message": "Gudbi",
     "description": "short for 'gigabytes'"
   },
   "clickToLoad": {
-    "message": "Klikoni për ta hapur",
+    "message": "Codso isbeddelada",
     "description": "Message used in frame placeholders"
   },
   "dummy": {

@@ -129,7 +129,6 @@ const Parser = class {
             exception: false,
             raw: '',
             compiled: '',
-            pseudoclass: false,
         };
         this.reset();
     }
@@ -289,7 +288,6 @@ const Parser = class {
     analyzeExtPattern() {
         this.result.exception = this.isException();
         this.result.compiled = undefined;
-        this.result.pseudoclass = false;
 
         let selector = this.strFromSpan(this.patternSpan);
         if ( selector === '' ) {
@@ -332,7 +330,13 @@ const Parser = class {
             this.flavorBits |= BITFlavorExtCosmetic;
         }
         this.result.raw = selector;
-        if ( this.selectorCompiler.compile(selector, this.result) === false ) {
+        if (
+            this.selectorCompiler.compile(
+                selector,
+                hasBits(this.flavorBits, BITFlavorExtStrong | BITFlavorExtStyle),
+                this.result
+            ) === false
+        ) {
             this.flavorBits |= BITFlavorUnsupported;
         }
     }
@@ -1302,12 +1306,26 @@ Parser.prototype.SelectorCompiler = class {
             [ 'matches-css-before', ':matches-css-before' ],
         ]);
         this.reSimpleSelector = /^[#.][A-Za-z_][\w-]*$/;
+        // https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet#browser_compatibility
+        //   Firefox does not support constructor for CSSStyleSheet
+        this.stylesheet = (( ) => {
+            if ( typeof document !== 'object' ) { return null; }
+            if ( document instanceof Object === false ) { return null; }
+            try {
+                return new CSSStyleSheet();
+            } catch(ex) {
+            }
+            const style = document.createElement('style');
+            document.body.append(style);
+            const stylesheet = style.sheet;
+            style.remove();
+            return stylesheet;
+        })();
         this.div = (( ) => {
             if ( typeof document !== 'object' ) { return null; }
             if ( document instanceof Object === false ) { return null; }
             return document.createElement('div');
         })();
-        this.rePseudoElement = /:(?::?after|:?before|:-?[a-z][a-z-]*[a-z])$/;
         this.reProceduralOperator = new RegExp([
             '^(?:',
             Array.from(parser.proceduralOperatorTokens.keys()).join('|'),
@@ -1333,7 +1351,7 @@ Parser.prototype.SelectorCompiler = class {
         ]);
     }
 
-    compile(raw, out) {
+    compile(raw, asProcedural, out) {
         // https://github.com/gorhill/uBlock/issues/952
         //   Find out whether we are dealing with an Adguard-specific cosmetic
         //   filter, and if so, translate it if supported, or discard it if not
@@ -1349,15 +1367,10 @@ Parser.prototype.SelectorCompiler = class {
             out.raw = raw;
         }
 
-        let extendedSyntax = false;
-        const selectorType = this.cssSelectorType(raw);
-        if ( selectorType !== 0 ) {
-            extendedSyntax = this.reExtendedSyntax.test(raw);
-            if ( extendedSyntax === false ) {
-                out.pseudoclass = selectorType === 3;
-                out.compiled = raw;
-                return true;
-            }
+        // Can be used in a declarative CSS rule?
+        if ( asProcedural === false && this.sheetSelectable(raw) ) {
+            out.compiled = raw;
+            return true;
         }
 
         // We  rarely reach this point -- majority of selectors are plain
@@ -1370,7 +1383,7 @@ Parser.prototype.SelectorCompiler = class {
         // Note: extended selector syntax has been deprecated in ABP, in
         // favor of the procedural one (i.e. `:operator(...)`).
         // See https://issues.adblockplus.org/ticket/5287
-        if ( extendedSyntax ) {
+        if ( asProcedural && this.reExtendedSyntax.test(raw) ) {
             let matches;
             while ( (matches = this.reExtendedSyntaxParser.exec(raw)) !== null ) {
                 const operator = this.normalizedExtendedSyntaxOperators.get(matches[1]);
@@ -1379,18 +1392,19 @@ Parser.prototype.SelectorCompiler = class {
                       operator + '(' + matches[3] + ')' +
                       raw.slice(matches.index + matches[0].length);
             }
-            return this.compile(raw, out);
+            return this.compile(raw, true, out);
         }
 
         // Procedural selector?
         const compiled = this.compileProceduralSelector(raw);
         if ( compiled === undefined ) { return false; }
 
-        if ( compiled.pseudo !== undefined ) {
-            out.pseudoclass = compiled.pseudo;
-        }
+        out.compiled =
+            compiled.selector !== compiled.raw ||
+            this.sheetSelectable(compiled.selector) === false
+                ? JSON.stringify(compiled)
+                : compiled.selector;
 
-        out.compiled = JSON.stringify(compiled);
         return true;
     }
 
@@ -1412,11 +1426,6 @@ Parser.prototype.SelectorCompiler = class {
             : `${selector}:style(${style})`;
     }
 
-    // Return value:
-    //   0b00 (0) = not a valid CSS selector
-    //   0b01 (1) = valid CSS selector, without pseudo-element
-    //   0b11 (3) = valid CSS selector, with pseudo element
-    //
     // Quick regex-based validation -- most cosmetic filters are of the
     // simple form and in such case a regex is much faster.
     // Keep in mind:
@@ -1425,25 +1434,40 @@ Parser.prototype.SelectorCompiler = class {
     // https://github.com/gorhill/uBlock/issues/3111
     //   Workaround until https://bugzilla.mozilla.org/show_bug.cgi?id=1406817
     //   is fixed.
-    cssSelectorType(s) {
-        if ( this.reSimpleSelector.test(s) ) { return 1; }
-        const pos = this.cssPseudoElement(s);
-        if ( pos !== -1 ) {
-            return this.cssSelectorType(s.slice(0, pos)) === 1 ? 3 : 0;
-        }
-        if ( this.div === null ) { return 1; }
+    // https://github.com/uBlockOrigin/uBlock-issues/issues/1751
+    //   Do not rely on matches() or querySelector() to test whether a
+    //   selector is declarative or not.
+    // https://github.com/uBlockOrigin/uBlock-issues/issues/1806#issuecomment-963278382
+    //   Forbid multiple and unexpected CSS style declarations.
+    sheetSelectable(s) {
+        if ( this.reSimpleSelector.test(s) ) { return true; }
+        if ( this.stylesheet === null ) { return true; }
         try {
-            this.div.matches(`${s}, ${s}:not(#foo)`);
+            this.stylesheet.insertRule(`${s}{color:red}`);
+            if ( this.stylesheet.cssRules.length !== 1 ) { return false; }
+            const style = this.stylesheet.cssRules[0].style;
+            if ( style.length !== 1 ) { return false; }
+            if ( style.getPropertyValue('color') !== 'red' ) { return false; }
+            this.stylesheet.deleteRule(0);
         } catch (ex) {
-            return 0;
+            return false;
         }
-        return 1;
+        return true;
     }
 
-    cssPseudoElement(s) {
-        if ( s.lastIndexOf(':') === -1 ) { return -1; }
-        const match = this.rePseudoElement.exec(s);
-        return match !== null ? match.index : -1;
+    // https://github.com/uBlockOrigin/uBlock-issues/issues/1806
+    //   Forbid instances of:
+    //   - opening comment `/*`
+    querySelectable(s) {
+        if ( this.reSimpleSelector.test(s) ) { return true; }
+        if ( this.div === null ) { return true; }
+        try {
+            this.div.querySelector(`${s},${s}:not(#foo)`);
+            if ( s.includes('/*') ) { return false; }
+        } catch (ex) {
+            return false;
+        }
+        return true;
     }
 
     compileProceduralSelector(raw) {
@@ -1512,10 +1536,10 @@ Parser.prototype.SelectorCompiler = class {
 
     // https://github.com/uBlockOrigin/uBlock-issues/issues/341#issuecomment-447603588
     //   Reject instances of :not() filters for which the argument is
-    //   a valid CSS selector, otherwise we would be adversely
-    //   changing the behavior of CSS4's :not().
+    //   a valid CSS selector, otherwise we would be adversely changing the
+    //   behavior of CSS4's :not().
     compileNotSelector(s) {
-        if ( this.cssSelectorType(s) === 0 ) {
+        if ( this.querySelectable(s) === false ) {
             return this.compileProcedural(s);
         }
     }
@@ -1523,7 +1547,7 @@ Parser.prototype.SelectorCompiler = class {
     compileUpwardArgument(s) {
         const i = this.compileInteger(s, 1, 256);
         if ( i !== undefined ) { return i; }
-        if ( this.cssSelectorType(s) === 1 ) { return s; }
+        if ( this.querySelectable(s) ) { return s; }
     }
 
     compileRemoveSelector(s) {
@@ -1533,7 +1557,7 @@ Parser.prototype.SelectorCompiler = class {
     // https://github.com/uBlockOrigin/uBlock-issues/issues/382#issuecomment-703725346
     //   Prepend `:scope` only when it can be deemed implicit.
     compileSpathExpression(s) {
-        if ( this.cssSelectorType(/^\s*[+:>~]/.test(s) ? `:scope${s}` : s) === 1 ) {
+        if ( this.querySelectable(/^\s*[+:>~]/.test(s) ? `:scope${s}` : s) ) {
             return s;
         }
     }
@@ -1546,11 +1570,19 @@ Parser.prototype.SelectorCompiler = class {
     //   - opening comment `/*`
     compileStyleProperties(s) {
         if ( /url\(|\\|\/\*/i.test(s) ) { return; }
-        if ( this.div === null ) { return s; }
-        this.div.style.cssText = s;
-        if ( this.div.style.cssText === '' ) { return; }
-        this.div.style.cssText = '';
-        return s;
+        if ( this.stylesheet === null ) { return s; }
+        let valid = false;
+        try {
+            this.stylesheet.insertRule(`a{${s}}`);
+            const rules = this.stylesheet.cssRules;
+            valid = rules.length !== 0 && rules[0].style.cssText !== '';
+        } catch(ex) {
+            return;
+        }
+        if ( this.stylesheet.cssRules.length !== 0 ) {
+            this.stylesheet.deleteRule(0);
+        }
+        if ( valid ) { return s; }
     }
 
     compileAttrList(s) {
@@ -1684,9 +1716,7 @@ Parser.prototype.SelectorCompiler = class {
             // https://github.com/uBlockOrigin/uBlock-issues/issues/341#issuecomment-447603588
             //   Maybe that one operator is a valid CSS selector and if so,
             //   then consider it to be part of the prefix.
-            if ( this.cssSelectorType(raw.slice(opNameBeg, i)) === 1 ) {
-                continue;
-            }
+            if ( this.querySelectable(raw.slice(opNameBeg, i)) ) { continue; }
             // Extract and remember operator details.
             let operator = raw.slice(opNameBeg, opNameEnd);
             operator = this.normalizedOperators.get(operator) || operator;
@@ -1722,8 +1752,18 @@ Parser.prototype.SelectorCompiler = class {
 
         // No task found: then we have a CSS selector.
         // At least one task found: nothing should be left to parse.
-        if ( tasks.length === 0 && action === undefined ) {
-            prefix = raw;
+        if ( tasks.length === 0 ) {
+            if ( action === undefined ) {
+                prefix = raw;
+            }
+            if ( root && this.sheetSelectable(prefix) ) {
+                if ( action === undefined ) {
+                    return { selector: prefix };
+                } else if ( action[0] === ':style' ) {
+                    return { selector: prefix, action };
+                }
+            }
+
         } else if ( opPrefixBeg < n ) {
             if ( action !== undefined ) { return; }
             const spath = this.compileSpathExpression(raw.slice(opPrefixBeg));
@@ -1743,7 +1783,7 @@ Parser.prototype.SelectorCompiler = class {
                 prefix += ' *';
             }
             prefix = prefix.replace(this.reDropScope, '');
-            if ( this.cssSelectorType(prefix) === 0 ) {
+            if ( this.querySelectable(prefix) === false ) {
                 if (
                     root ||
                     this.reIsCombinator.test(prefix) === false ||
@@ -1765,17 +1805,6 @@ Parser.prototype.SelectorCompiler = class {
         // Expose action to take in root descriptor.
         if ( action !== undefined ) {
             out.action = action;
-        }
-
-        // Pseudo elements are valid only when used in a root task list AND
-        // only when there are no procedural operators: pseudo elements can't
-        // be querySelectorAll-ed.
-        if ( prefix !== '' ) {
-            const pos = this.cssPseudoElement(prefix);
-            if ( pos !== -1 ) {
-                if ( root === false || tasks.length !== 0 ) { return; }
-                out.pseudo = pos;
-            }
         }
 
         return out;
@@ -1884,9 +1913,9 @@ const BITUnderscore     = 1 << 22;
 const BITBrace          = 1 << 23;
 const BITPipe           = 1 << 24;
 const BITTilde          = 1 << 25;
-const BITOpening        = 1 << 27;
-const BITClosing        = 1 << 28;
-const BITUnicode        = 1 << 29;
+const BITOpening        = 1 << 26;
+const BITClosing        = 1 << 27;
+const BITUnicode        = 1 << 28;
 // TODO: separate from character bits into a new slice slot.
 const BITIgnore         = 1 << 30;
 const BITError          = 1 << 31;
@@ -2359,6 +2388,9 @@ const Span = class {
 
 /******************************************************************************/
 
+// https://github.com/uBlockOrigin/uBlock-issues/issues/760#issuecomment-951146371
+//   Quick fix: auto-escape commas.
+
 const NetOptionsIterator = class {
     constructor(parser) {
         this.parser = parser;
@@ -2426,8 +2458,9 @@ const NetOptionsIterator = class {
                 if ( hasBits(bits, BITComma) ) {
                     if ( this.interactive && (i === lopt || slices[i+2] > 1) ) {
                         slices[i] |= BITError;
+                    } else if ( /^,\d*?\}/.test(this.parser.raw.slice(slices[i+1])) === false ) {
+                        break;
                     }
-                    break;
                 }
                 if ( lval === 0 && hasBits(bits, BITEqual) ) { lval = i; }
                 i += 3;
@@ -2551,7 +2584,7 @@ const NetOptionsIterator = class {
                 }
             }
         }
-        // `queryprune=`:  only for network requests.
+        // `removeparam=`:  only for network requests.
         {
             const i = this.tokenPos[OPTTokenQueryprune];
             if ( i !== -1 ) {

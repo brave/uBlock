@@ -146,16 +146,19 @@ import {
 };
 
 µb.saveUserSettings = function() {
+    // `externalLists` will be deprecated in some future, it is kept around
+    // for forward compatibility purpose, and should reflect the content of
+    // `importedLists`.
+    // 
+    // https://github.com/uBlockOrigin/uBlock-issues/issues/1803
+    //   Do this before computing modified settings.
+    this.userSettings.externalLists =
+        this.userSettings.importedLists.join('\n');
+
     const toSave = this.getModifiedSettings(
         this.userSettings,
         this.userSettingsDefault
     );
-
-    // `externalLists` will be deprecated in some future, it is kept around
-    // for forward compatibility purpose, and should reflect the content of
-    // `importedLists`.
-    this.userSettings.externalLists =
-        this.userSettings.importedLists.join('\n');
 
     const toRemove = [];
     for ( const key in this.userSettings ) {
@@ -1489,16 +1492,17 @@ self.addEventListener('hiddenSettingsChanged', ( ) => {
 
 // https://github.com/gorhill/uBlock/issues/2344
 //   Support mutliple locales per filter list.
-
 // https://github.com/gorhill/uBlock/issues/3210
 //   Support ability to auto-enable a filter list based on user agent.
+// https://github.com/gorhill/uBlock/pull/3860
+//   Get current language using extensions API (instead of `navigator.language`)
 
 µb.listMatchesEnvironment = function(details) {
     // Matches language?
     if ( typeof details.lang === 'string' ) {
         let re = this.listMatchesEnvironment.reLang;
         if ( re === undefined ) {
-            const match = /^[a-z]+/.exec(self.navigator.language);
+            const match = /^[a-z]+/.exec(browser.i18n.getUILanguage());
             if ( match !== null ) {
                 re = new RegExp('\\b' + match[0] + '\\b');
                 this.listMatchesEnvironment.reLang = re;
