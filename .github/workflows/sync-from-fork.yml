@@ -1,4 +1,4 @@
-name: Check for Changes & Sync from Fork
+name: Sync from Fork
 on:
   schedule:
     # * is a special character in YAML so you have to quote this string
