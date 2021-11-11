@@ -1,4 +1,4 @@
-name: Check for Changes
+name: Check for Changes & Sync from Fork
 on:
   schedule:
     # * is a special character in YAML so you have to quote this string
@@ -10,6 +10,8 @@ jobs:
     env:
       FILES_TO_CHECK: "assets/resources/scriptlets.js|web_accessible_resources/|js/redirect-engine.js"
       UPSTREAM_URL: "https://github.com/gorhill/ublock.git"
+    outputs:
+      changes: ${{ steps.git-check.outputs.changes_present }}
     steps:
       - uses: actions/checkout@v2
       - name: Fetch release version
@@ -22,5 +24,17 @@ jobs:
       - name: show files
         run: cat updatedfiles.txt
       - name: Have files changed
-        if: steps.git-check.outputs.changes_present == 'false'
-        run: exit 1
+        if: steps.checkForChanges.outputs.changes_present == 'false'
+        run: echo "No changes needed to be synchronised"
+  sync:
+    needs: checkForChanges
+    if: ${{ needs.checkForChanges.outputs.changes == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: tgymnich/fork-sync@v1.6.3
+        with:
+          owner: gorhill
+          base: master
+          head: master
+          auto_approve: false
+          ignore_fail: true
