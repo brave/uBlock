@@ -5,13 +5,13 @@ on:
     - cron:  '0 9 * * *'
 
 jobs:
-  checkForChanges:
+  check-for-changes:
     runs-on: ubuntu-latest
     env:
       FILES_TO_CHECK: "assets/resources/scriptlets.js|web_accessible_resources/|js/redirect-engine.js"
       UPSTREAM_URL: "https://github.com/gorhill/ublock.git"
     outputs:
-      changes: ${{ steps.git-check.outputs.changes_present }}
+      changes: ${{ steps.git-check.outputs.changes-present }}
     steps:
       - uses: actions/checkout@v2
       - name: Fetch release version
@@ -20,15 +20,15 @@ jobs:
           git fetch upstream && git diff --name-only --diff-filter AM HEAD..remotes/upstream/master > updatedfiles.txt
       - name: Check for modified files
         id: git-check
-        run: echo ::set-output name=changes_present::$(if grep -qE "${FILES_TO_CHECK}" updatedfiles.txt; then echo 'true'; else echo 'false'; fi)
+        run: echo ::set-output name=changes-present::$(if grep -qE "${FILES_TO_CHECK}" updatedfiles.txt; then echo 'true'; else echo 'false'; fi)
       - name: show files
         run: cat updatedfiles.txt
       - name: Have files changed
-        if: steps.checkForChanges.outputs.changes_present == 'false'
+        if: steps.check-for-changes.outputs.changes-present == 'false'
         run: echo "No changes needed to be synchronised"
   sync:
-    needs: checkForChanges
-    if: ${{ needs.checkForChanges.outputs.changes == 'true' }}
+    needs: check-for-changes
+    if: ${{ needs.check-for-changes.outputs.changes == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: tgymnich/fork-sync@v1.6.3
