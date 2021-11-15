@@ -127,6 +127,10 @@
     "message": "Vai al registro delle richieste",
     "description": "Tooltip used for the logger icon in the panel"
   },
+  "popupTipReport": {
+    "message": "Segnala un problema su questo sito",
+    "description": "Tooltip used for the 'chat' icon in the panel"
+  },
   "popupTipNoPopups": {
     "message": "Disabilita/abilita il blocco di tutti i popup per questo sito",
     "description": "Tooltip for the no-popups per-site switch"
@@ -855,6 +859,14 @@
     "message": "Apri",
     "description": "Text for button which open an external webpage in Support pane"
   },
+  "supportReportSpecificButton": {
+    "message": "Crea una nuova segnalazione",
+    "description": "Text for button which open an external webpage in Support pane"
+  },
+  "supportFindSpecificButton": {
+    "message": "Trova segnalazioni simili",
+    "description": "A clickable link in the filter issue reporter section"
+  },
   "supportS1H": {
     "message": "Documentazione",
     "description": "Header of 'Documentation' section in Support pane"
@@ -906,6 +918,46 @@
   "supportS5P2": {
     "message": "<b>Importante:</b> Le informazioni potenzialmente private o sensibili vengono oscurate automaticamente. Le informazioni oscurate possono rendere più difficile risolvere un problema.",
     "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS6H": {
+    "message": "Segnala un problema con un filtro",
+    "description": "Header of 'Report a filter issue' section in Support pane"
+  },
+  "supportS6P1S1": {
+    "message": "Per evitare di gravare i volontari con segnalazioni doppie, verificare che il problema non sia già stato segnalato.",
+    "description": "A paragraph in the filter issue reporter section"
+  },
+  "supportS6URL": {
+    "message": "Indirizzo della pagina web:",
+    "description": "Label for the URL of the page"
+  },
+  "supportS6Select1": {
+    "message": "La pagina web...",
+    "description": "Label for widget to select type of issue"
+  },
+  "supportS6Select1Option0": {
+    "message": "Scegli una voce",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option1": {
+    "message": "Mostra pubblicità o avanzi di pubblicità",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option2": {
+    "message": "Ha sovrapposizioni o altri fastidi",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option3": {
+    "message": "Rileva uBlock Origin",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option4": {
+    "message": "Ha problemi relativi alla privacy",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option5": {
+    "message": "Si rompe quando uBlock Origin è attivato",
+    "description": "An entry in the widget used to select the type of issue"
   },
   "supportRedact": {
     "message": "Oscura",

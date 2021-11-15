@@ -28,13 +28,14 @@
 let supportData;
 
 const uselessKeys = [
+    'modifiedHiddenSettings.benchmarkDatasetURL',
     'modifiedUserSettings.popupPanelSections',
     'modifiedUserSettings.externalLists',
     'modifiedUserSettings.importedLists',
 ];
 
 const sensitiveValues = [
-    'filterset',
+    'filterset (user)',
     'modifiedUserSettings.popupPanelSections',
     'modifiedHiddenSettings.userResourcesLocation',
     'trustedset.added',
@@ -113,21 +114,52 @@ function patchEmptiness(data, prop) {
     }
 }
 
-function addDetailsToReportURL(id) {
-    const text = cmEditor.getValue().replace(/^    /gm, '');
+function configToMarkdown(collapse = false) {
+    const text = cmEditor.getValue();
+    return collapse
+        ? '<details>\n\n```yaml\n' + text + '\n```\n</details>'
+        : '```yaml\n' + text + '\n```\n';
+}
+
+function addDetailsToReportURL(id, collapse = false) {
     const elem = uDom.nodeFromId(id);
     const url = new URL(elem.getAttribute('data-url'));
-    url.searchParams.set(
-        'configuration',
-        '<details>\n\n```yaml\n' + text + '\n```\n</details>'
-    );
+    url.searchParams.set('configuration', configToMarkdown(collapse));
     elem.setAttribute('data-url', url);
 }
 
 function showData() {
     const shownData = JSON.parse(JSON.stringify(supportData));
     uselessKeys.forEach(prop => { removeKey(shownData, prop); });
-    if ( document.body.classList.contains('redacted') ) {
+    const redacted = document.body.classList.contains('redacted');
+    // If the report is for a specific site, report per-site switches which
+    // are triggered on the reported site.
+    if (
+        reportURL !== null &&
+        shownData.switchRuleset instanceof Object &&
+        Array.isArray(shownData.switchRuleset.added)
+    ) {
+        const hostname = reportURL.hostname;
+        const added = [];
+        const triggered = [];
+        for ( const rule of shownData.switchRuleset.added ) {
+            const match = /^[^:]+:\s+(\S+)/.exec(rule);
+            if (
+                match[1] === '*' ||
+                hostname === match[1] ||
+                hostname.endsWith(`.${match[1]}`)
+            ) {
+                triggered.push(rule);
+            } else {
+                added.push(rule);
+            }
+        }
+        if ( triggered.length !== 0 ) {
+            shownData.switchRuleset.triggered = triggered;
+            shownData.switchRuleset.added = added;
+        }
+    }
+    if ( redacted ) {
         sensitiveValues.forEach(prop => { redactValue(shownData, prop); });
         sensitiveKeys.forEach(prop => { redactKeys(shownData, prop); });
     }
@@ -139,8 +171,8 @@ function showData() {
         .slice(1, -1)
         .map(v => {
             return v
-                .replace( /^(   *)"/, '  $1')
-                .replace( /^( +.*[^\\])(?:": "|": \{$|": \[$|": )/, '$1: ')
+                .replace( /^( *?)  "/, '$1')
+                .replace( /^( *.*[^\\])(?:": "|": \{$|": \[$|": )/, '$1: ')
                 .replace( /(?:",?|\},?|\],?|,)$/, '');
         })
         .filter(v => v.trim() !== '')
@@ -149,15 +181,53 @@ function showData() {
     cmEditor.setValue(text);
     cmEditor.clearHistory();
 
-    addDetailsToReportURL('filterReport');
-    addDetailsToReportURL('bugReport');
+    addDetailsToReportURL('filterReport', redacted === false);
+    addDetailsToReportURL('bugReport', redacted === false);
+}
+
+/******************************************************************************/
+
+const reportURL = (( ) => {
+    const url = new URL(window.location.href);
+    try {
+        const reportURL = url.searchParams.get('reportURL');
+        if ( reportURL !== null ) {
+            document.body.classList.add('filterIssue');
+        }
+        document.querySelector('[data-i18n="supportS6URL"] ~ input').value = reportURL;
+        return new URL(reportURL);
+    } catch(ex) {
+    }
+    return null;
+})();
+
+function reportSpecificFilterHostname() {
+    return reportURL.hostname.replace(/^www\./, '');
+}
+
+function reportSpecificFilterType() {
+    return document.querySelector('[data-i18n="supportS6Select1"] ~ select').value;
+}
+
+function reportSpecificFilterIssue(ev) {
+    const githubURL = new URL('https://github.com/uBlockOrigin/uAssets/issues/new?template=specific_report_from_ubo.yml');
+    const issueType = reportSpecificFilterType();
+    githubURL.searchParams.set('title', `${reportSpecificFilterHostname()}: ${issueType}`);
+    githubURL.searchParams.set('url_address_of_the_web_page', '`' + reportURL.href + '`');
+    githubURL.searchParams.set('category', issueType);
+    githubURL.searchParams.set('configuration', configToMarkdown(false));
+    vAPI.messaging.send('default', {
+        what: 'gotoURL',
+        details: { url: githubURL.href, select: true, index: -1 },
+    });
+    ev.preventDefault();
 }
 
 /******************************************************************************/
 
 const cmEditor = new CodeMirror(document.getElementById('supportData'), {
     autofocus: true,
-    lineWrapping: true,
+    readOnly: true,
     styleActiveLine: true,
 });
 
@@ -170,12 +240,6 @@ uBlockDashboard.patchCodeMirrorEditor(cmEditor);
         what: 'getSupportData',
     });
 
-    // Remove unnecessary information
-    if ( supportData.modifiedHiddenSettings instanceof Object ) {
-        const o = supportData.modifiedHiddenSettings;
-        o.benchmarkDatasetURL = undefined;
-    }
-
     showData();
 
     uDom('[data-url]').on('click', ev => {
@@ -185,6 +249,20 @@ uBlockDashboard.patchCodeMirrorEditor(cmEditor);
         vAPI.messaging.send('default', {
             what: 'gotoURL',
             details: { url, select: true, index: -1 },
+        });
+        ev.preventDefault();
+    });
+
+    uDom('[data-i18n="supportReportSpecificButton"]').on('click', ev => {
+        reportSpecificFilterIssue(ev);
+    });
+
+    uDom('[data-i18n="supportFindSpecificButton"]').on('click', ev => {
+        const url = new URL('https://github.com/uBlockOrigin/uAssets/issues');
+        url.searchParams.set('q', `is:issue "${reportSpecificFilterHostname()}" in:title`);
+        vAPI.messaging.send('default', {
+            what: 'gotoURL',
+            details: { url: url.href, select: true, index: -1 },
         });
         ev.preventDefault();
     });

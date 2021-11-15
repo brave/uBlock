@@ -127,6 +127,10 @@
     "message": "Otwórz rejestrator",
     "description": "Tooltip used for the logger icon in the panel"
   },
+  "popupTipReport": {
+    "message": "Zgłoś problem z tą stroną",
+    "description": "Tooltip used for the 'chat' icon in the panel"
+  },
   "popupTipNoPopups": {
     "message": "Włącz/wyłącz blokowanie wyskakujących okien na tej witrynie",
     "description": "Tooltip for the no-popups per-site switch"
@@ -855,6 +859,14 @@
     "message": "Otwórz",
     "description": "Text for button which open an external webpage in Support pane"
   },
+  "supportReportSpecificButton": {
+    "message": "Utwórz nowy raport",
+    "description": "Text for button which open an external webpage in Support pane"
+  },
+  "supportFindSpecificButton": {
+    "message": "Znajdź podobne raporty",
+    "description": "A clickable link in the filter issue reporter section"
+  },
   "supportS1H": {
     "message": "Dokumentacja",
     "description": "Header of 'Documentation' section in Support pane"
@@ -876,7 +888,7 @@
     "description": "Header of 'Filter issues' section in Support pane"
   },
   "supportS3P1": {
-    "message": "Zgłaszaj problemy z filtrowaniem na poszczególnych stronach na <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"> trakerze błędów<code>uBlockOrigin/uAssets</code></span>. Wymaga konta GitHub.",
+    "message": "Zgłaszaj problemy z filtrowaniem na poszczególnych stronach na <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"> trakerze błędów<code>uBlockOrigin/uAssets</code></span>. <u>Wymaga konta GitHub.</u>",
     "description": "First paragraph of 'Filter issues' section in Support pane"
   },
   "supportS3P2": {
@@ -892,7 +904,7 @@
     "description": "Header of 'Bug report' section in Support pane"
   },
   "supportS4P1": {
-    "message": "Zgłoś problemy związane bezpośrednio z uBlock Origin na <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\">trakerze błędów <code>uBlockOrigin/uBlock-issue</code></span>. Wymaga konta GitHub.",
+    "message": "Zgłoś problemy związane bezpośrednio z uBlock Origin na <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\">trakerze błędów <code>uBlockOrigin/uBlock-issue</code></span>. <u>Wymaga konta GitHub.</u>",
     "description": "First paragraph of 'Bug report' section in Support pane"
   },
   "supportS5H": {
@@ -906,6 +918,46 @@
   "supportS5P2": {
     "message": "<b>Ważne:</b> potencjalnie prywatne lub wrażliwe informacje są domyślnie ocenzurowane. Ocenzurowanie może utrudnić rozwiązanie problemu.",
     "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS6H": {
+    "message": "Zgłoś problem z filtrowaniem",
+    "description": "Header of 'Report a filter issue' section in Support pane"
+  },
+  "supportS6P1S1": {
+    "message": "Aby uniknąć obciążania wolontariuszy zduplikowanymi zgłoszeniami, sprawdź, czy problem nie został już zgłoszony.",
+    "description": "A paragraph in the filter issue reporter section"
+  },
+  "supportS6URL": {
+    "message": "Adres strony internetowej:",
+    "description": "Label for the URL of the page"
+  },
+  "supportS6Select1": {
+    "message": "Strona internetowa…",
+    "description": "Label for widget to select type of issue"
+  },
+  "supportS6Select1Option0": {
+    "message": "-- Wybierz pozycję --",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option1": {
+    "message": "Wyświetla reklamy lub ich pozostałości",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option2": {
+    "message": "Ma nakładki lub inne niedogodności",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option3": {
+    "message": "Wykrywa uBlock Origin",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option4": {
+    "message": "Ma problemy związane z prywatnością",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option5": {
+    "message": "Działa nieprawidłowo, gdy włączony jest uBlock Origin",
+    "description": "An entry in the widget used to select the type of issue"
   },
   "supportRedact": {
     "message": "Ocenzuruj",

@@ -127,6 +127,10 @@
     "message": "Logger openen",
     "description": "Tooltip used for the logger icon in the panel"
   },
+  "popupTipReport": {
+    "message": "Een probleem op deze website melden",
+    "description": "Tooltip used for the 'chat' icon in the panel"
+  },
   "popupTipNoPopups": {
     "message": "Alle pop-ups voor deze website in-/uitschakelen",
     "description": "Tooltip for the no-popups per-site switch"
@@ -855,6 +859,14 @@
     "message": "Openen",
     "description": "Text for button which open an external webpage in Support pane"
   },
+  "supportReportSpecificButton": {
+    "message": "Nieuwe melding maken",
+    "description": "Text for button which open an external webpage in Support pane"
+  },
+  "supportFindSpecificButton": {
+    "message": "Soortgelijke meldingen zoeken",
+    "description": "A clickable link in the filter issue reporter section"
+  },
   "supportS1H": {
     "message": "Documentatie",
     "description": "Header of 'Documentation' section in Support pane"
@@ -906,6 +918,46 @@
   "supportS5P2": {
     "message": "<b>Belangrijk:</b> mogelijk gevoelige of privégegevens worden standaard geredigeerd. Geredigeerde gegevens kunnen het oplossen van een probleem bemoeilijken.",
     "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS6H": {
+    "message": "Een filterprobleem melden",
+    "description": "Header of 'Report a filter issue' section in Support pane"
+  },
+  "supportS6P1S1": {
+    "message": "Controleer of het probleem niet eerder is gemeld om te voorkomen dat vrijwilligers met dubbele meldingen worden belast.",
+    "description": "A paragraph in the filter issue reporter section"
+  },
+  "supportS6URL": {
+    "message": "Adres van de webpagina:",
+    "description": "Label for the URL of the page"
+  },
+  "supportS6Select1": {
+    "message": "De webpagina...",
+    "description": "Label for widget to select type of issue"
+  },
+  "supportS6Select1Option0": {
+    "message": "-- Maak een keuze --",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option1": {
+    "message": "Toont advertenties of restanten",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option2": {
+    "message": "Heeft overlappingen of andere ongemakken",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option3": {
+    "message": "Detecteert uBlock Origin",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option4": {
+    "message": "Heeft privacy-gerelateerde problemen",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option5": {
+    "message": "Werkt niet als uBlock Origin is ingeschakeld",
+    "description": "An entry in the widget used to select the type of issue"
   },
   "supportRedact": {
     "message": "Redigeren",

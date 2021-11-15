@@ -127,6 +127,10 @@
     "message": "Otvoriť Zaznamenávač",
     "description": "Tooltip used for the logger icon in the panel"
   },
+  "popupTipReport": {
+    "message": "Nahlásiť problém na tejto webovej stránke",
+    "description": "Tooltip used for the 'chat' icon in the panel"
+  },
   "popupTipNoPopups": {
     "message": "Žiadne vyskakovacie okná pre túto stránku",
     "description": "Tooltip for the no-popups per-site switch"
@@ -855,6 +859,14 @@
     "message": "Otvoriť",
     "description": "Text for button which open an external webpage in Support pane"
   },
+  "supportReportSpecificButton": {
+    "message": "Vytvoriť nové hlásenie",
+    "description": "Text for button which open an external webpage in Support pane"
+  },
+  "supportFindSpecificButton": {
+    "message": "Vyhľadať podobné hlásenia",
+    "description": "A clickable link in the filter issue reporter section"
+  },
   "supportS1H": {
     "message": "Dokumentácia",
     "description": "Header of 'Documentation' section in Support pane"
@@ -906,6 +918,46 @@
   "supportS5P2": {
     "message": "<b>Dôležité:</b> Potenciálne súkromné alebo citlivé informácie sú štandardne upravované. Upravené informácie môžu sťažiť riešenie problému.",
     "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS6H": {
+    "message": "Nahlásiť problém s filtrom",
+    "description": "Header of 'Report a filter issue' section in Support pane"
+  },
+  "supportS6P1S1": {
+    "message": "Aby ste dobrovoľníkov nezaťažovali duplicitnými hláseniami, overte si, či už problém nebol nahlásený.",
+    "description": "A paragraph in the filter issue reporter section"
+  },
+  "supportS6URL": {
+    "message": "Adresa webovej stránky:",
+    "description": "Label for the URL of the page"
+  },
+  "supportS6Select1": {
+    "message": "Webová stránka…",
+    "description": "Label for widget to select type of issue"
+  },
+  "supportS6Select1Option0": {
+    "message": "-- Vyberte položku --",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option1": {
+    "message": "Zobrazuje reklamy alebo zvyšky reklám",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option2": {
+    "message": "Je prekrytá alebo má iné nedostatky",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option3": {
+    "message": "Deteguje uBlock Origin",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option4": {
+    "message": "Má problémy súvisiace so súkromím",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option5": {
+    "message": "Je rozbitá, keď je povolený uBlock Origin",
+    "description": "An entry in the widget used to select the type of issue"
   },
   "supportRedact": {
     "message": "Upravovať",

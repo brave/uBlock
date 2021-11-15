@@ -127,6 +127,10 @@
     "message": "Перейти до журналу запитів",
     "description": "Tooltip used for the logger icon in the panel"
   },
+  "popupTipReport": {
+    "message": "Повідомити про помилку на цьому вебсайті",
+    "description": "Tooltip used for the 'chat' icon in the panel"
+  },
   "popupTipNoPopups": {
     "message": "Увімкнути блокування всіх виринаючих вікон цього сайту",
     "description": "Tooltip for the no-popups per-site switch"
@@ -855,6 +859,14 @@
     "message": "Відкрити",
     "description": "Text for button which open an external webpage in Support pane"
   },
+  "supportReportSpecificButton": {
+    "message": "Створити новий звіт",
+    "description": "Text for button which open an external webpage in Support pane"
+  },
+  "supportFindSpecificButton": {
+    "message": "Знайти подібні звіти",
+    "description": "A clickable link in the filter issue reporter section"
+  },
   "supportS1H": {
     "message": "Документація",
     "description": "Header of 'Documentation' section in Support pane"
@@ -906,6 +918,46 @@
   "supportS5P2": {
     "message": "<b>Важливо:</b> Потенційно приватні або конфіденційні дані типово редаговані. Редаговані дані можуть ускладнити розв'язання проблеми.",
     "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS6H": {
+    "message": "Повідомити про ваду фільтра",
+    "description": "Header of 'Report a filter issue' section in Support pane"
+  },
+  "supportS6P1S1": {
+    "message": "Щоб не обтяжувати волонтерів повторюваними звітами, переконайтеся, що про проблему ще не повідомлялося.",
+    "description": "A paragraph in the filter issue reporter section"
+  },
+  "supportS6URL": {
+    "message": "Адреса вебсторінки:",
+    "description": "Label for the URL of the page"
+  },
+  "supportS6Select1": {
+    "message": "Вебсторінка...",
+    "description": "Label for widget to select type of issue"
+  },
+  "supportS6Select1Option0": {
+    "message": "-- Указати проблему --",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option1": {
+    "message": "З'являється реклама або залишки оголошень",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option2": {
+    "message": "Накладання або інші прикрощі",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option3": {
+    "message": "Виявляє uBlock Origin",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option4": {
+    "message": "Пов'язані з приватністю проблеми",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option5": {
+    "message": "Щось не працює, якщо увімкнено uBlock Origin",
+    "description": "An entry in the widget used to select the type of issue"
   },
   "supportRedact": {
     "message": "Редагувати",

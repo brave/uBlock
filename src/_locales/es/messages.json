@@ -127,6 +127,10 @@
     "message": "Ir al registro de peticiones",
     "description": "Tooltip used for the logger icon in the panel"
   },
+  "popupTipReport": {
+    "message": "Reportar un problema en este sitio web",
+    "description": "Tooltip used for the 'chat' icon in the panel"
+  },
   "popupTipNoPopups": {
     "message": "Alternar bloqueo de todas las ventanas emergentes en este sitio",
     "description": "Tooltip for the no-popups per-site switch"
@@ -855,6 +859,14 @@
     "message": "Abrir",
     "description": "Text for button which open an external webpage in Support pane"
   },
+  "supportReportSpecificButton": {
+    "message": "Crear nuevo reporte",
+    "description": "Text for button which open an external webpage in Support pane"
+  },
+  "supportFindSpecificButton": {
+    "message": "Encontrar reportes similares",
+    "description": "A clickable link in the filter issue reporter section"
+  },
   "supportS1H": {
     "message": "Documentación",
     "description": "Header of 'Documentation' section in Support pane"
@@ -876,7 +888,7 @@
     "description": "Header of 'Filter issues' section in Support pane"
   },
   "supportS3P1": {
-    "message": "Reportar problemas de filtros con sitios web específicos en el registro de problemas de <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"><code>uBlockOrigin/uAssets</code></span>. Requiere una cuenta en GitHub.",
+    "message": "Reportar problemas de filtros con sitios web específicos en el registro de problemas de <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"><code>uBlockOrigin/uAssets</code></span>. <u>Requiere una cuenta en GitHub</u>.",
     "description": "First paragraph of 'Filter issues' section in Support pane"
   },
   "supportS3P2": {
@@ -892,7 +904,7 @@
     "description": "Header of 'Bug report' section in Support pane"
   },
   "supportS4P1": {
-    "message": "Reportar problemas con uBlock Origin en el registro de problemas <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\"><code>uBlockOrigin/uBlock-issue</code></span>. Requiere una cuenta en GitHub.",
+    "message": "Reportar problemas con uBlock Origin en el registro de problemas <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\"><code>uBlockOrigin/uBlock-issue</code></span>. <u>Requiere una cuenta en GitHub</u>.",
     "description": "First paragraph of 'Bug report' section in Support pane"
   },
   "supportS5H": {
@@ -906,6 +918,46 @@
   "supportS5P2": {
     "message": "<b>Importante:</b> la información potencialmente privada o sensible se redacta de forma predeterminada. La información redactada puede dificultar la resolución de un problema.",
     "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS6H": {
+    "message": "Reportar un problema de filtro",
+    "description": "Header of 'Report a filter issue' section in Support pane"
+  },
+  "supportS6P1S1": {
+    "message": "Para evitar sobrecargar a voluntarios con reportes duplicados, verifica que el problema no haya sido reportado.",
+    "description": "A paragraph in the filter issue reporter section"
+  },
+  "supportS6URL": {
+    "message": "Dirección de la página web:",
+    "description": "Label for the URL of the page"
+  },
+  "supportS6Select1": {
+    "message": "La página web...",
+    "description": "Label for widget to select type of issue"
+  },
+  "supportS6Select1Option0": {
+    "message": "-- Elige una entrada --",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option1": {
+    "message": "Muestra anuncios o restos de anuncios",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option2": {
+    "message": "Tiene superposiciones u otras molestias",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option3": {
+    "message": "Detecta uBlock Origin",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option4": {
+    "message": "Tiene problemas relacionados con la privacidad",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option5": {
+    "message": "Se rompe cuando uBlock Origin está habilitado",
+    "description": "An entry in the widget used to select the type of issue"
   },
   "supportRedact": {
     "message": "Redactar",

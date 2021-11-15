@@ -127,6 +127,10 @@
     "message": "აღმრიცხავის გახსნა",
     "description": "Tooltip used for the logger icon in the panel"
   },
+  "popupTipReport": {
+    "message": "ამ საიტზე ხარვეზის მოხსენება",
+    "description": "Tooltip used for the 'chat' icon in the panel"
+  },
   "popupTipNoPopups": {
     "message": "ამ საიტზე ყველა ამომხტომი ფანჯრის შეზღუდვის ჩართვა/გამორთვა",
     "description": "Tooltip for the no-popups per-site switch"
@@ -855,6 +859,14 @@
     "message": "გახსნა",
     "description": "Text for button which open an external webpage in Support pane"
   },
+  "supportReportSpecificButton": {
+    "message": "შექმენით ახალი მოსხენება",
+    "description": "Text for button which open an external webpage in Support pane"
+  },
+  "supportFindSpecificButton": {
+    "message": "იპოვეთ მსგავსი მოხსენებები",
+    "description": "A clickable link in the filter issue reporter section"
+  },
   "supportS1H": {
     "message": "მასალები",
     "description": "Header of 'Documentation' section in Support pane"
@@ -906,6 +918,46 @@
   "supportS5P2": {
     "message": "<b>გაითვალისწინეთ:</b> მონაცემები, რომლებიც შესაძლოა პირადი და მნიშვნელოვანი იყოს, ნაგულისხმევად იკვეცება. ამასთან, შეკვეცილი ინფორმაციით, სავარაუდოდ გართულდება ხარვეზის გამოსწორება.",
     "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS6H": {
+    "message": "ფილტრის ხარვეზის მოხსენება",
+    "description": "Header of 'Report a filter issue' section in Support pane"
+  },
+  "supportS6P1S1": {
+    "message": "მოხალისეები რომ არ მოცდნენ ერთნაირი მოსხენებების ნახვით, გთოხვთ გადაამოწმოთ, უკვე ხომ არაა გაგზავნილი საჩივარი ამ ხარვეზზე.",
+    "description": "A paragraph in the filter issue reporter section"
+  },
+  "supportS6URL": {
+    "message": "ვებგვერდის მისამართი",
+    "description": "Label for the URL of the page"
+  },
+  "supportS6Select1": {
+    "message": "ვებგვერდი...",
+    "description": "Label for widget to select type of issue"
+  },
+  "supportS6Select1Option0": {
+    "message": "-- შეარჩიეთ --",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option1": {
+    "message": "აჩვენებს რეკლამებს ან მის ნარჩენებს",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option2": {
+    "message": "ადებს შემაწუხებელ შრეებს და მისთანებს",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option3": {
+    "message": "ამჩნევს, რომ uBlock Origin ჩართულია",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option4": {
+    "message": " პირადულობის დაცვის ხარვეზებითაა",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option5": {
+    "message": "ფუჭდება, როცა uBlock Origin ჩართულია",
+    "description": "An entry in the widget used to select the type of issue"
   },
   "supportRedact": {
     "message": "შეკვეცილი",

@@ -127,6 +127,10 @@
     "message": "開啟記錄器",
     "description": "Tooltip used for the logger icon in the panel"
   },
+  "popupTipReport": {
+    "message": "回報此網站的問題",
+    "description": "Tooltip used for the 'chat' icon in the panel"
+  },
   "popupTipNoPopups": {
     "message": "切換是否阻擋此網站的所有彈出型視窗",
     "description": "Tooltip for the no-popups per-site switch"
@@ -855,6 +859,14 @@
     "message": "開啟",
     "description": "Text for button which open an external webpage in Support pane"
   },
+  "supportReportSpecificButton": {
+    "message": "發出新報告",
+    "description": "Text for button which open an external webpage in Support pane"
+  },
+  "supportFindSpecificButton": {
+    "message": "尋找類似的報告",
+    "description": "A clickable link in the filter issue reporter section"
+  },
   "supportS1H": {
     "message": "文件",
     "description": "Header of 'Documentation' section in Support pane"
@@ -906,6 +918,46 @@
   "supportS5P2": {
     "message": "<b>特別注意：</b>預設情況下，潛在隱私或敏感資料會被替換掉。替換過的資訊可能會加大問題解決的難度。",
     "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS6H": {
+    "message": "回報過濾規則的問題",
+    "description": "Header of 'Report a filter issue' section in Support pane"
+  },
+  "supportS6P1S1": {
+    "message": "為了避免太多人發出重複的報告拖垮志工，請先確認是否已經有人回報過您打算報告的問題。",
+    "description": "A paragraph in the filter issue reporter section"
+  },
+  "supportS6URL": {
+    "message": "網址：",
+    "description": "Label for the URL of the page"
+  },
+  "supportS6Select1": {
+    "message": "這張網頁…",
+    "description": "Label for widget to select type of issue"
+  },
+  "supportS6Select1Option0": {
+    "message": "-- 挑選一種情況 --",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option1": {
+    "message": "顯示廣告或廣告移除後留下的天窗",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option2": {
+    "message": "會覆蓋內容或有其他煩人的內容",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option3": {
+    "message": "會偵測到您已安裝 uBlock Origin",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option4": {
+    "message": "有隱私權相關問題",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option5": {
+    "message": "開啟 uBlock Origin 的時候網頁運作不正常",
+    "description": "An entry in the widget used to select the type of issue"
   },
   "supportRedact": {
     "message": "替換",

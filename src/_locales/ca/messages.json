@@ -127,6 +127,10 @@
     "message": "Obre el registre d'esdeveniments",
     "description": "Tooltip used for the logger icon in the panel"
   },
+  "popupTipReport": {
+    "message": "Informeu d'un problema en aquest lloc web",
+    "description": "Tooltip used for the 'chat' icon in the panel"
+  },
   "popupTipNoPopups": {
     "message": "Commuta el bloqueig de totes les finestres emergents d'aquest lloc",
     "description": "Tooltip for the no-popups per-site switch"
@@ -855,6 +859,14 @@
     "message": "Obre",
     "description": "Text for button which open an external webpage in Support pane"
   },
+  "supportReportSpecificButton": {
+    "message": "Crea un informe nou",
+    "description": "Text for button which open an external webpage in Support pane"
+  },
+  "supportFindSpecificButton": {
+    "message": "Busca informes semblants",
+    "description": "A clickable link in the filter issue reporter section"
+  },
   "supportS1H": {
     "message": "Documentació",
     "description": "Header of 'Documentation' section in Support pane"
@@ -906,6 +918,46 @@
   "supportS5P2": {
     "message": "<b>Important:</b> per defecte es redacta informació potencialment privada o confidencial. La informació redactada pot dificultar la resolució d'un problema.",
     "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS6H": {
+    "message": "Informeu d'un problema de filtre",
+    "description": "Header of 'Report a filter issue' section in Support pane"
+  },
+  "supportS6P1S1": {
+    "message": "Per evitar carregar els voluntaris amb informes duplicats, verifiqueu que el problema encara no s'hagi informat.",
+    "description": "A paragraph in the filter issue reporter section"
+  },
+  "supportS6URL": {
+    "message": "Adreça de la pàgina web:",
+    "description": "Label for the URL of the page"
+  },
+  "supportS6Select1": {
+    "message": "La pàgina web...",
+    "description": "Label for widget to select type of issue"
+  },
+  "supportS6Select1Option0": {
+    "message": "-- Trieu una entrada --",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option1": {
+    "message": "Mostra anuncis o restes d'anuncis",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option2": {
+    "message": "Té superposicions o altres molèsties",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option3": {
+    "message": "Detecta l'uBlock Origin",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option4": {
+    "message": "Té problemes relacionats amb la privadesa",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option5": {
+    "message": "No funciona quan l'uBlock Origin està activat",
+    "description": "An entry in the widget used to select the type of issue"
   },
   "supportRedact": {
     "message": "Redacta",

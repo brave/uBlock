@@ -127,6 +127,10 @@
     "message": "Преглед на дневника със заявки",
     "description": "Tooltip used for the logger icon in the panel"
   },
+  "popupTipReport": {
+    "message": "Подайте сигнал за проблем на този уебсайт",
+    "description": "Tooltip used for the 'chat' icon in the panel"
+  },
   "popupTipNoPopups": {
     "message": "Превключване блокирането на всички изскачащи прозорци за този сайт",
     "description": "Tooltip for the no-popups per-site switch"
@@ -855,6 +859,14 @@
     "message": "Отваряне",
     "description": "Text for button which open an external webpage in Support pane"
   },
+  "supportReportSpecificButton": {
+    "message": "Нов доклад",
+    "description": "Text for button which open an external webpage in Support pane"
+  },
+  "supportFindSpecificButton": {
+    "message": "Намерете подобни доклади",
+    "description": "A clickable link in the filter issue reporter section"
+  },
   "supportS1H": {
     "message": "Документация",
     "description": "Header of 'Documentation' section in Support pane"
@@ -906,6 +918,46 @@
   "supportS5P2": {
     "message": "<b>Важно:</b> Потенциално лична или чувствителна информация се редактира по подразбиране. Редактираната информация може да затрудни решаването на даден проблем.",
     "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
+  },
+  "supportS6H": {
+    "message": "Подайте сигнал за проблем с филтъра",
+    "description": "Header of 'Report a filter issue' section in Support pane"
+  },
+  "supportS6P1S1": {
+    "message": "За да избегнете натоварването на доброволците с дублиращи се доклади, моля, проверете дали проблемът все още не е докладван.",
+    "description": "A paragraph in the filter issue reporter section"
+  },
+  "supportS6URL": {
+    "message": "Адрес на уеб страницата:",
+    "description": "Label for the URL of the page"
+  },
+  "supportS6Select1": {
+    "message": "Уеб страницата...",
+    "description": "Label for widget to select type of issue"
+  },
+  "supportS6Select1Option0": {
+    "message": "-- Изберете запис --",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option1": {
+    "message": "Показва реклами или остатъци от реклами",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option2": {
+    "message": "Има наслагвания или други неудобства",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option3": {
+    "message": "Открива uBlock Origin",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option4": {
+    "message": "Има проблеми, свързани с поверителността",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option5": {
+    "message": "Прекъсва, когато uBlock Origin е активиран",
+    "description": "An entry in the widget used to select the type of issue"
   },
   "supportRedact": {
     "message": "Редактиран вид",
