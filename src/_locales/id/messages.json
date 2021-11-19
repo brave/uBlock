@@ -959,6 +959,14 @@
     "message": "Rusak saat uBlock Origin aktif",
     "description": "An entry in the widget used to select the type of issue"
   },
+  "supportS6Select1Option6": {
+    "message": "Membuka tab atau jendela yang tidak diinginkan",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Checkbox1": {
+    "message": "Beri label halaman web sebagai &ldquo;NSFW&rdquo; (<a href=\"https://wikipedia.org/wiki/Not_safe_for_work\">&ldquo;Tidak Aman Untuk Bekerja&rdquo;</a>)",
+    "description": "A checkbox to use for NSFW sites"
+  },
   "supportRedact": {
     "message": "Sensor",
     "description": "Text for 'Redact' button"

@@ -959,6 +959,14 @@
     "message": "Funktioniert nicht richtig, wenn uBlock Origin aktiviert ist",
     "description": "An entry in the widget used to select the type of issue"
   },
+  "supportS6Select1Option6": {
+    "message": "Öffnet unerwünschte Tabs oder Fenster",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Checkbox1": {
+    "message": "Kennzeichnen Sie die Webseite als „NSFW” (<a href=\"https://wikipedia.org/wiki/Not_safe_for_work\">„Nicht zur Ansicht bzw. Verwendung am Arbeitsplatz geeignet”</a>)",
+    "description": "A checkbox to use for NSFW sites"
+  },
   "supportRedact": {
     "message": "Überarbeiten",
     "description": "Text for 'Redact' button"

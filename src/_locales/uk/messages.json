@@ -959,6 +959,14 @@
     "message": "Щось не працює, якщо увімкнено uBlock Origin",
     "description": "An entry in the widget used to select the type of issue"
   },
+  "supportS6Select1Option6": {
+    "message": "Відкриває небажані вкладки або вікна",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Checkbox1": {
+    "message": "Позначити цю сторінку «NSFW» (<a href=\"https://uk.wikipedia.org/wiki/NSFW\">«Небезпечно для роботи»</a>)",
+    "description": "A checkbox to use for NSFW sites"
+  },
   "supportRedact": {
     "message": "Редагувати",
     "description": "Text for 'Redact' button"

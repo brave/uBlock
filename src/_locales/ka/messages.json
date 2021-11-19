@@ -944,7 +944,7 @@
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Select1Option2": {
-    "message": "ადებს შემაწუხებელ შრეებს და მისთანებს",
+    "message": "ადებს შემაწუხებელ შრეებსა და მისთანებს",
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Select1Option3": {
@@ -958,6 +958,14 @@
   "supportS6Select1Option5": {
     "message": "ფუჭდება, როცა uBlock Origin ჩართულია",
     "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option6": {
+    "message": "ხსნის არასასურველ ჩანართებს ან ფანჯრებს",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Checkbox1": {
+    "message": "გვერდი მოინიშნოს, როგორც „NSFW“ (<a href=\"https://wikipedia.org/wiki/Not_safe_for_work\">„შეუსაბამო“</a>)",
+    "description": "A checkbox to use for NSFW sites"
   },
   "supportRedact": {
     "message": "შეკვეცილი",

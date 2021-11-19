@@ -959,6 +959,14 @@
     "message": "開啟 uBlock Origin 的時候網頁運作不正常",
     "description": "An entry in the widget used to select the type of issue"
   },
+  "supportS6Select1Option6": {
+    "message": "開啟不想出現的分頁或視窗",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Checkbox1": {
+    "message": "將網頁標記為「NSFW」（<a href=\"https://zh.wikipedia.org/wiki/NSFW\">工作場所不宜</a>）",
+    "description": "A checkbox to use for NSFW sites"
+  },
   "supportRedact": {
     "message": "替換",
     "description": "Text for 'Redact' button"

@@ -959,6 +959,14 @@
     "message": "Прекъсва, когато uBlock Origin е активиран",
     "description": "An entry in the widget used to select the type of issue"
   },
+  "supportS6Select1Option6": {
+    "message": "Отваря нежелани раздели или прозорци",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Checkbox1": {
+    "message": "Маркиране на уеб страницата като &ldquo;NSFW&rdquo; (<a href=\"https://wikipedia.org/wiki/Not_safe_for_work\">&ldquo;небезопасна за работа&rdquo;</a>)",
+    "description": "A checkbox to use for NSFW sites"
+  },
   "supportRedact": {
     "message": "Редактиран вид",
     "description": "Text for 'Redact' button"

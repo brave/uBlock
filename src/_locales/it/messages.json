@@ -959,6 +959,14 @@
     "message": "Si rompe quando uBlock Origin è attivato",
     "description": "An entry in the widget used to select the type of issue"
   },
+  "supportS6Select1Option6": {
+    "message": "Apre schede o finestre indesiderate",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Checkbox1": {
+    "message": "Etichetta la pagina web come &ldquo;NSFW&rdquo; (<a href=\"https://it.wikipedia.org/wiki/NSFW\">&ldquo;Not Safe For Work&rdquo;</a>)",
+    "description": "A checkbox to use for NSFW sites"
+  },
   "supportRedact": {
     "message": "Oscura",
     "description": "Text for 'Redact' button"

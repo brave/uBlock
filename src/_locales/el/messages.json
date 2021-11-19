@@ -959,6 +959,14 @@
     "message": "Μη λειτουργικό όταν το uBlock Origin είναι ενεργοποιημένο",
     "description": "An entry in the widget used to select the type of issue"
   },
+  "supportS6Select1Option6": {
+    "message": "Ανοίγει ανεπιθύμητες καρτέλες ή παράθυρα",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Checkbox1": {
+    "message": "Επισημάνετε την ιστοσελίδα ως &ldquo;NSFW&rdquo; (<a href=\"https://wikipedia.org/wiki/Not_safe_for_work\">&ldquo;Not Safe For Work&rdquo;</a>)",
+    "description": "A checkbox to use for NSFW sites"
+  },
   "supportRedact": {
     "message": "Redact",
     "description": "Text for 'Redact' button"

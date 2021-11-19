@@ -959,6 +959,14 @@
     "message": "Werkt niet als uBlock Origin is ingeschakeld",
     "description": "An entry in the widget used to select the type of issue"
   },
+  "supportS6Select1Option6": {
+    "message": "Opent ongewenste tabbladen of vensters",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Checkbox1": {
+    "message": "De webpagina labelen als &lsquo;NSFW&rsquo; (<a href=\"https://nl.wikipedia.org/wiki/NSFW\">&lsquo;Not Safe For Work&rsquo;</a>)",
+    "description": "A checkbox to use for NSFW sites"
+  },
   "supportRedact": {
     "message": "Redigeren",
     "description": "Text for 'Redact' button"
