@@ -115,7 +115,7 @@ function patchEmptiness(data, prop) {
 }
 
 function configToMarkdown(collapse = false) {
-    const text = cmEditor.getValue();
+    const text = cmEditor.getValue().trim();
     return collapse
         ? '<details>\n\n```yaml\n' + text + '\n```\n</details>'
         : '```yaml\n' + text + '\n```\n';
@@ -131,7 +131,7 @@ function addDetailsToReportURL(id, collapse = false) {
 function showData() {
     const shownData = JSON.parse(JSON.stringify(supportData));
     uselessKeys.forEach(prop => { removeKey(shownData, prop); });
-    const redacted = document.body.classList.contains('redacted');
+    const redacted = true;
     // If the report is for a specific site, report per-site switches which
     // are triggered on the reported site.
     if (
@@ -219,7 +219,7 @@ function reportSpecificFilterIssue(ev) {
     githubURL.searchParams.set('title', title);
     githubURL.searchParams.set('url_address_of_the_web_page', '`' + reportURL.href + '`');
     githubURL.searchParams.set('category', issueType);
-    githubURL.searchParams.set('configuration', configToMarkdown(false));
+    githubURL.searchParams.set('configuration', configToMarkdown(true));
     vAPI.messaging.send('default', {
         what: 'gotoURL',
         details: { url: githubURL.href, select: true, index: -1 },
@@ -269,16 +269,6 @@ uBlockDashboard.patchCodeMirrorEditor(cmEditor);
             details: { url: url.href, select: true, index: -1 },
         });
         ev.preventDefault();
-    });
-
-    uDom('#redactButton').on('click', ( ) => {
-        document.body.classList.add('redacted');
-        showData();
-    });
-
-    uDom('#unredactButton').on('click', ( ) => {
-        document.body.classList.remove('redacted');
-        showData();
     });
 
     uDom('#selectAllButton').on('click', ( ) => {
