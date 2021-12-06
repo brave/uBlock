@@ -29,9 +29,13 @@ let supportData;
 
 const uselessKeys = [
     'modifiedHiddenSettings.benchmarkDatasetURL',
-    'modifiedUserSettings.popupPanelSections',
+    'modifiedHiddenSettings.consoleLogLevel',
+    'modifiedHiddenSettings.uiPopupConfig',
+    'modifiedUserSettings.alwaysDetachLogger',
+    'modifiedUserSettings.firewallPaneMinimized',
     'modifiedUserSettings.externalLists',
     'modifiedUserSettings.importedLists',
+    'modifiedUserSettings.popupPanelSections',
 ];
 
 const sensitiveValues = [
@@ -132,33 +136,6 @@ function showData() {
     const shownData = JSON.parse(JSON.stringify(supportData));
     uselessKeys.forEach(prop => { removeKey(shownData, prop); });
     const redacted = true;
-    // If the report is for a specific site, report per-site switches which
-    // are triggered on the reported site.
-    if (
-        reportURL !== null &&
-        shownData.switchRuleset instanceof Object &&
-        Array.isArray(shownData.switchRuleset.added)
-    ) {
-        const hostname = reportURL.hostname;
-        const added = [];
-        const triggered = [];
-        for ( const rule of shownData.switchRuleset.added ) {
-            const match = /^[^:]+:\s+(\S+)/.exec(rule);
-            if (
-                match[1] === '*' ||
-                hostname === match[1] ||
-                hostname.endsWith(`.${match[1]}`)
-            ) {
-                triggered.push(rule);
-            } else {
-                added.push(rule);
-            }
-        }
-        if ( triggered.length !== 0 ) {
-            shownData.switchRuleset.triggered = triggered;
-            shownData.switchRuleset.added = added;
-        }
-    }
     if ( redacted ) {
         sensitiveValues.forEach(prop => { redactValue(shownData, prop); });
         sensitiveKeys.forEach(prop => { redactKeys(shownData, prop); });
@@ -166,14 +143,17 @@ function showData() {
     for ( const prop in shownData ) {
         patchEmptiness(shownData, prop);
     }
+    if ( reportedPage !== null ) {
+        shownData.popupPanel = reportedPage.popupPanel;
+    }
     const text = JSON.stringify(shownData, null, 2)
         .split('\n')
         .slice(1, -1)
         .map(v => {
             return v
-                .replace( /^( *?)  "/, '$1')
-                .replace( /^( *.*[^\\])(?:": "|": \{$|": \[$|": )/, '$1: ')
-                .replace( /(?:",?|\},?|\],?|,)$/, '');
+                .replace(/^( *?)  "/, '$1')
+                .replace(/^( *.*[^\\])(?:": "|": \{$|": \[$|": )/, '$1: ')
+                .replace(/(?:",?|\},?|\],?|,)$/, '');
         })
         .filter(v => v.trim() !== '')
         .join('\n') + '\n';
@@ -181,43 +161,62 @@ function showData() {
     cmEditor.setValue(text);
     cmEditor.clearHistory();
 
-    addDetailsToReportURL('filterReport', redacted === false);
-    addDetailsToReportURL('bugReport', redacted === false);
+    addDetailsToReportURL('filterReport', true);
+    addDetailsToReportURL('bugReport', true);
 }
 
 /******************************************************************************/
 
-const reportURL = (( ) => {
+const reportedPage = (( ) => {
     const url = new URL(window.location.href);
     try {
-        const reportURL = url.searchParams.get('reportURL');
-        if ( reportURL !== null ) {
-            document.body.classList.add('filterIssue');
+        const pageURL = url.searchParams.get('pageURL');
+        if ( pageURL === null ) { return null; }
+        const parsedURL = new URL(pageURL);
+        parsedURL.username = '';
+        parsedURL.password = '';
+        parsedURL.hash = '';
+        const select = document.querySelector('select[name="url"]');
+        select.options[0].textContent = parsedURL.href;
+        if ( parsedURL.search !== '' ) {
+            const option = document.createElement('option');
+            parsedURL.search = '';
+            option.textContent = parsedURL.href;
+            select.append(option);
         }
-        document.querySelector('[data-i18n="supportS6URL"] ~ input').value = reportURL;
-        return new URL(reportURL);
+        if ( parsedURL.pathname !== '/' ) {
+            const option = document.createElement('option');
+            parsedURL.pathname = '';
+            option.textContent = parsedURL.href;
+            select.append(option);
+        }
+        document.body.classList.add('filterIssue');
+        return {
+            hostname: parsedURL.hostname.replace(/^(m|mobile|www)\./, ''),
+            popupPanel: JSON.parse(url.searchParams.get('popupPanel')),
+        };
     } catch(ex) {
     }
     return null;
 })();
 
-function reportSpecificFilterHostname() {
-    return reportURL.hostname.replace(/^www\./, '');
-}
-
 function reportSpecificFilterType() {
-    return document.querySelector('[data-i18n="supportS6Select1"] ~ select').value;
+    return document.querySelector('select[name="type"]').value;
 }
 
 function reportSpecificFilterIssue(ev) {
     const githubURL = new URL('https://github.com/uBlockOrigin/uAssets/issues/new?template=specific_report_from_ubo.yml');
     const issueType = reportSpecificFilterType();
-    let title = `${reportSpecificFilterHostname()}: ${issueType}`;
+    let title = `${reportedPage.hostname}: ${issueType}`;
     if ( document.getElementById('isNSFW').checked ) {
         title = `[nsfw] ${title}`;
     }
     githubURL.searchParams.set('title', title);
-    githubURL.searchParams.set('url_address_of_the_web_page', '`' + reportURL.href + '`');
+    githubURL.searchParams.set(
+        'url_address_of_the_web_page', '`' +
+        document.querySelector('select[name="url"]').value +
+        '`'
+    );
     githubURL.searchParams.set('category', issueType);
     githubURL.searchParams.set('configuration', configToMarkdown(true));
     vAPI.messaging.send('default', {
@@ -252,24 +251,26 @@ uBlockDashboard.patchCodeMirrorEditor(cmEditor);
         if ( typeof url !== 'string' || url === '' ) { return; }
         vAPI.messaging.send('default', {
             what: 'gotoURL',
-            details: { url, select: true, index: -1 },
+            details: { url, select: true, index: -1, shiftKey: ev.shiftKey },
         });
         ev.preventDefault();
     });
 
-    uDom('[data-i18n="supportReportSpecificButton"]').on('click', ev => {
-        reportSpecificFilterIssue(ev);
-    });
-
-    uDom('[data-i18n="supportFindSpecificButton"]').on('click', ev => {
-        const url = new URL('https://github.com/uBlockOrigin/uAssets/issues');
-        url.searchParams.set('q', `is:issue "${reportSpecificFilterHostname()}" in:title`);
-        vAPI.messaging.send('default', {
-            what: 'gotoURL',
-            details: { url: url.href, select: true, index: -1 },
+    if ( reportedPage !== null ) {
+        uDom('[data-i18n="supportReportSpecificButton"]').on('click', ev => {
+            reportSpecificFilterIssue(ev);
         });
-        ev.preventDefault();
-    });
+
+        uDom('[data-i18n="supportFindSpecificButton"]').on('click', ev => {
+            const url = new URL('https://github.com/uBlockOrigin/uAssets/issues');
+            url.searchParams.set('q', `is:issue sort:updated-desc "${reportedPage.hostname}" in:title`);
+            vAPI.messaging.send('default', {
+                what: 'gotoURL',
+                details: { url: url.href, select: true, index: -1 },
+            });
+            ev.preventDefault();
+        });
+    }
 
     uDom('#selectAllButton').on('click', ( ) => {
         cmEditor.focus();

@@ -5,10 +5,11 @@ body {
 .body > div {
     max-width: 800px;
     }
-
+h3 {
+    margin-bottom: 0;
+    }
 .supportEntry {
     display: flex;
-    margin-top: 1em;
     }
 :root.mobile .supportEntry {
     flex-direction: column;
@@ -16,15 +17,12 @@ body {
 .supportEntry > div:first-of-type {
     flex-grow: 1;
     }
-.supportEntry > div.hasButtons {
-    align-items: center;
-    display: flex;
-    justify-content: space-around;
+:root:not(.mobile) .supportEntry > div:first-of-type {
+    margin-inline-end: 2em;
     }
 .supportEntry h3 {
-    margin-top: 0;
+    margin: 1em 0;
     }
-
 
 .e > .supportEntry {
     flex-direction: column;
@@ -32,13 +30,8 @@ body {
 .e > .supportEntry > div:not(:first-of-type) {
     margin-top: 1em;
     }
-.e > .supportEntry *:is(input,select) {
-    padding: var(--default-gap-xxsmall);
-    }
-.e > .supportEntry input[type="url"] {
-    width: 100%;
-    }
-.e > .supportEntry *:is(input,select) {
+.e > .supportEntry select {
+    min-width: 50%;
     max-width: calc(100% - 1em);
     }
 body:not(.filterIssue) .body > div.e {
@@ -49,8 +42,7 @@ body.filterIssue .body > div:not(.e) {
 }
 
 button {
-    margin-inline-end: 1em;
-        -webkit-margin-end: 1em;
+    align-self: center;
     }
 span[data-url] {
     color: var(--link-ink);

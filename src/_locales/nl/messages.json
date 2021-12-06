@@ -404,7 +404,7 @@
     "description": "Appears at the top of the _3rd-party filters_ pane"
   },
   "3pListsOfBlockedHostsPerListStats": {
-    "message": "{{used}} van {{total}} gebruikt",
+    "message": "{{used}} van de {{total}} gebruikt",
     "description": "Appears aside each filter list in the _3rd-party filters_ pane"
   },
   "3pAutoUpdatePrompt1": {
@@ -888,7 +888,7 @@
     "description": "Header of 'Filter issues' section in Support pane"
   },
   "supportS3P1": {
-    "message": "Meld filterproblemen met specifieke websites op de <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"><code>uBlockOrigin/uAssets</code> probleemtracker</span>. Vereist een GitHub-account.",
+    "message": "Meld filterproblemen met specifieke websites in de <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"><code>uBlockOrigin/uAssets</code>-probleemtracker</span>. <u>Vereist een GitHub-account.</u>",
     "description": "First paragraph of 'Filter issues' section in Support pane"
   },
   "supportS3P2": {
@@ -904,7 +904,7 @@
     "description": "Header of 'Bug report' section in Support pane"
   },
   "supportS4P1": {
-    "message": "Meld problemen met uBlock Origin zelf bij de <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\"><code>uBlockOrigin/uBlock-issue</code> probleemtracker</span>. Vereist een GitHub-account.",
+    "message": "Meld problemen met uBlock Origin zelf in de <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\"><code>uBlockOrigin/uBlock-issue</code>-probleemtracker</span>. <u>Vereist een GitHub-account.</u>",
     "description": "First paragraph of 'Bug report' section in Support pane"
   },
   "supportS5H": {
@@ -964,7 +964,7 @@
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Checkbox1": {
-    "message": "De webpagina labelen als &lsquo;NSFW&rsquo; (<a href=\"https://nl.wikipedia.org/wiki/NSFW\">&lsquo;Not Safe For Work&rsquo;</a>)",
+    "message": "De webpagina labelen als ‘NSFW’ (<a href=\"https://nl.wikipedia.org/wiki/NSFW\">‘Not Safe For Work’</a>)",
     "description": "A checkbox to use for NSFW sites"
   },
   "supportRedact": {
