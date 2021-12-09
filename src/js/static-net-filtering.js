@@ -111,10 +111,8 @@ const typeNameToTypeValue = {
        'inline-font': 17 << TypeBitsOffset,
      'inline-script': 18 << TypeBitsOffset,
              'cname': 19 << TypeBitsOffset,
-//          'unused': 20 << TypeBitsOffset,
-//          'unused': 21 << TypeBitsOffset,
-            'webrtc': 22 << TypeBitsOffset,
-       'unsupported': 23 << TypeBitsOffset,
+            'webrtc': 20 << TypeBitsOffset,
+       'unsupported': 21 << TypeBitsOffset,
 };
 
 const otherTypeBitValue = typeNameToTypeValue.other;
@@ -168,8 +166,6 @@ const typeValueToTypeName = [
 //const typeValueFromCatBits = catBits => (catBits >>> TypeBitsOffset) & 0b11111;
 
 const MAX_TOKEN_LENGTH = 7;
-
-const COMPILED_BAD_SECTION = 1;
 
 // Four upper bits of token hash are reserved for built-in predefined
 // token hashes, which should never end up being used when tokenizing
@@ -597,92 +593,6 @@ const filterLogData = (idata, details) => {
 
 /******************************************************************************/
 
-const filterPattern = {
-    compile: function(parsed, units) {
-        if ( parsed.isRegex ) {
-            units.push(FilterRegex.compile(parsed));
-            return;
-        }
-        const pattern = parsed.pattern;
-        if ( pattern === '*' ) {
-            units.push(FilterTrue.compile());
-            return;
-        }
-        if ( parsed.tokenHash === NO_TOKEN_HASH ) {
-            units.push(FilterPatternGeneric.compile(parsed));
-            return;
-        }
-        if ( parsed.firstWildcardPos === -1 && parsed.firstCaretPos === -1 ) {
-            units.push(FilterPatternPlain.compile(parsed));
-            return;
-        }
-        if (
-            parsed.secondWildcardPos !== -1 ||
-            parsed.secondCaretPos !== -1 ||
-            parsed.firstCaretPos !== -1 && (
-                parsed.firstWildcardPos === -1 ||
-                parsed.firstWildcardPos !== (parsed.firstCaretPos + 1)
-            )
-        ) {
-            return this.compileGeneric(parsed, units);
-        }
-        const hasCaretCombo = parsed.firstCaretPos !== -1;
-        const sright = pattern.slice(parsed.firstWildcardPos + 1);
-        const sleft = pattern.slice(
-            0,
-            hasCaretCombo ? parsed.firstCaretPos : parsed.firstWildcardPos
-        );
-        if ( parsed.tokenBeg < parsed.firstWildcardPos ) {
-            parsed.pattern = sleft;
-            units.push(FilterPatternPlain.compile(parsed));
-            parsed.pattern = sright;
-            units.push(FilterPatternRight.compile(parsed, hasCaretCombo));
-            return;
-        }
-        // parsed.tokenBeg > parsed.firstWildcardPos
-        parsed.pattern = sright;
-        parsed.tokenBeg -= parsed.firstWildcardPos + 1;
-        units.push(FilterPatternPlain.compile(parsed));
-        parsed.pattern = sleft;
-        units.push(FilterPatternLeft.compile(parsed, hasCaretCombo));
-    },
-    compileGeneric: function(parsed, units) {
-        const pattern = parsed.pattern;
-        // Optimize special case: plain pattern with trailing caret
-        if (
-            parsed.firstWildcardPos === -1 &&
-            parsed.firstCaretPos === (pattern.length - 1)
-        ) {
-            parsed.pattern = pattern.slice(0, -1);
-            units.push(FilterPatternPlain.compile(parsed));
-            units.push(FilterTrailingSeparator.compile());
-            return;
-        }
-        // Use a plain pattern as a first test for whether the generic pattern
-        // needs to be matched.
-        // TODO: inconclusive, investigate more.
-        //let left = parsed.tokenBeg;
-        //while ( left > 0 ) {
-        //    const c = pattern.charCodeAt(left-1);
-        //    if ( c === 0x2A /* '*' */ || c === 0x5E /* '^' */ ) { break; }
-        //    left -= 1;
-        //}
-        //let right = parsed.tokenBeg + parsed.token.length;
-        //while ( right < pattern.length ) {
-        //    const c = pattern.charCodeAt(right);
-        //    if ( c === 0x2A /* '*' */ || c === 0x5E /* '^' */ ) { break; }
-        //    right += 1;
-        //}
-        //parsed.pattern = pattern.slice(left, right);
-        //parsed.tokenBeg -= left;
-        //units.push(FilterPatternPlain.compile(parsed));
-        //parsed.pattern = pattern;
-        units.push(FilterPatternGeneric.compile(parsed));
-    },
-};
-
-/******************************************************************************/
-
 const FilterTrue = class {
     static match() {
         return true;
@@ -856,157 +766,18 @@ registerFilterClass(FilterPatternPlainX);
 
 /******************************************************************************/
 
-// https://github.com/gorhill/uBlock/commit/7971b223855d#commitcomment-37077525
-//   Mind that the left part may be empty.
-
-const FilterPatternLeft = class {
-    static match(idata) {
-        const left = bidiTrie.indexOf(
-            0,
-            $patternMatchLeft,
-            filterData[idata+1],
-            filterData[idata+2]
-        );
-        if ( left === -1 ) { return false; }
-        $patternMatchLeft = left;
-        return true;
-    }
-
-    static compile(details, ex) {
-        return [
-            ex ? FilterPatternLeftEx.fid : FilterPatternLeft.fid,
-            details.pattern
-        ];
-    }
-
-    static fromCompiled(args) {
-        const idata = filterDataAllocLen(3);
-        filterData[idata+0] = args[0];                          // fid
-        filterData[idata+1] = bidiTrie.storeString(args[1]);    // i
-        filterData[idata+2] = args[1].length;                   // n
-        return idata;
-    }
-
-    static logData(idata, details) {
-        details.pattern.unshift('*');
-        const n = filterData[idata+2];
-        if ( n === 0 ) { return; }
-        const s = bidiTrie.extractString(filterData[idata+1], n);
-        details.pattern.unshift(s);
-        details.regex.unshift(restrFromPlainPattern(s), '.*');
-    }
-};
-
-registerFilterClass(FilterPatternLeft);
-
-
-const FilterPatternLeftEx = class extends FilterPatternLeft {
-    static match(idata) {
-        const i = filterData[idata+1];
-        const n = filterData[idata+2];
-        let left = 0;
-        for (;;) {
-            left = bidiTrie.indexOf(
-                left,
-                $patternMatchLeft - 1,
-                i,
-                n
-            );
-            if ( left === -1 ) { return false; }
-            if ( isSeparatorChar(bidiTrie.haystack[left + n]) ) { break; }
-            left += 1;
-        }
-        $patternMatchLeft = left;
-        return true;
-    }
-
-    static logData(idata, details) {
-        details.pattern.unshift('^*');
-        const n = filterData[idata+2];
-        if ( n === 0 ) { return; }
-        const s = bidiTrie.extractString(filterData[idata+1], n);
-        details.pattern.unshift(s);
-        details.regex.unshift(restrFromPlainPattern(s), restrSeparator, '.*');
-    }
-};
-
-registerFilterClass(FilterPatternLeftEx);
-
-/******************************************************************************/
-
-const FilterPatternRight = class {
-    static match(idata) {
-        const n = filterData[idata+2];
-        const right = bidiTrie.lastIndexOf(
-            $patternMatchRight, bidiTrie.haystackLen,
-            filterData[idata+1],
-            n
-        );
-        if ( right === -1 ) { return false; }
-        $patternMatchRight = right + n;
-        return true;
-    }
-
-    static compile(details, ex) {
-        return [
-            ex ? FilterPatternRightEx.fid : FilterPatternRight.fid,
-            details.pattern
-        ];
-    }
-
-    static fromCompiled(args) {
-        const idata = filterDataAllocLen(3);
-        filterData[idata+0] = args[0];                          // fid
-        filterData[idata+1] = bidiTrie.storeString(args[1]);    // i
-        filterData[idata+2] = args[1].length;                   // n
-        return idata;
-    }
-
-    static logData(idata, details) {
-        const s = bidiTrie.extractString(filterData[idata+1], filterData[idata+2]);
-        details.pattern.push('*', s);
-        details.regex.push('.*', restrFromPlainPattern(s));
-    }
-};
-
-registerFilterClass(FilterPatternRight);
-
-
-const FilterPatternRightEx = class extends FilterPatternRight {
-    static match(idata) {
-        const n = filterData[idata+2];
-        const left = $patternMatchRight;
-        const right = bidiTrie.lastIndexOf(
-            left + 1,
-            bidiTrie.haystackLen,
-            filterData[idata+1],
-            n
-        );
-        if ( right === -1 ) { return false; }
-        if ( isSeparatorChar(bidiTrie.haystack[left]) === false ) {
-            return false;
-        }
-        $patternMatchRight = right + n;
-        return true;
-    }
-
-    static logData(idata, details) {
-        const s = bidiTrie.extractString(filterData[idata+1], filterData[idata+2]);
-        details.pattern.push('^*', s);
-        details.regex.push(restrSeparator, '.*', restrFromPlainPattern(s));
-    }
-};
-
-registerFilterClass(FilterPatternRightEx);
-
-/******************************************************************************/
-
 const FilterPatternGeneric = class {
     static match(idata) {
-        const refs = filterRefs[filterData[idata+2]];
+        const refs = filterRefs[filterData[idata+4]];
         if ( refs.$re === null ) {
             refs.$re = new RegExp(
-                restrFromGenericPattern(refs.s, filterData[idata+1])
+                restrFromGenericPattern(
+                    bidiTrie.extractString(
+                        filterData[idata+1],
+                        filterData[idata+2]
+                    ),
+                    filterData[idata+3]
+                )
             );
         }
         return refs.$re.test($requestURL);
@@ -1023,13 +794,12 @@ const FilterPatternGeneric = class {
     }
 
     static fromCompiled(args) {
-        const idata = filterDataAllocLen(3);
-        filterData[idata+0] = args[0];          // fid
-        filterData[idata+1] = args[2];          // anchor
-        filterData[idata+2] = filterRefAdd({
-            s: args[1],
-            $re: null,
-        });
+        const idata = filterDataAllocLen(5);
+        filterData[idata+0] = args[0];                          // fid
+        filterData[idata+1] = bidiTrie.storeString(args[1]);    // i
+        filterData[idata+2] = args[1].length;                   // n
+        filterData[idata+3] = args[2];                          // anchor
+        filterData[idata+4] = filterRefAdd({ $re: null });
         return idata;
     }
 
@@ -1039,21 +809,22 @@ const FilterPatternGeneric = class {
 
     static logData(idata, details) {
         details.pattern.length = 0;
-        const anchor = filterData[idata+1];
+        const anchor = filterData[idata+3];
         if ( (anchor & 0b100) !== 0 ) {
             details.pattern.push('||');
         } else if ( (anchor & 0b010) !== 0 ) {
             details.pattern.push('|');
         }
-        const refs = filterRefs[filterData[idata+2]];
-        details.pattern.push(refs.s);
+        const s = bidiTrie.extractString(
+            filterData[idata+1],
+            filterData[idata+2]
+        );
+        details.pattern.push(s);
         if ( (anchor & 0b001) !== 0 ) {
             details.pattern.push('|');
         }
         details.regex.length = 0;
-        details.regex.push(
-            restrFromGenericPattern(refs.s, anchor & ~0b100)
-        );
+        details.regex.push(restrFromGenericPattern(s, anchor & ~0b100));
     }
 };
 
@@ -2010,12 +1781,10 @@ registerFilterClass(FilterCompositeAll);
 const FilterHostnameDict = class {
     static getCount(idata) {
         const itrie = filterData[idata+1];
-        if ( itrie === 0 ) {
-            return filterRefs[filterData[idata+3]].length;
+        if ( itrie !== 0 ) {
+            return Array.from(destHNTrieContainer.trieIterator(itrie)).length;
         }
-        return Array.from(
-            destHNTrieContainer.trieIterator(filterData[idata+1])
-        ).length;
+        return filterRefs[filterData[idata+3]].length;
     }
 
     static match(idata) {
@@ -2871,6 +2640,12 @@ class FilterCompiler {
         return this;
     }
 
+    start(/* writer */) {
+    }
+
+    finish(/* writer */) {
+    }
+
     clone() {
         return new FilterCompiler(this.parser, this);
     }
@@ -3336,8 +3111,8 @@ class FilterCompiler {
 
         writer.select(
             this.badFilter
-                ? writer.NETWORK_SECTION + COMPILED_BAD_SECTION
-                : writer.NETWORK_SECTION
+                ? 'NETWORK_FILTERS:BAD'
+                : 'NETWORK_FILTERS:GOOD'
         );
 
         // Reminder:
@@ -3395,7 +3170,7 @@ class FilterCompiler {
             const leftAnchored = (this.anchor & 0b010) !== 0;
             for ( const entity of entities ) {
                 const units = [];
-                filterPattern.compile(this, units);
+                this.compilePattern(units);
                 if ( leftAnchored ) { units.push(FilterAnchorLeft.compile()); }
                 filterOrigin.compile([ entity ], true, units);
                 this.compileToAtomicFilter(
@@ -3409,7 +3184,7 @@ class FilterCompiler {
         const units = [];
 
         // Pattern
-        filterPattern.compile(this, units);
+        this.compilePattern(units);
 
         // Anchor
         if ( (this.anchor & 0b100) !== 0 ) {
@@ -3493,6 +3268,36 @@ class FilterCompiler {
         }
     }
 
+    compilePattern(units) {
+        if ( this.isRegex ) {
+            units.push(FilterRegex.compile(this));
+            return;
+        }
+        if ( this.pattern === '*' ) {
+            units.push(FilterTrue.compile());
+            return;
+        }
+        if ( this.tokenHash === NO_TOKEN_HASH ) {
+            units.push(FilterPatternGeneric.compile(this));
+            return;
+        }
+        if ( this.firstWildcardPos === -1 && this.firstCaretPos === -1 ) {
+            units.push(FilterPatternPlain.compile(this));
+            return;
+        }
+        // Optimize special case: plain pattern with trailing caret
+        if (
+            this.firstWildcardPos === -1 &&
+            this.firstCaretPos === (this.pattern.length - 1)
+        ) {
+            this.pattern = this.pattern.slice(0, -1);
+            units.push(FilterPatternPlain.compile(this));
+            units.push(FilterTrailingSeparator.compile());
+            return;
+        }
+        units.push(FilterPatternGeneric.compile(this));
+    }
+
     compileToAtomicFilter(fdata, writer) {
         const catBits = this.action | this.party;
         let { typeBits } = this;
@@ -3544,8 +3349,8 @@ FilterCompiler.prototype.FILTER_UNSUPPORTED = 2;
 /******************************************************************************/
 
 const FilterContainer = function() {
-    this.compilerVersion = '2';
-    this.selfieVersion = '3';
+    this.compilerVersion = '4';
+    this.selfieVersion = '4';
 
     this.MAX_TOKEN_LENGTH = MAX_TOKEN_LENGTH;
     this.optimizeTaskId = undefined;
@@ -3697,6 +3502,8 @@ FilterContainer.prototype.freeze = function() {
     this.goodFilters.clear();
     filterArgsToUnit.clear();
 
+    //this.filterClassHistogram();
+
     // Optimizing is not critical for the static network filtering engine to
     // work properly, so defer this until later to allow for reduced delay to
     // readiness when no valid selfie is available.
@@ -3715,8 +3522,6 @@ FilterContainer.prototype.optimize = function(throttle = 0) {
         dropTask(this.optimizeTaskId);
         this.optimizeTaskId = undefined;
     }
-
-    //this.filterClassHistogram();
 
     const later = throttle => {
         this.optimizeTaskId = queueTask(( ) => {
@@ -3916,7 +3721,7 @@ FilterContainer.prototype.createCompiler = function(parser) {
 /******************************************************************************/
 
 FilterContainer.prototype.fromCompiled = function(reader) {
-    reader.select(reader.NETWORK_SECTION);
+    reader.select('NETWORK_FILTERS:GOOD');
     while ( reader.next() ) {
         this.acceptedCount += 1;
         if ( this.goodFilters.has(reader.line) ) {
@@ -3926,7 +3731,7 @@ FilterContainer.prototype.fromCompiled = function(reader) {
         }
     }
 
-    reader.select(reader.NETWORK_SECTION + COMPILED_BAD_SECTION);
+    reader.select('NETWORK_FILTERS:BAD');
     while ( reader.next() ) {
         this.badFilters.add(reader.line);
     }
