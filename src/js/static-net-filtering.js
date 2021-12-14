@@ -418,20 +418,20 @@ function filterDataFromSelfie(selfie) {
 }
 
 const filterRefs = [ null ];
-let filterRefWritePtr = 1;
+let filterRefsWritePtr = 1;
 const filterRefAdd = function(ref) {
-    const i = filterRefWritePtr;
+    const i = filterRefsWritePtr;
     filterRefs[i] = ref;
-    filterRefWritePtr += 1;
+    filterRefsWritePtr += 1;
     return i;
 };
 function filterRefsReset() {
     filterRefs.fill(null);
-    filterRefWritePtr = 1;
+    filterRefsWritePtr = 1;
 }
 function filterRefsToSelfie() {
     const refs = [];
-    for ( let i = 0; i < filterRefWritePtr; i++ ) {
+    for ( let i = 0; i < filterRefsWritePtr; i++ ) {
         const v = filterRefs[i];
         if ( v instanceof RegExp ) {
             refs.push({ t: 1, s: v.source, f: v.flags });
@@ -475,7 +475,7 @@ function filterRefsFromSelfie(selfie) {
             throw new Error('Unknown filter reference!');
         }
     }
-    filterRefWritePtr = refs.length;
+    filterRefsWritePtr = refs.length;
     return true;
 }
 
@@ -593,13 +593,13 @@ const filterLogData = (idata, details) => {
 
 /******************************************************************************/
 
-const FilterTrue = class {
+const FilterPatternAny = class {
     static match() {
         return true;
     }
 
     static compile() {
-        return [ FilterTrue.fid ];
+        return [ FilterPatternAny.fid ];
     }
 
     static fromCompiled(args) {
@@ -615,12 +615,9 @@ const FilterTrue = class {
     }
 };
 
-registerFilterClass(FilterTrue);
+registerFilterClass(FilterPatternAny);
 
 /******************************************************************************/
-
-// The only purpose of this class is so that the `important` filter
-// option is added to the logged raw filter.
 
 const FilterImportant = class {
     static match() {
@@ -711,6 +708,14 @@ const FilterPatternPlain = class {
         if ( /^[0-9a-z%]{1,6}$/i.exec(s.slice(filterData[idata+3])) !== null ) {
             details.regex.push('(?![0-9A-Za-z%])');
         }
+    }
+
+    static dumpInfo(idata) {
+        const pattern = bidiTrie.extractString(
+            filterData[idata+1],
+            filterData[idata+2]
+        );
+        return `${pattern} ${filterData[idata+3]}`;
     }
 };
 
@@ -825,6 +830,13 @@ const FilterPatternGeneric = class {
         }
         details.regex.length = 0;
         details.regex.push(restrFromGenericPattern(s, anchor & ~0b100));
+    }
+
+    static dumpInfo(idata) {
+        return bidiTrie.extractString(
+            filterData[idata+1],
+            filterData[idata+2]
+        );
     }
 };
 
@@ -1007,11 +1019,14 @@ registerFilterClass(FilterTrailingSeparator);
 
 const FilterRegex = class {
     static match(idata) {
-        const refs = filterRefs[filterData[idata+2]];
+        const refs = filterRefs[filterData[idata+4]];
         if ( refs.$re === null ) {
             refs.$re = new RegExp(
-                refs.s,
-                filterData[idata+1] === 0 ? '' : 'i'
+                bidiTrie.extractString(
+                    filterData[idata+1],
+                    filterData[idata+2]
+                ),
+                filterData[idata+3] === 0 ? '' : 'i'
             );
         }
         if ( refs.$re.test($requestURLRaw) === false ) { return false; }
@@ -1028,13 +1043,12 @@ const FilterRegex = class {
     }
 
     static fromCompiled(args) {
-        const idata = filterDataAllocLen(3);
-        filterData[idata+0] = args[0];          // fid
-        filterData[idata+1] = args[2];          // match-case
-        filterData[idata+2] = filterRefAdd({
-            s: args[1],
-            $re: null,
-        });
+        const idata = filterDataAllocLen(5);
+        filterData[idata+0] = args[0];                          // fid
+        filterData[idata+1] = bidiTrie.storeString(args[1]);    // i
+        filterData[idata+2] = args[1].length;                   // n
+        filterData[idata+3] = args[2];                          // match-case
+        filterData[idata+4] = filterRefAdd({ $re: null });
         return idata;
     }
 
@@ -1043,13 +1057,28 @@ const FilterRegex = class {
     }
 
     static logData(idata, details) {
-        const refs = filterRefs[filterData[idata+2]];
-        details.pattern.push('/', refs.s, '/');
-        details.regex.push(refs.s);
+        const s = bidiTrie.extractString(
+            filterData[idata+1],
+            filterData[idata+2]
+        );
+        details.pattern.push('/', s, '/');
+        details.regex.push(s);
         details.isRegex = true;
-        if ( filterData[idata+1] !== 0 ) {
+        if ( filterData[idata+3] !== 0 ) {
             details.options.push('match-case');
         }
+    }
+
+    static dumpInfo(idata) {
+        return [
+            '/',
+            bidiTrie.extractString(
+                filterData[idata+1],
+                filterData[idata+2]
+            ),
+            '/',
+            filterData[idata+3] !== 0 ? ' (match-case)' : '',
+        ].join('');
     }
 };
 
@@ -1094,6 +1123,10 @@ const FilterNotType = class {
             bits &= ~bit;
             details.options.push(`~${typeValueToTypeName[i]}`);
         }
+    }
+
+    static dumpInfo(idata) {
+        return `0b${filterData[idata+1].toString(2)}`;
     }
 };
 
@@ -1259,6 +1292,10 @@ const FilterOriginHit = class {
     static logData(idata, details) {
         details.domains.push(this.getDomainOpt(idata));
     }
+
+    static dumpInfo(idata) {
+        return this.getDomainOpt(idata);
+    }
 };
 
 registerFilterClass(FilterOriginHit);
@@ -1371,6 +1408,10 @@ const FilterOriginHitSet = class {
     static logData(idata, details) {
         details.domains.push(this.getDomainOpt(idata));
     }
+
+    static dumpInfo(idata) {
+        return this.getDomainOpt(idata);
+    }
 };
 
 registerFilterClass(FilterOriginHitSet);
@@ -1444,6 +1485,10 @@ const FilterOriginEntityHit = class {
     static logData(idata, details) {
         details.domains.push(this.getDomainOpt(idata));
     }
+
+    static dumpInfo(idata) {
+        return this.getDomainOpt(idata);
+    }
 };
 
 registerFilterClass(FilterOriginEntityHit);
@@ -1495,6 +1540,10 @@ const FilterOriginHitSetTest = class extends FilterOriginHitSet {
         filterData[idata+2] = domainOpt.includes('.*') ? 1 : 0;     // hasEntity
         filterData[idata+3] = 0;                                    // $lastResult
         return idata;
+    }
+
+    static dumpInfo(idata) {
+        return super.dumpInfo(filterData[idata+1]);
     }
 };
 
@@ -1548,6 +1597,13 @@ const FilterModifier = class {
             opt += `=${refs.value}`;
         }
         details.options.push(opt);
+    }
+
+    static dumpInfo(idata) {
+        const s = StaticFilteringParser.netOptionTokenNames.get(filterData[idata+2]);
+        const refs = filterRefs[filterData[idata+3]];
+        if ( refs.value === '' ) { return s; }
+        return `${s}=${refs.value}`;
     }
 };
 
@@ -1659,6 +1715,10 @@ const FilterCollection = class {
         this.forEach(idata, iunit => {
             filterLogData(iunit, details);
         });
+    }
+
+    static dumpInfo(idata) {
+        return this.getCount(idata);
     }
 };
 
@@ -1832,6 +1892,10 @@ const FilterHostnameDict = class {
             restrSeparator
         );
     }
+
+    static dumpInfo(idata) {
+        return this.getCount(idata);
+    }
 };
 
 registerFilterClass(FilterHostnameDict);
@@ -1868,6 +1932,10 @@ const FilterDenyAllow = class {
 
     static logData(idata, details) {
         details.denyallow.push(filterRefs[filterData[idata+2]]);
+    }
+
+    static dumpInfo(idata) {
+        return filterRefs[filterData[idata+2]];
     }
 };
 
@@ -1912,6 +1980,10 @@ const FilterJustOrigin = class {
         details.pattern.push('*');
         details.regex.push('^');
         details.domains.push(filterRefs[filterData[idata+2]]);
+    }
+
+    static dumpInfo(idata) {
+        return this.getCount(idata);
     }
 };
 
@@ -2020,6 +2092,10 @@ const FilterPlainTrie = class {
             filterLogData(filterData[idata+2], details);
         }
     }
+
+    static dumpInfo(idata) {
+        return `${Array.from(bidiTrie.trieIterator(filterData[idata+1])).length}`;
+    }
 };
 
 registerFilterClass(FilterPlainTrie);
@@ -2029,6 +2105,10 @@ registerFilterClass(FilterPlainTrie);
 const FilterBucket = class extends FilterCollection {
     static getCount(idata) {
         return filterData[idata+2];
+    }
+
+    static forEach(idata, fn) {
+        return super.forEach(filterData[idata+1], fn);
     }
 
     static match(idata) {
@@ -2170,6 +2250,10 @@ const FilterBucket = class extends FilterCollection {
         }
         const ioriginhitset = FilterOriginHitSetTest.create(domainOpts.join('|'));
         return FilterBucketOfOriginHits.create(ioriginhitset, idesbucket);
+    }
+
+    static dumpInfo(idata) {
+        return this.getCount(idata);
     }
 };
 
@@ -2633,10 +2717,8 @@ class FilterCompiler {
         this.tokenBeg = 0;
         this.typeBits = 0;
         this.notTypeBits = 0;
-        this.firstWildcardPos = -1;
-        this.secondWildcardPos = -1;
-        this.firstCaretPos = -1;
-        this.secondCaretPos = -1;
+        this.wildcardPos = -1;
+        this.caretPos = -1;
         return this;
     }
 
@@ -2941,19 +3023,11 @@ class FilterCompiler {
         }
 
         if ( this.parser.patternHasWildcard() ) {
-            this.firstWildcardPos = pattern.indexOf('*');
-            if ( this.firstWildcardPos !== -1 ) {
-                this.secondWildcardPos =
-                    pattern.indexOf('*', this.firstWildcardPos + 1);
-            }
+            this.wildcardPos = pattern.indexOf('*');
         }
 
         if ( this.parser.patternHasCaret() ) {
-            this.firstCaretPos = pattern.indexOf('^');
-            if ( this.firstCaretPos !== -1 ) {
-                this.secondCaretPos =
-                    pattern.indexOf('^', this.firstCaretPos + 1);
-            }
+            this.caretPos = pattern.indexOf('^');
         }
 
         if ( pattern.length > 1024 ) {
@@ -3252,20 +3326,6 @@ class FilterCompiler {
                 : FilterCompositeAll.compile(units),
             writer
         );
-
-        // Add block-important filters to the block realm, so as to avoid
-        // to unconditionally match against the block-important realm for
-        // every network request. Block-important filters are quite rare so
-        // the block-important realm should be checked when and only when
-        // there is a matched exception filter, which important filters are
-        // meant to override.
-        if ( (this.action & ActionBitsMask) === BlockImportant ) {
-            this.action &= ~Important;
-            this.compileToAtomicFilter(
-                FilterCompositeAll.compile(units),
-                writer
-            );
-        }
     }
 
     compilePattern(units) {
@@ -3274,26 +3334,24 @@ class FilterCompiler {
             return;
         }
         if ( this.pattern === '*' ) {
-            units.push(FilterTrue.compile());
+            units.push(FilterPatternAny.compile());
             return;
         }
         if ( this.tokenHash === NO_TOKEN_HASH ) {
             units.push(FilterPatternGeneric.compile(this));
             return;
         }
-        if ( this.firstWildcardPos === -1 && this.firstCaretPos === -1 ) {
-            units.push(FilterPatternPlain.compile(this));
-            return;
-        }
-        // Optimize special case: plain pattern with trailing caret
-        if (
-            this.firstWildcardPos === -1 &&
-            this.firstCaretPos === (this.pattern.length - 1)
-        ) {
-            this.pattern = this.pattern.slice(0, -1);
-            units.push(FilterPatternPlain.compile(this));
-            units.push(FilterTrailingSeparator.compile());
-            return;
+        if ( this.wildcardPos === -1 ) {
+            if ( this.caretPos === -1 ) {
+                units.push(FilterPatternPlain.compile(this));
+                return;
+            }
+            if ( this.caretPos === (this.pattern.length - 1) ) {
+                this.pattern = this.pattern.slice(0, -1);
+                units.push(FilterPatternPlain.compile(this));
+                units.push(FilterTrailingSeparator.compile());
+                return;
+            }
         }
         units.push(FilterPatternGeneric.compile(this));
     }
@@ -3349,8 +3407,8 @@ FilterCompiler.prototype.FILTER_UNSUPPORTED = 2;
 /******************************************************************************/
 
 const FilterContainer = function() {
-    this.compilerVersion = '4';
-    this.selfieVersion = '4';
+    this.compilerVersion = '5';
+    this.selfieVersion = '6';
 
     this.MAX_TOKEN_LENGTH = MAX_TOKEN_LENGTH;
     this.optimizeTaskId = undefined;
@@ -3418,7 +3476,6 @@ FilterContainer.prototype.reset = function() {
 /******************************************************************************/
 
 FilterContainer.prototype.freeze = function() {
-    const filterBucketId = FilterBucket.fid;
     const unserialize = CompiledListReader.unserialize;
 
     for ( const line of this.goodFilters ) {
@@ -3481,28 +3538,26 @@ FilterContainer.prototype.freeze = function() {
 
         urlTokenizer.addKnownToken(tokenHash);
 
-        const inewunit = filterFromCompiled(fdata);
+        this.addFilterUnit(bits, tokenHash, filterFromCompiled(fdata));
 
-        if ( iunit === 0 ) {
-            bucket.set(tokenHash, inewunit);
-            continue;
+        // Add block-important filters to the block realm, so as to avoid
+        // to unconditionally match against the block-important realm for
+        // every network request. Block-important filters are quite rare so
+        // the block-important realm should be checked when and only when
+        // there is a matched exception filter, which important filters are
+        // meant to override.
+        if ( (bits & ActionBitsMask) === BlockImportant ) {
+            this.addFilterUnit(
+                bits & ~Important,
+                tokenHash,
+                filterFromCompiled(fdata)
+            );
         }
-        if ( filterData[iunit+0] === filterBucketId ) {
-            FilterBucket.unshift(iunit, inewunit);
-            continue;
-        }
-        const ibucketunit = FilterBucket.create();
-        FilterBucket.unshift(ibucketunit, iunit);
-        FilterBucket.unshift(ibucketunit, inewunit);
-        bucket.set(tokenHash, ibucketunit);
-        this.unitsToOptimize.push({ bits, tokenHash });
     }
 
     this.badFilters.clear();
     this.goodFilters.clear();
     filterArgsToUnit.clear();
-
-    //this.filterClassHistogram();
 
     // Optimizing is not critical for the static network filtering engine to
     // work properly, so defer this until later to allow for reduced delay to
@@ -3513,6 +3568,35 @@ FilterContainer.prototype.freeze = function() {
         this.optimizeTaskId = undefined;
         this.optimize(10);
     }, 2000);
+};
+
+/******************************************************************************/
+
+FilterContainer.prototype.addFilterUnit = function(
+    bits,
+    tokenHash,
+    inewunit
+) {
+    let ibucket = this.bitsToBucketIndices[bits];
+    if ( ibucket === 0 ) {
+        ibucket = this.bitsToBucketIndices[bits] = this.buckets.length;
+        this.buckets.push(new Map());
+    }
+    const bucket = this.buckets[ibucket];
+    const istoredunit = bucket.get(tokenHash) || 0;
+    if ( istoredunit === 0 ) {
+        bucket.set(tokenHash, inewunit);
+        return;
+    }
+    if ( filterData[istoredunit+0] === FilterBucket.fid ) {
+        FilterBucket.unshift(istoredunit, inewunit);
+        return;
+    }
+    const ibucketunit = FilterBucket.create();
+    FilterBucket.unshift(ibucketunit, istoredunit);
+    FilterBucket.unshift(ibucketunit, inewunit);
+    bucket.set(tokenHash, ibucketunit);
+    this.unitsToOptimize.push({ bits, tokenHash });
 };
 
 /******************************************************************************/
@@ -3567,8 +3651,6 @@ FilterContainer.prototype.optimize = function(throttle = 0) {
     );
     bidiTrieOptimize();
     filterDataShrink();
-
-    //this.filterClassHistogram();
 };
 
 /******************************************************************************/
@@ -4389,28 +4471,120 @@ FilterContainer.prototype.bucketHistogram = function() {
 
 /******************************************************************************/
 
-FilterContainer.prototype.filterClassHistogram = function() {
-    const filterClassDetails = new Map();
-    for ( const fclass of filterClasses ) {
-        filterClassDetails.set(fclass.fid, { name: fclass.name, count: 0, });
-    }
-    const countFilter = idata => {
-        const fc = filterGetClass(idata);
-        filterClassDetails.get(fc.fid).count += 1;
-        if ( fc.forEach === undefined ) { return; }
-        fc.forEach(idata, iunit => { countFilter(iunit); });
+// Dump the internal state of the filtering engine to the console.
+// Useful to make development decisions and investigate issues.
+
+FilterContainer.prototype.dump = function() {
+    const thConstants = new Map([
+        [ NO_TOKEN_HASH, 'NO_TOKEN_HASH' ],
+        [ DOT_TOKEN_HASH, 'DOT_TOKEN_HASH' ],
+        [ ANY_TOKEN_HASH, 'ANY_TOKEN_HASH' ],
+        [ ANY_HTTPS_TOKEN_HASH, 'ANY_HTTPS_TOKEN_HASH' ],
+        [ ANY_HTTP_TOKEN_HASH, 'ANY_HTTP_TOKEN_HASH' ],
+        [ EMPTY_TOKEN_HASH, 'EMPTY_TOKEN_HASH' ],
+    ]);
+
+    const dumpInfo = (idata, options) => {
+        const fc = filterClasses[filterData[idata+0]];
+        if ( fc.dumpInfo === undefined ) { return; }
+        return fc.dumpInfo(idata, options);
     };
-    for ( let bits = 0; bits < this.bitsToBucketIndices.length; bits++ ) {
-        const ibucket = this.bitsToBucketIndices[bits];
-        if ( ibucket === 0 ) { continue; }
-        for ( const iunit of this.buckets[ibucket].values() ) {
-            countFilter(iunit);
+
+    const out = [];
+
+    const toOutput = (depth, line) => {
+        out.push(`${' '.repeat(depth*2)}${line}`);
+    };
+
+    // TODO: Also report filters "hidden" behind FilterPlainTrie
+    const dumpUnit = (idata, out, depth = 0) => {
+        const fc = filterGetClass(idata);
+        fcCounts.set(fc.name, (fcCounts.get(fc.name) || 0) + 1);
+        const info = dumpInfo(idata) || '';
+        toOutput(depth, info !== '' ? `${fc.name}: ${info}` : fc.name);
+        switch ( fc ) {
+        case FilterBucket:
+        case FilterCompositeAll:
+        case FilterOriginHitAny: {
+            fc.forEach(idata, i => {
+                dumpUnit(i, out, depth+1);
+            });
+            break;
+        }
+        case FilterBucketOfOriginHits: {
+            dumpUnit(filterData[idata+1], out, depth+1);
+            dumpUnit(filterData[idata+2], out, depth+1);
+            break;
+        }
+        default:
+            break;
+        }
+    };
+
+    const fcCounts = new Map();
+    const thCounts = new Set();
+
+    const realms = new Map([
+        [ BlockAction, 'block' ],
+        [ BlockImportant, 'block-important' ],
+        [ AllowAction, 'allow' ],
+        [ ModifyAction, 'modify' ],
+    ]);
+    const partyness = new Map([
+        [ AnyParty, 'any-party' ],
+        [ FirstParty, '1st-party' ],
+        [ ThirdParty, '3rd-party' ],
+    ]);
+    for ( const [ realmBits, realmName ] of realms ) {
+        toOutput(1, `+ realm: ${realmName}`);
+        for ( const [ partyBits, partyName ] of partyness ) {
+            toOutput(2, `+ party: ${partyName}`);
+            const processedTypeBits = new Set();
+            for ( const typeName in typeNameToTypeValue ) {
+                const typeBits = typeNameToTypeValue[typeName];
+                if ( processedTypeBits.has(typeBits) ) { continue; }
+                processedTypeBits.add(typeBits);
+                const bits = realmBits | partyBits | typeBits;
+                const ibucket = this.bitsToBucketIndices[bits];
+                if ( ibucket === 0 ) { continue; }
+                const thCount = this.buckets[ibucket].size;
+                toOutput(3, `+ type: ${typeName} (${thCount})`);
+                for ( const [ th, iunit ] of this.buckets[ibucket] ) {
+                    thCounts.add(th);
+                    const ths = thConstants.has(th)
+                        ? thConstants.get(th)
+                        : `0x${th.toString(16)}`;
+                    toOutput(4, `th: ${ths}`);
+                    dumpUnit(iunit, out, 5);
+                }
+            }
         }
     }
-    const results = Array.from(filterClassDetails.values()).sort((a, b) => {
-        return b.count - a.count;
-    });
-    console.info(results);
+
+    const knownTokens =
+        urlTokenizer.knownTokens
+                    .reduce((a, b) => b !== 0 ? a+1 : a, 0);
+
+    out.unshift([
+        'Static Network Filtering Engine internals:',
+        `  Distinct token hashes: ${thCounts.size.toLocaleString('en')}`,
+        `  Known-token sieve (Uint8Array): ${knownTokens.toLocaleString('en')} out of 65,536`,
+        `  Filter data (Int32Array): ${filterDataWritePtr.toLocaleString('en')}`,
+        `  Filter refs (JS array): ${filterRefsWritePtr.toLocaleString('en')}`,
+        '  Origin trie container:',
+        origHNTrieContainer.dumpInfo().split('\n').map(a => `    ${a}`).join('\n'),
+        '  Request trie container:',
+        destHNTrieContainer.dumpInfo().split('\n').map(a => `    ${a}`).join('\n'),
+        '  Pattern trie container:',
+        bidiTrie.dumpInfo().split('\n').map(a => `    ${a}`).join('\n'),
+        '+ Filter class stats:',
+        Array.from(fcCounts)
+             .sort((a, b) => b[1] - a[1])
+             .map(a => `    ${a[0]}: ${a[1].toLocaleString('en')}`)
+             .join('\n'),
+        '+ Filter tree:',
+    ].join('\n'));
+    return out.join('\n');
 };
 
 /******************************************************************************/
