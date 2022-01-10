@@ -39,3 +39,22 @@ jobs:
           head: master
           auto_approve: false
           ignore_fail: true
+  update-pr-desc:
+    needs: sync
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      UPSTREAM_URL: "https://github.com/gorhill/ublock.git"
+    steps:
+      - uses: actions/checkout@v2
+      - name: Collate Changes
+        run: |
+          git remote add upstream ${UPSTREAM_URL}
+          git fetch upstream
+          git diff --diff-filter AM HEAD..remotes/upstream/master -- assets/resources/scriptlets.js >> changes.txt && echo >>changes.txt
+          git diff --diff-filter AM HEAD..remotes/upstream/master -- src/web_accessible_resources >> changes.txt && echo >>changes.txt
+          git diff --diff-filter AM HEAD..remotes/upstream/master -- src/js/redirect-engine.js >> changes.txt && echo >>changes.txt
+          git remote remove upstream
+      - name: Update PR Description
+        run: gh pr edit `gh pr list | grep 'Fork Sync' | awk {'print $1'}` -b "`cat "changes.txt"`"
+
