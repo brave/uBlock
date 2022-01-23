@@ -435,6 +435,10 @@
     "message": "Allmänna kosmetiska filter är de kosmetiska filter som är avsedda att tillämpas på alla webbplatser. Att aktivera detta alternativ kommer att eliminera minnes- och processoranvändningen som läggs till på webbsidor som ett resultat av hantering av allmänna kosmetiska filter.\n\nDet rekommenderas att aktivera detta alternativ på mindre kraftfulla enheter.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
   },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Stäng av nätverksaktiviteten tills alla filterlistor har laddats",
+    "description": "A checkbox in the 'Filter lists' pane"
+  },
   "3pListsOfBlockedHostsHeader": {
     "message": "Listor över blockerade värdar",
     "description": "English: Lists of blocked hosts"
@@ -588,8 +592,8 @@
     "description": "English: a sort option for list of rules."
   },
   "whitelistPrompt": {
-    "message": "De pålitliga webbplatsdirektiven dikterar på vilka webbplatser uBlock Origin bör inaktiveras. En post per rad. Ogiltiga direktiv ignoreras och kommenteras ut.",
-    "description": "The name of the trusted sites pane."
+    "message": "Direktiven för betrodda webbplatser anger vilka webbsidor som uBlock Origin ska inaktiveras på. En post per rad.",
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "Importera och lägg till",

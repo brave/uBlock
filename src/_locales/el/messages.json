@@ -435,6 +435,10 @@
     "message": "<p>Τα γενικά κοσμητικά φίλτρα είναι εκείνα τα κοσμητικά φίλτρα που εφαρμόζονται σε όλες τις ιστοσελίδες.<p>Αν και γίνεται αποτελεσματική διαχείρισή τους από το uBlock₀, τα γενικά κοσμητικά φίλτρα ενδέχεται να καταναλώσουν σημαντική μνήμη και να υπερφορτώσουν τη CPU σε μερικές ιστοσελίδες, ειδικά για μεγάλες μακροχρόνιες.<p>Η ενεργοποίηση αυτής της επιλογής θα εξαλείψει την υπερφόρτωση μνήμης και CPU στις ιστοσελίδες ως αποτέλεσμα της διαχείρισης γενικών κοσμητικών φίλτρων, ενώ ενδέχεται να μειώσει την κατανάλωση μνήμης του ίδιου του uBlock₀.<p>Προτείνεται η ενεργοποίηση αυτής της επιλογής στις λιγότερο ισχυρές συσκευές.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
   },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Αναστολή της δραστηριότητας δικτύου μέχρι να φορτωθούν όλες οι λίστες φίλτρων",
+    "description": "A checkbox in the 'Filter lists' pane"
+  },
   "3pListsOfBlockedHostsHeader": {
     "message": "Λίστες αποκλεισμένων hosts",
     "description": "English: Lists of blocked hosts"
@@ -589,7 +593,7 @@
   },
   "whitelistPrompt": {
     "message": "Η λίστα σας με τα ονόματα κόμβων (host names) στα οποία το uBlock θα είναι απενεργοποιημένο. Μια καταχώρηση ανά γραμμή. Άκυρα ονόματα κόμβων θα παρακάμπτονται σιωπηλά.",
-    "description": "The name of the trusted sites pane."
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "Εισαγωγή και προσάρτηση",
@@ -1140,7 +1144,7 @@
     "description": "tooltip"
   },
   "cloudNoData": {
-    "message": "...\n...",
+    "message": "…\n…",
     "description": ""
   },
   "cloudDeviceNamePrompt": {

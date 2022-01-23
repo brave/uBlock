@@ -128,7 +128,7 @@
     "description": "Tooltip used for the logger icon in the panel"
   },
   "popupTipReport": {
-    "message": "דווח על בעיה באתר אינטרנט זה",
+    "message": "דווח על סוגייה באתר זה",
     "description": "Tooltip used for the 'chat' icon in the panel"
   },
   "popupTipNoPopups": {
@@ -435,6 +435,10 @@
     "message": "מסננים קוסמטיים כלליים - אלה הם המסננים הקוסמטיים, אשר מיועדים להיות מוחלים על כל דפי האינטרנט. אפשור הגדרה זו תוריד את צריכת הזיכרון והמעבד אשר מתווספות לדפי אינטרנט כתוצאה משימוש במסננים קוסמטיים כלליים.\n\nמומלץ לאפשר הגדרה זו במכשירים פחות חזקים.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
   },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "השהה פעילות רשת עד לסיום טעינת כל רשימות הסינון",
+    "description": "A checkbox in the 'Filter lists' pane"
+  },
   "3pListsOfBlockedHostsHeader": {
     "message": "רשימה של דומיינים חסומים",
     "description": "English: Lists of blocked hosts"
@@ -496,7 +500,7 @@
     "description": "used as a tooltip for the clock icon beside a list"
   },
   "3pUpdating": {
-    "message": "מעדכן...",
+    "message": "מעדכן…",
     "description": "used as a tooltip for the spinner icon beside a list"
   },
   "3pNetworkError": {
@@ -552,7 +556,7 @@
     "description": "Will discard manually-edited content and exit manual-edit mode"
   },
   "rulesImport": {
-    "message": "ייבא מקובץ...",
+    "message": "ייבא מקובץ…",
     "description": ""
   },
   "rulesExport": {
@@ -589,7 +593,7 @@
   },
   "whitelistPrompt": {
     "message": "הרשומות באתרים המהימנים מציינות באילו דפי אינטרנט uBlock Origin לא יהיה פעיל. רשומה אחת בכל שורה. רשומות לא חוקיות תתעלמנה בשקט ויסומנו כהערות.",
-    "description": "The name of the trusted sites pane."
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "ייבא וצרף",
@@ -864,7 +868,7 @@
     "description": "Text for button which open an external webpage in Support pane"
   },
   "supportFindSpecificButton": {
-    "message": "חיפוש דוחות דומים",
+    "message": "מצא דוחות דומים",
     "description": "A clickable link in the filter issue reporter section"
   },
   "supportS1H": {
@@ -920,7 +924,7 @@
     "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
   },
   "supportS6H": {
-    "message": "דיווח על בעיית מסנן",
+    "message": "דווח על סוגיית מסנן",
     "description": "Header of 'Report a filter issue' section in Support pane"
   },
   "supportS6P1S1": {
@@ -928,11 +932,11 @@
     "description": "A paragraph in the filter issue reporter section"
   },
   "supportS6URL": {
-    "message": "כתובת דף האינטרנט:",
+    "message": "כתובת של דף האינטרנט:",
     "description": "Label for the URL of the page"
   },
   "supportS6Select1": {
-    "message": "דף האינטרנט...",
+    "message": "דף האינטרנט…",
     "description": "Label for widget to select type of issue"
   },
   "supportS6Select1Option0": {
@@ -1140,7 +1144,7 @@
     "description": "tooltip"
   },
   "cloudNoData": {
-    "message": "...\n...",
+    "message": "…\n…",
     "description": ""
   },
   "cloudDeviceNamePrompt": {

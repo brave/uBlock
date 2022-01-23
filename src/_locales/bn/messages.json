@@ -435,6 +435,10 @@
     "message": "<p>জেনেরিক প্রসাধনী ছাঁকনি হচ্ছে সেইসব প্রসাধনী ছাঁকনি যা সব ওয়েবসাইটে প্রয়োগের জন্য অভিপ্রেত।<p>যদিও তা uBlock₀ দ্বারা দক্ষতার সঙ্গে পরিচালনা করে, কিন্তু জেনেরিক প্রসাধন ফিল্টার এখনও কিছু ওয়েব পাতার পরিমাপযোগ্য মেমরি ও CPU-র অত্যাধিক চাপ সৃষ্টিতে অবদান রাখতে পারে, বিশেষ করে বড় এবং দীর্ঘ একটিতে।<p>এই অপশন সক্রিয় করলে জেনেরিক প্রসাধনী ছাঁকনি পরিচালিত হবে যা ওয়েব পাতার পরিমাপযোগ্য মেমরি ও CPU-র অত্যাধিক চাপ সৃষ্টি দূর করবে এবং uBlock₀ নিজেই মেমরি পদাঙ্ক অর্ধ করবে।<p>এটা কম শক্তিশালী ডিভাইসে এই অপশনটি সক্রিয় করার জন্য সুপারিশ করা হচ্ছে।",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
   },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Suspend network activity until all filter lists are loaded",
+    "description": "A checkbox in the 'Filter lists' pane"
+  },
   "3pListsOfBlockedHostsHeader": {
     "message": "অবরুদ্ধ হোস্টের তালিকা",
     "description": "English: Lists of blocked hosts"
@@ -589,7 +593,7 @@
   },
   "whitelistPrompt": {
     "message": "আপনার হোস্টের তালিকা যাদের জন্য uBlock₀ নিষ্ক্রিয় করা হবে। লাইন প্রতি একটি ভুক্তি। অবৈধ হোস্ট নাম নিশব্দে উপেক্ষা করা হবে।",
-    "description": "The name of the trusted sites pane."
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "আমদানি ও পরিশেষে যোগ করুন",
@@ -856,7 +860,7 @@
     "description": "Label for radio-button to pick export text format"
   },
   "supportOpenButton": {
-    "message": "Open",
+    "message": "খুলুন",
     "description": "Text for button which open an external webpage in Support pane"
   },
   "supportReportSpecificButton": {
@@ -932,7 +936,7 @@
     "description": "Label for the URL of the page"
   },
   "supportS6Select1": {
-    "message": "The web page...",
+    "message": "The web page…",
     "description": "Label for widget to select type of issue"
   },
   "supportS6Select1Option0": {
@@ -1192,7 +1196,7 @@
     "description": "Label for buttons used to copy something to the clipboard"
   },
   "genericSelectAll": {
-    "message": "Select all",
+    "message": "সবগুলো নির্বাচন করুন",
     "description": "Label for buttons used to select all text in editor"
   },
   "toggleBlockingProfile": {

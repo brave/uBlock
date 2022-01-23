@@ -435,6 +435,10 @@
     "message": "Algemene cosmetische filters zijn die cosmetische filters die zijn bedoeld om op alle websites te worden toegepast. Het inschakelen van deze optie elimineert de aan webpagina’s toegevoegde geheugen- en cpu-overhead als gevolg van het verwerken van algemene cosmetische filters.\n\nHet wordt aanbevolen deze optie op minder krachtige apparaten in te schakelen.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
   },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Netwerkactiviteit onderbreken totdat alle filterlijsten zijn geladen",
+    "description": "A checkbox in the 'Filter lists' pane"
+  },
   "3pListsOfBlockedHostsHeader": {
     "message": "Lijst van geblokkeerde hosts",
     "description": "English: Lists of blocked hosts"
@@ -588,8 +592,8 @@
     "description": "English: a sort option for list of rules."
   },
   "whitelistPrompt": {
-    "message": "De vertrouwde-website-instructies schrijven voor op welke webpagina’s uBlock Origin dient te worden uitgeschakeld. Eén vermelding per regel. Ongeldige instructies worden zonder mededeling genegeerd en uitgecommentarieerd.",
-    "description": "The name of the trusted sites pane."
+    "message": "De vertrouwde-website-instructies schrijven voor op welke webpagina’s uBlock Origin dient te worden uitgeschakeld. Eén vermelding per regel.",
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "Importeren en toevoegen...",
@@ -1024,7 +1028,7 @@
     "description": "English: my-ublock-backup_{{datetime}}.txt"
   },
   "aboutRestoreDataButton": {
-    "message": "Terugzetten uit bestand...",
+    "message": "Herstellen uit bestand...",
     "description": "English: Restore from file..."
   },
   "aboutResetDataButton": {

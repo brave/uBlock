@@ -312,7 +312,7 @@
     "description": "English: Click, Ctrl-click"
   },
   "pickerContextMenuEntry": {
-    "message": "Blokker element...",
+    "message": "Blokker element…",
     "description": "An entry in the browser's contextual menu"
   },
   "settingsCollapseBlockedPrompt": {
@@ -435,6 +435,10 @@
     "message": "Generelle kosmetiske filtre er de kosmetiske filtrene som er ment å brukes på alle nettsteder. Aktivering av dette alternativet vil eliminere ekstra minne- og prosessorbruk på nettsider grunnet håndteringen av generelle kosmetiske filtre.\n\nDet anbefales å aktivere dette alternativet på mindre kraftige enheter.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
   },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Stans nettverksaktivitet inntil alle filterlister er lastet",
+    "description": "A checkbox in the 'Filter lists' pane"
+  },
   "3pListsOfBlockedHostsHeader": {
     "message": "Lists of blocked hosts",
     "description": "English: Lists of blocked hosts"
@@ -476,7 +480,7 @@
     "description": "English: Custom"
   },
   "3pImport": {
-    "message": "Importer...",
+    "message": "Importer…",
     "description": "The label for the checkbox used to import external filter lists"
   },
   "3pExternalListsHint": {
@@ -496,7 +500,7 @@
     "description": "used as a tooltip for the clock icon beside a list"
   },
   "3pUpdating": {
-    "message": "Oppdaterer...",
+    "message": "Oppdaterer…",
     "description": "used as a tooltip for the spinner icon beside a list"
   },
   "3pNetworkError": {
@@ -588,8 +592,8 @@
     "description": "English: a sort option for list of rules."
   },
   "whitelistPrompt": {
-    "message": "Direktivene for betrodde sider bestemmer hvilke nettsider uBlock Origin ikke skal være aktiv på. Én oppføring per linje. Ugyldige direktiver blir stille ignorert og kommentert ut.",
-    "description": "The name of the trusted sites pane."
+    "message": "Direktivene for betrodde sider bestemmer hvilke nettsider uBlock Origin ikke skal være aktiv på. Én oppføring per linje.",
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "Importer og legg til",
@@ -932,7 +936,7 @@
     "description": "Label for the URL of the page"
   },
   "supportS6Select1": {
-    "message": "Nettsiden...",
+    "message": "Nettsiden…",
     "description": "Label for widget to select type of issue"
   },
   "supportS6Select1Option0": {
@@ -1140,7 +1144,7 @@
     "description": "tooltip"
   },
   "cloudNoData": {
-    "message": "...\n...",
+    "message": "…\n…",
     "description": ""
   },
   "cloudDeviceNamePrompt": {
@@ -1168,11 +1172,11 @@
     "description": ""
   },
   "contextMenuBlockElementInFrame": {
-    "message": "Blokker element i ramme...",
+    "message": "Blokker element i ramme…",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuSubscribeToList": {
-    "message": "Abonner på filterliste...",
+    "message": "Abonner på filterliste…",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuTemporarilyAllowLargeMediaElements": {

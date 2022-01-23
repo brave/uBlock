@@ -435,6 +435,10 @@
     "message": "பொதுவான ஒப்பனை வடிப்பான்கள் அனைத்து ஒப்பனை வடிப்பான்களாகும், அவை எல்லா வலைத்தளங்களிலும் பொருந்தும். இந்த விருப்பத்தை இயக்குவது பொதுவான ஒப்பனை வடிப்பான்களைக் கையாளுவதன் விளைவாக வலைப்பக்கங்களில் சேர்க்கப்பட்ட நினைவகம் மற்றும் CPU மேல்நிலை ஆகியவற்றை நீக்கும்.குறைந்த சக்திவாய்ந்த சாதனங்களில் இந்த விருப்பத்தை இயக்க பரிந்துரைக்கப்படுகிறது.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
   },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Suspend network activity until all filter lists are loaded",
+    "description": "A checkbox in the 'Filter lists' pane"
+  },
   "3pListsOfBlockedHostsHeader": {
     "message": "தடைசெய்யப்பட்ட வழங்கிகளின் பட்டியல்",
     "description": "English: Lists of blocked hosts"
@@ -589,7 +593,7 @@
   },
   "whitelistPrompt": {
     "message": "எந்தெந்தப் பக்கங்களில் uBlock₀ முடக்கப்பட வேண்டுமென்பதை அனுமதிப்பட்ட கட்டளைகள் ஆணையிடுகின்றன. வரிக்கு ஒரு இடுகை மட்டுமே. தவறான கட்டளைகள் அமைதியாகப் புறக்கணிக்கப்படும்.",
-    "description": "The name of the trusted sites pane."
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "இறக்குமதி செய்து சேர்",
@@ -1140,7 +1144,7 @@
     "description": "tooltip"
   },
   "cloudNoData": {
-    "message": "...\n...",
+    "message": "…\n…",
     "description": ""
   },
   "cloudDeviceNamePrompt": {

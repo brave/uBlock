@@ -312,7 +312,7 @@
     "description": "English: Click, Ctrl-click"
   },
   "pickerContextMenuEntry": {
-    "message": "Blochează elementul...",
+    "message": "Blochează elementul",
     "description": "An entry in the browser's contextual menu"
   },
   "settingsCollapseBlockedPrompt": {
@@ -434,6 +434,10 @@
   "3pIgnoreGenericCosmeticFiltersInfo": {
     "message": "<p>FIltrele cosmetice generice sunt acelea care se aplică tuturor site-urilor.<p>Deși sunt folosite eficient de uBlock₀, filtrele cosmetice generice pot contribui semnificativ la creșterea cantității de memorie și a utilizării procesorului pe anumite pagini, în special cele de mari dimensiuni și care sunt încărcate pentru mult timp.<p>Activarea acestei opțiuni va elimina încărcarea suplimentară a memoriei și a procesorului rezultată în urma folosirii filtrelor cosmetice generice, și, de asemenea, va micșora impactul uBlock₀ asupra sistemului.<p>Se recomandă activarea acestei opțiuni pe dispozitivele mai puțin performante.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
+  },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Suspendă activitatea în rețea până când se încarcă toate listele cu filtre",
+    "description": "A checkbox in the 'Filter lists' pane"
   },
   "3pListsOfBlockedHostsHeader": {
     "message": "Lista adreselor blocate",
@@ -589,7 +593,7 @@
   },
   "whitelistPrompt": {
     "message": "Lista ta de nume de gazde unde uBlock va fi dezactivat. Fiecare adresă pe o singură linie. Adresele nevalide vor fi ignorate automat.",
-    "description": "The name of the trusted sites pane."
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "Importă și adaugă",
@@ -1140,7 +1144,7 @@
     "description": "tooltip"
   },
   "cloudNoData": {
-    "message": "...\n...",
+    "message": "…\n…",
     "description": ""
   },
   "cloudDeviceNamePrompt": {

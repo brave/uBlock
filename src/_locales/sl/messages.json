@@ -435,6 +435,10 @@
     "message": "<p>Generični vizualni filtri so vizualni filtri, ki naj bi bili uporabljeni na vseh spletnih straneh.<p>Kljub temu, da je njihova uporaba v uBlock₀ učinkovita, generični vizualni filtri lahko, na nekaterih spletnih straneh (še posebno na velikih in starih), pripomorejo k opazni dodatni porabi pomnilnika in uporabi CPE.<p>Omogočitev te funkcije bo zmanjšala porabo pomnilnika in uporabo CPE, ki nastane kot rezultat dodajanja generičnih vizualnih filtrov, in tudi zmanjšala porabo pomnilnika dodatka uBlock₀.<p>Priporočeno je, da omogočite to možnost na manj zmogljivih napravah.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
   },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Prekini aktivnosti omrežja, dokler niso naloženi vsi filtri",
+    "description": "A checkbox in the 'Filter lists' pane"
+  },
   "3pListsOfBlockedHostsHeader": {
     "message": "Seznam blokiranih gostiteljev",
     "description": "English: Lists of blocked hosts"
@@ -589,7 +593,7 @@
   },
   "whitelistPrompt": {
     "message": "Vaš seznam gostiteljskih naslovov, za katere želite, da je uBlock₀ izklopljen. En vnos na vrstico. Neveljavna gostiteljska imena bodo brez opozoril ignorirana.",
-    "description": "The name of the trusted sites pane."
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "Uvozi in dodaj",
@@ -932,7 +936,7 @@
     "description": "Label for the URL of the page"
   },
   "supportS6Select1": {
-    "message": "The web page...",
+    "message": "The web page…",
     "description": "Label for widget to select type of issue"
   },
   "supportS6Select1Option0": {
@@ -1140,7 +1144,7 @@
     "description": "tooltip"
   },
   "cloudNoData": {
-    "message": "...\n...",
+    "message": "…\n…",
     "description": ""
   },
   "cloudDeviceNamePrompt": {

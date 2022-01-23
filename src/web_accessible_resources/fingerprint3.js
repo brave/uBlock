@@ -1,6 +1,7 @@
-/**
+/*******************************************************************************
+
     uBlock Origin - a browser extension to block requests.
-    Copyright (C) 2014-present Raymond Hill
+    Copyright (C) 2022-present Raymond Hill
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,37 +19,24 @@
     Home: https://github.com/gorhill/uBlock
 */
 
-body {
-    align-items: center;
-    background-color: var(--default-surface);
-    border: 1px solid var(--ubo-red);
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    padding: 0 2px;
-    position: relative;
-    width: 100vw;
-    }
-
-.logo {
-    left: 0;
-    padding: 2px 1px;
-    position: absolute;
-    top: 0;
-    }
-
-#frameURL {
-    font-family: monospace;
-    font-size: 90%;
-    overflow-y: auto;
-    word-break: break-all;
-    }
-#frameURL > a {
-    font-size: 1rem;
-    }
-    
-#clickToLoad {
-    cursor: default;
-    margin-bottom: 1em;
-    }
+(function() {
+    'use strict';
+    const visitorId = (( ) => {
+        let id = '';
+        for ( let i = 0; i < 8; i++ ) {
+            id += (Math.random() * 0x10000 + 0x1000 | 0).toString(16).slice(-4);
+        }
+        return id;
+    })();
+    const FingerprintJS = class {
+        static load() {
+            return Promise.resolve(new FingerprintJS());
+        }
+        get() {
+            return Promise.resolve({
+                visitorId,
+            });
+        }
+    };
+    window.FingerprintJS = FingerprintJS;
+})();

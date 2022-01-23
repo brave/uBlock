@@ -312,7 +312,7 @@
     "description": "English: Click, Ctrl-click"
   },
   "pickerContextMenuEntry": {
-    "message": "Blokér element...",
+    "message": "Blokér element",
     "description": "An entry in the browser's contextual menu"
   },
   "settingsCollapseBlockedPrompt": {
@@ -434,6 +434,10 @@
   "3pIgnoreGenericCosmeticFiltersInfo": {
     "message": "Generiske kosmetiske filtre er de kosmetiske filtre, der er beregnet til at gælde på alle websteder. Aktivering af denne indstilling vil eliminere hukommelse- og CPU-forbrug, der tilføjes til websider som et resultat af håndtering af generiske kosmetiske filtre.\n\nDet anbefales at aktivere denne indstilling på mindre kraftfulde enheder.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
+  },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Suspendér netværksaktivitet, indtil alle filterlister er indlæst",
+    "description": "A checkbox in the 'Filter lists' pane"
   },
   "3pListsOfBlockedHostsHeader": {
     "message": "Liste over blokerede værter",
@@ -588,8 +592,8 @@
     "description": "English: a sort option for list of rules."
   },
   "whitelistPrompt": {
-    "message": "De betroede webstedsdirektiver dikterer, på hvilke websider uBlock Origin skal deaktiveres. Én post pr. linje. Ugyldige direktiver ignoreres og kommenteres ud.",
-    "description": "The name of the trusted sites pane."
+    "message": "De betroede webstedsdirektiver dikterer, på hvilke websider uBlock Origin skal deaktiveres. En post pr. linje.",
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "Importér og tilføj",
@@ -1172,7 +1176,7 @@
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuSubscribeToList": {
-    "message": "Abonnér på filterliste...",
+    "message": "Filterlisteabonnering...",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuTemporarilyAllowLargeMediaElements": {

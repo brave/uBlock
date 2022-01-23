@@ -80,7 +80,6 @@ const hiddenSettingsDefault = {
     requestJournalProcessPeriod: 1000,
     selfieAfter: 2,
     strictBlockingBypassDuration: 120,
-    suspendTabsUntilReady: 'unset',
     uiPopupConfig: 'unset',
     uiFlavor: 'unset',
     uiStyles: 'unset',
@@ -109,6 +108,7 @@ const userSettingsDefault = {
     prefetchingDisabled: true,
     requestLogMaxEntries: 1000,
     showIconBadge: true,
+    suspendUntilListsAreLoaded: true,
     tooltipsDisabled: false,
     webrtcIPAddressHidden: false,
 };
@@ -174,8 +174,8 @@ const µBlock = {  // jshint ignore:line
 
     // Read-only
     systemSettings: {
-        compiledMagic: 44,  // Increase when compiled format changes
-        selfieMagic: 44,    // Increase when selfie format changes
+        compiledMagic: 46,  // Increase when compiled format changes
+        selfieMagic: 46,    // Increase when selfie format changes
     },
 
     // https://github.com/uBlockOrigin/uBlock-issues/issues/759#issuecomment-546654501
@@ -214,7 +214,8 @@ const µBlock = {  // jshint ignore:line
     readyToFilter: false,
 
     supportStats: {
-        launchToReadiness: '',
+        allReadyAfter: '',
+        maxAssetCacheWait: '0 ms',
     },
 
     pageStores: new Map(),

@@ -83,17 +83,18 @@ const getElementBoundingClientRect = function(elem) {
     if ( rect.width !== 0 && rect.height !== 0 ) {
         return rect;
     }
+    if ( elem.shadowRoot instanceof DocumentFragment ) {
+        return getElementBoundingClientRect(elem.shadowRoot);
+    }
 
     let left = rect.left,
-        right = rect.right,
+        right = left + rect.width,
         top = rect.top,
-        bottom = rect.bottom;
+        bottom = top + rect.height;
 
     for ( const child of elem.children ) {
         rect = getElementBoundingClientRect(child);
-        if ( rect.width === 0 || rect.height === 0 ) {
-            continue;
-        }
+        if ( rect.width === 0 || rect.height === 0 ) { continue; }
         if ( rect.left < left ) { left = rect.left; }
         if ( rect.right > right ) { right = rect.right; }
         if ( rect.top < top ) { top = rect.top; }
@@ -101,8 +102,10 @@ const getElementBoundingClientRect = function(elem) {
     }
 
     return {
+        bottom,
         height: bottom - top,
         left,
+        right,
         top,
         width: right - left
     };
@@ -333,7 +336,7 @@ const netFilterFromElement = function(elem) {
     const pattern = mergeStrings(urls);
 
 
-    if ( bestCandidateFilter === null ) {
+    if ( bestCandidateFilter === null && elem.matches('html,body') === false ) {
         bestCandidateFilter = {
             type: 'net',
             filters: candidates,
@@ -413,6 +416,9 @@ const cosmeticFilterFromElement = function(elem) {
     // Use attributes if still no selector found.
     // https://github.com/gorhill/uBlock/issues/1901
     //   Trim attribute value, this may help in case of malformed HTML.
+    //
+    // https://github.com/uBlockOrigin/uBlock-issues/issues/1923
+    //   Escape unescaped `"` in attribute values
     if ( selector === '' ) {
         let attributes = [], attr;
         switch ( tagName ) {
@@ -454,13 +460,14 @@ const cosmeticFilterFromElement = function(elem) {
         }
         while ( (attr = attributes.pop()) ) {
             if ( attr.v.length === 0 ) { continue; }
+            const w = attr.v.replace(/([^\\])"/g, '$1\\"');
             v = elem.getAttribute(attr.k);
             if ( attr.v === v ) {
-                selector += `[${attr.k}="${attr.v}"]`;
+                selector += `[${attr.k}="${w}"]`;
             } else if ( v.startsWith(attr.v) ) {
-                selector += `[${attr.k}^="${attr.v}"]`;
+                selector += `[${attr.k}^="${w}"]`;
             } else {
-                selector += `[${attr.k}*="${attr.v}"]`;
+                selector += `[${attr.k}*="${w}"]`;
             }
         }
     }
@@ -557,6 +564,18 @@ const filtersFrom = function(x, y) {
         if ( safeQuerySelectorAll(document.body, selector).length > 1 ) {
             cosmeticFilterCandidates.push('##body');
         }
+    }
+
+    // https://github.com/gorhill/uBlock/commit/ebaa8a8bb28aef043a68c99965fe6c128a3fe5e4#commitcomment-63818019
+    //   If still no best candidate, just use whatever is available in network
+    //   filter candidates -- which may have been previously skipped in favor
+    //   of cosmetic filters.
+    if ( bestCandidateFilter === null && netFilterCandidates.length !== 0 ) {
+        bestCandidateFilter = {
+            type: 'net',
+            filters: netFilterCandidates,
+            slot: 0
+        };
     }
 
     return netFilterCandidates.length + cosmeticFilterCandidates.length;
@@ -940,20 +959,22 @@ const zapElementAtPoint = function(mx, my, options) {
 
     if ( elemToRemove instanceof Element === false ) { return; }
 
-    const getStyleValue = function(elem, prop) {
+    const getStyleValue = (elem, prop) => {
         const style = window.getComputedStyle(elem);
         return style ? style[prop] : '';
     };
 
     // Heuristic to detect scroll-locking: remove such lock when detected.
-    let maybeScrollLocked = false;
-    let elem = elemToRemove;
-    do {
-        maybeScrollLocked =
-            parseInt(getStyleValue(elem, 'zIndex'), 10) >= 1000 ||
-            getStyleValue(elem, 'position') === 'fixed';
-        elem = elem.parentElement;
-    } while ( elem !== null && maybeScrollLocked === false );
+    let maybeScrollLocked = elemToRemove.shadowRoot instanceof DocumentFragment;
+    if ( maybeScrollLocked === false ) {
+        let elem = elemToRemove;
+        do {
+            maybeScrollLocked =
+                parseInt(getStyleValue(elem, 'zIndex'), 10) >= 1000 ||
+                getStyleValue(elem, 'position') === 'fixed';
+            elem = elem.parentElement;
+        } while ( elem !== null && maybeScrollLocked === false );
+    }
     if ( maybeScrollLocked ) {
         const doc = document;
         if ( getStyleValue(doc.body, 'overflowY') === 'hidden' ) {

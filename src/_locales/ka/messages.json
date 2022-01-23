@@ -435,6 +435,10 @@
     "message": "გარეგნული საერთო ფილტრები ისეთი ფილტრებია, რომლებიც ყველა ვებსაიტზე მოქმედებს. ამ პარამეტრის ჩართვით კი თავიდან აიცილებთ გარეგნული ელემენტების საერთო ფილტრების შედეგად მეხსიერებისა და პროცესორის ზედმეტ დატვირთვას.\n\nამ პარამეტრის ჩართვა სასურველია სუსტ მოწყობილობებზე.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
   },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Suspend network activity until all filter lists are loaded",
+    "description": "A checkbox in the 'Filter lists' pane"
+  },
   "3pListsOfBlockedHostsHeader": {
     "message": "Lists of blocked hosts",
     "description": "English: Lists of blocked hosts"
@@ -589,7 +593,7 @@
   },
   "whitelistPrompt": {
     "message": "მითითებული გამონაკლისები განსაზღვრავს, თუ რომელ ვებგვერდზე უნდა გამოირთოს uBlock Origin. თითოეული ჩანაწერი ცალკეულ ხაზზე უნდა იყოს. არასწორი მითითებები უგულებელყოფილი იქნება გაფრთხილების გარეშე და აღინიშნება კომენტარად.",
-    "description": "The name of the trusted sites pane."
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "შემოტანა და დამატება",
@@ -1140,7 +1144,7 @@
     "description": "tooltip"
   },
   "cloudNoData": {
-    "message": "...\n...",
+    "message": "…\n…",
     "description": ""
   },
   "cloudDeviceNamePrompt": {

@@ -1091,6 +1091,7 @@ const getLists = async function(callback) {
         isUpdating: io.isUpdating(),
         netFilterCount: staticNetFilteringEngine.getFilterCount(),
         parseCosmeticFilters: µb.userSettings.parseAllABPHideFilters,
+        suspendUntilListsAreLoaded: µb.userSettings.suspendUntilListsAreLoaded,
         userFiltersPath: µb.userFiltersPath
     };
     const [ lists, metadata ] = await Promise.all([
@@ -1293,7 +1294,7 @@ const getSupportData = async function() {
                 listDetails.push(parts.join('.'));
             }
         }
-        if ( list.isDefault ) {
+        if ( list.isDefault || listKey === µb.userFiltersPath ) {
             if ( used ) {
                 defaultListset[listKey] = listDetails.join(', ');
             } else {

@@ -312,7 +312,7 @@
     "description": "English: Click, Ctrl-click"
   },
   "pickerContextMenuEntry": {
-    "message": "Блокиране на елемент...",
+    "message": "Блокиране на елемент…",
     "description": "An entry in the browser's contextual menu"
   },
   "settingsCollapseBlockedPrompt": {
@@ -434,6 +434,10 @@
   "3pIgnoreGenericCosmeticFiltersInfo": {
     "message": "Общокозметични са филтрите, предназначени за прилагане във всички сайтове. Разрешаването на тази опция ще премахне натоварването на паметта и процесора, добавено към уеб страниците в резултат на обработката на общите козметични филтри.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
+  },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Преустановяване на мрежовата дейност, докато се заредят всички списъци с филтри",
+    "description": "A checkbox in the 'Filter lists' pane"
   },
   "3pListsOfBlockedHostsHeader": {
     "message": "Списъци на блокираните хостове",
@@ -588,8 +592,8 @@
     "description": "English: a sort option for list of rules."
   },
   "whitelistPrompt": {
-    "message": "Списък на адресите, за които uBlock Origin ще бъде изключен. Един запис на ред. Недействителните адреси ще бъдат пренебрегнати и коментирани.",
-    "description": "The name of the trusted sites pane."
+    "message": "Указанията за доверени сайтове определят кои уеб страници трябва да бъдат изключени от uBlock Origin. По един запис на ред.",
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "Внасяне от файл...",
@@ -1024,7 +1028,7 @@
     "description": "English: my-ublock-backup_{{datetime}}.txt"
   },
   "aboutRestoreDataButton": {
-    "message": "Внасяне от файл...",
+    "message": "Възстановяване от файл...",
     "description": "English: Restore from file..."
   },
   "aboutResetDataButton": {

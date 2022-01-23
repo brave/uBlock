@@ -435,6 +435,10 @@
     "message": "Общие косметические фильтры — это те косметические фильтры, которые должны применяться на всех веб-сайтах. Включение этой опции снизит потребление памяти и избавит процессор от обработки общих косметических фильтров на веб-страницах.\n\nРекомендуется включить эту опцию на недостаточно мощных устройствах.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
   },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Приостановить сетевую активность, пока не запустятся все списки фильтров",
+    "description": "A checkbox in the 'Filter lists' pane"
+  },
   "3pListsOfBlockedHostsHeader": {
     "message": "Список заблокированных хостов",
     "description": "English: Lists of blocked hosts"
@@ -496,7 +500,7 @@
     "description": "used as a tooltip for the clock icon beside a list"
   },
   "3pUpdating": {
-    "message": "Обновляется...",
+    "message": "Обновление...",
     "description": "used as a tooltip for the spinner icon beside a list"
   },
   "3pNetworkError": {
@@ -588,8 +592,8 @@
     "description": "English: a sort option for list of rules."
   },
   "whitelistPrompt": {
-    "message": "Записи доверенных сайтов указывают на каких веб-страницах uBlock Origin должен быть отключен. Одна запись на строку. Некорректные записи будут проигнорированы и закомментированы без предупреждений.",
-    "description": "The name of the trusted sites pane."
+    "message": "Записи доверенных сайтов указывают на каких веб-страницах uBlock Origin должен быть отключен. Одна запись на строку.",
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "Импортировать и добавить",
@@ -1024,7 +1028,7 @@
     "description": "English: my-ublock-backup_{{datetime}}.txt"
   },
   "aboutRestoreDataButton": {
-    "message": "Восстановление из файла...",
+    "message": "Восстановить из файла...",
     "description": "English: Restore from file..."
   },
   "aboutResetDataButton": {
@@ -1172,7 +1176,7 @@
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuSubscribeToList": {
-    "message": "Подписаться на список фильтров...",
+    "message": "Установить список фильтров...",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuTemporarilyAllowLargeMediaElements": {

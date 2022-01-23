@@ -435,6 +435,10 @@
     "message": "<p>Vispārīgie kosmētikas filtri ir kosmētikas filtri, kurus paredzēts piemērot visās tīmekļvietnēs.<p>Lai gan uBlock ₀ darbojas efektīvi, vispārīgie kosmētikas filtri dažās tīmekļa lapās var ievērojami noslogot atmiņu un centrālo procesoru.<p>Šīs opcijas izmantošana samazinās vispārīgo kosmētikas filtru izmantotās atmiņas un procesora noslodzi kā arī samazinās paša uBlock₀ izmantoto atmiņu.<p>Ieteicams izmantot zemas veiktspējas ierīcēm.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
   },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Atlikt tīkla darbības, līdz visi aizturēšanas saraksti ir ielādēti.",
+    "description": "A checkbox in the 'Filter lists' pane"
+  },
   "3pListsOfBlockedHostsHeader": {
     "message": "Bloķēto hostu saraksti",
     "description": "English: Lists of blocked hosts"
@@ -589,7 +593,7 @@
   },
   "whitelistPrompt": {
     "message": "Saraksts ar interneta resursiem, kuriem tiks atslēgts uBlock Origin. Viens ieraksts katrā rindiņā. Nederīgi interneta resursu nosaukumi tiks ignorēti bez brīdinājuma.",
-    "description": "The name of the trusted sites pane."
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "Importēt un pievienot",
@@ -1028,7 +1032,7 @@
     "description": "English: Restore from file..."
   },
   "aboutResetDataButton": {
-    "message": "Iestatīt noklusējuma iestatījumus...",
+    "message": "Atgriezt noklusējuma iestatījumus...",
     "description": "English: Reset to default settings..."
   },
   "aboutRestoreDataConfirm": {

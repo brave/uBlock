@@ -435,6 +435,10 @@
     "message": "<p>Загальні косметичні фільтри — це косметичні фільтри, які застосовуються до всіх веб-сторінок.<p>Хоча й uBlock обробує фільтри ефективно, вони все одно можуть вимагати значну кількість ресурсів на деяких, особливо навантаженних сторінках.<p>Увімкнення цього параметра знизить споживання ресурсів на таких сторінках від застосування загальних косметичних фільтрів, а також знизить споживання пам'яті самого uBlock.<p>Рекомендується увімкнути цей параметр на слабких пристроях.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
   },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Призупинити мережеві операції доки всі списки фільтрів не завантажаться",
+    "description": "A checkbox in the 'Filter lists' pane"
+  },
   "3pListsOfBlockedHostsHeader": {
     "message": "Перелік заблокованих хостів",
     "description": "English: Lists of blocked hosts"
@@ -552,7 +556,7 @@
     "description": "Will discard manually-edited content and exit manual-edit mode"
   },
   "rulesImport": {
-    "message": " Імпортувати з файлу...",
+    "message": " Імпортувати з файлу…",
     "description": ""
   },
   "rulesExport": {
@@ -589,7 +593,7 @@
   },
   "whitelistPrompt": {
     "message": "Ваш список адрес сайтів, для яких µBlock буде неактивним. Додайте по одному запису на рядок. Невірні адреси будуть проігноровані без попереджень та закоментовані.",
-    "description": "The name of the trusted sites pane."
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "Імпортувати та додати",
@@ -1024,11 +1028,11 @@
     "description": "English: my-ublock-backup_{{datetime}}.txt"
   },
   "aboutRestoreDataButton": {
-    "message": "Відновити з файлу...",
+    "message": "Відновити з файлу…",
     "description": "English: Restore from file..."
   },
   "aboutResetDataButton": {
-    "message": "Відновити параметри за замовчанням...",
+    "message": "Відновити початкові налаштування...",
     "description": "English: Reset to default settings..."
   },
   "aboutRestoreDataConfirm": {

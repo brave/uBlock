@@ -435,6 +435,10 @@
     "message": "<p>Els filtres cosmètics genèrics són filtres que no s'apliquen a tots els llocs web.<p>Tot i que l'uBlock₀ els gestiona de manera eficient, aquests filtres encara poden contribuir a un augment d'ús de la memòria o sobrecàrrega de la CPU en algunes pàgines web, especialment si tenen molt contingut, elements d'animació o temps real.<p>En habilitar aquesta opció s'elimina el risc de sobrecàrrega a la CPU i excés d'ús de la memòria com a resultat de la manipulació de filtres cosmètics genèrics i també es redueix el consum de memòria de l'uBlock₀.<p>Es recomana habilitar aquesta opció en dispositius poc potents.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
   },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Suspèn l'activitat de la xarxa fins a carregar totes les llistes de filtres",
+    "description": "A checkbox in the 'Filter lists' pane"
+  },
   "3pListsOfBlockedHostsHeader": {
     "message": "Llistes de servidors bloquejats",
     "description": "English: Lists of blocked hosts"
@@ -552,7 +556,7 @@
     "description": "Will discard manually-edited content and exit manual-edit mode"
   },
   "rulesImport": {
-    "message": "Importa des del fitxer...",
+    "message": "Importa des de...",
     "description": ""
   },
   "rulesExport": {
@@ -589,7 +593,7 @@
   },
   "whitelistPrompt": {
     "message": "Llistat dels noms de servidor amb que s'inhabilitarà l'µBlock. Una entrada per línia. S'ignoraran els noms de servidor no vàlids.",
-    "description": "The name of the trusted sites pane."
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "Imporar i annexar",
@@ -1024,11 +1028,11 @@
     "description": "English: my-ublock-backup_{{datetime}}.txt"
   },
   "aboutRestoreDataButton": {
-    "message": "Restaurar des d'un fitxer...",
+    "message": "Restaura des d'un fitxer...",
     "description": "English: Restore from file..."
   },
   "aboutResetDataButton": {
-    "message": "Restaurar als valors de fàbrica...",
+    "message": "Restaura als valors per defecte...",
     "description": "English: Reset to default settings..."
   },
   "aboutRestoreDataConfirm": {
@@ -1140,7 +1144,7 @@
     "description": "tooltip"
   },
   "cloudNoData": {
-    "message": "...\n...",
+    "message": "…\n…",
     "description": ""
   },
   "cloudDeviceNamePrompt": {

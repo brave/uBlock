@@ -4,7 +4,7 @@
     "description": "extension name."
   },
   "extShortDesc": {
-    "message": "Viimeinkin tehokas mainosesto, joka ei kuormita prosessoria ja muistia.",
+    "message": "Viimeinkin tehokas estotyökalu, joka ei kuormita prosessoria ja muistia.",
     "description": "this will be in the Chrome web store: must be 132 characters or less"
   },
   "dashboardName": {
@@ -60,7 +60,7 @@
     "description": "appears as tab name in dashboard"
   },
   "assetViewerPageName": {
-    "message": "uBlock₀ — Resursien katselu",
+    "message": "uBlock₀ — Resurssien katselu",
     "description": "Title for the asset viewer page"
   },
   "advancedSettingsPageName": {
@@ -312,7 +312,7 @@
     "description": "English: Click, Ctrl-click"
   },
   "pickerContextMenuEntry": {
-    "message": "Estä elementti...",
+    "message": "Estä elementti…",
     "description": "An entry in the browser's contextual menu"
   },
   "settingsCollapseBlockedPrompt": {
@@ -435,6 +435,10 @@
     "message": "Kosmeettiset yleissuodattimet ovat sellaisia kosmeettisia suodattimia, jotka on tarkoitettu käytettäväksi kaikilla verkkosivustoilla. Tämä asetus poistaa tällaisten suodattimien käsittelystä verkkosivuille aiheutuvan, korkeamman keskusmuistin ja suorittimen kuormituksen.\n\nAsetuksen käyttö on suositeltavaa heikkotehoisilla laitteilla.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
   },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Keskeytä verkon toiminta, kunnes kaikki suodatinlistat on ladattu",
+    "description": "A checkbox in the 'Filter lists' pane"
+  },
   "3pListsOfBlockedHostsHeader": {
     "message": "Luettelo estetyistä osoitteista",
     "description": "English: Lists of blocked hosts"
@@ -476,7 +480,7 @@
     "description": "English: Custom"
   },
   "3pImport": {
-    "message": "Tuo...",
+    "message": "Tuo…",
     "description": "The label for the checkbox used to import external filter lists"
   },
   "3pExternalListsHint": {
@@ -496,7 +500,7 @@
     "description": "used as a tooltip for the clock icon beside a list"
   },
   "3pUpdating": {
-    "message": "Päivitetään...",
+    "message": "Päivitetään…",
     "description": "used as a tooltip for the spinner icon beside a list"
   },
   "3pNetworkError": {
@@ -552,7 +556,7 @@
     "description": "Will discard manually-edited content and exit manual-edit mode"
   },
   "rulesImport": {
-    "message": "Tuo tiedostosta...",
+    "message": "Tuo tiedostosta…",
     "description": ""
   },
   "rulesExport": {
@@ -588,8 +592,8 @@
     "description": "English: a sort option for list of rules."
   },
   "whitelistPrompt": {
-    "message": "Luotettu sivusto -luokitukset määrittelevät millä sivuilla uBlock Originia ei käytetä. Yksiosoite riviä kohden. Virheelliset luokitukset ohitetaan huomaamattomasti ja kommentoidaan pois.",
-    "description": "The name of the trusted sites pane."
+    "message": "Luotettu sivusto -luokitukset määrittelevät millä sivuilla uBlock Originia ei käytetä. Yksi osoite riviä kohden.",
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "Tuo ja lisää...",
@@ -932,7 +936,7 @@
     "description": "Label for the URL of the page"
   },
   "supportS6Select1": {
-    "message": "Verkkosivu...",
+    "message": "Verkkosivu…",
     "description": "Label for widget to select type of issue"
   },
   "supportS6Select1Option0": {
@@ -1024,11 +1028,11 @@
     "description": "English: my-ublock-backup_{{datetime}}.txt"
   },
   "aboutRestoreDataButton": {
-    "message": "Palauta tiedostosta...",
+    "message": "Palauta tiedostosta…",
     "description": "English: Restore from file..."
   },
   "aboutResetDataButton": {
-    "message": "Palauta oletusasetukset...",
+    "message": "Palauta oletusasetukset…",
     "description": "English: Reset to default settings..."
   },
   "aboutRestoreDataConfirm": {
@@ -1168,11 +1172,11 @@
     "description": ""
   },
   "contextMenuBlockElementInFrame": {
-    "message": "Estä elementti kehyksestä...",
+    "message": "Estä elementti kehyksestä…",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuSubscribeToList": {
-    "message": "Tilaa suodatinlista...",
+    "message": "Tilaa suodatinlista…",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuTemporarilyAllowLargeMediaElements": {

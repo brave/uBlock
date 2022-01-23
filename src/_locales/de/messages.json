@@ -435,6 +435,10 @@
     "message": "Generische kosmetische Filter sind diejenigen kosmetischen Filter, die für die Anwendung auf allen Webseiten bestimmt sind. Die Aktivierung dieser Option wird die Mehrbelastung für Speicher und Prozessor auf Webseiten durch die Verarbeitung generischer kosmetischer Filter verhindern.\n\nEs wird empfohlen, diese Option auf weniger leistungsstarken Geräten zu aktivieren.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
   },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Netzwerkaktivität unterbrechen, bis alle Filterlisten geladen sind",
+    "description": "A checkbox in the 'Filter lists' pane"
+  },
   "3pListsOfBlockedHostsHeader": {
     "message": "Listen blockierter Hostnamen",
     "description": "English: Lists of blocked hosts"
@@ -476,7 +480,7 @@
     "description": "English: Custom"
   },
   "3pImport": {
-    "message": "Importieren …",
+    "message": "Importieren...",
     "description": "The label for the checkbox used to import external filter lists"
   },
   "3pExternalListsHint": {
@@ -552,7 +556,7 @@
     "description": "Will discard manually-edited content and exit manual-edit mode"
   },
   "rulesImport": {
-    "message": "Aus einer Datei importieren …",
+    "message": "Aus Datei importieren …",
     "description": ""
   },
   "rulesExport": {
@@ -589,7 +593,7 @@
   },
   "whitelistPrompt": {
     "message": "Ausnahmeregeln bestimmen, auf welchen Webseiten uBlock Origin nicht aktiv sein soll. Ein Eintrag pro Zeile. Ungültige Regeln werden ignoriert und auskommentiert.",
-    "description": "The name of the trusted sites pane."
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "Importieren und anfügen",
@@ -1024,11 +1028,11 @@
     "description": "English: my-ublock-backup_{{datetime}}.txt"
   },
   "aboutRestoreDataButton": {
-    "message": "Aus einer Datei wiederherstellen ...",
+    "message": "Aus Datei wiederherstellen …",
     "description": "English: Restore from file..."
   },
   "aboutResetDataButton": {
-    "message": "Auf Vorgaben zurücksetzen …",
+    "message": "Auf Werkseinstellungen zurücksetzen...",
     "description": "English: Reset to default settings..."
   },
   "aboutRestoreDataConfirm": {

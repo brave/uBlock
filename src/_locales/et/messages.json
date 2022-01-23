@@ -435,6 +435,10 @@
     "message": "Üldised ilufiltrid on need ilufiltrid, mis töötavad kõikidel veebisaitidel. Selle valiku lubamine vähendab veebisaitidel üldiste ilufiltrite kasutamisest tulenevat mälu ja protsessori koormust.\n\nSelle valiku lubamine on soovitatav vähem võimekates seadmetes.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
   },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Peata võrguliiklus kõikide filtriloendite laadimiseni",
+    "description": "A checkbox in the 'Filter lists' pane"
+  },
   "3pListsOfBlockedHostsHeader": {
     "message": "Blokeeritud domeenide loendid",
     "description": "English: Lists of blocked hosts"
@@ -589,7 +593,7 @@
   },
   "whitelistPrompt": {
     "message": "Usaldatud saitide direktiivid määravad, millistel veebilehtedel peaks uBlock Origin keelatud olema. Üks kirje rea kohta. Sobimatuid direktiive vaikselt ignoreeritakse ja kommenteeritakse välja.",
-    "description": "The name of the trusted sites pane."
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "Impordi ja lisa",

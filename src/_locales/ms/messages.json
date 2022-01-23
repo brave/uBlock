@@ -435,6 +435,10 @@
     "message": "Penapis kosmetik generik adalah penapis kosmetik itu mengubah kesemua laman web. Mendayakan tetapan ini akan mengurangkan penggunaan memori dan overhed CPU dari laman web sebagai hasil pengendalian penapis kosmetik generik.\n\nIa disyorkan untuk mengaktifkan tetapan ini untuk peranti yang lemah.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
   },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Suspend network activity until all filter lists are loaded",
+    "description": "A checkbox in the 'Filter lists' pane"
+  },
   "3pListsOfBlockedHostsHeader": {
     "message": "Lists of blocked hosts",
     "description": "English: Lists of blocked hosts"
@@ -589,7 +593,7 @@
   },
   "whitelistPrompt": {
     "message": "Arahan laman web yang dipercayai menentukan halaman web mana uBlock Origin harus dilumpuhkan. Satu penyertaan setiap baris. Arahan tidak sah akan diam-diam diabaikan dan dikomentari.",
-    "description": "The name of the trusted sites pane."
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "Import dan melampirkan",
@@ -1140,7 +1144,7 @@
     "description": "tooltip"
   },
   "cloudNoData": {
-    "message": "...\n...",
+    "message": "…\n…",
     "description": ""
   },
   "cloudDeviceNamePrompt": {

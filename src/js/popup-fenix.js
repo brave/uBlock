@@ -856,6 +856,24 @@ const gotoReport = function() {
         if ( popupData[prop] === expected ) { continue; }
         popupPanel[name] = !expected;
     }
+    if ( hostnameToSortableTokenMap.size !== 0 ) {
+        const blockedDetails = {};
+        const hostnames =
+            Array.from(hostnameToSortableTokenMap.keys()).sort(hostnameCompare);
+        for ( const hostname of hostnames ) {
+            const entry = popupData.hostnameDict[hostname];
+            const count = entry.counts.blocked.any;
+            if ( count === 0 ) { continue; }
+            const domain = entry.domain;
+            if ( blockedDetails[domain] === undefined ) {
+                blockedDetails[domain] = 0;
+            }
+            blockedDetails[domain] += count;
+        }
+        if ( Object.keys(blockedDetails).length !== 0 ) {
+            popupPanel.blockedDetails = blockedDetails;
+        }
+    }
     messaging.send('popupPanel', {
         what: 'launchReporter',
         tabId: popupData.tabId,

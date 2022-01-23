@@ -1138,7 +1138,7 @@ const webRequest = {
         vAPI.net = new vAPI.Net();
         vAPI.net.suspend();
 
-        return ( ) => {
+        return async ( ) => {
             vAPI.net.setSuspendableListener(onBeforeRequest);
             vAPI.net.addListener(
                 'onHeadersReceived',
@@ -1146,7 +1146,7 @@ const webRequest = {
                 { urls: [ 'http://*/*', 'https://*/*' ] },
                 [ 'blocking', 'responseHeaders' ]
             );
-            vAPI.net.unsuspend(true);
+            vAPI.net.unsuspend({ all: true });
         };
     })(),
 

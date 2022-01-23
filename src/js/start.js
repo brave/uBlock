@@ -134,6 +134,9 @@ const initializeTabs = async function() {
 /******************************************************************************/
 
 // To bring older versions up to date
+//
+// https://www.reddit.com/r/uBlockOrigin/comments/s7c9go/
+//   Abort suspending network requests when uBO is merely being installed.
 
 const onVersionReady = function(lastVersion) {
     if ( lastVersion === vAPI.app.version ) { return; }
@@ -141,7 +144,12 @@ const onVersionReady = function(lastVersion) {
     vAPI.storage.set({ version: vAPI.app.version });
 
     const lastVersionInt = vAPI.app.intFromVersion(lastVersion);
-    if ( lastVersionInt === 0 ) { return; }
+
+    // Special case: first installation
+    if ( lastVersionInt === 0 ) {
+        vAPI.net.unsuspend({ all: true, discard: true });
+        return;
+    }
 
     // Since built-in resources may have changed since last version, we
     // force a reload of all resources.
@@ -192,6 +200,13 @@ const onNetWhitelistReady = function(netWhitelistRaw, adminExtra) {
 // User settings are in memory
 
 const onUserSettingsReady = function(fetched) {
+    // Terminate suspended state?
+    if ( fetched.suspendUntilListsAreLoaded === false ) {
+        vAPI.net.unsuspend({ all: true, discard: true });
+        ubolog(`Unsuspend network activity listener`);
+        µb.supportStats.unsuspendAfter = `${Date.now() - vAPI.T0} ms`;
+    }
+
     // `externalLists` will be deprecated in some future, it is kept around
     // for forward compatibility purpose, and should reflect the content of
     // `importedLists`.
@@ -282,13 +297,6 @@ const onHiddenSettingsReady = async function() {
         ubolog(`Override default webext flavor with ${tokens}`);
     }
 
-    // Maybe override current network listener suspend state
-    if ( µb.hiddenSettings.suspendTabsUntilReady === 'no' ) {
-        vAPI.net.unsuspend(true);
-    } else if ( µb.hiddenSettings.suspendTabsUntilReady === 'yes' ) {
-        vAPI.net.suspend();
-    }
-
     // Maybe disable WebAssembly
     if ( vAPI.canWASM && µb.hiddenSettings.disableWebAssembly !== true ) {
         const wasmModuleFetcher = function(path) {
@@ -304,7 +312,7 @@ const onHiddenSettingsReady = async function() {
         });
     }
 
-    // Matbe override default cache storage
+    // Maybe override default cache storage
     const cacheBackend = await cacheStorage.select(
         µb.hiddenSettings.cacheStorageAPI
     );
@@ -506,11 +514,11 @@ browser.runtime.onUpdateAvailable.addListener(details => {
     }
 });
 
-µb.supportStats.launchToReadiness = `${Date.now() - vAPI.T0} ms`;
+µb.supportStats.allReadyAfter = `${Date.now() - vAPI.T0} ms`;
 if ( selfieIsValid ) {
-    µb.supportStats.launchToReadiness += ' (selfie)';
+    µb.supportStats.allReadyAfter += ' (selfie)';
 }
-ubolog(`All ready ${µb.supportStats.launchToReadiness} ms after launch`);
+ubolog(`All ready ${µb.supportStats.allReadyAfter} ms after launch`);
 
 // <<<<< end of private scope
 })();

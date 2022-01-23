@@ -435,6 +435,10 @@
     "message": "<p>Daugybiniai kosmetiniai filtrai yra tokie kosmetiniai filtrai, kurie taikomi visoms svetainėms.<p>Nors uBlock₀ juos apdoroja efektyviai, daugybiniai kosmetiniai filtrai vis tiek gali prisidėti prie pamatuojamo atminties ir procesoriaus panaudojimo kai kuriose svetainėse, ypač didelėse ir ilgai gyvuojančiose.<p>Šio nustatymo įjungimas sumažins atminties ir procesoriaus naudojimą, kurį sukelia svetainės dėl daugybinių kosmetinių filtrų apdorojimo, bei sumažins bendrą uBlock₀ atminties naudojimą.<p>Rekomenduojama įjungti šį nustatymą mažiau galinguose įrenginiuose.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
   },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Suspend network activity until all filter lists are loaded",
+    "description": "A checkbox in the 'Filter lists' pane"
+  },
   "3pListsOfBlockedHostsHeader": {
     "message": "Blokuotų serverių sąrašas",
     "description": "English: Lists of blocked hosts"
@@ -589,7 +593,7 @@
   },
   "whitelistPrompt": {
     "message": "Baltojo sąrašo direktyvos nurodo, kurioms svetainėms uBlock Origin turėtų būti išjungtas. Vienas įrašas eilutėje. Neteisingos direktyvos bus tyliai ignoruotos ir užkomentuotos.",
-    "description": "The name of the trusted sites pane."
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "Importuoti ir papildyti",
@@ -932,7 +936,7 @@
     "description": "Label for the URL of the page"
   },
   "supportS6Select1": {
-    "message": "The web page...",
+    "message": "The web page…",
     "description": "Label for widget to select type of issue"
   },
   "supportS6Select1Option0": {
@@ -1140,7 +1144,7 @@
     "description": "tooltip"
   },
   "cloudNoData": {
-    "message": "...\n...",
+    "message": "…\n…",
     "description": ""
   },
   "cloudDeviceNamePrompt": {
@@ -1168,11 +1172,11 @@
     "description": ""
   },
   "contextMenuBlockElementInFrame": {
-    "message": "Block element in frame...",
+    "message": "Block element in frame…",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuSubscribeToList": {
-    "message": "Subscribe to filter list...",
+    "message": "Subscribe to filter list…",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuTemporarilyAllowLargeMediaElements": {

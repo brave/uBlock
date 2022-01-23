@@ -312,7 +312,7 @@
     "description": "English: Click, Ctrl-click"
   },
   "pickerContextMenuEntry": {
-    "message": "Bloquear elemento...",
+    "message": "Bloquear elemento…",
     "description": "An entry in the browser's contextual menu"
   },
   "settingsCollapseBlockedPrompt": {
@@ -435,6 +435,10 @@
     "message": "Os filtros cosméticos genéricos são destinados para aplicação em todos os sites. Se ativar esta opção irá eliminar o excesso de utilização da memória e CPU, como resultado da manipulação dos filtros cosméticos genéricos.\n\nRecomendamos a ativação desta opção em dispositivos mais fracos.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
   },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Suspender a atividade da rede até que todas as listas de filtros sejam carregadas",
+    "description": "A checkbox in the 'Filter lists' pane"
+  },
   "3pListsOfBlockedHostsHeader": {
     "message": "Listas de servidores bloqueados",
     "description": "English: Lists of blocked hosts"
@@ -476,7 +480,7 @@
     "description": "English: Custom"
   },
   "3pImport": {
-    "message": "Importar...",
+    "message": "Importar…",
     "description": "The label for the checkbox used to import external filter lists"
   },
   "3pExternalListsHint": {
@@ -496,7 +500,7 @@
     "description": "used as a tooltip for the clock icon beside a list"
   },
   "3pUpdating": {
-    "message": "A atualizar...",
+    "message": "A atualizar…",
     "description": "used as a tooltip for the spinner icon beside a list"
   },
   "3pNetworkError": {
@@ -552,7 +556,7 @@
     "description": "Will discard manually-edited content and exit manual-edit mode"
   },
   "rulesImport": {
-    "message": "Importar a partir de ficheiro...",
+    "message": "Importar a partir de ficheiro…",
     "description": ""
   },
   "rulesExport": {
@@ -588,8 +592,8 @@
     "description": "English: a sort option for list of rules."
   },
   "whitelistPrompt": {
-    "message": "As diretivas de sites confiáveis determinam em quais páginas web o uBlock Origin deve ser desativado. Uma entrada por linha. Diretivas inválidas serão ignoradas e comentadas silenciosamente.",
-    "description": "The name of the trusted sites pane."
+    "message": "As diretivas de sites confiáveis determinam em que páginas web o uBlock Origin deve ser desativado. Uma entrada por linha.",
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "Importar e anexar",
@@ -932,7 +936,7 @@
     "description": "Label for the URL of the page"
   },
   "supportS6Select1": {
-    "message": "A página web...",
+    "message": "A página web…",
     "description": "Label for widget to select type of issue"
   },
   "supportS6Select1Option0": {
@@ -1024,11 +1028,11 @@
     "description": "English: my-ublock-backup_{{datetime}}.txt"
   },
   "aboutRestoreDataButton": {
-    "message": "Restaurar a partir de ficheiro...",
+    "message": "Restaurar a partir de ficheiro…",
     "description": "English: Restore from file..."
   },
   "aboutResetDataButton": {
-    "message": "Restaurar predefinições...",
+    "message": "Restaurar predefinições…",
     "description": "English: Reset to default settings..."
   },
   "aboutRestoreDataConfirm": {
@@ -1168,11 +1172,11 @@
     "description": ""
   },
   "contextMenuBlockElementInFrame": {
-    "message": "Bloquear elemento no frame...",
+    "message": "Bloquear elemento no frame…",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuSubscribeToList": {
-    "message": "Subscrever à lista de filtros...",
+    "message": "Subscrever à lista de filtros…",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuTemporarilyAllowLargeMediaElements": {

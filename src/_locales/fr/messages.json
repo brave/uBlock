@@ -312,7 +312,7 @@
     "description": "English: Click, Ctrl-click"
   },
   "pickerContextMenuEntry": {
-    "message": "Bloquer un élément",
+    "message": "Bloquer l'élément",
     "description": "An entry in the browser's contextual menu"
   },
   "settingsCollapseBlockedPrompt": {
@@ -435,6 +435,10 @@
     "message": "Les filtres esthétiques génériques sont des filtres esthétiques conçus pour être appliqués sur tous les sites Web. Activer cette option réduira l'utilisation en mémoire et en processeur sur les pages Web.\n\nIl est recommandé d'activer ce paramètre sur des appareils à la puissance modeste.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
   },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Suspendre l'activité réseau jusqu'au chargement de toutes les listes de filtres",
+    "description": "A checkbox in the 'Filter lists' pane"
+  },
   "3pListsOfBlockedHostsHeader": {
     "message": "Listes prédéfinies d'hôtes à bloquer",
     "description": "English: Lists of blocked hosts"
@@ -496,7 +500,7 @@
     "description": "used as a tooltip for the clock icon beside a list"
   },
   "3pUpdating": {
-    "message": "Mise à jour en cours...",
+    "message": "Mise à jour en cours…",
     "description": "used as a tooltip for the spinner icon beside a list"
   },
   "3pNetworkError": {
@@ -552,7 +556,7 @@
     "description": "Will discard manually-edited content and exit manual-edit mode"
   },
   "rulesImport": {
-    "message": "Importer à partir du fichier",
+    "message": "Importer à partir du fichier…",
     "description": ""
   },
   "rulesExport": {
@@ -588,8 +592,8 @@
     "description": "English: a sort option for list of rules."
   },
   "whitelistPrompt": {
-    "message": "Les sites Web déclarés comme fiables auprès d'uBlock Origin ne seront pas traités par ce dernier.\nUne entrée par ligne. Les entrées invalides seront silencieusement ignorées et commentées.",
-    "description": "The name of the trusted sites pane."
+    "message": "Les directives de site de confiance indiquent sur quelles pages Web uBlock Origin devrait être désactivée. Une entrée par ligne.",
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "Importer",
@@ -932,7 +936,7 @@
     "description": "Label for the URL of the page"
   },
   "supportS6Select1": {
-    "message": "La page Web...",
+    "message": "La page Web…",
     "description": "Label for widget to select type of issue"
   },
   "supportS6Select1Option0": {
@@ -1024,11 +1028,11 @@
     "description": "English: my-ublock-backup_{{datetime}}.txt"
   },
   "aboutRestoreDataButton": {
-    "message": "Importer depuis un fichier",
+    "message": "Restaurer depuis un fichier…",
     "description": "English: Restore from file..."
   },
   "aboutResetDataButton": {
-    "message": "Paramètres par défaut",
+    "message": "Réinitialiser les réglages",
     "description": "English: Reset to default settings..."
   },
   "aboutRestoreDataConfirm": {
@@ -1168,7 +1172,7 @@
     "description": ""
   },
   "contextMenuBlockElementInFrame": {
-    "message": "Bloquer un élément de cadre",
+    "message": "Bloquer l'élément dans le cadre",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuSubscribeToList": {

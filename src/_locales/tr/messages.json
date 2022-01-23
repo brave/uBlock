@@ -312,7 +312,7 @@
     "description": "English: Click, Ctrl-click"
   },
   "pickerContextMenuEntry": {
-    "message": "Ögeyi engelle...",
+    "message": "Ögeyi engelle…",
     "description": "An entry in the browser's contextual menu"
   },
   "settingsCollapseBlockedPrompt": {
@@ -435,6 +435,10 @@
     "message": "Genel kozmetik filtreler tüm web sayfalarına uygulanacak kozmetik filtrelerdir. Bu seçeneğin etkinleştirilmesi, genel kozmetik filtrelerin işlenmesi nedeniyle web sayfalarına eklenen bellek ve işlemci yükünü ortadan kaldırır.\n\nDaha az güçlü aygıtlarda bu seçeneğin etkinleştirilmesi önerilir.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
   },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Ağ etkinliğini, tüm filtre listeleri yüklenene kadar askıya al",
+    "description": "A checkbox in the 'Filter lists' pane"
+  },
   "3pListsOfBlockedHostsHeader": {
     "message": "Engellenmiş alan adlarının listesi",
     "description": "English: Lists of blocked hosts"
@@ -476,7 +480,7 @@
     "description": "English: Custom"
   },
   "3pImport": {
-    "message": "İçe aktar...",
+    "message": "İçe aktar…",
     "description": "The label for the checkbox used to import external filter lists"
   },
   "3pExternalListsHint": {
@@ -496,7 +500,7 @@
     "description": "used as a tooltip for the clock icon beside a list"
   },
   "3pUpdating": {
-    "message": "Güncelleniyor...",
+    "message": "Güncelleniyor…",
     "description": "used as a tooltip for the spinner icon beside a list"
   },
   "3pNetworkError": {
@@ -552,7 +556,7 @@
     "description": "Will discard manually-edited content and exit manual-edit mode"
   },
   "rulesImport": {
-    "message": "Dosyadan al...",
+    "message": "Dosyadan al…",
     "description": ""
   },
   "rulesExport": {
@@ -588,8 +592,8 @@
     "description": "English: a sort option for list of rules."
   },
   "whitelistPrompt": {
-    "message": "Güvenilen site yönergeleri, uBlock Origin'in devre dışı bırakılması gerektiği web sayfalarını belirler. Her satırda bir girdi. Geçersiz yönergeler sessizce yok sayılacak ve yoruma dönüştürülecektir.",
-    "description": "The name of the trusted sites pane."
+    "message": "Güvenilen site yönergeleri, uBlock Origin'in devre dışı bırakılması gerektiği web sayfalarını belirler. Her satırda bir girdi.",
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "İçe aktar ve ekle",
@@ -884,15 +888,15 @@
     "description": "First paragraph of 'Questions and support' section in Support pane"
   },
   "supportS3H": {
-    "message": "Filtre sorunları/websitesi bozuk",
+    "message": "Filtre sorunları/web sitesi bozuk",
     "description": "Header of 'Filter issues' section in Support pane"
   },
   "supportS3P1": {
-    "message": "Belirli websiteleriyle ilgili filtre sorunlarını  <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"><code>uBlockOrigin/uAssets</code> sorun izleyicisine</span> bildirin. <u>Github hesabı gerektirir.</u>",
+    "message": "Belirli web siteleriyle ilgili filtre sorunlarını  <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"><code>uBlockOrigin/uAssets</code> sorun izleyicisine</span> bildirin. <u>Github hesabı gerektirir.</u>",
     "description": "First paragraph of 'Filter issues' section in Support pane"
   },
   "supportS3P2": {
-    "message": "<b>Önemli:</b> uBlock Origin'le birlikte, belirli websitelerinde filtre sorunlarına neden olabileceği için, diğer benzer amaçlı engellicileri kullanmaktan kaçının.",
+    "message": "<b>Önemli:</b> uBlock Origin'le birlikte, belirli web sitelerinde filtre sorunlarına neden olabileceği için, diğer benzer amaçlı engelleyicileri kullanmaktan kaçının.",
     "description": "Second paragraph of 'Filter issues' section in Support pane"
   },
   "supportS3P3": {
@@ -964,7 +968,7 @@
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Checkbox1": {
-    "message": "Websitesini uygunsuz (“NSFW”) olarak etiketle (<a href=\"https://wikipedia.org/wiki/Not_safe_for_work\">“Not Safe For Work”</a>)",
+    "message": "Web sayfasını uygunsuz (“NSFW”) olarak etiketle (<a href=\"https://wikipedia.org/wiki/Not_safe_for_work\">“Not Safe For Work”</a>)",
     "description": "A checkbox to use for NSFW sites"
   },
   "supportRedact": {
@@ -1024,11 +1028,11 @@
     "description": "English: my-ublock-backup_{{datetime}}.txt"
   },
   "aboutRestoreDataButton": {
-    "message": "Dosyadan geri yükle...",
+    "message": "Dosyadan geri yükle…",
     "description": "English: Restore from file..."
   },
   "aboutResetDataButton": {
-    "message": "Varsayılan ayarlara sıfırla...",
+    "message": "Varsayılan ayarlara sıfırla…",
     "description": "English: Reset to default settings..."
   },
   "aboutRestoreDataConfirm": {
@@ -1168,11 +1172,11 @@
     "description": ""
   },
   "contextMenuBlockElementInFrame": {
-    "message": "Çerçevedeki ögeyi engelle...",
+    "message": "Çerçevedeki ögeyi engelle…",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuSubscribeToList": {
-    "message": "Filtre listesine abone ol...",
+    "message": "Filtre listesine abone ol…",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuTemporarilyAllowLargeMediaElements": {

@@ -231,8 +231,25 @@ describe('SNFE', () => {
                     const serialized = await engine.serialize();
                     await engine.deserialize(serialized);
                 });
-            });
 
+                // https://github.com/gorhill/uBlock/commit/8f461072f576cdf72c088a952ef342281a7c44d6
+                it('should correctly remove query parameter following deserialization', async () => {
+                    await engine.useLists([
+                        { name: 'custom', raw: '*$removeparam=/^utm_/' },
+                    ]);
+                    const request = {
+                        originURL: 'https://www.example.com/?utm_source=1',
+                        type: 'document',
+                        url: 'https://www.example.com/?utm_source=1',
+                    };
+                    let result = engine.filterQuery(request);
+                    assert.strictEqual(result.redirectURL, 'https://www.example.com/');
+                    const serialized = await engine.serialize();
+                    await engine.deserialize(serialized);
+                    result = engine.filterQuery(request);
+                    assert.strictEqual(result.redirectURL, 'https://www.example.com/');
+                });
+            });
 
             describe('Filter matching', () => {
                 beforeEach(async () => {
@@ -308,6 +325,44 @@ describe('SNFE', () => {
                         originURL: 'https://www.example.com/',
                         type: 'stylesheet',
                         url: 'https://www.example.com/',
+                    });
+                    assert.strictEqual(r, 0);
+                });
+
+                // https://github.com/gorhill/uBlock/commit/d66cd1116c0e
+                it('should not match on localhost', async () => {
+                    await engine.useLists([
+                        { name: 'test', raw: '.js$domain=foo.*|bar.*\n/^/$domain=example.*|foo.*' },
+                    ]);
+                    const r = engine.matchRequest({
+                        originURL: 'https://localhost/',
+                        type: 'script',
+                        url: 'https://localhost/baz.js',
+                    });
+                    assert.strictEqual(r, 0);
+                });
+
+                // https://github.com/AdguardTeam/AdguardFilters/issues/88067#issuecomment-1019518277
+                it('should match regex-based filter without `match-case` option', async () => {
+                    await engine.useLists([
+                        { name: 'test', raw: '/\.com\/[a-z]{9,}\/[a-z]{9,}\.js$/$script,1p' },
+                    ]);
+                    const r = engine.matchRequest({
+                        originURL: 'https://example.com/',
+                        type: 'script',
+                        url: 'https://example.com/LQMDQSMLDAZAEHERE/LQMDQSMLDAZAEHERE.js',
+                    });
+                    assert.strictEqual(r, 1);
+                });
+
+                it('should not match regex-based filter with `match-case` option', async () => {
+                    await engine.useLists([
+                        { name: 'test', raw: '/\.com\/[a-z]{9,}\/[a-z]{9,}\.js$/$script,1p,match-case' },
+                    ]);
+                    const r = engine.matchRequest({
+                        originURL: 'https://example.com/',
+                        type: 'script',
+                        url: 'https://example.com/LQMDQSMLDAZAEHERE/LQMDQSMLDAZAEHERE.js',
                     });
                     assert.strictEqual(r, 0);
                 });

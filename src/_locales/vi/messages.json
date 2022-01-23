@@ -104,7 +104,7 @@
     "description": "For the new mobile-friendly popup design"
   },
   "popupBlockedSinceInstall_v2": {
-    "message": "Bị chặn kể từ khi cài đặt",
+    "message": "Đã chặn từ khi cài đặt",
     "description": "For the new mobile-friendly popup design"
   },
   "popupDomainsConnected_v2": {
@@ -136,11 +136,11 @@
     "description": "Tooltip for the no-popups per-site switch"
   },
   "popupTipNoPopups1": {
-    "message": "Nhấp để chặn tất cả cửa sổ bật lên trên trang này",
+    "message": "Nhấp để chặn tất cả cửa sổ popup trên trang này",
     "description": "Tooltip for the no-popups per-site switch"
   },
   "popupTipNoPopups2": {
-    "message": "Nhấp để hủy chặn tất cả cửa sổ bật lên trên trang này",
+    "message": "Nhấp để hủy chặn tất cả cửa sổ popup trên trang này",
     "description": "Tooltip for the no-popups per-site switch"
   },
   "popupTipNoLargeMedia": {
@@ -435,6 +435,10 @@
     "message": "Bộ lọc phần tử chung là những bộ lọc phần tử được áp dụng cho cho mọi trang web. Kích hoạt tùy chọn này sẽ giảm bớt sức nặng lên cpu và bộ nhớ do không còn phải xử lí các bộ lọc phần tử chung.\n\nTùy chọn này được khuyến nghị kích hoạt trên thiết bị cấu hình thấp.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
   },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Ngắt kết nối mạng cho đến khi tất cả các bộ lọc đã được tải",
+    "description": "A checkbox in the 'Filter lists' pane"
+  },
   "3pListsOfBlockedHostsHeader": {
     "message": "Danh sách những máy chủ bị chặn",
     "description": "English: Lists of blocked hosts"
@@ -589,7 +593,7 @@
   },
   "whitelistPrompt": {
     "message": "Danh sách tên các máy chủ mà uBlock Origin sẽ bị chặn. Một mục nhập trên mỗi dòng. Tên máy chủ không hợp lệ sẽ được tự động bỏ qua.",
-    "description": "The name of the trusted sites pane."
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "Nhập và thêm vào",

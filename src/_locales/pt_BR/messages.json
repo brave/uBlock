@@ -312,7 +312,7 @@
     "description": "English: Click, Ctrl-click"
   },
   "pickerContextMenuEntry": {
-    "message": "Bloquear elemento",
+    "message": "Bloquear elemento...",
     "description": "An entry in the browser's contextual menu"
   },
   "settingsCollapseBlockedPrompt": {
@@ -434,6 +434,10 @@
   "3pIgnoreGenericCosmeticFiltersInfo": {
     "message": "Os filtros cosméticos genéricos são filtros que são destinados a serem aplicados em todos os sites. Ativando esta opção irá eliminar a sobrecarga da memória e CPU das página.\n\nÉ recomendado que ative esta opção em dispositivos menos poderosos.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
+  },
+  "3pSuspendUntilListsAreLoaded": {
+    "message": "Suspender atividade da rede até que todas as listas de filtros estejam carregadas",
+    "description": "A checkbox in the 'Filter lists' pane"
   },
   "3pListsOfBlockedHostsHeader": {
     "message": "Listas de servidores bloqueados",
@@ -588,8 +592,8 @@
     "description": "English: a sort option for list of rules."
   },
   "whitelistPrompt": {
-    "message": "As diretivas de sites confiáveis ditam quais páginas da internet o uBlock Origin deve ser desativado. Você deve inserir uma entrada por linha. As diretivas inválidas serão silenciosamente ignoradas e comentadas.",
-    "description": "The name of the trusted sites pane."
+    "message": "As diretivas dos sites confiáveis ditam em quais páginas da web o uBlock Origin deve ser desativado. Uma entrada por linha.",
+    "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
     "message": "Importar e adicionar",
@@ -908,7 +912,7 @@
     "description": "First paragraph of 'Bug report' section in Support pane"
   },
   "supportS5H": {
-    "message": "Informação sobre Soluções de Problemas",
+    "message": "Informações sobre Soluções de Problemas",
     "description": "Header of 'Troubleshooting Information' section in Support pane"
   },
   "supportS5P1": {
@@ -920,11 +924,11 @@
     "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
   },
   "supportS6H": {
-    "message": "Reportar um problema com o filtro",
+    "message": "Informar um problema com o filtro",
     "description": "Header of 'Report a filter issue' section in Support pane"
   },
   "supportS6P1S1": {
-    "message": "Para evitar sobrecarregar os voluntários com relatórios duplicados, por favor certifique-se que o problema já não foi relatado.",
+    "message": "Para evitar sobrecarregar os voluntários com relatórios duplicados, por favor certifique-se que o problema já não foi informado.",
     "description": "A paragraph in the filter issue reporter section"
   },
   "supportS6URL": {
@@ -1028,7 +1032,7 @@
     "description": "English: Restore from file..."
   },
   "aboutResetDataButton": {
-    "message": "Restaurar configurações padrão...",
+    "message": "Restaurar para as configurações padrão...",
     "description": "English: Reset to default settings..."
   },
   "aboutRestoreDataConfirm": {
