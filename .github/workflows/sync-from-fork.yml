@@ -2,7 +2,7 @@ name: Sync from fork
 on:
   schedule:
     # * is a special character in YAML so you have to quote this string
-    - cron:  '0 * * * *'
+    - cron: "0 * * * *"
   workflow_dispatch:
 
 jobs:
@@ -51,10 +51,14 @@ jobs:
         run: |
           git remote add upstream ${UPSTREAM_URL}
           git fetch upstream
-          git diff --diff-filter AM HEAD..remotes/upstream/master -- assets/resources/scriptlets.js >> changes.txt && echo >>changes.txt
-          git diff --diff-filter AM HEAD..remotes/upstream/master -- src/web_accessible_resources >> changes.txt && echo >>changes.txt
-          git diff --diff-filter AM HEAD..remotes/upstream/master -- src/js/redirect-engine.js >> changes.txt && echo >>changes.txt
+
+          FILES_TO_CHECK=("assets/resources/scriptlets.js"  "src/web_accessible_resources"  "src/js/redirect-engine.js")
+          for files in ${FILES_TO_CHECK[*]}; do
+          echo '```' >> changes.txt;
+          git diff --diff-filter AM HEAD..remotes/upstream/master -- $files >> changes.txt;
+          echo -e '```\n' >> changes.txt;
+          done;
+
           git remote remove upstream
       - name: Update PR Description
         run: gh pr edit `gh pr list | grep 'Fork Sync' | awk {'print $1'}` -b "`cat "changes.txt"`"
-
