@@ -54,7 +54,7 @@ jobs:
 
           FILES_TO_CHECK=("assets/resources/scriptlets.js"  "src/web_accessible_resources"  "src/js/redirect-engine.js")
           for files in ${FILES_TO_CHECK[*]}; do
-          echo '```' >> changes.txt;
+          echo '```diff' >> changes.txt;
           git diff --diff-filter AM HEAD..remotes/upstream/master -- $files >> changes.txt;
           echo -e '```\n' >> changes.txt;
           done;
