@@ -56,7 +56,7 @@
     "description": "appears as tab name in dashboard"
   },
   "supportPageName": {
-    "message": "Support",
+    "message": "সাহায্য",
     "description": "appears as tab name in dashboard"
   },
   "assetViewerPageName": {
@@ -128,7 +128,7 @@
     "description": "Tooltip used for the logger icon in the panel"
   },
   "popupTipReport": {
-    "message": "Report an issue on this website",
+    "message": "এই ওয়েবসাইট এর একটি সমস্যার ব্যাপারা অভিযোগ যানান",
     "description": "Tooltip used for the 'chat' icon in the panel"
   },
   "popupTipNoPopups": {
@@ -152,7 +152,7 @@
     "description": "Tooltip for the no-large-media per-site switch"
   },
   "popupTipNoLargeMedia2": {
-    "message": "এই সাইটে বড় মিডিয়া উপাদান আর অবরুদ্ধ না করতে ক্লিক করুন",
+    "message": "এই সাইটের বর মিডিয়া এলিমেন্টগুলি ব্লক করা বন্ধ করতে ক্লিক করুন",
     "description": "Tooltip for the no-large-media per-site switch"
   },
   "popupTipNoCosmeticFiltering": {
@@ -335,17 +335,25 @@
     "message": "বর্ণান্ধ সহযোগী",
     "description": "English: Color-blind friendly"
   },
+  "settingsAppearance": {
+    "message": "Appearance",
+    "description": "Section for controlling user interface appearance"
+  },
+  "settingsThemeLabel": {
+    "message": "Theme",
+    "description": "Label for checkbox to enable a custom dark theme"
+  },
+  "settingsThemeAccent0Label": {
+    "message": "Custom accent color",
+    "description": "Label for checkbox to pick an accent color"
+  },
   "settingsCloudStorageEnabledPrompt": {
     "message": "ক্লাউড সংরক্ষণ সক্রিয় করুন",
     "description": ""
   },
   "settingsAdvancedUserPrompt": {
     "message": "আমি একজন উন্নত ব্যবহারকারী (<a href='https://github.com/gorhill/uBlock/wiki/Advanced-user-features'>পড়া আবশ্যক</a>)",
-    "description": ""
-  },
-  "settingsAdvancedUserSettings": {
-    "message": "উন্নত সেটিংস",
-    "description": "For the tooltip of a link which gives access to advanced settings"
+    "description": "Checkbox to let user access advanced, technical features"
   },
   "settingsPrefetchingDisabledPrompt": {
     "message": "প্রি-ফেচিং বন্ধ করুন (অবরুদ্ধ নেটওয়ার্ক থেকে যে কোনো সংযোগ প্রতিরোধ করতে)",
@@ -390,6 +398,18 @@
   "settingsUncloakCnamePrompt": {
     "message": "Canonical Name এর উন্মোচন",
     "description": "background information: https://github.com/uBlockOrigin/uBlock-issues/issues/1513"
+  },
+  "settingsAdvanced": {
+    "message": "Advanced",
+    "description": "Section for controlling advanced-user settings"
+  },
+  "settingsAdvancedSynopsis": {
+    "message": "Features suitable only for technical users.",
+    "description": "Description of section controlling advanced-user settings"
+  },
+  "settingsAdvancedUserSettings": {
+    "message": "উন্নত সেটিংস",
+    "description": "For the tooltip of a link which gives access to advanced settings"
   },
   "settingsLastRestorePrompt": {
     "message": "সর্বশেষ পুনঃস্থাপন:",
@@ -436,7 +456,7 @@
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
   },
   "3pSuspendUntilListsAreLoaded": {
-    "message": "Suspend network activity until all filter lists are loaded",
+    "message": "সবগুলি ফিল্টার তালিকা লোড না হওয়া পর্যন্ত নেটওয়ার্ক কার্যকলাপ স্থগিত করুন",
     "description": "A checkbox in the 'Filter lists' pane"
   },
   "3pListsOfBlockedHostsHeader": {
@@ -864,11 +884,11 @@
     "description": "Text for button which open an external webpage in Support pane"
   },
   "supportReportSpecificButton": {
-    "message": "Create new report",
+    "message": "নতুন অভিযোগ",
     "description": "Text for button which open an external webpage in Support pane"
   },
   "supportFindSpecificButton": {
-    "message": "Find similar reports",
+    "message": "একই রকম অভিযোগ দেখুন",
     "description": "A clickable link in the filter issue reporter section"
   },
   "supportS1H": {

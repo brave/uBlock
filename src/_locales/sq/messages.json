@@ -312,7 +312,7 @@
     "description": "English: Click, Ctrl-click"
   },
   "pickerContextMenuEntry": {
-    "message": "Bllokim i elementit",
+    "message": "Bllokoj elementin…",
     "description": "An entry in the browser's contextual menu"
   },
   "settingsCollapseBlockedPrompt": {
@@ -335,17 +335,25 @@
     "message": "Përshtat ngjyrat për daltonikët",
     "description": "English: Color-blind friendly"
   },
+  "settingsAppearance": {
+    "message": "Appearance",
+    "description": "Section for controlling user interface appearance"
+  },
+  "settingsThemeLabel": {
+    "message": "Theme",
+    "description": "Label for checkbox to enable a custom dark theme"
+  },
+  "settingsThemeAccent0Label": {
+    "message": "Custom accent color",
+    "description": "Label for checkbox to pick an accent color"
+  },
   "settingsCloudStorageEnabledPrompt": {
     "message": "Aktivizoj renë informatike",
     "description": ""
   },
   "settingsAdvancedUserPrompt": {
-    "message": "Kam njohuri të avancuara (<a href='https://github.com/gorhill/uBlock/wiki/Advanced-user-features'>Lexim i detyruar</a>)",
-    "description": ""
-  },
-  "settingsAdvancedUserSettings": {
-    "message": "parametra të avancuar",
-    "description": "For the tooltip of a link which gives access to advanced settings"
+    "message": "Jam një përdorues i përparuar (<a href='https://github.com/gorhill/uBlock/wiki/Advanced-user-features'>Lexim i detyruar</a>)",
+    "description": "Checkbox to let user access advanced, technical features"
   },
   "settingsPrefetchingDisabledPrompt": {
     "message": "Çaktivizoj kërkesat paraprake (për të evituar çdo lidhje me kërkesat e bllokuara)",
@@ -390,6 +398,18 @@
   "settingsUncloakCnamePrompt": {
     "message": "Demaskoj emrat kanonikë",
     "description": "background information: https://github.com/uBlockOrigin/uBlock-issues/issues/1513"
+  },
+  "settingsAdvanced": {
+    "message": "Advanced",
+    "description": "Section for controlling advanced-user settings"
+  },
+  "settingsAdvancedSynopsis": {
+    "message": "Features suitable only for technical users.",
+    "description": "Description of section controlling advanced-user settings"
+  },
+  "settingsAdvancedUserSettings": {
+    "message": "parametra të avancuar",
+    "description": "For the tooltip of a link which gives access to advanced settings"
   },
   "settingsLastRestorePrompt": {
     "message": "Rindërtimi i fundit:",
@@ -436,7 +456,7 @@
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
   },
   "3pSuspendUntilListsAreLoaded": {
-    "message": "Pezullo aktivitetin në rrjet derisa të ngarkohen të gjitha filtrat",
+    "message": "Pezulloj aktivitetin me rrjetin deri kur të jenë gati listat e filtrave",
     "description": "A checkbox in the 'Filter lists' pane"
   },
   "3pListsOfBlockedHostsHeader": {
@@ -480,7 +500,7 @@
     "description": "English: Custom"
   },
   "3pImport": {
-    "message": "Importoj...",
+    "message": "Importoj…",
     "description": "The label for the checkbox used to import external filter lists"
   },
   "3pExternalListsHint": {
@@ -500,7 +520,7 @@
     "description": "used as a tooltip for the clock icon beside a list"
   },
   "3pUpdating": {
-    "message": "Në përditësim...",
+    "message": "Në përditësim…",
     "description": "used as a tooltip for the spinner icon beside a list"
   },
   "3pNetworkError": {
@@ -556,7 +576,7 @@
     "description": "Will discard manually-edited content and exit manual-edit mode"
   },
   "rulesImport": {
-    "message": "Importim nga skedari...",
+    "message": "Importoj nga skedari…",
     "description": ""
   },
   "rulesExport": {
@@ -936,7 +956,7 @@
     "description": "Label for the URL of the page"
   },
   "supportS6Select1": {
-    "message": "Faqja web...",
+    "message": "Faqja…",
     "description": "Label for widget to select type of issue"
   },
   "supportS6Select1Option0": {
@@ -1028,11 +1048,11 @@
     "description": "English: my-ublock-backup_{{datetime}}.txt"
   },
   "aboutRestoreDataButton": {
-    "message": "Rindërtim nga skedari...",
+    "message": "Rindërtoj sipas skedarit…",
     "description": "English: Restore from file..."
   },
   "aboutResetDataButton": {
-    "message": "Kthej parametrat fillestarë...",
+    "message": "Kthej parametrat fillestarë…",
     "description": "English: Reset to default settings..."
   },
   "aboutRestoreDataConfirm": {
@@ -1172,11 +1192,11 @@
     "description": ""
   },
   "contextMenuBlockElementInFrame": {
-    "message": "Bllokoj elementin në kuadër...",
+    "message": "Bllokoj elementin në kuadër…",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuSubscribeToList": {
-    "message": "Abonohu tek lista e filtrimit...",
+    "message": "Abonohem në listën e filtrave…",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuTemporarilyAllowLargeMediaElements": {
