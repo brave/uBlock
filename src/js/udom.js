@@ -71,77 +71,90 @@ DOMListFactory.root = document.querySelector(':root');
 
 /******************************************************************************/
 
-DOMListFactory.setTheme = function(theme, remove) {
-    if ( theme === 'auto' && typeof self.watchMedia === 'function' ) {
-        const mql = self.watchMedia('(prefers-color-scheme: dark)');
-        theme = mql instanceof Object && mql.matches === true
-            ? 'dark'
-            : '';
+DOMListFactory.setTheme = function(theme, propagate = false) {
+    if ( theme === 'auto' ) {
+        if ( typeof self.matchMedia === 'function' ) {
+            const mql = self.matchMedia('(prefers-color-scheme: dark)');
+            theme = mql instanceof Object && mql.matches === true
+                ? 'dark'
+                : 'light';
+        } else {
+            theme = 'light';
+        }
     }
     let w = self;
     for (;;) {
         const rootcl = w.document.documentElement.classList;
-        rootcl.remove(...remove);
-        switch ( theme ) {
-        case 'dark':
+        if ( theme === 'dark' ) {
             rootcl.add('dark');
-            break;
-        case 'light':
+            rootcl.remove('light');
+        } else /* if ( theme === 'light' ) */ {
             rootcl.add('light');
-            break;
-        default:
-            break;
+            rootcl.remove('dark');
         }
+        if ( propagate === false ) { break; }
         if ( w === w.parent ) { break; }
         w = w.parent;
         try { void w.document; } catch(ex) { return; }
     }
 };
 
-DOMListFactory.normalizeAccentColor = function(accentColor) {
-    if ( self.hsluv === undefined ) { return accentColor; }
-    const hsl = self.hsluv.hexToHsluv(accentColor);
-    hsl[0] = Math.round(hsl[0] * 10) / 10;
-    hsl[1] = Math.round(Math.min(100, Math.max(50, hsl[1])));
-    hsl[2] = 70;
-    const rgb = self.hsluv.hsluvToRgb(hsl).map(
-        a => Math.round(a * 255).toString(16).padStart(2, '0')
-    );
-    return `#${rgb.join('')}`;
-};
-
-DOMListFactory.setAccentColor = function(accentEnabled, accentColor) {
-    if ( self.hsluv === undefined ) { return; }
-    let w = self;
-    let styleText = '';
-    if ( accentEnabled ) {
+DOMListFactory.setAccentColor = function(
+    accentEnabled,
+    accentColor,
+    propagate,
+    stylesheet = ''
+) {
+    if ( accentEnabled && stylesheet === '' && self.hsluv !== undefined ) {
+        const toRGB = hsl => self.hsluv.hsluvToRgb(hsl).map(a => Math.round(a * 255)).join(' ');
+        // Normalize first
+        const hsl = self.hsluv.hexToHsluv(accentColor);
+        hsl[0] = Math.round(hsl[0] * 10) / 10;
+        hsl[1] = Math.round(Math.min(100, Math.max(0, hsl[1])));
+        // Use normalized result to derive all shades
         const shades = [ 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95 ];
         const text = [];
-        const hsl = self.hsluv.hexToHsluv(accentColor);
-        text.push(':root {');
+        text.push(':root.accented {');
         for ( const shade of shades ) {
             hsl[2] = shade;
-            const rgb = self.hsluv.hsluvToRgb(hsl).map(a => Math.round(a * 255));
-            text.push(`   --primary-color-${shade}: ${rgb.join(' ')};`);
+            text.push(`   --primary-${shade}: ${toRGB(hsl)};`);
         }
-        text.push('}', '');
-        styleText = text.join('\n');
+        text.push('}');
+        hsl[1] = Math.min(25, hsl[1]);
+        hsl[2] = 80;
+        text.push(
+            ':root.light.accented {',
+            `    --button-surface-rgb: ${toRGB(hsl)};`,
+            '}',
+        );
+        hsl[2] = 30;
+        text.push(
+            ':root.dark.accented {',
+            `    --button-surface-rgb: ${toRGB(hsl)};`,
+            '}',
+        );
+        text.push('');
+        stylesheet = text.join('\n');
+        vAPI.messaging.send('uDom', { what: 'uiAccentStylesheet', stylesheet });
     }
+    let w = self;
     for (;;) {
-        let style = w.document.querySelector('style#accentColors');
+        const wdoc = w.document;
+        let style = wdoc.querySelector('style#accentColors');
         if ( style !== null ) { style.remove(); }
-        if ( styleText.length !== 0 ) {
-            style = w.document.createElement('style');
+        if ( accentEnabled ) {
+            style = wdoc.createElement('style');
             style.id = 'accentColors';
-            style.textContent = styleText;
-            w.document.head.append(style);
-            w.document.documentElement.classList.add('accented');
+            style.textContent = stylesheet;
+            wdoc.head.append(style);
+            wdoc.documentElement.classList.add('accented');
         } else {
-            w.document.documentElement.classList.remove('accented');
+            wdoc.documentElement.classList.remove('accented');
         }
+        if ( propagate === false ) { break; }
         if ( w === w.parent ) { break; }
         w = w.parent;
-        try { void w.document; } catch(ex) { return; }
+        try { void w.document; } catch(ex) { break; }
     }
 };
 
@@ -150,9 +163,14 @@ DOMListFactory.setAccentColor = function(accentEnabled, accentColor) {
     //   Offer the possibility to bypass uBO's default styling
     vAPI.messaging.send('uDom', { what: 'uiStyles' }).then(response => {
         if ( typeof response !== 'object' || response === null ) { return; }
-        uDom.setTheme(response.uiTheme, [ 'dark', 'light' ]);
+        uDom.setTheme(response.uiTheme);
         if ( response.uiAccentCustom ) {
-            uDom.setAccentColor(true, response.uiAccentCustom0);
+            uDom.setAccentColor(
+                true,
+                response.uiAccentCustom0,
+                false,
+                response.uiAccentStylesheet
+            );
         }
         if ( response.uiStyles !== 'unset' ) {
             document.body.style.cssText = response.uiStyles;

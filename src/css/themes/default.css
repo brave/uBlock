@@ -122,15 +122,18 @@
 }
 
 /*
- * Font size
+ * Font
  * 
  * */
 :root {
     --font-size: 14px;
+    --font-size-smaller: 13px;
+    --font-family: Inter, sans-serif;
 }
 
 :root.mobile {
     --font-size: 16px;
+    --font-size-smaller: 14px;
 }
 
 /*
@@ -139,19 +142,59 @@
  * Tool: hsluv.org
  * 
  * */
-:root /* h268 */ {
-     --primary-color-5:  13   4  65; /* S:90 Luv:5 */
-    --primary-color-10:  22   9  92; /* S:90 Luv:10 */
-    --primary-color-20:  40  20 145; /* S:90 Luv:20 */
-    --primary-color-30:  59  32 202; /* S:90 Luv:30 */
-    --primary-color-40:  84  62 234; /* S:90 Luv:40 */
-    --primary-color-50: 112  98 240; /* S:90 Luv:50 */
-    --primary-color-60: 139 130 244; /* S:90 Luv:60 */
-    --primary-color-70: 168 162 247; /* S:90 Luv:70 */
-    --primary-color-80: 196 193 250; /* S:90 Luv:80 */
-    --primary-color-90: 225 224 252; /* S:90 Luv:90 */
-    --primary-color-95: 240 239 254; /* S:90 Luv:95 */
+:root /* h255 */ {
+    --primary-5:   3  16  40; /* S:90 Luv:5 */
+   --primary-10:   5  27  59; /* S:90 Luv:10 */
+   --primary-20:  14  47  95; /* S:90 Luv:20 */
+   --primary-30:  24  69 134; /* S:90 Luv:30 */
+   --primary-40:  34  93 176; /* S:90 Luv:40 */
+   --primary-50:  45 117 219; /* S:90 Luv:50 */
+   --primary-60:  86 143 244; /* S:90 Luv:60 */
+   --primary-70: 137 170 247; /* S:90 Luv:70 */
+   --primary-80: 179 198 250; /* S:90 Luv:80 */
+   --primary-90: 218 226 252; /* S:90 Luv:90 */
+   --primary-95: 236 240 254; /* S:90 Luv:95 */
     }
+
+/*
+ * Default dark theme starts here
+ * 
+ * https://github.com/uBlockOrigin/uBlock-issues/issues/1027#issuecomment-629641072
+ *   Assign a default background color if dark mode is enabled -- hopefully
+ *   this will avoid flashes of white background until the document's own CSS
+ *   overrides the default color value below.
+ * 
+ * */
+@media (prefers-color-scheme: light) {
+    :root {
+        --surface-0-rgb: 255 255 255;
+        --surface-1: rgb(var(--gray-95));
+        --surface-2: rgb(var(--gray-90));
+        --surface-3: rgb(var(--gray-80));
+    }
+}
+@media (prefers-color-scheme: dark) {
+    :root {
+        --surface-0-rgb: 0 0 0;
+        --surface-1: rgb(var(--gray-10));
+        --surface-2: rgb(var(--gray-20));
+        --surface-3: rgb(var(--gray-30));
+    }
+}
+
+:root.light {
+    --surface-0-rgb: 255 255 255;
+    --surface-1: rgb(var(--gray-95));
+    --surface-2: rgb(var(--gray-90));
+    --surface-3: rgb(var(--gray-80));
+}
+
+:root.dark {
+    --surface-0-rgb: 0 0 0;
+    --surface-1: rgb(var(--gray-10));
+    --surface-2: rgb(var(--gray-20));
+    --surface-3: rgb(var(--gray-30));
+}
 
 /*
  * Components
@@ -173,25 +216,28 @@
     --ink-rgb: var(--ink-80);
     --ink-0: black;
 
-    --surface-0-rgb: 255 255 255;
-    --surface-0: rgb(var(--surface-0-rgb));
-    --surface-1: rgb(var(--gray-95));
-    --surface-2: rgb(var(--gray-90));
-    --surface-3: rgb(var(--gray-80));
-
     --border-1: rgb(var(--gray-75));
     --border-2: rgb(var(--gray-70));
     --border-3: rgb(var(--gray-65));
     --border-4: rgb(var(--gray-60));
 
     --accent-ink-3: var(--ink-1);
-    --accent-surface-1: rgb(var(--primary-color-40));
+    --accent-surface-1: rgb(var(--primary-40));
+
+    --link-ink: rgb(var(--primary-40));
+    --link-hover-ink: rgb(var(--primary-30));
+
+    /* buttons */
+    --button-surface-rgb: var(--gray-80);
+
+    --dashboard-tab-active-ink-rgb: var(--primary-40);
+    --dashboard-tab-focus-surface-rgb: var(--primary-90);
 
     /* popup panel */
-    --popup-cell-cname-ink: rgb(var(--blue-50));
+    --popup-cell-cname-ink: #0054d7; /* h260 S:100 Luv:40 */;
     --popup-cell-label-mixed-surface: #c29100; /* TODO: fix */
     --popup-icon-x-ink: rgb(var(--red-60));
-    --popup-power-ink-rgb: var(--primary-color-50);
+    --popup-power-ink-rgb: var(--primary-50);
 
     /* horizontal line separator */
     --hr-ink: var(--surface-2);
@@ -201,7 +247,7 @@
     --cloud-used-surface: rgb(var(--violet-60));
 
     /* codemirror */
-    --cm-active-line: var(--surface-1);
+    --cm-active-line: rgb(var(--gray-90));
     --cm-cursor: var(--ink-0);
     --cm-foldmarker-ink: rgb(var(--blue-40));
     --cm-gutter-border: var(--surface-1);
@@ -213,10 +259,10 @@
     --cm-merge-chunk-surface: rgb(var(--surface-0-rgb) / 40%);
     --cm-negative: #e32f00; /* h:15 S:100 Luv:50 */
     --cm-positive: #008a21; /* h:130 S:100 Luv:50 */
-    --cm-selection-surface: rgb(var(--primary-color-70) / 50%);
-    --cm-selection-ink: var(--ink-1);
-    --cm-searching-ink: inherit;
-    --cm-searching-surface: rgb(var(--yellow-20) / 80%);
+    --cm-selection-surface: rgb(var(--gray-90));
+    --cm-selection-focused-surface: rgb(var(--primary-90));
+    --cm-searching-ink: black;
+    --cm-searching-surface: #fee300cc /* h75 S:100 Luv:90 a:80% */;
     --cm-search-match-surface: rgb(var(--yellow-40) / 50%);
 
     /* syntax highlight: static filtering */
@@ -245,16 +291,6 @@
     --logger-modified-em-surface: #0000c028;
 }
 
-/*
- * Default dark theme starts here
- * 
- * https://github.com/uBlockOrigin/uBlock-issues/issues/1027#issuecomment-629641072
- *   Assign a default background color if dark mode is enabled -- hopefully
- *   this will avoid flashes of white background until the document's own CSS
- *   overrides the default color value below.
- * 
- * */
-
 /* https://material.io/design/color/dark-theme.html */
 :root.dark {
     --elevation-down-surface: black;
@@ -267,37 +303,43 @@
     --ink-rgb: var(--gray-95);
     --ink-0: white;
 
-    --surface-0-rgb: 0 0 0;
-    --surface-1: rgb(var(--gray-10));
-    --surface-2: rgb(var(--gray-20));
-    --surface-3: rgb(var(--gray-30));
-
     --border-1: rgb(var(--gray-35));
     --border-2: rgb(var(--gray-40));
     --border-3: rgb(var(--gray-45));
     --border-4: rgb(var(--gray-50));
 
-    --accent-surface-1: rgb(var(--primary-color-70));
+    --accent-surface-1: rgb(var(--primary-70));
+
+    --link-ink: rgb(var(--primary-70));
+    --link-hover-ink: rgb(var(--primary-80));
+
+    /* buttons */
+    --button-surface-rgb: var(--gray-30);
+
+    --dashboard-tab-active-ink-rgb: var(--primary-70);
+    --dashboard-tab-focus-surface-rgb: var(--primary-20);
 
     /* popup panel */
-    --popup-cell-cname-ink: hsla(0, 0%, 53%, 0.3);
+    --popup-cell-cname-ink: #93a6ff; /* h260 S:100 Luv:70 */;
     --popup-cell-label-mixed-surface: hsla(45, 100%, 38%, 1); /* TODO: fix */
     --popup-icon-x-ink: rgb(var(--red-50));
-    --popup-power-ink-rgb: var(--primary-color-60);
+    --popup-power-ink-rgb: var(--primary-60);
 
     /* cloud widget */
     --cloud-total-used-surface: rgb(var(--violet-20) / 25%);
     --cloud-used-surface: rgb(var(--violet-20));
 
     /* codemirror */
+    --cm-active-line: rgb(var(--gray-20));
     --cm-merge-copy-ink: rgb(var(--blue-30));
     --cm-foldmarker-ink: rgb(var(--blue-20));
     --cm-matchingbracket: rgb(var(--green-30) / 50%);
     --cm-negative: #ff8982; /* h:15 S:100 Luv:70 */
     --cm-positive: #00c634; /* h:130 S:100 Luv:70 */
-    --cm-selection-surface: rgb(var(--primary-color-30) / 50%);
-    --cm-searching-ink: var(--surface-0);
-    --cm-searching-surface: rgb(var(--yellow-20));
+    --cm-selection-surface: rgb(var(--gray-20));
+    --cm-selection-focused-surface: rgb(var(--primary-20));
+    --cm-searching-ink: black;
+    --cm-searching-surface: #fee300cc /* h75 S:100 Luv:90 a:80% */;
 
     /* syntax highlight: static filtering */
     --sf-comment-ink: var(--ink-3);
@@ -327,6 +369,8 @@
     --medium-em: 60%;
     --low-em: 38%;
 
+    --surface-0: rgb(var(--surface-0-rgb));
+
     --ink-1: rgb(var(--ink-rgb));
     --ink-2: rgb(var(--ink-rgb) / var(--high-em));
     --ink-3: rgb(var(--ink-rgb) / var(--medium-em));
@@ -335,14 +379,13 @@
     --accent-ink-1: var(--surface-0);
     --accent-ink-3: var(--ink-1);
 
-    --link-ink: var(--accent-surface-1);
     --subtil-ink: var(--accent-surface-1);
 
     --fieldset-header-surface: transparent;
     --fieldset-header-ink: var(--ink-2);
 
     --button-ink: var(--ink-1);
-    --button-surface: var(--surface-3);
+    --button-surface: rgb(var(--button-surface-rgb));
     --button-border-radius: 5px;
     --button-preferred-ink: var(--accent-ink-1);
     --button-preferred-surface: var(--accent-surface-1);
@@ -359,10 +402,11 @@
     --notice-surface-shadow: #000 0 2px 8px;
 
     --dashboard-tab-ink: var(--ink-1);
-    --dashboard-tab-active-ink: var(--accent-surface-1);
+    --dashboard-tab-active-ink: rgb(var(--dashboard-tab-active-ink-rgb));
     --dashboard-tab-active-surface: transparent;
-    --dashboard-tab-surface-hover: var(--surface-2);
-    --dashboard-tab-border-hover: var(--surface-3);
+    --dashboard-tab-focus-surface: rgb(var(--dashboard-tab-focus-surface-rgb));
+    --dashboard-tab-hover-surface: var(--surface-2);
+    --dashboard-tab-hover-border: var(--surface-3);
 
     /* info levels: normal, fyi, warn, error -- we want same Luv */
     --info0-ink-rgb: 119 119 119; /* h:  0 S:  0 Luv:60 */
@@ -383,11 +427,11 @@
     --popup-cell-block-own-surface: rgb(var(--popup-cell-block-own-surface-rgb));
     --popup-cell-block-surface: rgb(var(--popup-cell-block-surface-rgb));
     --popup-power-ink: rgb(var(--popup-power-ink-rgb));
-    --popup-toolbar-surface: rgb(var(--primary-color-80) / 20%);
-    --popup-toolbar-surface-hover: rgb(var(--primary-color-80) / 25%);
+    --popup-toolbar-surface: rgb(var(--primary-80) / 20%);
+    --popup-toolbar-surface-hover: rgb(var(--primary-80) / 25%);
     --popup-ruleset-tool-ink: var(--ink-1);
-    --popup-ruleset-tool-surface: rgb(var(--primary-color-80) / 20%);
-    --popup-ruleset-tool-surface-hover: rgb(var(--primary-color-80) / 25%);
+    --popup-ruleset-tool-surface: rgb(var(--primary-80) / 20%);
+    --popup-ruleset-tool-surface-hover: rgb(var(--primary-80) / 25%);
     --popup-ruleset-tool-shadow: transparent;
 }
 
@@ -410,14 +454,6 @@
     --popup-cell-block-surface-rgb:     175  74  74; /* h:12.2  S:50  Luv:45 */
     --popup-cell-noop-own-surface-rgb:  132 132 132; /* h:0     S:0   Luv:55 */
     --popup-cell-noop-surface-rgb:       94  94  94; /* h:0     S:0   Luv:40 */
-}
-
-:root.accented {
-    --button-surface: rgb(var(--primary-color-80));
-}
-
-:root.dark.accented {
-    --button-surface: rgb(var(--primary-color-30));
 }
 
 /*

@@ -45,7 +45,7 @@ body {
     box-sizing: border-box;
     color: var(--ink-1);
         fill: var(--ink-1);
-    font-family: Inter, sans-serif;
+    font-family: var(--font-family);
     font-size: var(--font-size);
     line-height: 1.5;
     margin: 0;
@@ -54,6 +54,10 @@ body {
 a {
     color: var(--link-ink);
         fill: var(--link-ink);
+    }
+a:hover {
+    color: var(--link-hover-ink);
+        fill: var(--link-hover-ink);
     }
 code, .code {
     background-color: var(--surface-2);

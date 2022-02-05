@@ -30,7 +30,7 @@ textarea {
     padding-right: var(--default-gap-xsmall);
     }
 .permatoolbar button.active {
-    fill: rgb(var(--primary-color-50));
+    fill: rgb(var(--primary-50));
     }
 .permatoolbar button > .fa-icon {
     font-size: 180%;
@@ -127,7 +127,7 @@ textarea {
     transform: scaleY(1);
     }
 #netInspector #filterExprPicker {
-    background-color: var(--surface-1);
+    background-color: var(--surface-0);
     border: 1px solid gray;
     display: none;
     position: absolute;
@@ -175,12 +175,12 @@ body[dir="rtl"] #netInspector #filterExprPicker {
     margin: 0;
     }
 #netInspector #filterExprPicker span[data-filtex]:hover {
-    background-color: rgb(var(--primary-color-70) / 25%);
-    border: 1px solid rgb(var(--primary-color-70));
+    background-color: rgb(var(--primary-70) / 25%);
+    border: 1px solid rgb(var(--primary-70));
     }
 #netInspector #filterExprPicker span.on[data-filtex] {
-    background-color: rgb(var(--primary-color-70) / 40%);
-    border: 1px solid rgb(var(--primary-color-70));
+    background-color: rgb(var(--primary-70) / 40%);
+    border: 1px solid rgb(var(--primary-70));
     }
 
 #netInspector .vscrollable {
@@ -253,7 +253,7 @@ body[dir="rtl"] #netInspector #filterExprPicker {
     background-color: rgba(0, 19, 110, 0.1);
     }
 #vwRenderer .logEntry > div[data-aliasid] {
-    color: mediumblue;
+    color: var(--popup-cell-cname-ink);
     }
 #vwRenderer .logEntry > div[data-type="tabLoad"] {
     background-color: #666;
@@ -539,9 +539,9 @@ body[dir="rtl"] #modalOverlay > div > div:nth-of-type(2) {
     max-height: 20vh;
     }
 #netFilteringDialog > .preview > span {
-    background-color: white;
+    background-color: var(--surface-3);
     cursor: pointer;
-    padding: 0.5em;
+    padding: 1em;
     }
 
 #netFilteringDialog > .headers {
@@ -668,7 +668,7 @@ body[dir="rtl"] #netFilteringDialog > .panes > .details > div > span:nth-of-type
     text-decoration: line-through;
     }
 #netFilteringDialog > .panes > .details .exceptored .exceptor {
-    background-color: rgb(var(--primary-color-50) / 50%);
+    background-color: rgb(var(--primary-50) / 50%);
     }
 #netFilteringDialog > .panes > .details .exceptor::before {
     content: '#@#';
@@ -888,7 +888,7 @@ body.dirty #netFilteringDialog > div.panes > .dynamic > .toolbar #saveRules {
     display: inline-flex;
     }
 #loggerExportDialog .options span[data-i18n] {
-    border: 1px solid rgb(var(--primary-color-70));
+    border: 1px solid rgb(var(--primary-70));
     cursor: pointer;
     font-size: 90%;
     margin: 0;
@@ -896,11 +896,11 @@ body.dirty #netFilteringDialog > div.panes > .dynamic > .toolbar #saveRules {
     white-space: nowrap;
     }
 #loggerExportDialog .options span[data-i18n]:hover {
-    background-color: rgb(var(--primary-color-70) / 40%);
+    background-color: rgb(var(--primary-70) / 40%);
     }
 #loggerExportDialog .options span.on[data-i18n],
 #loggerExportDialog .options span.pushbutton:active {
-    background-color: rgb(var(--primary-color-70) / 40%);
+    background-color: rgb(var(--primary-70) / 40%);
     }
 #loggerExportDialog .output {
     font: smaller mono;

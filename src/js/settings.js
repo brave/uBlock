@@ -212,13 +212,14 @@ const changeUserSettings = function(name, value) {
     // Maybe reflect some changes immediately
     switch ( name ) {
     case 'uiTheme':
-        uDom.setTheme(value, [ 'dark', 'light' ]);
+        uDom.setTheme(value, true);
         break;
     case 'uiAccentCustom':
     case 'uiAccentCustom0':
         uDom.setAccentColor(
             uDom.nodeFromSelector('[data-setting-name="uiAccentCustom"]').checked,
-            uDom.nodeFromSelector('[data-setting-name="uiAccentCustom0"]').value
+            uDom.nodeFromSelector('[data-setting-name="uiAccentCustom0"]').value,
+            true
         );
         break;
     default:
@@ -236,9 +237,6 @@ const onValueChanged = function(ev) {
     switch ( name ) {
     case 'largeMediaSize':
         value = Math.min(Math.max(Math.floor(parseInt(value, 10) || 0), 0), 1000000);
-        break;
-    case 'uiAccentCustom0':
-        value = uDom.normalizeAccentColor(value);
         break;
     default:
         break;
