@@ -215,6 +215,7 @@
     /* https://material.io/design/color/text-legibility.html#text-backgrounds */
     --ink-rgb: var(--ink-80);
     --ink-0: black;
+    --ink-100: white;
 
     --border-1: rgb(var(--gray-75));
     --border-2: rgb(var(--gray-70));
@@ -246,6 +247,9 @@
     --cloud-total-used-surface: rgb(var(--violet-60) / 25%);
     --cloud-used-surface: rgb(var(--violet-60));
 
+    /* misc */
+    --error-surface: #c00004; /* h:12 S:100 Luv:40 */
+
     /* codemirror */
     --cm-active-line: rgb(var(--gray-90));
     --cm-cursor: var(--ink-0);
@@ -259,8 +263,8 @@
     --cm-merge-chunk-surface: rgb(var(--surface-0-rgb) / 40%);
     --cm-negative: #e32f00; /* h:15 S:100 Luv:50 */
     --cm-positive: #008a21; /* h:130 S:100 Luv:50 */
-    --cm-selection-surface: rgb(var(--gray-90));
-    --cm-selection-focused-surface: rgb(var(--primary-90));
+    --cm-selection-surface: rgb(var(--gray-70));
+    --cm-selection-focused-surface: rgb(var(--primary-70));
     --cm-searching-ink: black;
     --cm-searching-surface: #fee300cc /* h75 S:100 Luv:90 a:80% */;
     --cm-search-match-surface: rgb(var(--yellow-40) / 50%);
@@ -302,6 +306,7 @@
 
     --ink-rgb: var(--gray-95);
     --ink-0: white;
+    --ink-100: black;
 
     --border-1: rgb(var(--gray-35));
     --border-2: rgb(var(--gray-40));
@@ -329,6 +334,9 @@
     --cloud-total-used-surface: rgb(var(--violet-20) / 25%);
     --cloud-used-surface: rgb(var(--violet-20));
 
+    /* misc */
+    --error-surface: #ff5354; /* h:12 S:100 Luv:60 */
+
     /* codemirror */
     --cm-active-line: rgb(var(--gray-20));
     --cm-merge-copy-ink: rgb(var(--blue-30));
@@ -336,8 +344,8 @@
     --cm-matchingbracket: rgb(var(--green-30) / 50%);
     --cm-negative: #ff8982; /* h:15 S:100 Luv:70 */
     --cm-positive: #00c634; /* h:130 S:100 Luv:70 */
-    --cm-selection-surface: rgb(var(--gray-20));
-    --cm-selection-focused-surface: rgb(var(--primary-20));
+    --cm-selection-surface: rgb(var(--gray-40));
+    --cm-selection-focused-surface: rgb(var(--primary-40));
     --cm-searching-ink: black;
     --cm-searching-surface: #fee300cc /* h75 S:100 Luv:90 a:80% */;
 
