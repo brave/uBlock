@@ -404,7 +404,7 @@
     "description": "Section for controlling advanced-user settings"
   },
   "settingsAdvancedSynopsis": {
-    "message": "Alleen voor technische gebruikers geschikte functies.",
+    "message": "Alleen voor technische gebruikers geschikte functies",
     "description": "Description of section controlling advanced-user settings"
   },
   "settingsAdvancedUserSettings": {
@@ -532,11 +532,11 @@
     "description": "Short information about how to create custom filters"
   },
   "1pImport": {
-    "message": "Importeren en toevoegen...",
+    "message": "Importeren en toevoegen…",
     "description": "English: Import and append"
   },
   "1pExport": {
-    "message": "Exporteren...",
+    "message": "Exporteren…",
     "description": "English: Export"
   },
   "1pExportFilename": {
@@ -580,7 +580,7 @@
     "description": ""
   },
   "rulesExport": {
-    "message": "Exporteren naar bestand...",
+    "message": "Exporteren naar bestand…",
     "description": ""
   },
   "rulesDefaultFileName": {
@@ -616,11 +616,11 @@
     "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
-    "message": "Importeren en toevoegen...",
+    "message": "Importeren en toevoegen…",
     "description": "English: Import and append"
   },
   "whitelistExport": {
-    "message": "Exporteren...",
+    "message": "Exporteren…",
     "description": "English: Export"
   },
   "whitelistExportFilename": {
@@ -1040,7 +1040,7 @@
     "description": "Shown in the About pane"
   },
   "aboutBackupDataButton": {
-    "message": "Back-up maken naar bestand...",
+    "message": "Back-up maken naar bestand…",
     "description": "Text for button to create a backup of all settings"
   },
   "aboutBackupFilename": {
@@ -1219,13 +1219,13 @@
     "message": "Alles selecteren",
     "description": "Label for buttons used to select all text in editor"
   },
-  "toggleBlockingProfile": {
-    "message": "Blokkeringsprofiel omschakelen",
-    "description": "Label for keyboard shortcut used to toggle blocking profile"
+  "toggleCosmeticFiltering": {
+    "message": "Cosmetische filters in-/uitschakelen",
+    "description": "Label for keyboard shortcut used to toggle cosmetic filtering"
   },
   "relaxBlockingMode": {
     "message": "Blokkeringsmodus beperken",
-    "description": "Label for keyboard shortcut used to relax blocking mode (meant to replace 'Toggle blocking profile')"
+    "description": "Label for keyboard shortcut used to relax blocking mode"
   },
   "storageUsed": {
     "message": "Gebruikte opslagruimte: {{value}} {{unit}}",

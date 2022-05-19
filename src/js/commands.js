@@ -31,7 +31,7 @@ import { hostnameFromURI } from './uri-utils.js';
 µb.canUseShortcuts = vAPI.commands instanceof Object;
 
 // https://github.com/uBlockOrigin/uBlock-issues/issues/386
-//   Firefox 74 and above has complete shotcut assignment user interface.
+//   Firefox 74 and above has complete shortcut assignment user interface.
 µb.canUpdateShortcuts = false;
 
 if (
@@ -160,11 +160,21 @@ const relaxBlockingMode = (( ) => {
 })();
 
 vAPI.commands.onCommand.addListener(async command => {
+    // Generic commands
+    if ( command === 'open-dashboard' ) {
+        µb.openNewTab({
+            url: 'dashboard.html',
+            select: true,
+            index: -1,
+        });
+        return;
+    }
+    // Tab-specific commands
+    const tab = await vAPI.tabs.getCurrent();
+    if ( tab instanceof Object === false ) { return; }
     switch ( command ) {
     case 'launch-element-picker':
     case 'launch-element-zapper': {
-        const tab = await vAPI.tabs.getCurrent();
-        if ( tab instanceof Object === false ) { return; }
         µb.epickerArgs.mouse = false;
         µb.elementPickerExec(
             tab.id,
@@ -175,8 +185,6 @@ vAPI.commands.onCommand.addListener(async command => {
         break;
     }
     case 'launch-logger': {
-        const tab = await vAPI.tabs.getCurrent();
-        if ( tab instanceof Object === false ) { return; }
         const hash = tab.url.startsWith(vAPI.getURL(''))
             ? ''
             : `#_+${tab.id}`;
@@ -187,16 +195,14 @@ vAPI.commands.onCommand.addListener(async command => {
         });
         break;
     }
-    case 'open-dashboard': {
-        µb.openNewTab({
-            url: 'dashboard.html',
-            select: true,
-            index: -1,
-        });
-        break;
-    }
     case 'relax-blocking-mode':
-        relaxBlockingMode(await vAPI.tabs.getCurrent());
+        relaxBlockingMode(tab);
+        break;
+    case 'toggle-cosmetic-filtering':
+        µb.toggleHostnameSwitch({
+            name: 'no-cosmetic-filtering',
+            hostname: hostnameFromURI(µb.normalizeTabURL(tab.id, tab.url)),
+        });
         break;
     default:
         break;

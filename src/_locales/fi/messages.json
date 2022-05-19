@@ -68,15 +68,15 @@
     "description": "Title for the advanced settings page"
   },
   "popupPowerSwitchInfo": {
-    "message": "Painallus: Poista uBlock₀ käytöstä/ota se käyttöön tällä sivustolla.\n\nCtrl+painallus: poista uBlock₀ käytöstä vain tällä sivulla.",
+    "message": "Painallus: poista uBlock₀ käytöstä/ota se käyttöön tällä sivustolla.\n\nCtrl+painallus: poista uBlock₀ käytöstä vain tällä sivulla.",
     "description": "English: Click: disable/enable uBlock₀ for this site.\n\nCtrl+click: disable uBlock₀ only on this page."
   },
   "popupPowerSwitchInfo1": {
-    "message": "Painallus poistaa uBlock₀;n käytöstä tällä sivustolla.\n\nCtrl+painallus poistaa uBlock₀:n käytöstä vain tällä sivulla.",
+    "message": "Poista uBlock₀ käytöstä tällä sivustolla painamalla tästä.\n\nCtrl+painallus poistaa uBlock₀:n käytöstä vain tällä sivulla.",
     "description": "Message to be read by screen readers"
   },
   "popupPowerSwitchInfo2": {
-    "message": "Paina ottaaksesi uBlock₀:n käyttöön tällä sivustolla.",
+    "message": "Ota uBlock₀ käyttöön tällä sivustolla painamalla tästä.",
     "description": "Message to be read by screen readers"
   },
   "popupBlockedRequestPrompt": {
@@ -136,11 +136,11 @@
     "description": "Tooltip for the no-popups per-site switch"
   },
   "popupTipNoPopups1": {
-    "message": "Paina estääksesi kaikki ponnahdukset tällä sivustolla",
+    "message": "Estä kaikki ponnahdukset tällä sivustolla painamalla tästä",
     "description": "Tooltip for the no-popups per-site switch"
   },
   "popupTipNoPopups2": {
-    "message": "Paina salliaksesi kaikki ponnahdukset tällä sivustolla",
+    "message": "Salli kaikki ponnahdukset tällä sivustolla painamalla tästä",
     "description": "Tooltip for the no-popups per-site switch"
   },
   "popupTipNoLargeMedia": {
@@ -148,11 +148,11 @@
     "description": "Tooltip for the no-large-media per-site switch"
   },
   "popupTipNoLargeMedia1": {
-    "message": "Paina estääksesi suuret mediaelementit tällä sivustolla",
+    "message": "Estä suuret mediaelementit tällä sivustolla painamalla tästä",
     "description": "Tooltip for the no-large-media per-site switch"
   },
   "popupTipNoLargeMedia2": {
-    "message": "Paina salliaksesi suuret mediaelementit tällä sivustolla",
+    "message": "Salli suuret mediaelementit tällä sivustolla painamalla tästä",
     "description": "Tooltip for the no-large-media per-site switch"
   },
   "popupTipNoCosmeticFiltering": {
@@ -160,11 +160,11 @@
     "description": "Tooltip for the no-cosmetic-filtering per-site switch"
   },
   "popupTipNoCosmeticFiltering1": {
-    "message": "Paina poistaaksesi kosmeettisen suodatuksen käytöstä tällä sivustolla",
+    "message": "Poista kosmeettinen suodatus käytöstä tällä sivustolla painamalla tästä",
     "description": "Tooltip for the no-cosmetic-filtering per-site switch"
   },
   "popupTipNoCosmeticFiltering2": {
-    "message": "Paina käyttääksesi kosmeettista suodatusta tällä sivustolla",
+    "message": "Ota kosmeettinen suodatus käyttöön tällä sivustolla painamalla tästä",
     "description": "Tooltip for the no-cosmetic-filtering per-site switch"
   },
   "popupTipNoRemoteFonts": {
@@ -172,19 +172,19 @@
     "description": "Tooltip for the no-remote-fonts per-site switch"
   },
   "popupTipNoRemoteFonts1": {
-    "message": "Paina estääksesi ulkoisten fonttien latauksen tällä sivustolla",
+    "message": "Estä ulkoisten fonttien lataus tällä sivustolla painamalla tästä",
     "description": "Tooltip for the no-remote-fonts per-site switch"
   },
   "popupTipNoRemoteFonts2": {
-    "message": "Paina salliaksesi ulkoisten fonttien latauksen tällä sivustolla",
+    "message": "Salli ulkoisten fonttien lataus tällä sivustolla painamalla tästä",
     "description": "Tooltip for the no-remote-fonts per-site switch"
   },
   "popupTipNoScripting1": {
-    "message": "Paina estääksesi JavaScriptin tällä sivustolla",
+    "message": "Estä JavaScript tällä sivustolla painamalla tästä",
     "description": "Tooltip for the no-scripting per-site switch"
   },
   "popupTipNoScripting2": {
-    "message": "Paina salliaksesi JavaScriptin tällä sivustolla",
+    "message": "Salli JavaScript tällä sivustolla painamalla tästä",
     "description": "Tooltip for the no-scripting per-site switch"
   },
   "popupNoPopups_v2": {
@@ -224,11 +224,11 @@
     "description": "Tooltip when hovering the top-most cell of the local-rules column."
   },
   "popupTipSaveRules": {
-    "message": "Paina tehdäksesi muutoksistasi pysyviä.",
+    "message": "Tee muutoksistasi pysyviä painamalla tästä.",
     "description": "Tooltip when hovering over the padlock in the dynamic filtering pane."
   },
   "popupTipRevertRules": {
-    "message": "Paina kumotaksesi muutoksesi.",
+    "message": "Kumoa muutoksesi painamalla tästä.",
     "description": "Tooltip when hovering over the eraser in the dynamic filtering pane."
   },
   "popupAnyRulePrompt": {
@@ -404,7 +404,7 @@
     "description": "Section for controlling advanced-user settings"
   },
   "settingsAdvancedSynopsis": {
-    "message": "Teknisille käyttäjille sopivat ominaisuudet.",
+    "message": "Teknisille käyttäjille sopivat ominaisuudet",
     "description": "Description of section controlling advanced-user settings"
   },
   "settingsAdvancedUserSettings": {
@@ -516,7 +516,7 @@
     "description": "used as a tooltip for eye icon beside a list"
   },
   "3pLastUpdate": {
-    "message": "Viimeisin päivitys: {{ago}}.\nPaina pakottaaksesi päivityksen.",
+    "message": "Viimeisin päivitys: {{ago}}.\nPakota päivitys painamalla tästä.",
     "description": "used as a tooltip for the clock icon beside a list"
   },
   "3pUpdating": {
@@ -928,7 +928,7 @@
     "description": "Header of 'Bug report' section in Support pane"
   },
   "supportS4P1": {
-    "message": "Ilmoita ongelmista uBlock Origin -laajennuksessa <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\"><code>uBlockOrigin/uBlock</code>-ongelmaseurannanssa</span>. <u>Vaatii GitHub-tilin</u>.",
+    "message": "Ilmoita uBlock Origin -laajennuksen ongelmista <span data-url=\"https://github.com/uBlockOrigin/uBlock-issues/issues?q=is%3Aissue\"><code>uBlockOrigin/uBlock</code>-ongelmaseurannanssa</span>. <u>Vaatii GitHub-tilin</u>.",
     "description": "First paragraph of 'Bug report' section in Support pane"
   },
   "supportS5H": {
@@ -936,7 +936,7 @@
     "description": "Header of 'Troubleshooting Information' section in Support pane"
   },
   "supportS5P1": {
-    "message": "Alla on teknisiä tietoja, jotka saattavat olla hyödyllisiä vapaaehtoisille, jotka yrittävät auttaa ongelmasi ratkaisussa.",
+    "message": "Alla on teknisiä tietoja, joista voi olla hyötyä vapaaehtoisille, jotka pyrkivät auttamaan ongelmasi ratkaisussa.",
     "description": "First paragraph of 'Troubleshooting Information' section in Support pane"
   },
   "supportS5P2": {
@@ -1012,7 +1012,7 @@
     "description": "English: Source code (GPLv3)"
   },
   "aboutContributors": {
-    "message": "Tukijat",
+    "message": "Avustajat",
     "description": "English: Contributors"
   },
   "aboutSourceCode": {
@@ -1028,7 +1028,7 @@
     "description": "Link text to uBO's own filter lists repo"
   },
   "aboutDependencies": {
-    "message": "Ulkopuoliset riippuvuudet (GPLv3:n mukaisesti):",
+    "message": "Ulkopuoliset riippuvuudet (GPLv3-yhteensopiva):",
     "description": "Shown in the About pane"
   },
   "aboutCDNs": {
@@ -1219,13 +1219,13 @@
     "message": "Valitse kaikki",
     "description": "Label for buttons used to select all text in editor"
   },
-  "toggleBlockingProfile": {
-    "message": "Muuta esto-profiilia",
-    "description": "Label for keyboard shortcut used to toggle blocking profile"
+  "toggleCosmeticFiltering": {
+    "message": "Kytke kosmeettinen suodatus",
+    "description": "Label for keyboard shortcut used to toggle cosmetic filtering"
   },
   "relaxBlockingMode": {
     "message": "Kevennetty estotila",
-    "description": "Label for keyboard shortcut used to relax blocking mode (meant to replace 'Toggle blocking profile')"
+    "description": "Label for keyboard shortcut used to relax blocking mode"
   },
   "storageUsed": {
     "message": "Tallennustilan käyttö: {{value}} {{unit}}",

@@ -81,7 +81,6 @@ const hiddenSettingsDefault = {
     selfieAfter: 2,
     strictBlockingBypassDuration: 120,
     uiPopupConfig: 'unset',
-    uiFlavor: 'unset',
     uiStyles: 'unset',
     updateAssetBypassBrowserCache: false,
     userResourcesLocation: 'unset',
@@ -110,7 +109,7 @@ const userSettingsDefault = {
     prefetchingDisabled: true,
     requestLogMaxEntries: 1000,
     showIconBadge: true,
-    suspendUntilListsAreLoaded: true,
+    suspendUntilListsAreLoaded: vAPI.Net.canSuspend(),
     tooltipsDisabled: false,
     webrtcIPAddressHidden: false,
 };

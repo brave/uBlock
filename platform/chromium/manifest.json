@@ -26,6 +26,9 @@
     },
     "relax-blocking-mode": {
       "description": "__MSG_relaxBlockingMode__"
+    },
+    "toggle-cosmetic-filtering": {
+      "description": "__MSG_toggleCosmeticFiltering__"
     }
   },
   "content_scripts": [
@@ -50,7 +53,8 @@
         "https://filterlists.com/*",
         "https://forums.lanik.us/*",
         "https://github.com/*",
-        "https://*.github.io/*"
+        "https://*.github.io/*",
+        "https://*.letsblock.it/*"
       ],
       "js": [
         "/js/scriptlets/subscriber.js"

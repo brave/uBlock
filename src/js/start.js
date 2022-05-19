@@ -201,10 +201,20 @@ const onNetWhitelistReady = function(netWhitelistRaw, adminExtra) {
 
 const onUserSettingsReady = function(fetched) {
     // Terminate suspended state?
-    if ( fetched.suspendUntilListsAreLoaded === false ) {
+    const tnow = Date.now() - vAPI.T0;
+    if (
+        vAPI.Net.canSuspend() &&
+        fetched.suspendUntilListsAreLoaded === false
+    ) {
         vAPI.net.unsuspend({ all: true, discard: true });
-        ubolog(`Unsuspend network activity listener`);
-        µb.supportStats.unsuspendAfter = `${Date.now() - vAPI.T0} ms`;
+        ubolog(`Unsuspend network activity listener at ${tnow} ms`);
+        µb.supportStats.unsuspendAfter = `${tnow} ms`;
+    } else if (
+        vAPI.Net.canSuspend() === false &&
+        fetched.suspendUntilListsAreLoaded
+    ) {
+        vAPI.net.suspend();
+        ubolog(`Suspend network activity listener at ${tnow} ms`);
     }
 
     // `externalLists` will be deprecated in some future, it is kept around
@@ -482,16 +492,6 @@ io.addObserver(µb.assetObserver.bind(µb));
 // Force an update of the context menu according to the currently
 // active tab.
 contextMenu.update();
-
-// Maybe install non-default popup document, or automatically select
-// default UI according to platform.
-if (
-    browser.browserAction instanceof Object &&
-    browser.browserAction.setPopup instanceof Function &&
-    µb.hiddenSettings.uiFlavor === 'classic'
-) {
-    browser.browserAction.setPopup({ popup: 'popup.html' });
-}
 
 // https://github.com/uBlockOrigin/uBlock-issues/issues/717
 //   Prevent the extension from being restarted mid-session.

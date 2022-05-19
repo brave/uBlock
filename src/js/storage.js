@@ -645,7 +645,8 @@ self.addEventListener('hiddenSettingsChanged', ( ) => {
         io.registerAssetSource(listKey, entry);
     }
 
-    // Convert a no longer existing stock list into an imported list.
+    // Convert a no longer existing stock list into an imported list, except
+    // when the removed stock list is deemed a "bad list".
     const customListFromStockList = assetKey => {
         const oldEntry = oldAvailableLists[assetKey];
         if ( oldEntry === undefined || oldEntry.off === true ) { return; }
@@ -653,6 +654,7 @@ self.addEventListener('hiddenSettingsChanged', ( ) => {
         if ( Array.isArray(listURL) ) {
             listURL = listURL[0];
         }
+        if ( this.badLists.has(listURL) ) { return; }
         const newEntry = {
             content: 'filters',
             contentURL: listURL,
@@ -805,7 +807,7 @@ self.addEventListener('hiddenSettingsChanged', ( ) => {
     const onFilterListsReady = function(lists) {
         this.availableFilterLists = lists;
 
-        if ( vAPI.net.canSuspend() ) {
+        if ( vAPI.Net.canSuspend() ) {
             vAPI.net.suspend();
         }
         redirectEngine.reset();
@@ -934,7 +936,7 @@ self.addEventListener('hiddenSettingsChanged', ( ) => {
             if ( matches[2] !== undefined ) {
                 updateAfter = Math.ceil(updateAfter / 24);
             }
-            updateAfter = Math.max(updateAfter, 1);
+            updateAfter = Math.max(updateAfter, 0.5);
             if ( updateAfter !== listEntry.updateAfter ) {
                 listEntry.updateAfter = updateAfter;
                 io.registerAssetSource(assetKey, { updateAfter });
@@ -1492,7 +1494,7 @@ self.addEventListener('hiddenSettingsChanged', ( ) => {
 /******************************************************************************/
 
 // https://github.com/gorhill/uBlock/issues/2344
-//   Support mutliple locales per filter list.
+//   Support multiple locales per filter list.
 // https://github.com/gorhill/uBlock/issues/3210
 //   Support ability to auto-enable a filter list based on user agent.
 // https://github.com/gorhill/uBlock/pull/3860

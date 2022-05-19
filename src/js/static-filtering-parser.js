@@ -114,6 +114,7 @@ const Parser = class {
         this.reUnicodeChars = /[^\x00-\x7F]/g;
         this.reHostnameLabel = /[^.]+/g;
         this.rePlainHostname = /^(?:[\w-]+\.)*[a-z]+$/;
+        this.reBadHostnameChars = /[\x00-\x24\x26-\x29\x2b\x2c\x2f\x3b-\x40\x5c\x5e\x60\x7b-\x7f]/;
         this.rePlainEntity = /^(?:[\w-]+\.)+\*$/;
         this.reEntity = /^[^*]+\.\*$/;
         // https://github.com/uBlockOrigin/uBlock-issues/issues/1146
@@ -743,6 +744,7 @@ const Parser = class {
         if ( not && (modeBits & 0b1000) === 0 ) { return; }
         let hn = not === false ? s : s.slice(1);
         if ( this.rePlainHostname.test(hn) ) { return s; }
+        if ( this.reBadHostnameChars.test(hn) ) { return; }
         const hasWildcard = hn.lastIndexOf('*') !== -1;
         if ( hasWildcard ) {
             if ( modeBits === 0 ) { return; }
@@ -1575,7 +1577,7 @@ Parser.prototype.SelectorCompiler = class {
         if ( this.querySelectable(s) ) { return s; }
     }
 
-    compileRemoveSelector(s) {
+    compileNoArgument(s) {
         if ( s === '' ) { return s; }
     }
 
@@ -1683,6 +1685,7 @@ Parser.prototype.SelectorCompiler = class {
                 raw.push(task[1]);
                 break;
             case ':min-text-length':
+            case ':others':
             case ':upward':
             case ':watch-attr':
             case ':xpath':
@@ -1860,8 +1863,10 @@ Parser.prototype.SelectorCompiler = class {
             return this.compileInteger(args);
         case ':not':
             return this.compileNotSelector(args);
+        case ':others':
+            return this.compileNoArgument(args);
         case ':remove':
-            return this.compileRemoveSelector(args);
+            return this.compileNoArgument(args);
         case ':spath':
             return this.compileSpathExpression(args);
         case ':style':
@@ -1878,6 +1883,9 @@ Parser.prototype.SelectorCompiler = class {
     }
 };
 
+// bit 0: can be used as auto-completion hint
+// bit 1: can not be used in HTML filtering
+//
 Parser.prototype.proceduralOperatorTokens = new Map([
     [ '-abp-contains', 0b00 ],
     [ '-abp-has', 0b00, ],
@@ -1893,6 +1901,7 @@ Parser.prototype.proceduralOperatorTokens = new Map([
     [ 'min-text-length', 0b01 ],
     [ 'not', 0b01 ],
     [ 'nth-ancestor', 0b00 ],
+    [ 'others', 0b01 ],
     [ 'remove', 0b11 ],
     [ 'style', 0b11 ],
     [ 'upward', 0b01 ],
@@ -2493,7 +2502,7 @@ const NetOptionsIterator = class {
                 if ( lval === 0 && hasBits(bits, BITEqual) ) { lval = i; }
                 i += 3;
             }
-            // Check for proper assignement
+            // Check for proper assignment
             let assigned = false;
             if ( good && lval !== 0 ) {
                 good = assigned = slices[lval+2] === 1 && lval + 3 !== i;

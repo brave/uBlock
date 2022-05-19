@@ -181,9 +181,14 @@ vAPI.Tabs = class extends vAPI.Tabs {
             return Array.from(out);
         }
 
+        // https://github.com/uBlockOrigin/uBlock-issues/issues/2063
+        //   Do not interfere with root document
         suspendOneRequest(details) {
             this.suspendedTabIds.add(details.tabId);
-            return { cancel: true };
+            if ( details.type === 'main_frame' ) { return; }
+            return {
+                redirectUrl: vAPI.getURL(`web_accessible_resources/empty?secret=${vAPI.warSecret()}`)
+            };
         }
 
         unsuspendAllRequests(discard = false) {

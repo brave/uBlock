@@ -23,30 +23,27 @@
 
 /******************************************************************************/
 
-{
-// >>>>> start of local scope
+let listEntries = Object.create(null);
 
 /******************************************************************************/
 
-const reBlockStart = /^#block-start-([\w:]+)\n/gm;
-let listEntries = Object.create(null);
+// https://github.com/uBlockOrigin/uBlock-issues/issues/2092
+//   Order of ids matters
 
 const extractBlocks = function(content, ...ids) {
-    reBlockStart.lastIndex = 0;
     const out = [];
-    let match = reBlockStart.exec(content);
-    while ( match !== null ) {
-        const beg = match.index + match[0].length;
-        const id = match[1];
-        if ( ids.includes(id) ) {
-            const end = content.indexOf(`#block-end-${id}`, beg);
-            out.push(content.slice(beg, end));
-            reBlockStart.lastIndex = end;
-        }
-        match = reBlockStart.exec(content);
+    for ( const id of ids ) {
+        const pattern = `#block-start-${id}\n`;
+        let beg = content.indexOf(pattern);
+        if ( beg === -1 ) { continue; }
+        beg += pattern.length;
+        const end = content.indexOf(`#block-end-${id}`, beg);
+        out.push(content.slice(beg, end));
     }
     return out.join('\n');
 };
+
+/******************************************************************************/
 
 // https://github.com/MajkiIT/polish-ads-filter/issues/14768#issuecomment-536006312
 //   Avoid reporting badfilter-ed filters.
@@ -58,7 +55,10 @@ const fromNetFilter = function(details) {
     for ( const assetKey in listEntries ) {
         const entry = listEntries[assetKey];
         if ( entry === undefined ) { continue; }
-        const content = extractBlocks(entry.content, 'NETWORK_FILTERS:GOOD');
+        if ( entry.networkContent === undefined ) {
+            entry.networkContent = extractBlocks(entry.content, 'NETWORK_FILTERS:GOOD');
+        }
+        const content = entry.networkContent;
         let pos = 0;
         for (;;) {
             pos = content.indexOf(compiledFilter, pos);
@@ -66,8 +66,7 @@ const fromNetFilter = function(details) {
             // We need an exact match.
             // https://github.com/gorhill/uBlock/issues/1392
             // https://github.com/gorhill/uBlock/issues/835
-            const notFound = pos !== 0 &&
-                             content.charCodeAt(pos - 1) !== 0x0A;
+            const notFound = pos !== 0 && content.charCodeAt(pos - 1) !== 0x0A;
             pos += compiledFilter.length;
             if (
                 notFound ||
@@ -90,6 +89,8 @@ const fromNetFilter = function(details) {
     self.postMessage({ id: details.id, response });
 };
 
+/******************************************************************************/
+
 // Looking up filter lists from a cosmetic filter is a bit more complicated
 // than with network filters:
 //
@@ -110,7 +111,7 @@ const fromNetFilter = function(details) {
 // FilterContainer.fromCompiledContent() is our reference code to create
 // the various compiled versions.
 
-const fromCosmeticFilter = function(details) {
+const fromExtendedFilter = function(details) {
     const match = /^#@?#\^?/.exec(details.rawFilter);
     const prefix = match[0];
     const exception = prefix.charAt(1) === '@';
@@ -159,14 +160,17 @@ const fromCosmeticFilter = function(details) {
     for ( const assetKey in listEntries ) {
         const entry = listEntries[assetKey];
         if ( entry === undefined ) { continue; }
-        const content = extractBlocks(
-            entry.content,
-            'COSMETIC_FILTERS:GENERIC',
-            'COSMETIC_FILTERS:SPECIFIC',
-            'SCRIPTLET_FILTERS',
-            'HTML_FILTERS',
-            'HTTPHEADER_FILTERS'
-        );
+        if ( entry.extendedContent === undefined ) {
+            entry.extendedContent = extractBlocks(
+                entry.content,
+                'COSMETIC_FILTERS:SPECIFIC',
+                'COSMETIC_FILTERS:GENERIC',
+                'SCRIPTLET_FILTERS',
+                'HTML_FILTERS',
+                'HTTPHEADER_FILTERS'
+            );
+        }
+        const content = entry.extendedContent;
         let found;
         let pos = 0;
         while ( (pos = content.indexOf(needle, pos)) !== -1 ) {
@@ -270,7 +274,9 @@ const fromCosmeticFilter = function(details) {
     self.postMessage({ id: details.id, response });
 };
 
-self.onmessage = function(e) { // jshint ignore:line
+/******************************************************************************/
+
+self.onmessage = function(e) {
     const msg = e.data;
 
     switch ( msg.what ) {
@@ -286,15 +292,10 @@ self.onmessage = function(e) { // jshint ignore:line
         fromNetFilter(msg);
         break;
 
-    case 'fromCosmeticFilter':
-        fromCosmeticFilter(msg);
+    case 'fromExtendedFilter':
+        fromExtendedFilter(msg);
         break;
     }
 };
-
-/******************************************************************************/
-
-// <<<<< end of local scope
-}
 
 /******************************************************************************/

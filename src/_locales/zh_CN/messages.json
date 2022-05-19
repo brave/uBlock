@@ -336,7 +336,7 @@
     "description": "English: Color-blind friendly"
   },
   "settingsAppearance": {
-    "message": "界面外观",
+    "message": "外观",
     "description": "Section for controlling user interface appearance"
   },
   "settingsThemeLabel": {
@@ -352,7 +352,7 @@
     "description": ""
   },
   "settingsAdvancedUserPrompt": {
-    "message": "我是高级用户 （<a href='https://github.com/gorhill/uBlock/wiki/Advanced-user-features'>须知</a>）",
+    "message": "我是高级用户",
     "description": "Checkbox to let user access advanced, technical features"
   },
   "settingsPrefetchingDisabledPrompt": {
@@ -400,11 +400,11 @@
     "description": "background information: https://github.com/uBlockOrigin/uBlock-issues/issues/1513"
   },
   "settingsAdvanced": {
-    "message": "高级设定",
+    "message": "高级",
     "description": "Section for controlling advanced-user settings"
   },
   "settingsAdvancedSynopsis": {
-    "message": "仅为专家用户提供的功能。",
+    "message": "仅适合专家级用户的功能。",
     "description": "Description of section controlling advanced-user settings"
   },
   "settingsAdvancedUserSettings": {
@@ -984,7 +984,7 @@
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Select1Option6": {
-    "message": "打开多余的标签页或窗口",
+    "message": "打开不需要的标签页或窗口",
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Checkbox1": {
@@ -1072,7 +1072,7 @@
     "description": "English: Network error: {{msg}}"
   },
   "subscriberConfirm": {
-    "message": "uBlock₀：添加下列 URL 到您的自定义规则列表吗？\n\n标题： “{{title}}”\nURL： {{url}}",
+    "message": "添加下列网址到您的自定义规则列表吗？\n\n标题： “{{title}}”\n网址： {{url}}",
     "description": "No longer used"
   },
   "subscribeButton": {
@@ -1219,13 +1219,13 @@
     "message": "全选",
     "description": "Label for buttons used to select all text in editor"
   },
-  "toggleBlockingProfile": {
-    "message": "切换拦截方案",
-    "description": "Label for keyboard shortcut used to toggle blocking profile"
+  "toggleCosmeticFiltering": {
+    "message": "是否应用元素过滤规则",
+    "description": "Label for keyboard shortcut used to toggle cosmetic filtering"
   },
   "relaxBlockingMode": {
     "message": "放宽拦截限制",
-    "description": "Label for keyboard shortcut used to relax blocking mode (meant to replace 'Toggle blocking profile')"
+    "description": "Label for keyboard shortcut used to relax blocking mode"
   },
   "storageUsed": {
     "message": "已用存储：{{value}} {{unit}}",

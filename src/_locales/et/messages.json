@@ -352,7 +352,7 @@
     "description": ""
   },
   "settingsAdvancedUserPrompt": {
-    "message": "Olen kogenud kasutaja (<a href='https://github.com/gorhill/uBlock/wiki/Advanced-user-features'>Vajalik lugemus</a>)",
+    "message": "Olen kogenud kasutaja",
     "description": "Checkbox to let user access advanced, technical features"
   },
   "settingsPrefetchingDisabledPrompt": {
@@ -1219,13 +1219,13 @@
     "message": "Vali kõik",
     "description": "Label for buttons used to select all text in editor"
   },
-  "toggleBlockingProfile": {
-    "message": "Lülita blokeerimisprofiili",
-    "description": "Label for keyboard shortcut used to toggle blocking profile"
+  "toggleCosmeticFiltering": {
+    "message": "Lülita kosmeetilist filtreerimist",
+    "description": "Label for keyboard shortcut used to toggle cosmetic filtering"
   },
   "relaxBlockingMode": {
     "message": "Rahulik blokeerimisrežiim",
-    "description": "Label for keyboard shortcut used to relax blocking mode (meant to replace 'Toggle blocking profile')"
+    "description": "Label for keyboard shortcut used to relax blocking mode"
   },
   "storageUsed": {
     "message": "Mahtu kasutatud: {{value}} {{unit}}",
