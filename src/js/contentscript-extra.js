@@ -104,15 +104,22 @@ class PSelectorMatchesCSSBeforeTask extends PSelectorMatchesCSSTask {
 }
 PSelectorMatchesCSSBeforeTask.prototype.pseudo = ':before';
 
-class PSelectorMinTextLengthTask extends PSelectorTask {
+class PSelectorMatchesMediaTask extends PSelectorTask {
     constructor(task) {
         super();
-        this.min = task[1];
+        this.mql = window.matchMedia(task[1]);
+        if ( this.mql.media === 'not all' ) { return; }
+        this.mql.addEventListener('change', ( ) => {
+            if ( typeof vAPI !== 'object' ) { return; }
+            if ( vAPI === null ) { return; }
+            const filterer = vAPI.domFilterer && vAPI.domFilterer.proceduralFilterer;
+            if ( filterer instanceof Object === false ) { return; }
+            filterer.onDOMChanged([ null ]);
+        });
     }
     transpose(node, output) {
-        if ( node.textContent.length >= this.min ) {
-            output.push(node);
-        }
+        if ( this.mql.matches === false ) { return; }
+        output.push(node);
     }
 }
 
@@ -127,6 +134,18 @@ class PSelectorMatchesPathTask extends PSelectorTask {
     }
     transpose(node, output) {
         if ( this.needle.test(self.location.pathname + self.location.search) ) {
+            output.push(node);
+        }
+    }
+}
+
+class PSelectorMinTextLengthTask extends PSelectorTask {
+    constructor(task) {
+        super();
+        this.min = task[1];
+    }
+    transpose(node, output) {
+        if ( node.textContent.length >= this.min ) {
             output.push(node);
         }
     }
@@ -322,6 +341,7 @@ class PSelector {
                 [ ':matches-css', PSelectorMatchesCSSTask ],
                 [ ':matches-css-after', PSelectorMatchesCSSAfterTask ],
                 [ ':matches-css-before', PSelectorMatchesCSSBeforeTask ],
+                [ ':matches-media', PSelectorMatchesMediaTask ],
                 [ ':matches-path', PSelectorMatchesPathTask ],
                 [ ':min-text-length', PSelectorMinTextLengthTask ],
                 [ ':not', PSelectorIfNotTask ],
@@ -394,6 +414,13 @@ class PSelectorRoot extends PSelector {
         this.cost = 0;
         this.lastAllowanceTime = 0;
         this.styleToken = styleToken;
+    }
+    prime(input) {
+        try {
+            return super.prime(input);
+        } catch (ex) {
+        }
+        return [];
     }
 }
 PSelectorRoot.prototype.hit = false;
@@ -514,7 +541,7 @@ class ProceduralFilterer {
 
     // TODO: Current assumption is one style per hit element. Could be an
     //       issue if an element has multiple styling and one styling is
-    //       brough back. Possibly too rare to care about this for now.
+    //       brought back. Possibly too rare to care about this for now.
     unstyleNodes(nodes) {
         for ( const node of nodes ) {
             if ( this.styledNodes.has(node) ) { continue; }
@@ -523,7 +550,7 @@ class ProceduralFilterer {
     }
 
     createProceduralFilter(o) {
-        return new PSelectorRoot(o);
+        return new PSelectorRoot(typeof o === 'string' ? JSON.parse(o) : o);
     }
 
     onDOMCreated() {

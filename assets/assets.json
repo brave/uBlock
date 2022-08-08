@@ -561,8 +561,8 @@
 		"off": true,
 		"title": "LVA: Latvian List",
 		"lang": "lv",
-		"contentURL": "https://notabug.org/latvian-list/adblock-latvian/raw/master/lists/latvian-list.txt",
-		"supportURL": "https://notabug.org/latvian-list/adblock-latvian"
+		"contentURL": "https://raw.githubusercontent.com/Latvian-List/adblock-latvian/master/lists/latvian-list.txt",
+		"supportURL": "https://github.com/Latvian-List/adblock-latvian"
 	},
 	"NLD-0": {
 		"content": "filters",
@@ -632,7 +632,13 @@
 		"off": true,
 		"title": "RUS: RU AdList",
 		"lang": "be kk tt ru uk uz",
-		"contentURL": "https://easylist-downloads.adblockplus.org/advblock+cssfixes.txt",
+		"contentURL": "https://raw.githubusercontent.com/easylist/ruadlist/master/RuAdList-uBO.txt",
+		"cdnURLs": [
+			"https://cdn.jsdelivr.net/gh/easylist/ruadlist@master/RuAdList-uBO.txt",
+			"https://cdn.statically.io/gh/easylist/ruadlist/master/RuAdList-uBO.txt",
+			"https://combinatronics.io/easylist/ruadlist/master/RuAdList-uBO.txt",
+			"https://gitcdn.link/cdn/easylist/ruadlist/master/RuAdList-uBO.txt"
+		],
 		"supportURL": "https://forums.lanik.us/viewforum.php?f=102",
 		"instructionURL": "https://forums.lanik.us/viewtopic.php?f=102&t=22512"
 	},
