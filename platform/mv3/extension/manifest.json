@@ -1,7 +1,15 @@
 {
+  "action": {
+    "default_icon": {
+      "16": "img/icon_16.png",
+      "32": "img/icon_32.png",
+      "64": "img/icon_64.png"
+    },
+    "default_popup": "popup.html"
+  },
   "author": "Raymond Hill",
-   "background": {
-      "service_worker": "background.js",
+  "background": {
+      "service_worker": "/js/background.js",
       "type": "module"
    },
   "declarative_net_request": {
@@ -17,9 +25,11 @@
   },
   "manifest_version": 3,
   "minimum_chrome_version": "101.0",
-  "name": "uBO Minus (MV3)",
+  "name": "uBlock Origin Lite",
   "permissions": [
+    "activeTab",
     "declarativeNetRequest"
   ],
-  "version": "0.1.0"
+  "short_name": "uBO Lite",
+  "version": "0.1"
 }

@@ -221,7 +221,8 @@ const backgroundImageURLFromElement = function(elem) {
 // https://github.com/gorhill/uBlock/issues/1725#issuecomment-226479197
 //   Limit returned string to 1024 characters.
 //   Also, return only URLs which will be seen by an HTTP observer.
-
+// https://github.com/uBlockOrigin/uBlock-issues/issues/2260
+//   Maybe get to the actual URL indirectly.
 const resourceURLsFromElement = function(elem) {
     const urls = [];
     const tagName = elem.localName;
@@ -231,7 +232,10 @@ const resourceURLsFromElement = function(elem) {
         if ( url !== '' ) { urls.push(url); }
         return urls;
     }
-    const s = elem[prop];
+    let s = elem[prop];
+    if ( s instanceof SVGAnimatedString ) {
+        s = s.baseVal;
+    }
     if ( typeof s === 'string' && /^https?:\/\//.test(s) ) {
         urls.push(trimFragmentFromURL(s.slice(0, 1024)));
     }
@@ -376,6 +380,7 @@ const netFilter1stSources = {
      'embed': 'src',
     'iframe': 'src',
        'img': 'src',
+     'image': 'href',
     'object': 'data',
     'source': 'src',
      'video': 'src'
@@ -671,12 +676,17 @@ const filterToDOMInterface = (( ) => {
         }
 
         // Lookup by tag names.
+        // https://github.com/uBlockOrigin/uBlock-issues/issues/2260
+        //   Maybe get to the actual URL indirectly.
         const elems = document.querySelectorAll(
             Object.keys(netFilter1stSources).join()
         );
         for ( const elem of elems ) {
             const srcProp = netFilter1stSources[elem.localName];
-            const src = elem[srcProp];
+            let src = elem[srcProp];
+            if ( src instanceof SVGAnimatedString ) {
+                src = src.baseVal;
+            }
             if (
                 typeof src === 'string' &&
                     reFilter.test(src) ||
@@ -1278,17 +1288,20 @@ const pickerCSSStyle = [
     'position: fixed',
     'top: 0',
     'transform: none',
-    'visibility: visible',
+    'visibility: hidden',
     'width: 100%',
     'z-index: 2147483647',
-    // https://github.com/uBlockOrigin/uBlock-issues/issues/1408
-    'color-scheme: light',
+    'color-scheme: light dark',
     ''
 ];
+
 
 const pickerCSS = `
 :root > [${vAPI.sessionId}] {
     ${pickerCSSStyle.join(' !important;')}
+}
+:root > [${vAPI.sessionId}-loaded] {
+    visibility: visible !important;
 }
 :root [${vAPI.sessionId}-clickblind] {
     pointer-events: none !important;
@@ -1312,7 +1325,10 @@ vAPI.MessagingConnection.addListener(onConnectionMessage);
     if ( pickerBootArgs.zap ) {
         url.searchParams.set('zap', '1');
     }
-    pickerRoot.contentWindow.location = url.href;
+    pickerRoot.addEventListener("load", function() {
+      pickerRoot.setAttribute(`${vAPI.sessionId}-loaded`, "");
+    });
+    pickerRoot.src = url.href;
 }
 
 /******************************************************************************/

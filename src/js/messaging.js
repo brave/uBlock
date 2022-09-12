@@ -160,7 +160,7 @@ const onMessage = function(request, sender, callback) {
             env: vAPI.webextFlavor.env,
         };
         const t0 = Date.now();
-        dnrRulesetFromRawLists(listPromises, options).then(ruleset => {
+        dnrRulesetFromRawLists(listPromises, options).then(details => {
             const replacer = (k, v) => {
                 if ( k.startsWith('__') ) { return; }
                 if ( Array.isArray(v) ) {
@@ -192,9 +192,14 @@ const onMessage = function(request, sender, callback) {
                 rule.action.type === 'redirect' &&
                 rule.action.redirect.transform !== undefined;
             const runtime = Date.now() - t0;
+            const { ruleset } = details;
             const out = [
                 `dnrRulesetFromRawLists(${JSON.stringify(listNames, null, 2)})`,
                 `Run time: ${runtime} ms`,
+                `Filters count: ${details.filterCount}`,
+                `Accepted filter count: ${details.acceptedFilterCount}`,
+                `Rejected filter count: ${details.rejectedFilterCount}`,
+                `Resulting DNR rule count: ${ruleset.length}`,
             ];
             const good = ruleset.filter(rule =>
                 isUnsupported(rule) === false &&
@@ -294,15 +299,24 @@ const onMessage = function(request, sender, callback) {
         µb.openNewTab(request.details);
         break;
 
-    case 'reloadTab':
-        if ( vAPI.isBehindTheSceneTabId(request.tabId) === false ) {
-            vAPI.tabs.reload(request.tabId, request.bypassCache === true);
-            if ( request.select && vAPI.tabs.select ) {
-                vAPI.tabs.select(request.tabId);
+    // https://github.com/uBlockOrigin/uBlock-issues/issues/1954
+    //   In case of document-blocked page, navigate to blocked URL instead
+    //   of forcing a reload.
+    case 'reloadTab': {
+        if ( vAPI.isBehindTheSceneTabId(request.tabId) ) { break; }
+        const { tabId, bypassCache, url, select } = request;
+        vAPI.tabs.get(tabId).then(tab => {
+            if ( url && tab && url !== tab.url ) {
+                vAPI.tabs.replace(tabId, url);
+            } else {
+                vAPI.tabs.reload(tabId, bypassCache === true);
             }
+        });
+        if ( select && vAPI.tabs.select ) {
+            vAPI.tabs.select(tabId);
         }
         break;
-
+    }
     case 'setWhitelist':
         µb.netWhitelist = µb.whitelistFromString(request.whitelist);
         µb.saveWhitelist();
@@ -885,7 +899,9 @@ const onMessage = function(request, sender, callback) {
                 mouse: µb.epickerArgs.mouse,
                 zap: µb.epickerArgs.zap,
                 eprom: µb.epickerArgs.eprom,
-                pickerURL: vAPI.getURL(`/web_accessible_resources/epicker-ui.html?secret=${vAPI.warSecret()}`),
+                pickerURL: vAPI.getURL(
+                    `/web_accessible_resources/epicker-ui.html?secret=${vAPI.warSecret()}`
+                ),
             });
             µb.epickerArgs.target = '';
         });

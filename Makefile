@@ -4,8 +4,8 @@ run_options := $(filter-out $@,$(MAKECMDGOALS))
 .PHONY: all clean test lint chromium firefox npm dig mv3 \
 	compare maxcost medcost mincost modifiers record wasm
 
-sources := $(wildcard assets/resources/* src/* src/*/* src/*/*/* src/*/*/*/*)
-platform := $(wildcard platform/* platform/*/*)
+sources := $(wildcard assets/resources/* dist/version src/* src/*/* src/*/*/* src/*/*/*/*)
+platform := $(wildcard platform/* platform/*/* platform/*/*/*)
 assets := $(wildcard submodules/uAssets/* \
                      submodules/uAssets/*/* \
                      submodules/uAssets/*/*/* \
@@ -52,10 +52,14 @@ dig: dist/build/uBlock0.dig
 dig-snfe: dig
 	cd dist/build/uBlock0.dig && npm run snfe $(run_options)
 
-dist/build/uBlock0.mv3: tools/make-mv3.sh $(sources) $(platform)
-	tools/make-mv3.sh all
+mv3: tools/make-mv3.sh $(sources) $(platform)
+	tools/make-mv3.sh
 
-mv3: dist/build/uBlock0.mv3
+mv3-quick: tools/make-mv3.sh $(sources) $(platform)
+	tools/make-mv3.sh quick
+	
+mv3-full: tools/make-mv3.sh $(sources) $(platform)
+	tools/make-mv3.sh full
 
 # Update submodules.
 update-submodules:

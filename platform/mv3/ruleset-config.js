@@ -24,7 +24,7 @@
 export default [
     {
         id: 'default',
-        name: 'Default ruleset',
+        name: 'Default: Ads and trackers',
         enabled: true,
         paths: [
         ],
@@ -40,7 +40,6 @@ export default [
             'https://ublockorigin.github.io/uAssets/filters/unbreak.txt',
             'https://easylist.to/easylist/easylist.txt',
             'https://easylist.to/easylist/easyprivacy.txt',
-            'https://malware-filter.gitlab.io/malware-filter/urlhaus-filter-online.txt',
             'https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=1&mimetype=plaintext',
         ]
     },

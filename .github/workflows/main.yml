@@ -19,7 +19,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Clone repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           persist-credentials: false
       - name: Clone uAssets
@@ -39,13 +39,24 @@ jobs:
           tag_name: ${{ steps.release_info.outputs.VERSION }}
           release_name: ${{ steps.release_info.outputs.VERSION }}
           prerelease: true
-      - name: Build all packages
+      - name: Build MV2 packages
         run: |
           tools/make-chromium.sh ${{ steps.release_info.outputs.VERSION }}
           tools/make-firefox.sh ${{ steps.release_info.outputs.VERSION }}
           tools/make-thunderbird.sh ${{ steps.release_info.outputs.VERSION }}
           tools/make-npm.sh ${{ steps.release_info.outputs.VERSION }}
-          tools/make-mv3.sh all
+      - name: Build MV3 packages
+        run: |
+          tools/make-mv3.sh full
+          echo "MV3PACKAGE=$(basename $(ls dist/build/uBlock0_*.mv3.zip))" >> $GITHUB_ENV
+          cp dist/build/uBlock0.mv3/log.txt dist/chromium-mv3/
+      - name: Commit MV3 build log file
+        # https://github.com/marketplace/actions/github-action-for-committing-changes-to-a-repository
+        uses: devops-infra/action-commit-push@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          commit_message: Update build log file
+          target_branch: master
       - name: Upload Chromium package
         uses: actions/upload-release-asset@v1
         env:
@@ -88,6 +99,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist/build/uBlock0.mv3.zip
-          asset_name: uBlock0.mv3.zip
+          asset_path: dist/build/${{ env.MV3PACKAGE }}
+          asset_name: ${{ env.MV3PACKAGE }}
           asset_content_type: application/octet-stream

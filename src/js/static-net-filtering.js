@@ -3427,6 +3427,8 @@ class FilterCompiler {
         }
     }
 
+    // https://github.com/uBlockOrigin/uAssets/discussions/14683#discussioncomment-3559284
+    //   If the removeparam value is a regex, unescape escaped commas
     extractTokenFromQuerypruneValue() {
         const pattern = this.modifyValue;
         if ( pattern === '*' || pattern.charCodeAt(0) === 0x7E /* '~' */ ) {
@@ -3434,7 +3436,9 @@ class FilterCompiler {
         }
         const match = /^\/(.+)\/i?$/.exec(pattern);
         if ( match !== null ) {
-            return this.extractTokenFromRegex(match[1]);
+            return this.extractTokenFromRegex(
+                match[1].replace(/(\{\d*)\\,/, '$1,')
+            );
         }
         if ( pattern.startsWith('|') ) {
             return this.extractTokenFromRegex('\\b' + pattern.slice(1));
@@ -3852,6 +3856,9 @@ FilterContainer.prototype.dnrFromCompiled = function(op, context, ...args) {
             good: new Set(),
             bad: new Set(),
             invalid: new Set(),
+            filterCount: 0,
+            acceptedFilterCount: 0,
+            rejectedFilterCount: 0,
         };
     }
 
@@ -3859,6 +3866,7 @@ FilterContainer.prototype.dnrFromCompiled = function(op, context, ...args) {
         const reader = args[0];
         reader.select('NETWORK_FILTERS:GOOD');
         while ( reader.next() ) {
+            context.filterCount += 1;
             if ( context.good.has(reader.line) === false ) {
                 context.good.add(reader.line);
             }
@@ -3878,8 +3886,10 @@ FilterContainer.prototype.dnrFromCompiled = function(op, context, ...args) {
 
     for ( const line of good ) {
         if ( bad.has(line) ) {
+            context.rejectedFilterCount += 1;
             continue;
         }
+        context.acceptedFilterCount += 1;
 
         const args = unserialize(line);
         const bits = args[0];
@@ -4201,7 +4211,12 @@ FilterContainer.prototype.dnrFromCompiled = function(op, context, ...args) {
         }
     }
 
-    return Array.from(rulesetMap.values());
+    return {
+        ruleset: Array.from(rulesetMap.values()),
+        filterCount: context.filterCount,
+        acceptedFilterCount: context.acceptedFilterCount,
+        rejectedFilterCount: context.rejectedFilterCount,
+    };
 };
 
 /******************************************************************************/
