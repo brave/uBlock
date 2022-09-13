@@ -25,11 +25,6 @@
 
 /******************************************************************************/
 
-{
-// >>>>> start of local scope
-
-/******************************************************************************/
-
 const discardUnsavedData = function(synchronous = false) {
     const paneFrame = document.getElementById('iframe');
     const paneWindow = paneFrame.contentWindow;
@@ -148,8 +143,3 @@ if ( self.location.hash.slice(1) === 'no-dashboard.html' ) {
         });
     }
 })();
-
-/******************************************************************************/
-
-// <<<<< end of local scope
-}

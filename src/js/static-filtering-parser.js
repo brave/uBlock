@@ -1534,6 +1534,9 @@ Parser.prototype.SelectorCompiler = class {
     compileProceduralSelector(raw, asProcedural = false) {
         const compiled = this.compileProcedural(raw, true, asProcedural);
         if ( compiled !== undefined ) {
+            if ( asProcedural ) {
+                this.optimizeCompiledProcedural(compiled);
+            }
             compiled.raw = this.decompileProcedural(compiled);
         }
         return compiled;
@@ -1688,6 +1691,31 @@ Parser.prototype.SelectorCompiler = class {
         return s;
     }
 
+    optimizeCompiledProcedural(compiled) {
+        if ( typeof compiled === 'string' ) { return; }
+        if ( Array.isArray(compiled.tasks) === false ) { return; }
+        const tasks = [];
+        let selector = compiled.selector;
+        for ( const task of compiled.tasks ) {
+            switch ( task[0] ) {
+            case ':not':
+            case ':if-not':
+                this.optimizeCompiledProcedural(task[1]);
+                if ( tasks.length === 0 && typeof task[1] === 'string' ) {
+                    selector += `:not(${task[1]})`;
+                    break;
+                }
+                tasks.push(task);
+                break;
+            default:
+                tasks.push(task);
+                break;
+            }
+        }
+        compiled.selector = selector;
+        compiled.tasks = tasks.length !== 0 ? tasks : undefined;
+    }
+
     // https://github.com/gorhill/uBlock/issues/2793#issuecomment-333269387
     //   Normalize (somewhat) the stringified version of procedural
     //   cosmetic filters -- this increase the likelihood of detecting
@@ -1696,6 +1724,7 @@ Parser.prototype.SelectorCompiler = class {
     //   The normalized string version is what is reported in the logger,
     //   by design.
     decompileProcedural(compiled) {
+        if ( typeof compiled === 'string' ) { return compiled; }
         const tasks = compiled.tasks || [];
         const raw = [ compiled.selector ];
         for ( const task of tasks ) {
@@ -1736,6 +1765,10 @@ Parser.prototype.SelectorCompiler = class {
                 break;
             case ':not':
             case ':if-not':
+                if ( typeof(task[1]) === 'string' ) {
+                    raw.push(`:not(${task[1]})`);
+                    break;
+                }
                 raw.push(`:not(${this.decompileProcedural(task[1])})`);
                 break;
             case ':spath':
@@ -3143,10 +3176,17 @@ Parser.utils = Parser.prototype.utils = (( ) => {
         [ 'adguard_ext_safari', 'false' ],
     ]);
 
+    const toURL = url => {
+        try {
+            return new URL(url.trim());
+        } catch (ex) {
+        }
+    };
+
     class preparser {
         // This method returns an array of indices, corresponding to position in
         // the content string which should alternatively be parsed and discarded.
-        static splitter(content, env) {
+        static splitter(content, env = []) {
             const reIf = /^!#(if|endif)\b([^\n]*)(?:[\n\r]+|$)/gm;
             const stack = [];
             const shouldDiscard = ( ) => stack.some(v => v);
@@ -3172,7 +3212,6 @@ Parser.utils = Parser.prototype.utils = (( ) => {
                     }
                     stack.push(startDiscard);
                     break;
-
                 case 'endif':
                     stack.pop();
                     const stopDiscard = shouldDiscard() === false;
@@ -3181,7 +3220,6 @@ Parser.utils = Parser.prototype.utils = (( ) => {
                         discard = false;
                     }
                     break;
-
                 default:
                     break;
                 }
@@ -3189,6 +3227,47 @@ Parser.utils = Parser.prototype.utils = (( ) => {
 
             parts.push(content.length);
             return parts;
+        }
+
+        static expandIncludes(parts, env = []) {
+            const out = [];
+            const reInclude = /^!#include +(\S+)[^\n\r]*(?:[\n\r]+|$)/gm;
+            for ( const part of parts ) {
+                if ( typeof part === 'string' ) {
+                    out.push(part);
+                    continue;
+                }
+                if ( part instanceof Object === false ) { continue; }
+                const content = part.content;
+                const slices = this.splitter(content, env);
+                for ( let i = 0, n = slices.length - 1; i < n; i++ ) {
+                    const slice = content.slice(slices[i+0], slices[i+1]);
+                    if ( (i & 1) !== 0 ) {
+                        out.push(slice);
+                        continue;
+                    }
+                    let lastIndex = 0;
+                    for (;;) {
+                        const match = reInclude.exec(slice);
+                        if ( match === null ) { break; }
+                        if ( toURL(match[1]) !== undefined ) { continue; }
+                        if ( match[1].indexOf('..') !== -1 ) { continue; }
+                        // Compute nested list path relative to parent list path
+                        const pos = part.url.lastIndexOf('/');
+                        if ( pos === -1 ) { continue; }
+                        const subURL = part.url.slice(0, pos + 1) + match[1].trim();
+                        out.push(
+                            slice.slice(lastIndex, match.index + match[0].length),
+                            `! >>>>>>>> ${subURL}\n`,
+                            { url: subURL },
+                            `! <<<<<<<< ${subURL}\n`
+                        );
+                        lastIndex = reInclude.lastIndex;
+                    }
+                    out.push(lastIndex === 0 ? slice : slice.slice(lastIndex));
+                }
+            }
+            return out;
         }
 
         static prune(content, env) {
