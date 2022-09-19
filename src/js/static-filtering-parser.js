@@ -1337,7 +1337,7 @@ Parser.prototype.SelectorCompiler = class {
         // context.
         const cssIdentifier = '[A-Za-z_][\\w-]*';
         const cssClassOrId = `[.#]${cssIdentifier}`;
-        const cssAttribute = `\\[${cssIdentifier}[*^$]?="[^"\\]\\\\]+"\\]`;
+        const cssAttribute = `\\[${cssIdentifier}(?:[*^$]?="[^"\\]\\\\]+")\\]`;
         const cssSimple =
             '(?:' +
             `${cssIdentifier}(?:${cssClassOrId})*(?:${cssAttribute})*` + '|' +
@@ -1374,11 +1374,15 @@ Parser.prototype.SelectorCompiler = class {
             return document.createElement('div');
         })();
 
-        this.reProceduralOperator = new RegExp([
-            '^(?:',
-            Array.from(parser.proceduralOperatorTokens.keys()).join('|'),
-            ')\\('
-        ].join(''));
+        const allProceduralOperators = Array.from(
+            parser.proceduralOperatorTokens.keys()
+        );
+        this.reProceduralOperator = new RegExp(
+            `^(?:${allProceduralOperators.join('|')})\\(`
+        );
+        this.reHasProceduralOperator = new RegExp(
+            `:(?:${allProceduralOperators.filter(s => s !== 'not').join('|')})\\(`
+        );
         this.reEatBackslashes = /\\([()])/g;
         this.reEscapeRegex = /[.*+?^${}()|[\]\\]/g;
         this.reDropScope = /^\s*:scope\s*(?=[+>~])/;
@@ -1502,7 +1506,9 @@ Parser.prototype.SelectorCompiler = class {
     //   assign new text.
     sheetSelectable(s) {
         if ( this.reCommonSelector.test(s) ) { return true; }
-        if ( this.cssValidatorElement === null ) { return true; }
+        if ( this.cssValidatorElement === null ) {
+            return this.reHasProceduralOperator.test(s) === false;
+        }
         let valid = false;
         try {
             this.cssValidatorElement.childNodes[0].nodeValue = `_z + ${s}{color:red;} _z{color:red;}`;
@@ -1521,7 +1527,9 @@ Parser.prototype.SelectorCompiler = class {
     //   - opening comment `/*`
     querySelectable(s) {
         if ( this.reCommonSelector.test(s) ) { return true; }
-        if ( this.div === null ) { return true; }
+        if ( this.div === null ) {
+            return this.reHasProceduralOperator.test(s) === false;
+        }
         try {
             this.div.querySelector(`${s},${s}:not(#foo)`);
             if ( s.includes('/*') ) { return false; }
@@ -3148,6 +3156,7 @@ Parser.utils = Parser.prototype.utils = (( ) => {
 
     const preparserTokens = new Map([
         [ 'ext_ublock', 'ublock' ],
+        [ 'ext_ubol', 'ubol' ],
         [ 'env_chromium', 'chromium' ],
         [ 'env_edge', 'edge' ],
         [ 'env_firefox', 'firefox' ],

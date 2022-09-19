@@ -16,7 +16,7 @@
     "description": "English: uBO Lite — Dashboard"
   },
   "dashboardUnsavedWarning": {
-    "message": "Peringatan! Anda memiliki perubahan yang belum disimpan",
+    "message": "Peringatan! Anda memiliki ubahan yang belum disimpan",
     "description": "A warning in the dashboard when navigating away from unsaved changes"
   },
   "dashboardUnsavedWarningStay": {
@@ -80,11 +80,19 @@
     "description": "Tooltip when hovering over the eraser in the dynamic filtering pane."
   },
   "popupMoreButton": {
-    "message": "More",
+    "message": "Lainnya",
+    "description": "Label to be used to show popup panel sections"
+  },
+  "popupGrantGreatPowers": {
+    "message": "Klik untuk memberi uBO Lite izin tambahan pada situs ini.\nIzin tambahan memungkinkan pemblokiran konten yang lebih efektif.",
+    "description": "Label to be used to show popup panel sections"
+  },
+  "popupRevokeGreatPowers": {
+    "message": "Klik untuk membatalkan izin tambahan pada situs ini",
     "description": "Label to be used to show popup panel sections"
   },
   "popupLessButton": {
-    "message": "Less",
+    "message": "Lebih sedikit",
     "description": "Label to be used to hide popup panel sections"
   },
   "settingsIconBadgePrompt": {

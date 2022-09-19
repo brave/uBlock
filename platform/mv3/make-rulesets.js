@@ -25,7 +25,9 @@
 
 import fs from 'fs/promises';
 import https from 'https';
+import path from 'path';
 import process from 'process';
+import { createHash } from 'crypto';
 
 import { dnrRulesetFromRawLists } from './js/static-dnr-filtering.js';
 import { StaticFilteringParser } from './js/static-filtering-parser.js';
@@ -48,6 +50,26 @@ const commandLineArgs = (( ) => {
     }
     return args;
 })();
+
+const outputDir = commandLineArgs.get('output') || '.';
+const cacheDir = `${outputDir}/../mv3-data`;
+const rulesetDir = `${outputDir}/rulesets`;
+const cssDir = `${rulesetDir}/css`;
+const scriptletDir = `${rulesetDir}/js`;
+const env = [ 'chromium', 'ubol' ];
+
+/******************************************************************************/
+
+const jsonSetMapReplacer = (k, v) => {
+    if ( v instanceof Set || v instanceof Map ) {
+        if ( v.size === 0 ) { return; }
+        return Array.from(v);
+    }
+    return v;
+};
+
+const uid = (s, l = 8) =>
+    createHash('sha256').update(s).digest('hex').slice(0,l);
 
 /******************************************************************************/
 
@@ -91,34 +113,546 @@ const log = (text, silent = false) => {
 
 /******************************************************************************/
 
-const fetchList = url => {
+const urlToFileName = url => {
+    return url
+        .replace(/^https?:\/\//, '')
+        .replace(/\//g, '_')
+        ;
+};
+
+const fetchList = (url, cacheDir) => {
     return new Promise((resolve, reject) => {
-        log(`\tFetching ${url}`);
-        https.get(url, response => {
-            const data = [];
-            response.on('data', chunk => {
-                data.push(chunk.toString());
+        const fname = urlToFileName(url);
+        fs.readFile(`${cacheDir}/${fname}`, { encoding: 'utf8' }).then(content => {
+            log(`\tFetched local ${url}`);
+            resolve({ url, content });
+        }).catch(( ) => {
+            log(`\tFetching remote ${url}`);
+            https.get(url, response => {
+                const data = [];
+                response.on('data', chunk => {
+                    data.push(chunk.toString());
+                });
+                response.on('end', ( ) => {
+                    const content = data.join('');
+                    try {
+                        writeFile(`${cacheDir}/${fname}`, content);
+                    } catch (ex) {
+                    }
+                    resolve({ url, content });
+                });
+            }).on('error', error => {
+                reject(error);
             });
-            response.on('end', ( ) => {
-                resolve({ url, content: data.join('') });
-            });
-        }).on('error', error => {
-            reject(error);
         });
     });
 };
 
 /******************************************************************************/
 
+const writeFile = async (fname, data) => {
+    const dir = path.dirname(fname);
+    await fs.mkdir(dir, { recursive: true });
+    const promise = fs.writeFile(fname, data);
+    writeOps.push(promise);
+    return promise;
+};
+
+const writeOps = [];
+
+/******************************************************************************/
+
+const ruleResources = [];
+const rulesetDetails = [];
+const scriptingDetails = new Map();
+
+/******************************************************************************/
+
+async function fetchAsset(assetDetails) {
+    // Remember fetched URLs
+    const fetchedURLs = new Set();
+
+    // Fetch list and expand `!#include` directives
+    let parts = assetDetails.urls.map(url => ({ url }));
+    while (  parts.every(v => typeof v === 'string') === false ) {
+        const newParts = [];
+        for ( const part of parts ) {
+            if ( typeof part === 'string' ) {
+                newParts.push(part);
+                continue;
+            }
+            if ( fetchedURLs.has(part.url) ) {
+                newParts.push('');
+                continue;
+            }
+            fetchedURLs.add(part.url);
+            newParts.push(
+                fetchList(part.url, cacheDir).then(details => {
+                    const { url } = details;
+                    const content = details.content.trim();
+                    if ( typeof content === 'string' && content !== '' ) {
+                        if (
+                            content.startsWith('<') === false ||
+                            content.endsWith('>') === false
+                        ) {
+                            return { url, content };
+                        }
+                    }
+                    log(`No valid content for ${details.name}`);
+                    return { url, content: '' };
+                })
+            );
+        }
+        parts = await Promise.all(newParts);
+        parts = StaticFilteringParser.utils.preparser.expandIncludes(parts, env);
+    }
+    const text = parts.join('\n');
+
+    if ( text === '' ) {
+        log('No filterset found');
+    }
+    return text;
+}
+
+/******************************************************************************/
+
+async function processNetworkFilters(assetDetails, network) {
+    const replacer = (k, v) => {
+        if ( k.startsWith('__') ) { return; }
+        if ( Array.isArray(v) ) {
+            return v.sort();
+        }
+        if ( v instanceof Object ) {
+            const sorted = {};
+            for ( const kk of Object.keys(v).sort() ) {
+                sorted[kk] = v[kk];
+            }
+            return sorted;
+        }
+        return v;
+    };
+
+    const { ruleset: rules } = network;
+    log(`Input filter count: ${network.filterCount}`);
+    log(`\tAccepted filter count: ${network.acceptedFilterCount}`);
+    log(`\tRejected filter count: ${network.rejectedFilterCount}`);
+    log(`Output rule count: ${rules.length}`);
+
+    const good = rules.filter(rule => isGood(rule) && isRegex(rule) === false);
+    log(`\tGood: ${good.length}`);
+
+    const regexes = rules.filter(rule => isGood(rule) && isRegex(rule));
+    log(`\tMaybe good (regexes): ${regexes.length}`);
+
+    const redirects = rules.filter(rule =>
+        isUnsupported(rule) === false &&
+        isRedirect(rule)
+    );
+    log(`\tredirect-rule= (discarded): ${redirects.length}`);
+
+    const headers = rules.filter(rule =>
+        isUnsupported(rule) === false &&
+        isCsp(rule)
+    );
+    log(`\tcsp= (discarded): ${headers.length}`);
+
+    const removeparams = rules.filter(rule =>
+        isUnsupported(rule) === false &&
+        isRemoveparam(rule)
+    );
+    log(`\tremoveparams= (discarded): ${removeparams.length}`);
+
+    const bad = rules.filter(rule =>
+        isUnsupported(rule)
+    );
+    log(`\tUnsupported: ${bad.length}`);
+    log(
+        bad.map(rule => rule._error.map(v => `\t\t${v}`)).join('\n'),
+        true
+    );
+
+    writeFile(
+        `${rulesetDir}/${assetDetails.id}.json`,
+        `${JSON.stringify(good, replacer)}\n`
+    );
+
+    if ( regexes.length !== 0 ) {
+        writeFile(
+            `${rulesetDir}/${assetDetails.id}.regexes.json`,
+            `${JSON.stringify(regexes, replacer)}\n`
+        );
+    }
+
+    return {
+        total: rules.length,
+        accepted: good.length,
+        discarded: redirects.length + headers.length + removeparams.length,
+        rejected: bad.length,
+        regexes: regexes.length,
+    };
+}
+
+/******************************************************************************/
+
+function addScriptingAPIResources(id, entry, prop, fname) {
+    if ( entry[prop] === undefined ) { return; }
+    for ( const hn of entry[prop] ) {
+        let details = scriptingDetails.get(id);
+        if ( details === undefined ) {
+            details = {
+                matches: new Map(),
+                excludeMatches: new Map(),
+            };
+            scriptingDetails.set(id, details);
+        }
+        let fnames = details[prop].get(hn);
+        if ( fnames === undefined ) {
+            fnames = new Set();
+            details[prop].set(hn, fnames);
+        }
+        fnames.add(fname);
+    }
+}
+
+/******************************************************************************/
+
+const globalCSSFileSet = new Set();
+
+// Using a at-rule layer declaration allows to raise uBOL's styles above
+// that of the page.
+const cssDeclaration =
+`@layer {
+$selector$ {
+  display:none!important;
+ }
+}`;
+
+function processCosmeticFilters(assetDetails, mapin) {
+    if ( mapin === undefined ) { return 0; }
+
+    // Drop worryingly generic-looking selectors, they are too likely to
+    // cause false positives on unrelated sites. It's the price for a Lite
+    // version. Examples:
+    //   div[style*="z-index:"]
+    //   [style*="opacity:  0"]
+    for ( const s of mapin.keys() ) {
+        if ( /^[a-z]*\[style[^\]]*\](:|$)/.test(s) === false ) { continue; }
+        // `[style]` attributes with `/` characters are probably ok since they
+        // likely refer to specific `url()` property.
+        if ( s.indexOf('/') !== -1 ) { continue; }
+        // `[style]` attributes with dimension properties might be specific
+        // enough after all.
+        if ( /\b(height|width)\s*:\s*\d+px\b/.test(s) ) { continue; }
+        //console.log(`\tDropping ${s}`);
+        mapin.delete(s);
+    }
+
+    // This groups together selectors which are used by a the same hostname.
+    const optimizeExtendedFilters = filters => {
+        if ( filters === undefined ) { return []; }
+        const merge = new Map();
+        for ( const [ selector, details ] of filters ) {
+            const json = JSON.stringify(details);
+            let entries = merge.get(json);
+            if ( entries === undefined ) {
+                entries = new Set();
+                merge.set(json, entries);
+            }
+            entries.add(selector);
+        }
+        const out = [];
+        for ( const [ json, entries ] of merge ) {
+            const details = JSON.parse(json);
+            details.payload = Array.from(entries);
+            out.push(details);
+        }
+        return out;
+    };
+    const optimized = optimizeExtendedFilters(mapin);
+
+    // This creates a map of unique selectorset => all hostnames
+    // including/excluding the selectorset. This allows to avoid duplication
+    // of css content.
+    const cssContentMap = new Map();
+    for ( const entry of optimized ) {
+        const selectors = entry.payload.map(s => ` ${s}`).join(',\n');
+        // ends-with 0 = css resource
+        const fname = uid(selectors) + '0';
+        let contentDetails = cssContentMap.get(fname);
+        if ( contentDetails === undefined ) {
+            contentDetails = { selectors };
+            cssContentMap.set(fname, contentDetails);
+        }
+        if ( entry.matches !== undefined ) {
+            if ( contentDetails.matches === undefined ) {
+                contentDetails.matches = new Set();
+            }
+            for ( const hn of entry.matches ) {
+                contentDetails.matches.add(hn);
+            }
+        }
+        if ( entry.excludeMatches !== undefined ) {
+            if ( contentDetails.excludeMatches === undefined ) {
+                contentDetails.excludeMatches = new Set();
+            }
+            for ( const hn of entry.excludeMatches ) {
+                contentDetails.excludeMatches.add(hn);
+            }
+        }
+    }
+
+    // We do not want more than 128 CSS files per subscription, so we will
+    // group multiple unrelated selectors in the same file and hope this does
+    // not cause false positives.
+    const contentPerFile = Math.ceil(cssContentMap.size / 128);
+    const cssContentArray = Array.from(cssContentMap).map(entry => entry[1]);
+    let distinctResourceCount = 0;
+
+    for ( let i = 0; i < cssContentArray.length; i += contentPerFile ) {
+        const slice = cssContentArray.slice(i, i + contentPerFile);
+        const matches = slice.map(entry =>
+            Array.from(entry.matches || [])
+        ).flat();
+        const excludeMatches = slice.map(entry =>
+            Array.from(entry.excludeMatches || [])
+        ).flat();
+        const selectors = slice.map(entry =>
+            entry.selectors
+        ).join(',\n');
+        const fname = uid(selectors) + '0';
+        if ( globalCSSFileSet.has(fname) === false ) {
+            globalCSSFileSet.add(fname);
+            const fpath = `${fname.slice(0,1)}/${fname.slice(1,2)}/${fname.slice(2)}`;
+            writeFile(
+                `${cssDir}/${fpath}.css`,
+                cssDeclaration.replace('$selector$', selectors)
+            );
+            distinctResourceCount += 1;
+        }
+        addScriptingAPIResources(
+            assetDetails.id,
+            { matches },
+            'matches',
+            fname
+        );
+        addScriptingAPIResources(
+            assetDetails.id,
+            { excludeMatches },
+            'excludeMatches',
+            fname
+        );
+    }
+
+    log(`CSS entries: ${distinctResourceCount}`);
+
+    return distinctResourceCount;
+}
+
+/******************************************************************************/
+
+// Load all available scriptlets into a key-val map, where the key is the
+// scriptlet token, and val is the whole content of the file.
+
+const scriptletDealiasingMap = new Map(); 
+let scriptletsMapPromise;
+
+function loadAllSourceScriptlets() {
+    if ( scriptletsMapPromise !== undefined ) {
+        return scriptletsMapPromise;
+    }
+
+    scriptletsMapPromise = fs.readdir('./scriptlets').then(files => {
+        const reScriptletNameOrAlias = /^\/\/\/\s+(?:name|alias)\s+(\S+)/gm;
+        const readPromises = [];
+        for ( const file of files ) {
+            readPromises.push(
+                fs.readFile(`./scriptlets/${file}`, { encoding: 'utf8' })
+            );
+        }
+        return Promise.all(readPromises).then(results => {
+            const originalScriptletMap = new Map();
+            for ( const text of results ) {
+                const aliasSet = new Set();
+                for (;;) {
+                    const match = reScriptletNameOrAlias.exec(text);
+                    if ( match === null ) { break; }
+                    aliasSet.add(match[1]);
+                }
+                if ( aliasSet.size === 0 ) { continue; }
+                const aliases = Array.from(aliasSet);
+                originalScriptletMap.set(aliases[0], text);
+                for ( let i = 0; i < aliases.length; i++ ) {
+                    scriptletDealiasingMap.set(aliases[i], aliases[0]);
+                }
+            }
+            return originalScriptletMap;
+        });
+    });
+
+    return scriptletsMapPromise;
+}
+
+const globalPatchedScriptletsSet = new Set();
+
+async function processScriptletFilters(assetDetails, mapin) {
+    if ( mapin === undefined ) { return 0; }
+
+    // Load all available scriptlets into a key-val map, where the key is the
+    // scriptlet token, and val is the whole content of the file.
+    const originalScriptletMap = await loadAllSourceScriptlets();
+
+    const parseArguments = (raw) => {
+        const out = [];
+        let s = raw;
+        let len = s.length;
+        let beg = 0, pos = 0;
+        let i = 1;
+        while ( beg < len ) {
+            pos = s.indexOf(',', pos);
+            // Escaped comma? If so, skip.
+            if ( pos > 0 && s.charCodeAt(pos - 1) === 0x5C /* '\\' */ ) {
+                s = s.slice(0, pos - 1) + s.slice(pos);
+                len -= 1;
+                continue;
+            }
+            if ( pos === -1 ) { pos = len; }
+            out.push(s.slice(beg, pos).trim());
+            beg = pos = pos + 1;
+            i++;
+        }
+        return out;
+    };
+
+    const parseFilter = (raw) => {
+        const filter = raw.slice(4, -1);
+        const end = filter.length;
+        let pos = filter.indexOf(',');
+        if ( pos === -1 ) { pos = end; }
+        const parts = filter.trim().split(',').map(s => s.trim());
+        const token = scriptletDealiasingMap.get(parts[0]) || '';
+        if ( token !== '' && originalScriptletMap.has(token) ) {
+            return {
+                token,
+                args: parseArguments(parts.slice(1).join(',').trim()),
+            };
+        }
+    };
+
+    // For each instance of distinct scriptlet, we will collect distinct
+    // instances of arguments, and for each distinct set of argument, we
+    // will collect the set of hostnames for which the scriptlet/args is meant
+    // to execute. This will allow us a single content script file and the
+    // scriptlets execution will depend on hostname testing against the
+    // URL of the document at scriptlet execution time. In the end, we
+    // should have no more generated content script per subscription than the
+    // number of distinct source scriptlets.
+    const scriptletDetails = new Map();
+    for ( const [ rawFilter, entry ] of mapin ) {
+        const normalized = parseFilter(rawFilter);
+        if ( normalized === undefined ) { continue; }
+        let argsDetails = scriptletDetails.get(normalized.token);
+        if ( argsDetails === undefined ) {
+            argsDetails = new Map();
+            scriptletDetails.set(normalized.token, argsDetails);
+        }
+        const argsHash = JSON.stringify(normalized.args);
+        let hostnamesDetails = argsDetails.get(argsHash);
+        if ( hostnamesDetails === undefined ) {
+            hostnamesDetails = {
+                a: normalized.args,
+                y: new Set(),
+                n: new Set(),
+            };
+        }
+        argsDetails.set(argsHash, hostnamesDetails);
+        if ( entry.matches ) {
+            for ( const hn of entry.matches ) {
+                hostnamesDetails.y.add(hn);
+            }
+        }
+        if ( entry.excludeMatches ) {
+            for ( const hn of entry.excludeMatches ) {
+                hostnamesDetails.n.add(hn);
+            }
+        }
+    }
+
+    let distinctResourceCount = 0;
+
+    const jsonReplacer = (k, v) => {
+        if ( k === 'n' ) {
+            if ( v.size === 0 ) { return; }
+            return Array.from(v);
+        }
+        if ( v instanceof Set || v instanceof Map ) {
+            if ( v.size === 0 ) { return; }
+            return Array.from(v);
+        }
+        return v;
+    };
+
+    const toHostnamesMap = (hostnames, hash, out) => {
+        for ( const hn of hostnames ) {
+            const existing = out.get(hn);
+            if ( existing === undefined ) {
+                out.set(hn, hash);
+            } else if ( Array.isArray(existing) ) {
+                existing.push(hash);
+            } else {
+                out.set(hn, [ existing, hash ]);
+            }
+        }
+    };
+
+    for ( const [ token, argsDetails ] of scriptletDetails ) {
+        const argsMap = Array.from(argsDetails).map(entry => {
+            return [ 
+                parseInt(uid(entry[0]),16),
+                { a: entry[1].a, n: entry[1].n }
+            ];
+        });
+        const hostnamesMap = new Map();
+        for ( const [ argsHash, details ] of argsDetails ) {
+            toHostnamesMap(details.y, parseInt(uid(argsHash),16), hostnamesMap);
+        }
+        const patchedScriptlet = originalScriptletMap.get(token)
+            .replace(
+                /\bself\.\$argsMap\$/m,
+                `${JSON.stringify(argsMap, jsonReplacer)}`
+            ).replace(
+                /\bself\.\$hostnamesMap\$/m,
+                `${JSON.stringify(hostnamesMap, jsonReplacer)}`
+            );
+        // ends-with 1 = scriptlet resource
+        const fname = uid(patchedScriptlet) + '1';
+        if ( globalPatchedScriptletsSet.has(fname) === false ) {
+            globalPatchedScriptletsSet.add(fname);
+            writeFile(`${scriptletDir}/${fname}.js`, patchedScriptlet, {});
+            distinctResourceCount += 1;
+        }
+        for ( const details of argsDetails.values() ) {
+            addScriptingAPIResources(
+                assetDetails.id,
+                { matches: details.y },
+                'matches',
+                fname
+            );
+            addScriptingAPIResources(
+                assetDetails.id,
+                { excludeMatches: details.n },
+                'excludeMatches',
+                fname
+            );
+        }
+    }
+    log(`Scriptlet entries: ${distinctResourceCount}`);
+
+    return distinctResourceCount;
+}
+
+/******************************************************************************/
+
 async function main() {
-
-    const env = [ 'chromium' ];
-
-    const writeOps = [];
-    const ruleResources = [];
-    const rulesetDetails = [];
-    const regexRulesetDetails = new Map();
-    const outputDir = commandLineArgs.get('output') || '.';
 
     // Get manifest content
     const manifest = await fs.readFile(
@@ -140,117 +674,30 @@ async function main() {
     }
     log(`Version: ${version}`);
 
-    let goodTotalCount = 0;
-    let maybeGoodTotalCount = 0;
-
-    const replacer = (k, v) => {
-        if ( k.startsWith('__') ) { return; }
-        if ( Array.isArray(v) ) {
-            return v.sort();
-        }
-        if ( v instanceof Object ) {
-            const sorted = {};
-            for ( const kk of Object.keys(v).sort() ) {
-                sorted[kk] = v[kk];
-            }
-            return sorted;
-        }
-        return v;
-    };
-
-    const rulesetDir = `${outputDir}/rulesets`;
-    const rulesetDirPromise = fs.mkdir(`${rulesetDir}`, { recursive: true });
-
-    const writeFile = (path, data) =>
-        rulesetDirPromise.then(( ) =>
-            fs.writeFile(path, data));
-
     const rulesetFromURLS = async function(assetDetails) {
         log('============================');
         log(`Listset for '${assetDetails.id}':`);
 
-        // Remember fetched URLs
-        const fetchedURLs = new Set();
+        const text = await fetchAsset(assetDetails);
 
-        // Fetch list and expand `!#include` directives
-        let parts = assetDetails.urls.map(url => ({ url }));
-        while (  parts.every(v => typeof v === 'string') === false ) {
-            const newParts = [];
-            for ( const part of parts ) {
-                if ( typeof part === 'string' ) {
-                    newParts.push(part);
-                    continue;
-                }
-                if ( fetchedURLs.has(part.url) ) {
-                    newParts.push('');
-                    continue;
-                }
-                fetchedURLs.add(part.url);
-                newParts.push(
-                    fetchList(part.url).then(details => {
-                        const { url } = details;
-                        const content = details.content.trim();
-                        if ( typeof content === 'string' && content !== '' ) {
-                            if (
-                                content.startsWith('<') === false ||
-                                content.endsWith('>') === false
-                            ) {
-                                return { url, content };
-                            }
-                        }
-                        log(`No valid content for ${details.name}`);
-                        return { url, content: '' };
-                    })
-                );
-            }
-            parts = await Promise.all(newParts);
-            parts = StaticFilteringParser.utils.preparser.expandIncludes(parts, env);
-        }
-        const text = parts.join('\n');
-
-        if ( text === '' ) {
-            log('No filterset found');
-            return;
-        }
-
-        const details = await dnrRulesetFromRawLists([ { name: assetDetails.id, text } ], { env });
-        const { ruleset: rules } = details;
-        log(`Input filter count: ${details.filterCount}`);
-        log(`\tAccepted filter count: ${details.acceptedFilterCount}`);
-        log(`\tRejected filter count: ${details.rejectedFilterCount}`);
-        log(`Output rule count: ${rules.length}`);
-
-        const good = rules.filter(rule => isGood(rule) && isRegex(rule) === false);
-        log(`\tGood: ${good.length}`);
-
-        const regexes = rules.filter(rule => isGood(rule) && isRegex(rule));
-        log(`\tMaybe good (regexes): ${regexes.length}`);
-
-        const redirects = rules.filter(rule =>
-            isUnsupported(rule) === false &&
-            isRedirect(rule)
+        const results = await dnrRulesetFromRawLists(
+            [ { name: assetDetails.id, text } ],
+            { env }
         );
-        log(`\tredirect-rule= (discarded): ${redirects.length}`);
 
-        const headers = rules.filter(rule =>
-            isUnsupported(rule) === false &&
-            isCsp(rule)
+        const netStats = await processNetworkFilters(
+            assetDetails,
+            results.network
         );
-        log(`\tcsp= (discarded): ${headers.length}`);
 
-        const removeparams = rules.filter(rule =>
-            isUnsupported(rule) === false &&
-            isRemoveparam(rule)
+        const cosmeticStats = await processCosmeticFilters(
+            assetDetails,
+            results.cosmetic
         );
-        log(`\tremoveparams= (discarded): ${removeparams.length}`);
 
-        const bad = rules.filter(rule =>
-            isUnsupported(rule)
-        );
-        log(`\tUnsupported: ${bad.length}`);
-        log(
-            bad.map(rule => rule._error.map(v => `\t\t${v}`)).join('\n'),
-            true
+        const scriptletStats = await processScriptletFilters(
+            assetDetails,
+            results.scriptlet
         );
 
         rulesetDetails.push({
@@ -258,44 +705,32 @@ async function main() {
             name: assetDetails.name,
             enabled: assetDetails.enabled,
             lang: assetDetails.lang,
+            homeURL: assetDetails.homeURL,
             filters: {
-                total: details.filterCount,
-                accepted: details.acceptedFilterCount,
-                rejected: details.rejectedFilterCount,
+                total: results.network.filterCount,
+                accepted: results.network.acceptedFilterCount,
+                rejected: results.network.rejectedFilterCount,
             },
             rules: {
-                total: rules.length,
-                accepted: good.length,
-                discarded: redirects.length + headers.length + removeparams.length,
-                rejected: bad.length,
-                regexes: regexes.length,
+                total: netStats.total,
+                accepted: netStats.accepted,
+                discarded: netStats.discarded,
+                rejected: netStats.rejected,
+                regexes: netStats.regexes,
+            },
+            css: {
+                specific: cosmeticStats,
+            },
+            scriptlets: {
+                total: scriptletStats,
             },
         });
-
-        writeOps.push(
-            writeFile(
-                `${rulesetDir}/${assetDetails.id}.json`,
-                `${JSON.stringify(good, replacer, 2)}\n`
-            )
-        );
-
-        regexRulesetDetails.set(assetDetails.id, regexes);
-
-        writeOps.push(
-            writeFile(
-                `${rulesetDir}/${assetDetails.id}.regexes.json`,
-                `${JSON.stringify(regexes, replacer, 2)}\n`
-            )
-        );
 
         ruleResources.push({
             id: assetDetails.id,
             enabled: assetDetails.enabled,
             path: `/rulesets/${assetDetails.id}.json`
         });
-
-        goodTotalCount += good.length;
-        maybeGoodTotalCount += regexes.length;
     };
 
     // Get assets.json content
@@ -307,20 +742,23 @@ async function main() {
     );
 
     // Assemble all default lists as the default ruleset
-    const contentURLs = [];
-    for ( const asset of Object.values(assets) ) {
-        if ( asset.content !== 'filters' ) { continue; }
-        if ( asset.off === true ) { continue; }
-        const contentURL = Array.isArray(asset.contentURL)
-            ? asset.contentURL[0]
-            : asset.contentURL;
-        contentURLs.push(contentURL);
-    }
+    const contentURLs = [
+        'https://ublockorigin.pages.dev/filters/filters.txt',
+        'https://ublockorigin.pages.dev/filters/badware.txt',
+        'https://ublockorigin.pages.dev/filters/privacy.txt',
+        'https://ublockorigin.pages.dev/filters/resource-abuse.txt',
+        'https://ublockorigin.pages.dev/filters/unbreak.txt',
+        'https://ublockorigin.pages.dev/filters/quick-fixes.txt',
+        'https://secure.fanboy.co.nz/easylist.txt',
+        'https://secure.fanboy.co.nz/easyprivacy.txt',
+        'https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=1&mimetype=plaintext',
+    ];
     await rulesetFromURLS({
         id: 'default',
         name: 'Ads, trackers, miners, and more' ,
         enabled: true,
         urls: contentURLs,
+        homeURL: 'https://github.com/uBlockOrigin/uAssets',
     });
 
     // Regional rulesets
@@ -338,10 +776,11 @@ async function main() {
             name: asset.title,
             enabled: false,
             urls: [ contentURL ],
+            homeURL: asset.supportURL,
         });
     }
 
-    // Handpicked rulesets
+    // Handpicked rulesets from assets.json
     const handpicked = [ 'block-lan', 'dpollock-0' ];
     for ( const id of handpicked ) {
         const asset = assets[id];
@@ -355,20 +794,30 @@ async function main() {
             name: asset.title,
             enabled: false,
             urls: [ contentURL ],
+            homeURL: asset.supportURL,
         });
     }
 
-    writeOps.push(
-        writeFile(
-            `${rulesetDir}/ruleset-details.json`,
-            `${JSON.stringify(rulesetDetails, replacer, 2)}\n`
-        )
+    // Handpicked rulesets from abroad
+    await rulesetFromURLS({
+        id: 'stevenblack-hosts',
+        name: 'Steven Black\'s hosts file',
+        enabled: false,
+        urls: [ 'https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts' ],
+        homeURL: 'https://github.com/StevenBlack/hosts#readme',
+    });
+
+    writeFile(
+        `${rulesetDir}/ruleset-details.json`,
+        `${JSON.stringify(rulesetDetails, null, 1)}\n`
+    );
+
+    writeFile(
+        `${rulesetDir}/scripting-details.json`,
+        `${JSON.stringify(scriptingDetails, jsonSetMapReplacer)}\n`
     );
 
     await Promise.all(writeOps);
-
-    log(`Total good rules count: ${goodTotalCount}`);
-    log(`Total regex rules count: ${maybeGoodTotalCount}`);
 
     // Patch manifest
     manifest.declarative_net_request = { rule_resources: ruleResources };

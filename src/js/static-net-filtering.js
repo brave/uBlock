@@ -3852,14 +3852,15 @@ FilterContainer.prototype.freeze = function() {
 
 FilterContainer.prototype.dnrFromCompiled = function(op, context, ...args) {
     if ( op === 'begin' ) {
-        return {
+        Object.assign(context, {
             good: new Set(),
             bad: new Set(),
             invalid: new Set(),
             filterCount: 0,
             acceptedFilterCount: 0,
             rejectedFilterCount: 0,
-        };
+        });
+        return;
     }
 
     if ( op === 'add' ) {
@@ -4175,6 +4176,7 @@ FilterContainer.prototype.dnrFromCompiled = function(op, context, ...args) {
     };
     mergeRules(rulesetMap, 'resourceTypes');
     mergeRules(rulesetMap, 'initiatorDomains');
+    mergeRules(rulesetMap, 'requestDomains');
     mergeRules(rulesetMap, 'removeParams');
 
     // Patch case-sensitiveness

@@ -4,7 +4,7 @@
     "description": "extension name."
   },
   "extShortDesc": {
-    "message": "An experimental, permission-less lite content blocker -- block ads, trackers, miners and more by default.",
+    "message": "An experimental, permission-less content blocker. Blocks ads, trackers, miners, and more immediately upon installation.",
     "description": "this will be in the Chrome web store: must be 132 characters or less"
   },
   "perRulesetStats": {
@@ -83,6 +83,14 @@
     "message": "More",
     "description": "Label to be used to show popup panel sections"
   },
+  "popupGrantGreatPowers": {
+    "message": "Click to grant uBO Lite extended permissions on this site.\nExtended permissions allow more effective content blocking.",
+    "description": "Label to be used to show popup panel sections"
+  },
+  "popupRevokeGreatPowers": {
+    "message": "Click to revoke extended permissions on this site",
+    "description": "Label to be used to show popup panel sections"
+  },
   "popupLessButton": {
     "message": "Less",
     "description": "Label to be used to hide popup panel sections"
@@ -100,7 +108,7 @@
     "description": "Label for checkbox to enable a custom dark theme"
   },
   "settingsThemeAccent0Label": {
-    "message": "Custom accent color",
+    "message": "Custom accent colour",
     "description": "Label for checkbox to pick an accent color"
   },
   "settingsNoCSPReportsPrompt": {
@@ -168,7 +176,7 @@
     "description": "The default filename to use for import/export purpose"
   },
   "aboutChangelog": {
-    "message": "Changelog",
+    "message": "Change-log",
     "description": ""
   },
   "aboutCode": {
