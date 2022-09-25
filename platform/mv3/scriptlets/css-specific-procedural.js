@@ -19,15 +19,41 @@
     Home: https://github.com/gorhill/uBlock
 */
 
+/* jshint esversion:11 */
+
 'use strict';
 
-if (
-    typeof vAPI === 'object' &&
-    typeof vAPI.DOMProceduralFilterer !== 'object'
-) {
-// >>>>>>>> start of local scope
+/******************************************************************************/
+
+/// name css-specific-procedural
 
 /******************************************************************************/
+
+// Important!
+// Isolate from global scope
+(function() {
+
+/******************************************************************************/
+
+// $rulesetId$
+
+const argsMap = new Map(self.$argsMap$);
+
+const hostnamesMap = new Map(self.$hostnamesMap$);
+
+/******************************************************************************/
+
+const addStylesheet = text => {
+    try {
+        const sheet = new CSSStyleSheet();
+        sheet.replace(`@layer{${text}}`);
+        document.adoptedStyleSheets = [
+            ...document.adoptedStyleSheets,
+            sheet
+        ];
+    } catch(ex) {
+    }
+};
 
 const nonVisualElements = {
     script: true,
@@ -42,7 +68,6 @@ class PSelectorTask {
     end() {
     }
 }
-
 
 class PSelectorHasTextTask extends PSelectorTask {
     constructor(task) {
@@ -431,31 +456,24 @@ class PSelectorRoot extends PSelector {
         return [];
     }
 }
-PSelectorRoot.prototype.hit = false;
+
+/******************************************************************************/
 
 class ProceduralFilterer {
-    constructor(domFilterer) {
-        this.domFilterer = domFilterer;
-        this.domIsReady = false;
-        this.domIsWatched = false;
-        this.mustApplySelectors = false;
-        this.selectors = new Map();
-        this.masterToken = vAPI.randomToken();
+    constructor(selectors) {
+        this.selectors = [];
+        this.masterToken = this.randomToken();
         this.styleTokenMap = new Map();
         this.styledNodes = new Set();
-        if ( vAPI.domWatcher instanceof Object ) {
-            vAPI.domWatcher.addListener(this);
-        }
+        this.timer = undefined;
+        this.addSelectors(selectors);
     }
 
-    addProceduralSelectors(selectors) {
-        const addedSelectors = [];
-        let mustCommit = this.domIsWatched;
+    addSelectors() {
         for ( const selector of selectors ) {
-            if ( this.selectors.has(selector.raw) ) { continue; }
             let style, styleToken;
             if ( selector.action === undefined ) {
-                style = vAPI.hideStyle;
+                style = 'display:none!important;';
             } else if ( selector.action[0] === 'style' ) {
                 style = selector.action[1];
             }
@@ -463,27 +481,12 @@ class ProceduralFilterer {
                 styleToken = this.styleTokenFromStyle(style);
             }
             const pselector = new PSelectorRoot(selector, styleToken);
-            this.selectors.set(selector.raw, pselector);
-            addedSelectors.push(pselector);
-            mustCommit = true;
+            this.selectors.push(pselector);
         }
-        if ( mustCommit === false ) { return; }
-        this.mustApplySelectors = this.selectors.size !== 0;
-        this.domFilterer.commit();
-        if ( this.domFilterer.hasListeners() ) {
-            this.domFilterer.triggerListeners({
-                procedural: addedSelectors
-            });
-        }
+        this.onDOMChanged();
     }
 
     commitNow() {
-        if ( this.selectors.size === 0 || this.domIsReady === false ) {
-            return;
-        }
-
-        this.mustApplySelectors = false;
-
         //console.time('procedural selectors/dom layout changed');
 
         // https://github.com/uBlockOrigin/uBlock-issues/issues/341
@@ -506,28 +509,25 @@ class ProceduralFilterer {
             const t1 = Date.now();
             pselector.budget += t0 - t1;
             if ( pselector.budget < -500 ) {
-                console.info('uBO: disabling %s', pselector.raw);
+                console.info('uBOL: disabling %s', pselector.raw);
                 pselector.budget = -0x7FFFFFFF;
             }
             t0 = t1;
             if ( nodes.length === 0 ) { continue; }
-            pselector.hit = true;
             this.styleNodes(nodes, pselector.styleToken);
         }
 
         this.unstyleNodes(toUnstyle);
-        //console.timeEnd('procedural selectors/dom layout changed');
     }
 
     styleTokenFromStyle(style) {
         if ( style === undefined ) { return; }
         let styleToken = this.styleTokenMap.get(style);
         if ( styleToken !== undefined ) { return styleToken; }
-        styleToken = vAPI.randomToken();
+        styleToken = this.randomToken();
         this.styleTokenMap.set(style, styleToken);
-        this.domFilterer.addCSS(
-            `[${this.masterToken}][${styleToken}]\n{${style}}`,
-            { silent: true, mustInject: true }
+        addStylesheet(
+            `[${this.masterToken}][${styleToken}]\n{${style}}\n`,
         );
         return styleToken;
     }
@@ -547,9 +547,6 @@ class ProceduralFilterer {
         }
     }
 
-    // TODO: Current assumption is one style per hit element. Could be an
-    //       issue if an element has multiple styling and one styling is
-    //       brought back. Possibly too rare to care about this for now.
     unstyleNodes(nodes) {
         for ( const node of nodes ) {
             if ( this.styledNodes.has(node) ) { continue; }
@@ -557,48 +554,130 @@ class ProceduralFilterer {
         }
     }
 
-    createProceduralFilter(o) {
-        return new PSelectorRoot(typeof o === 'string' ? JSON.parse(o) : o);
+    randomToken() {
+        const n = Math.random();
+        return String.fromCharCode(n * 25 + 97) +
+            Math.floor(
+                (0.25 + n * 0.75) * Number.MAX_SAFE_INTEGER
+            ).toString(36).slice(-8);
     }
 
-    onDOMCreated() {
-        this.domIsReady = true;
-        this.domFilterer.commit();
-    }
-
-    onDOMChanged(addedNodes, removedNodes) {
-        if ( this.selectors.size === 0 ) { return; }
-        this.mustApplySelectors =
-            this.mustApplySelectors ||
-            addedNodes.length !== 0 ||
-            removedNodes;
-        this.domFilterer.commit();
+    onDOMChanged() {
+        if ( this.timer !== undefined ) { return; }
+        this.timer = self.requestAnimationFrame(( ) => {
+            this.timer = undefined;
+            this.commitNow();
+        });
     }
 }
-
-vAPI.DOMProceduralFilterer = ProceduralFilterer;
 
 /******************************************************************************/
 
-// >>>>>>>> end of local scope
+let hn;
+try { hn = document.location.hostname; } catch(ex) { }
+const selectors = [];
+while ( hn ) {
+    if ( hostnamesMap.has(hn) ) {
+        let argsHashes = hostnamesMap.get(hn);
+        if ( typeof argsHashes === 'number' ) { argsHashes = [ argsHashes ]; }
+        for ( const argsHash of argsHashes ) {
+            const details = argsMap.get(argsHash);
+            if ( details.n && details.n.includes(hn) ) { continue; }
+            selectors.push(...details.a);
+        }
+    }
+    if ( hn === '*' ) { break; }
+    const pos = hn.indexOf('.');
+    if ( pos !== -1 ) {
+        hn = hn.slice(pos + 1);
+    } else {
+        hn = '*';
+    }
 }
 
+const proceduralSelectors = [];
+const styleSelectors = [];
+for ( const selector of selectors ) {
+    if ( selector.cssable ) {
+        styleSelectors.push(selector);
+    } else {
+        proceduralSelectors.push(selector);
+    }
+}
 
+/******************************************************************************/
 
+// Declarative selectors
 
+if ( styleSelectors.length !== 0 ) {
+    const cssRuleFromProcedural = details => {
+        const { tasks, action } = details;
+        let mq;
+        if ( tasks !== undefined ) {
+            if ( tasks.length > 1 ) { return; }
+            if ( tasks[0][0] !== 'matches-media' ) { return; }
+            mq = tasks[0][1];
+        }
+        let style;
+        if ( Array.isArray(action) ) {
+            if ( action[0] !== 'style' ) { return; }
+            style = action[1];
+        }
+        if ( mq === undefined && style === undefined ) { return; }
+        if ( mq === undefined ) {
+            return `${details.selector}\n{${style}}`;
+        }
+        if ( style === undefined ) {
+            return `@media ${mq} {\n${details.selector}\n{display:none!important;}\n}`;
+        }
+        return `@media ${mq} {\n${details.selector}\n{${style}}\n}`;
+    };
+    const sheetText = [];
+    for ( const selector of styleSelectors ) {
+        const ruleText = cssRuleFromProcedural(selector);
+        if ( ruleText === undefined ) { continue; }
+        sheetText.push(ruleText);
+    }
+    if ( sheetText.length !== 0 ) {
+        addStylesheet(sheetText.join('\n'));
+    }
+}
 
+/******************************************************************************/
 
+// Procedural selectors
 
+if ( proceduralSelectors.length !== 0 ) {
+    const filterer = new ProceduralFilterer(proceduralSelectors);
+    const observer = new MutationObserver(mutations => {
+        let domChanged = false;
+        for ( let i = 0; i < mutations.length && !domChanged; i++ ) {
+            const mutation = mutations[i];
+            for ( const added of mutation.addedNodes ) {
+                if ( added.nodeType !== 1 ) { continue; }
+                domChanged = true;
+            }
+            for ( const removed of mutation.removedNodes ) {
+                if ( removed.nodeType !== 1 ) { continue; }
+                domChanged = true;
+            }
+        }
+        if ( domChanged === false ) { return; }
+        filterer.onDOMChanged();
+    });
+    observer.observe(document, {
+        childList: true,
+        subtree: true,
+    });
+}
 
-/*******************************************************************************
+/******************************************************************************/
 
-    DO NOT:
-    - Remove the following code
-    - Add code beyond the following code
-    Reason:
-    - https://github.com/gorhill/uBlock/pull/3721
-    - uBO never uses the return value from injected content scripts
+argsMap.clear();
+hostnamesMap.clear();
 
-**/
+/******************************************************************************/
 
-void 0;
+})();
+
+/******************************************************************************/

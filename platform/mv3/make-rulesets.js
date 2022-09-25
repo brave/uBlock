@@ -28,9 +28,9 @@ import https from 'https';
 import path from 'path';
 import process from 'process';
 import { createHash } from 'crypto';
-
 import { dnrRulesetFromRawLists } from './js/static-dnr-filtering.js';
 import { StaticFilteringParser } from './js/static-filtering-parser.js';
+import { fnameFromFileId } from './js/utils.js';
 
 /******************************************************************************/
 
@@ -54,9 +54,8 @@ const commandLineArgs = (( ) => {
 const outputDir = commandLineArgs.get('output') || '.';
 const cacheDir = `${outputDir}/../mv3-data`;
 const rulesetDir = `${outputDir}/rulesets`;
-const cssDir = `${rulesetDir}/css`;
 const scriptletDir = `${rulesetDir}/js`;
-const env = [ 'chromium', 'ubol' ];
+const env = [ 'chromium', 'ubol', 'native_css_has' ];
 
 /******************************************************************************/
 
@@ -68,8 +67,10 @@ const jsonSetMapReplacer = (k, v) => {
     return v;
 };
 
-const uid = (s, l = 8) =>
-    createHash('sha256').update(s).digest('hex').slice(0,l);
+const uidint32 = (s) => {
+    const h = createHash('sha256').update(s).digest('hex').slice(0,8);
+    return parseInt(h,16) & 0x7FFFFFFF;
+};
 
 /******************************************************************************/
 
@@ -294,161 +295,8 @@ async function processNetworkFilters(assetDetails, network) {
 
 /******************************************************************************/
 
-function addScriptingAPIResources(id, entry, prop, fname) {
-    if ( entry[prop] === undefined ) { return; }
-    for ( const hn of entry[prop] ) {
-        let details = scriptingDetails.get(id);
-        if ( details === undefined ) {
-            details = {
-                matches: new Map(),
-                excludeMatches: new Map(),
-            };
-            scriptingDetails.set(id, details);
-        }
-        let fnames = details[prop].get(hn);
-        if ( fnames === undefined ) {
-            fnames = new Set();
-            details[prop].set(hn, fnames);
-        }
-        fnames.add(fname);
-    }
-}
-
-/******************************************************************************/
-
-const globalCSSFileSet = new Set();
-
-// Using a at-rule layer declaration allows to raise uBOL's styles above
-// that of the page.
-const cssDeclaration =
-`@layer {
-$selector$ {
-  display:none!important;
- }
-}`;
-
-function processCosmeticFilters(assetDetails, mapin) {
-    if ( mapin === undefined ) { return 0; }
-
-    // Drop worryingly generic-looking selectors, they are too likely to
-    // cause false positives on unrelated sites. It's the price for a Lite
-    // version. Examples:
-    //   div[style*="z-index:"]
-    //   [style*="opacity:  0"]
-    for ( const s of mapin.keys() ) {
-        if ( /^[a-z]*\[style[^\]]*\](:|$)/.test(s) === false ) { continue; }
-        // `[style]` attributes with `/` characters are probably ok since they
-        // likely refer to specific `url()` property.
-        if ( s.indexOf('/') !== -1 ) { continue; }
-        // `[style]` attributes with dimension properties might be specific
-        // enough after all.
-        if ( /\b(height|width)\s*:\s*\d+px\b/.test(s) ) { continue; }
-        //console.log(`\tDropping ${s}`);
-        mapin.delete(s);
-    }
-
-    // This groups together selectors which are used by a the same hostname.
-    const optimizeExtendedFilters = filters => {
-        if ( filters === undefined ) { return []; }
-        const merge = new Map();
-        for ( const [ selector, details ] of filters ) {
-            const json = JSON.stringify(details);
-            let entries = merge.get(json);
-            if ( entries === undefined ) {
-                entries = new Set();
-                merge.set(json, entries);
-            }
-            entries.add(selector);
-        }
-        const out = [];
-        for ( const [ json, entries ] of merge ) {
-            const details = JSON.parse(json);
-            details.payload = Array.from(entries);
-            out.push(details);
-        }
-        return out;
-    };
-    const optimized = optimizeExtendedFilters(mapin);
-
-    // This creates a map of unique selectorset => all hostnames
-    // including/excluding the selectorset. This allows to avoid duplication
-    // of css content.
-    const cssContentMap = new Map();
-    for ( const entry of optimized ) {
-        const selectors = entry.payload.map(s => ` ${s}`).join(',\n');
-        // ends-with 0 = css resource
-        const fname = uid(selectors) + '0';
-        let contentDetails = cssContentMap.get(fname);
-        if ( contentDetails === undefined ) {
-            contentDetails = { selectors };
-            cssContentMap.set(fname, contentDetails);
-        }
-        if ( entry.matches !== undefined ) {
-            if ( contentDetails.matches === undefined ) {
-                contentDetails.matches = new Set();
-            }
-            for ( const hn of entry.matches ) {
-                contentDetails.matches.add(hn);
-            }
-        }
-        if ( entry.excludeMatches !== undefined ) {
-            if ( contentDetails.excludeMatches === undefined ) {
-                contentDetails.excludeMatches = new Set();
-            }
-            for ( const hn of entry.excludeMatches ) {
-                contentDetails.excludeMatches.add(hn);
-            }
-        }
-    }
-
-    // We do not want more than 128 CSS files per subscription, so we will
-    // group multiple unrelated selectors in the same file and hope this does
-    // not cause false positives.
-    const contentPerFile = Math.ceil(cssContentMap.size / 128);
-    const cssContentArray = Array.from(cssContentMap).map(entry => entry[1]);
-    let distinctResourceCount = 0;
-
-    for ( let i = 0; i < cssContentArray.length; i += contentPerFile ) {
-        const slice = cssContentArray.slice(i, i + contentPerFile);
-        const matches = slice.map(entry =>
-            Array.from(entry.matches || [])
-        ).flat();
-        const excludeMatches = slice.map(entry =>
-            Array.from(entry.excludeMatches || [])
-        ).flat();
-        const selectors = slice.map(entry =>
-            entry.selectors
-        ).join(',\n');
-        const fname = uid(selectors) + '0';
-        if ( globalCSSFileSet.has(fname) === false ) {
-            globalCSSFileSet.add(fname);
-            const fpath = `${fname.slice(0,1)}/${fname.slice(1,2)}/${fname.slice(2)}`;
-            writeFile(
-                `${cssDir}/${fpath}.css`,
-                cssDeclaration.replace('$selector$', selectors)
-            );
-            distinctResourceCount += 1;
-        }
-        addScriptingAPIResources(
-            assetDetails.id,
-            { matches },
-            'matches',
-            fname
-        );
-        addScriptingAPIResources(
-            assetDetails.id,
-            { excludeMatches },
-            'excludeMatches',
-            fname
-        );
-    }
-
-    log(`CSS entries: ${distinctResourceCount}`);
-
-    return distinctResourceCount;
-}
-
-/******************************************************************************/
+// TODO: unify css/scriptlet processing code since now css styles are
+// injected using scriptlet injection.
 
 // Load all available scriptlets into a key-val map, where the key is the
 // scriptlet token, and val is the whole content of the file.
@@ -492,7 +340,300 @@ function loadAllSourceScriptlets() {
     return scriptletsMapPromise;
 }
 
+/******************************************************************************/
+
 const globalPatchedScriptletsSet = new Set();
+
+function addScriptingAPIResources(id, entry, prop, fid) {
+    if ( entry[prop] === undefined ) { return; }
+    for ( const hn of entry[prop] ) {
+        let details = scriptingDetails.get(id);
+        if ( details === undefined ) {
+            details = {};
+            scriptingDetails.set(id, details);
+        }
+        if ( details[prop] === undefined ) {
+            details[prop] = new Map();
+        }
+        let fids = details[prop].get(hn);
+        if ( fids === undefined ) {
+            details[prop].set(hn, fid);
+        } else if ( fids instanceof Set ) {
+            fids.add(fid);
+        } else if ( fid !== fids ) {
+            fids = new Set([ fids, fid ]);
+            details[prop].set(hn, fids);
+        }
+    }
+}
+
+const        toCSSFileId = s => (uidint32(s) & ~0b11) | 0b00;
+const         toJSFileId = s => (uidint32(s) & ~0b11) | 0b01;
+const toProceduralFileId = s => (uidint32(s) & ~0b11) | 0b10;
+
+const pathFromFileName = fname => `${scriptletDir}/${fname.slice(0,2)}/${fname.slice(2)}.js`;
+
+/******************************************************************************/
+
+const COSMETIC_FILES_PER_RULESET = 12;
+const PROCEDURAL_FILES_PER_RULESET = 4;
+
+// This merges selectors which are used by the same hostnames
+
+function groupCosmeticByHostnames(mapin) {
+    if ( mapin === undefined ) { return []; }
+    const merged = new Map();
+    for ( const [ selector, details ] of mapin ) {
+        const json = JSON.stringify(details);
+        let entries = merged.get(json);
+        if ( entries === undefined ) {
+            entries = new Set();
+            merged.set(json, entries);
+        }
+        entries.add(selector);
+    }
+    const out = [];
+    for ( const [ json, entries ] of merged ) {
+        const details = JSON.parse(json);
+        details.selectors = Array.from(entries).sort();
+        out.push(details);
+    }
+    return out;
+}
+
+// This merges hostnames which have the same set of selectors.
+//
+// Also, we sort the hostnames to increase likelihood that selector with
+// same hostnames will end up in same generated scriptlet.
+
+function groupCosmeticBySelectors(arrayin) {
+    const contentMap = new Map();
+    for ( const entry of arrayin ) {
+        const id = uidint32(JSON.stringify(entry.selectors));
+        let details = contentMap.get(id);
+        if ( details === undefined ) {
+            details = { a: entry.selectors };
+            contentMap.set(id, details);
+        }
+        if ( entry.matches !== undefined ) {
+            if ( details.y === undefined ) {
+                details.y = new Set();
+            }
+            for ( const hn of entry.matches ) {
+                details.y.add(hn);
+            }
+        }
+        if ( entry.excludeMatches !== undefined ) {
+            if ( details.n === undefined ) {
+                details.n = new Set();
+            }
+            for ( const hn of entry.excludeMatches ) {
+                details.n.add(hn);
+            }
+        }
+    }
+    const hnSort = (a, b) =>
+        a.split('.').reverse().join('.').localeCompare(
+            b.split('.').reverse().join('.')
+        );
+    const out = Array.from(contentMap).map(a => [
+        a[0], {
+            a: a[1].a,
+            y: a[1].y ? Array.from(a[1].y).sort(hnSort) : undefined,
+            n: a[1].n ? Array.from(a[1].n) : undefined,
+        }
+    ]).sort((a, b) => {
+        const ha = Array.isArray(a[1].y) ? a[1].y[0] : '*';
+        const hb = Array.isArray(b[1].y) ? b[1].y[0] : '*';
+        return hnSort(ha, hb);
+    });
+    return out;
+}
+
+const scriptletHostnameToIdMap = (hostnames, id, map) => {
+    for ( const hn of hostnames ) {
+        const existing = map.get(hn);
+        if ( existing === undefined ) {
+            map.set(hn, id);
+        } else if ( Array.isArray(existing) ) {
+            existing.push(id);
+        } else {
+            map.set(hn, [ existing, id ]);
+        }
+    }
+};
+
+const scriptletJsonReplacer = (k, v) => {
+    if ( k === 'n' ) {
+        if ( v === undefined || v.size === 0 ) { return; }
+        return Array.from(v);
+    }
+    if ( v instanceof Set || v instanceof Map ) {
+        if ( v.size === 0 ) { return; }
+        return Array.from(v);
+    }
+    return v;
+};
+
+/******************************************************************************/
+
+async function processCosmeticFilters(assetDetails, mapin) {
+    if ( mapin === undefined ) { return 0; }
+
+    const contentArray = groupCosmeticBySelectors(
+        groupCosmeticByHostnames(mapin)
+    );
+    const contentPerFile =
+        Math.ceil(contentArray.length / COSMETIC_FILES_PER_RULESET);
+
+    // We do not want more than n CSS files per subscription, so we will
+    // group multiple unrelated selectors in the same file, and distinct
+    // css declarations will be injected programmatically according to the
+    // hostname of the current document.
+    //
+    // The cosmetic filters will be injected programmatically as content
+    // script and the decisions to activate the cosmetic filters will be
+    // done at injection time according to the document's hostname.
+    const originalScriptletMap = await loadAllSourceScriptlets();
+    const generatedFiles = [];
+
+    for ( let i = 0; i < contentArray.length; i += contentPerFile ) {
+        const slice = contentArray.slice(i, i + contentPerFile);
+        const argsMap = slice.map(entry => [
+            entry[0],
+            {
+                a: entry[1].a ? entry[1].a.join(',\n') : undefined,
+                n: entry[1].n
+            }
+        ]);
+        const hostnamesMap = new Map();
+        for ( const [ id, details ] of slice ) {
+            if ( details.y === undefined ) { continue; }
+            scriptletHostnameToIdMap(details.y, id, hostnamesMap);
+        }
+        const patchedScriptlet = originalScriptletMap.get('css-specific')
+            .replace(
+                '$rulesetId$',
+                assetDetails.id
+            ).replace(
+                /\bself\.\$argsMap\$/m,
+                `${JSON.stringify(argsMap, scriptletJsonReplacer)}`
+            ).replace(
+                /\bself\.\$hostnamesMap\$/m,
+                `${JSON.stringify(hostnamesMap, scriptletJsonReplacer)}`
+            );
+        const fid = toCSSFileId(patchedScriptlet);
+        if ( globalPatchedScriptletsSet.has(fid) === false ) {
+            globalPatchedScriptletsSet.add(fid);
+            const fname = fnameFromFileId(fid);
+            writeFile(pathFromFileName(fname), patchedScriptlet, {});
+            generatedFiles.push(fname);
+        }
+        for ( const entry of slice ) {
+            addScriptingAPIResources(
+                assetDetails.id,
+                { matches: entry[1].y },
+                'matches',
+                fid
+            );
+            addScriptingAPIResources(
+                assetDetails.id,
+                { excludeMatches: entry[1].n },
+                'excludeMatches',
+                fid
+            );
+        }
+    }
+
+    if ( generatedFiles.length !== 0 ) {
+        log(`CSS-related distinct filters: ${contentArray.length} distinct combined selectors`);
+        log(`CSS-related injectable files: ${generatedFiles.length}`);
+        log(`\t${generatedFiles.join(', ')}`);
+    }
+
+    return contentArray.length;
+}
+
+/******************************************************************************/
+
+async function processProceduralCosmeticFilters(assetDetails, mapin) {
+    if ( mapin === undefined ) { return 0; }
+
+    const contentArray = groupCosmeticBySelectors(
+        groupCosmeticByHostnames(mapin)
+    );
+    const contentPerFile =
+        Math.ceil(contentArray.length / PROCEDURAL_FILES_PER_RULESET);
+
+    // We do not want more than n CSS files per subscription, so we will
+    // group multiple unrelated selectors in the same file, and distinct
+    // css declarations will be injected programmatically according to the
+    // hostname of the current document.
+    //
+    // The cosmetic filters will be injected programmatically as content
+    // script and the decisions to activate the cosmetic filters will be
+    // done at injection time according to the document's hostname.
+    const originalScriptletMap = await loadAllSourceScriptlets();
+    const generatedFiles = [];
+
+    for ( let i = 0; i < contentArray.length; i += contentPerFile ) {
+        const slice = contentArray.slice(i, i + contentPerFile);
+        const argsMap = slice.map(entry => [
+            entry[0],
+            {
+                a: entry[1].a ? entry[1].a.map(v => JSON.parse(v)) : undefined,
+                n: entry[1].n
+            }
+        ]);
+        const hostnamesMap = new Map();
+        for ( const [ id, details ] of slice ) {
+            if ( details.y === undefined ) { continue; }
+            scriptletHostnameToIdMap(details.y, id, hostnamesMap);
+        }
+        const patchedScriptlet = originalScriptletMap.get('css-specific-procedural')
+            .replace(
+                '$rulesetId$',
+                assetDetails.id
+            ).replace(
+                /\bself\.\$argsMap\$/m,
+                `${JSON.stringify(argsMap, scriptletJsonReplacer)}`
+            ).replace(
+                /\bself\.\$hostnamesMap\$/m,
+                `${JSON.stringify(hostnamesMap, scriptletJsonReplacer)}`
+            );
+        const fid = toProceduralFileId(patchedScriptlet);
+        if ( globalPatchedScriptletsSet.has(fid) === false ) {
+            globalPatchedScriptletsSet.add(fid);
+            const fname = fnameFromFileId(fid);
+            writeFile(pathFromFileName(fname), patchedScriptlet, {});
+            generatedFiles.push(fname);
+        }
+        for ( const entry of slice ) {
+            addScriptingAPIResources(
+                assetDetails.id,
+                { matches: entry[1].y },
+                'matches',
+                fid
+            );
+            addScriptingAPIResources(
+                assetDetails.id,
+                { excludeMatches: entry[1].n },
+                'excludeMatches',
+                fid
+            );
+        }
+    }
+
+    if ( generatedFiles.length !== 0 ) {
+        log(`Procedural-related distinct filters: ${contentArray.length} distinct combined selectors`);
+        log(`Procedural-related injectable files: ${generatedFiles.length}`);
+        log(`\t${generatedFiles.join(', ')}`);
+    }
+
+    return contentArray.length;
+}
+
+/******************************************************************************/
 
 async function processScriptletFilters(assetDetails, mapin) {
     if ( mapin === undefined ) { return 0; }
@@ -563,8 +704,8 @@ async function processScriptletFilters(assetDetails, mapin) {
                 y: new Set(),
                 n: new Set(),
             };
+            argsDetails.set(argsHash, hostnamesDetails);
         }
-        argsDetails.set(argsHash, hostnamesDetails);
         if ( entry.matches ) {
             for ( const hn of entry.matches ) {
                 hostnamesDetails.y.add(hn);
@@ -577,78 +718,152 @@ async function processScriptletFilters(assetDetails, mapin) {
         }
     }
 
-    let distinctResourceCount = 0;
-
-    const jsonReplacer = (k, v) => {
-        if ( k === 'n' ) {
-            if ( v.size === 0 ) { return; }
-            return Array.from(v);
-        }
-        if ( v instanceof Set || v instanceof Map ) {
-            if ( v.size === 0 ) { return; }
-            return Array.from(v);
-        }
-        return v;
-    };
-
-    const toHostnamesMap = (hostnames, hash, out) => {
-        for ( const hn of hostnames ) {
-            const existing = out.get(hn);
-            if ( existing === undefined ) {
-                out.set(hn, hash);
-            } else if ( Array.isArray(existing) ) {
-                existing.push(hash);
-            } else {
-                out.set(hn, [ existing, hash ]);
-            }
-        }
-    };
+    const generatedFiles = [];
 
     for ( const [ token, argsDetails ] of scriptletDetails ) {
-        const argsMap = Array.from(argsDetails).map(entry => {
-            return [ 
-                parseInt(uid(entry[0]),16),
-                { a: entry[1].a, n: entry[1].n }
-            ];
-        });
+        const argsMap = Array.from(argsDetails).map(entry => [
+            uidint32(entry[0]),
+            { a: entry[1].a, n: entry[1].n }
+        ]);
         const hostnamesMap = new Map();
         for ( const [ argsHash, details ] of argsDetails ) {
-            toHostnamesMap(details.y, parseInt(uid(argsHash),16), hostnamesMap);
+            scriptletHostnameToIdMap(details.y, uidint32(argsHash), hostnamesMap);
         }
         const patchedScriptlet = originalScriptletMap.get(token)
             .replace(
+                '$rulesetId$',
+                assetDetails.id
+            ).replace(
                 /\bself\.\$argsMap\$/m,
-                `${JSON.stringify(argsMap, jsonReplacer)}`
+                `${JSON.stringify(argsMap, scriptletJsonReplacer)}`
             ).replace(
                 /\bself\.\$hostnamesMap\$/m,
-                `${JSON.stringify(hostnamesMap, jsonReplacer)}`
+                `${JSON.stringify(hostnamesMap, scriptletJsonReplacer)}`
             );
         // ends-with 1 = scriptlet resource
-        const fname = uid(patchedScriptlet) + '1';
-        if ( globalPatchedScriptletsSet.has(fname) === false ) {
-            globalPatchedScriptletsSet.add(fname);
-            writeFile(`${scriptletDir}/${fname}.js`, patchedScriptlet, {});
-            distinctResourceCount += 1;
+        const fid = toJSFileId(patchedScriptlet);
+        if ( globalPatchedScriptletsSet.has(fid) === false ) {
+            globalPatchedScriptletsSet.add(fid);
+            const fname = fnameFromFileId(fid);
+            writeFile(pathFromFileName(fname), patchedScriptlet, {});
+            generatedFiles.push(fname);
         }
         for ( const details of argsDetails.values() ) {
             addScriptingAPIResources(
                 assetDetails.id,
                 { matches: details.y },
                 'matches',
-                fname
+                fid
             );
             addScriptingAPIResources(
                 assetDetails.id,
                 { excludeMatches: details.n },
                 'excludeMatches',
-                fname
+                fid
             );
         }
     }
-    log(`Scriptlet entries: ${distinctResourceCount}`);
 
-    return distinctResourceCount;
+    if ( generatedFiles.length !== 0 ) {
+        const scriptletFilterCount = Array.from(scriptletDetails.values())
+            .reduce((a, b) => a + b.size, 0);
+        log(`Scriptlet-related distinct filters: ${scriptletFilterCount}`);
+        log(`Scriptlet-related injectable files: ${generatedFiles.length}`);
+        log(`\t${generatedFiles.join(', ')}`);
+    }
+
+    return generatedFiles.length;
 }
+
+/******************************************************************************/
+
+const rulesetFromURLS = async function(assetDetails) {
+    log('============================');
+    log(`Listset for '${assetDetails.id}':`);
+
+    const text = await fetchAsset(assetDetails);
+    if ( text === '' ) { return; }
+
+    const results = await dnrRulesetFromRawLists(
+        [ { name: assetDetails.id, text } ],
+        { env }
+    );
+
+    const netStats = await processNetworkFilters(
+        assetDetails,
+        results.network
+    );
+
+    // Split cosmetic filters into two groups: declarative and procedural
+    const declarativeCosmetic = new Map();
+    const proceduralCosmetic = new Map();
+    const rejectedCosmetic = [];
+    if ( results.cosmetic ) {
+        for ( const [ selector, details ] of results.cosmetic ) {
+            if ( details.rejected ) {
+                rejectedCosmetic.push(selector);
+                continue;
+            }
+            if ( selector.startsWith('{') === false ) {
+                declarativeCosmetic.set(selector, details);
+                continue;
+            }
+            const parsed = JSON.parse(selector);
+            parsed.raw = undefined;
+            proceduralCosmetic.set(JSON.stringify(parsed), details);
+        }
+    }
+    const cosmeticStats = await processCosmeticFilters(
+        assetDetails,
+        declarativeCosmetic
+    );
+    const proceduralStats = await processProceduralCosmeticFilters(
+        assetDetails,
+        proceduralCosmetic
+    );
+    if ( rejectedCosmetic.length !== 0 ) {
+        log(`Rejected cosmetic filters: ${rejectedCosmetic.length}`);
+        log(rejectedCosmetic.map(line => `\t${line}`).join('\n'));
+    }
+
+    const scriptletStats = await processScriptletFilters(
+        assetDetails,
+        results.scriptlet
+    );
+
+    rulesetDetails.push({
+        id: assetDetails.id,
+        name: assetDetails.name,
+        enabled: assetDetails.enabled,
+        lang: assetDetails.lang,
+        homeURL: assetDetails.homeURL,
+        filters: {
+            total: results.network.filterCount,
+            accepted: results.network.acceptedFilterCount,
+            rejected: results.network.rejectedFilterCount,
+        },
+        rules: {
+            total: netStats.total,
+            accepted: netStats.accepted,
+            discarded: netStats.discarded,
+            rejected: netStats.rejected,
+            regexes: netStats.regexes,
+        },
+        css: {
+            specific: cosmeticStats,
+            procedural: proceduralStats,
+        },
+        scriptlets: {
+            total: scriptletStats,
+        },
+    });
+
+    ruleResources.push({
+        id: assetDetails.id,
+        enabled: assetDetails.enabled,
+        path: `/rulesets/${assetDetails.id}.json`
+    });
+};
 
 /******************************************************************************/
 
@@ -673,65 +888,6 @@ async function main() {
         version += `.${yearPart}.${monthPart + dayPart + hourPart}`;
     }
     log(`Version: ${version}`);
-
-    const rulesetFromURLS = async function(assetDetails) {
-        log('============================');
-        log(`Listset for '${assetDetails.id}':`);
-
-        const text = await fetchAsset(assetDetails);
-
-        const results = await dnrRulesetFromRawLists(
-            [ { name: assetDetails.id, text } ],
-            { env }
-        );
-
-        const netStats = await processNetworkFilters(
-            assetDetails,
-            results.network
-        );
-
-        const cosmeticStats = await processCosmeticFilters(
-            assetDetails,
-            results.cosmetic
-        );
-
-        const scriptletStats = await processScriptletFilters(
-            assetDetails,
-            results.scriptlet
-        );
-
-        rulesetDetails.push({
-            id: assetDetails.id,
-            name: assetDetails.name,
-            enabled: assetDetails.enabled,
-            lang: assetDetails.lang,
-            homeURL: assetDetails.homeURL,
-            filters: {
-                total: results.network.filterCount,
-                accepted: results.network.acceptedFilterCount,
-                rejected: results.network.rejectedFilterCount,
-            },
-            rules: {
-                total: netStats.total,
-                accepted: netStats.accepted,
-                discarded: netStats.discarded,
-                rejected: netStats.rejected,
-                regexes: netStats.regexes,
-            },
-            css: {
-                specific: cosmeticStats,
-            },
-            scriptlets: {
-                total: scriptletStats,
-            },
-        });
-
-        ruleResources.push({
-            id: assetDetails.id,
-            enabled: assetDetails.enabled,
-            path: `/rulesets/${assetDetails.id}.json`
-        });
-    };
 
     // Get assets.json content
     const assets = await fs.readFile(
@@ -762,11 +918,15 @@ async function main() {
     });
 
     // Regional rulesets
+    const excludedLists = [
+        'ara-0',
+        'EST-0',
+    ];
     for ( const [ id, asset ] of Object.entries(assets) ) {
         if ( asset.content !== 'filters' ) { continue; }
         if ( asset.off !== true ) { continue; }
         if ( typeof asset.lang !== 'string' ) { continue; }
-
+        if ( excludedLists.includes(id) ) { continue; }
         const contentURL = Array.isArray(asset.contentURL)
             ? asset.contentURL[0]
             : asset.contentURL;
