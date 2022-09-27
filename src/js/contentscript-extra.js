@@ -43,6 +43,14 @@ class PSelectorTask {
     }
 }
 
+class PSelectorVoidTask extends PSelectorTask {
+    constructor(task) {
+        super();
+        console.info(`uBO: :${task[0]}() operator does not exist`);
+    }
+    transpose() {
+    }
+}
 
 class PSelectorHasTextTask extends PSelectorTask {
     constructor(task) {
@@ -93,6 +101,19 @@ class PSelectorMatchesCSSTask extends PSelectorTask {
         if ( style !== null && this.value.test(style[this.name]) ) {
             output.push(node);
         }
+    }
+}
+class PSelectorMatchesCSSAfterTask extends PSelectorMatchesCSSTask {
+    constructor(task) {
+        super(task);
+        this.pseudo = '::after';
+    }
+}
+
+class PSelectorMatchesCSSBeforeTask extends PSelectorMatchesCSSTask {
+    constructor(task) {
+        super(task);
+        this.pseudo = '::before';
     }
 }
 
@@ -345,6 +366,8 @@ class PSelector {
                 [ 'if', PSelectorIfTask ],
                 [ 'if-not', PSelectorIfNotTask ],
                 [ 'matches-css', PSelectorMatchesCSSTask ],
+                [ 'matches-css-after', PSelectorMatchesCSSAfterTask ],
+                [ 'matches-css-before', PSelectorMatchesCSSBeforeTask ],
                 [ 'matches-media', PSelectorMatchesMediaTask ],
                 [ 'matches-path', PSelectorMatchesPathTask ],
                 [ 'min-text-length', PSelectorMinTextLengthTask ],
@@ -362,8 +385,7 @@ class PSelector {
         const tasks = [];
         if ( Array.isArray(o.tasks) === false ) { return; }
         for ( const task of o.tasks ) {
-            const ctor = this.operatorToTaskMap.get(task[0]);
-            if ( ctor === undefined ) { return; }
+            const ctor = this.operatorToTaskMap.get(task[0]) || PSelectorVoidTask;
             tasks.push(new ctor(task));
         }
         // Initialize only after all tasks have been successfully instantiated
