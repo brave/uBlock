@@ -115,6 +115,14 @@
     "message": "CSP-rapporten blokkearje",
     "description": "background information: https://github.com/gorhill/uBlock/issues/3150"
   },
+  "omnipotenceLabel": {
+    "message": "Wiidweidich filterjen op alle websites ynskeakelje",
+    "description": "Header for a ruleset section in 'Filter lists pane'"
+  },
+  "omnipotenceLegend": {
+    "message": "uBO Lite kin allinnich wiidweidich filterjen op in bepaalde website tapasse, neidat jo de útwreiding eksplisyt tastimmingen ferliend hawwe om gegevens op dy website oan te passen. Fia dizze ynstelling kinne jo tastimmingen foar wiidweidich filterjen oan alle websites tagelyk ferliene.",
+    "description": "Header for a ruleset section in 'Filter lists pane'"
+  },
   "3pGroupDefault": {
     "message": "Standert",
     "description": "Header for a ruleset section in 'Filter lists pane'"
@@ -214,5 +222,57 @@
   "genericRevert": {
     "message": "Ungedien meitsje",
     "description": "for generic 'Revert' buttons"
+  },
+  "firstRunSectionLabel": {
+    "message": "Wolkom",
+    "description": "The header text for the welcome message section"
+  },
+  "firstRunDescription": {
+    "message": "Jo hawwe sakrekt uBO Lite ynstallearre. Hjir kinne jo de standery filtermodus foar it gebrûk op alle websites kieze.\n\nStandert wurdt de modus <em>Basis</em> selektearre, omdat hjirfoar gjin tastimming foar it lêzen en wizigjen fan gegevens fereaske is. As jo uBO Lite fertrouwe, kinne jo it brede tastimming foar it lêzen en wizigjen fan gegevens op alle websites ferliene, sadat standert mear avansearre filtermooglikheden foar alle websites beskikber binne.",
+    "description": "Descriptive text shown at first install time only "
+  },
+  "defaultFilteringModeSectionLabel": {
+    "message": "Standert filtermodus",
+    "description": "The header text for the default filtering mode section"
+  },
+  "defaultFilteringModeDescription": {
+    "message": "De standert filtermodus wurdt negearre troch filtermodi per website. Jo kinne de filtermodus op in winske website oanpasse nei de modus dy’t op dy website it bêste wurket. Elke modus hat foar- en neidielen.",
+    "description": "This describes the default filtering mode setting"
+  },
+  "filteringMode0Name": {
+    "message": "gjin filtering",
+    "description": "Name of blocking mode 0"
+  },
+  "filteringMode1Name": {
+    "message": "basis",
+    "description": "Name of blocking mode 1"
+  },
+  "filteringMode2Name": {
+    "message": "optimaal",
+    "description": "Name of blocking mode 2"
+  },
+  "filteringMode3Name": {
+    "message": "folslein",
+    "description": "Name of blocking mode 3"
+  },
+  "basicFilteringModeDescription": {
+    "message": "Basale netwurkfiltering fan selektearre filterlisten út.\n\nFereasket gjin tastimming foar it lêzen en wizigjen fan gegevens op websites.",
+    "description": "This describes the 'basic' filtering mode"
+  },
+  "optimalFilteringModeDescription": {
+    "message": "Avansearre netwurkfiltering plus spesifike wiidweidige filtering fan selektearre filterlisten út.\n\nFereasket brede tastimming foar it lêzen en wizigjen fan gegevens op alle websites.",
+    "description": "This describes the 'optimal' filtering mode"
+  },
+  "completeFilteringModeDescription": {
+    "message": "Avansearre netwurkfiltering plus spesifike en algemiene wiidweidige filtering fan selektearre filterlisten út.\n\nFereasket brede tastimming foar it lêzen en wizigjen fan gegevens op alle websites.\n\nAlgemiene wiidweidige filtering kin in heger gebrûk fan websideboarnen feroarsaakje.",
+    "description": "This describes the 'complete' filtering mode"
+  },
+  "behaviorSectionLabel": {
+    "message": "Gedrach",
+    "description": "The header text for the 'Behavior' section"
+  },
+  "autoReloadLabel": {
+    "message": "Side automatysk fernije by wizigjen fan filtermodus",
+    "description": "Label for a checkbox in the options page"
   }
 }

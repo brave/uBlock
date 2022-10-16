@@ -25,7 +25,6 @@ echo "*** uBOLite.mv3: Copying common files"
 cp -R src/css/fonts/* $DES/css/fonts/
 cp src/css/themes/default.css $DES/css/
 cp src/css/common.css $DES/css/
-cp src/css/dashboard.css $DES/css/
 cp src/css/dashboard-common.css $DES/css/
 cp src/css/fa-icons.css $DES/css/
 
@@ -37,7 +36,7 @@ cp LICENSE.txt $DES/
 echo "*** uBOLite.mv3: Copying mv3-specific files"
 cp platform/mv3/extension/*.html $DES/
 cp platform/mv3/extension/css/* $DES/css/
-cp platform/mv3/extension/js/* $DES/js/
+cp -R platform/mv3/extension/js/* $DES/js/
 cp platform/mv3/extension/img/* $DES/img/
 cp -R platform/mv3/extension/_locales $DES/
 

@@ -142,8 +142,8 @@ const typeValueToTypeName = [
     'image',
     'object',
     'script',
-    'xmlhttprequest',
-    'sub_frame',
+    'xhr',
+    'frame',
     'font',
     'media',
     'websocket',
@@ -162,6 +162,22 @@ const typeValueToTypeName = [
     'webrtc',
     'unsupported',
 ];
+
+const typeValueToDNRTypeName = [
+    '',
+    'stylesheet',
+    'image',
+    'object',
+    'script',
+    'xmlhttprequest',
+    'sub_frame',
+    'font',
+    'media',
+    'websocket',
+    'ping',
+    'other',
+];
+
 
 //const typeValueFromCatBits = catBits => (catBits >>> TypeBitsOffset) & 0b11111;
 
@@ -615,11 +631,6 @@ const dnrRuleFromCompiled = (args, rule) => {
 const dnrAddRuleError = (rule, msg) => {
     rule._error = rule._error || [];
     rule._error.push(msg);
-};
-
-const dnrAddRuleWarning = (rule, msg) => {
-    rule._warning = rule._warning || [];
-    rule._warning.push(msg);
 };
 
 /*******************************************************************************
@@ -1279,15 +1290,19 @@ const FilterNotType = class {
 
     static dnrFromCompiled(args, rule) {
         rule.condition = rule.condition || {};
-        if ( rule.condition.excludedResourceTypes === undefined ) {
-            rule.condition.excludedResourceTypes = [];
+        const rc = rule.condition;
+        if ( rc.excludedResourceTypes === undefined ) {
+            rc.excludedResourceTypes = [ 'main_frame' ];
         }
         let bits = args[1];
-        for ( let i = 1; bits !== 0 && i < typeValueToTypeName.length; i++ ) {
+        for ( let i = 1; bits !== 0 && i < typeValueToDNRTypeName.length; i++ ) {
             const bit = 1 << (i - 1);
             if ( (bits & bit) === 0 ) { continue; }
             bits &= ~bit;
-            rule.condition.excludedResourceTypes.push(`${typeValueToTypeName[i]}`);
+            const type = typeValueToDNRTypeName[i];
+            if ( type === undefined ) { continue; }
+            if ( rc.excludedResourceTypes.includes(type) ) { continue; }
+            rc.excludedResourceTypes.push(type);
         }
     }
 
@@ -3903,65 +3918,65 @@ FilterContainer.prototype.dnrFromCompiled = function(op, context, ...args) {
         const bucket = buckets.get(bits);
 
         switch ( tokenHash ) {
-            case DOT_TOKEN_HASH: {
-                if ( bucket.has(DOT_TOKEN_HASH) === false ) {
-                    bucket.set(DOT_TOKEN_HASH, [{
-                        condition: {
-                            requestDomains: []
-                        }
-                    }]);
-                }
-                const rule = bucket.get(DOT_TOKEN_HASH)[0];
-                rule.condition.requestDomains.push(fdata);
-                break;
+        case DOT_TOKEN_HASH: {
+            if ( bucket.has(DOT_TOKEN_HASH) === false ) {
+                bucket.set(DOT_TOKEN_HASH, [{
+                    condition: {
+                        requestDomains: []
+                    }
+                }]);
             }
-            case ANY_TOKEN_HASH: {
-                if ( bucket.has(ANY_TOKEN_HASH) === false ) {
-                    bucket.set(ANY_TOKEN_HASH, [{
-                        condition: {
-                            initiatorDomains: []
-                        }
-                    }]);
-                }
-                const rule = bucket.get(ANY_TOKEN_HASH)[0];
-                rule.condition.initiatorDomains.push(fdata);
-                break;
+            const rule = bucket.get(DOT_TOKEN_HASH)[0];
+            rule.condition.requestDomains.push(fdata);
+            break;
+        }
+        case ANY_TOKEN_HASH: {
+            if ( bucket.has(ANY_TOKEN_HASH) === false ) {
+                bucket.set(ANY_TOKEN_HASH, [{
+                    condition: {
+                        initiatorDomains: []
+                    }
+                }]);
             }
-            case ANY_HTTPS_TOKEN_HASH: {
-                if ( bucket.has(ANY_HTTPS_TOKEN_HASH) === false ) {
-                    bucket.set(ANY_HTTPS_TOKEN_HASH, [{
-                        condition: {
-                            urlFilter: '|https://',
-                            initiatorDomains: []
-                        }
-                    }]);
-                }
-                const rule = bucket.get(ANY_HTTPS_TOKEN_HASH)[0];
-                rule.condition.initiatorDomains.push(fdata);
-                break;
+            const rule = bucket.get(ANY_TOKEN_HASH)[0];
+            rule.condition.initiatorDomains.push(fdata);
+            break;
+        }
+        case ANY_HTTPS_TOKEN_HASH: {
+            if ( bucket.has(ANY_HTTPS_TOKEN_HASH) === false ) {
+                bucket.set(ANY_HTTPS_TOKEN_HASH, [{
+                    condition: {
+                        urlFilter: '|https://',
+                        initiatorDomains: []
+                    }
+                }]);
             }
-            case ANY_HTTP_TOKEN_HASH: {
-                if ( bucket.has(ANY_HTTP_TOKEN_HASH) === false ) {
-                    bucket.set(ANY_HTTP_TOKEN_HASH, [{
-                        condition: {
-                            urlFilter: '|http://',
-                            initiatorDomains: []
-                        }
-                    }]);
-                }
-                const rule = bucket.get(ANY_HTTP_TOKEN_HASH)[0];
-                rule.condition.initiatorDomains.push(fdata);
-                break;
+            const rule = bucket.get(ANY_HTTPS_TOKEN_HASH)[0];
+            rule.condition.initiatorDomains.push(fdata);
+            break;
+        }
+        case ANY_HTTP_TOKEN_HASH: {
+            if ( bucket.has(ANY_HTTP_TOKEN_HASH) === false ) {
+                bucket.set(ANY_HTTP_TOKEN_HASH, [{
+                    condition: {
+                        urlFilter: '|http://',
+                        initiatorDomains: []
+                    }
+                }]);
             }
-            default: {
-                if ( bucket.has(EMPTY_TOKEN_HASH) === false ) {
-                    bucket.set(EMPTY_TOKEN_HASH, []);
-                }
-                const rule = {};
-                dnrRuleFromCompiled(fdata, rule);
-                bucket.get(EMPTY_TOKEN_HASH).push(rule);
-                break;
+            const rule = bucket.get(ANY_HTTP_TOKEN_HASH)[0];
+            rule.condition.initiatorDomains.push(fdata);
+            break;
+        }
+        default: {
+            if ( bucket.has(EMPTY_TOKEN_HASH) === false ) {
+                bucket.set(EMPTY_TOKEN_HASH, []);
             }
+            const rule = {};
+            dnrRuleFromCompiled(fdata, rule);
+            bucket.get(EMPTY_TOKEN_HASH).push(rule);
+            break;
+        }
         }
     }
 
@@ -4018,6 +4033,24 @@ FilterContainer.prototype.dnrFromCompiled = function(op, context, ...args) {
         }
     }
 
+    // Collect generichide filters
+    const generichideExclusions = [];
+    {
+        const bucket = buckets.get(AllowAction | typeNameToTypeValue['generichide']);
+        if ( bucket ) {
+            for ( const rules of bucket.values() ) {
+                for ( const rule of rules ) {
+                    if ( rule.condition === undefined ) { continue; }
+                    if ( rule.condition.initiatorDomains ) {
+                        generichideExclusions.push(...rule.condition.initiatorDomains);
+                    } else if ( rule.condition.requestDomains ) {
+                        generichideExclusions.push(...rule.condition.requestDomains);
+                    }
+                }
+            }
+        }
+    }
+
     // Patch modifier filters
     for ( const rule of ruleset ) {
         if ( rule.__modifierType === undefined ) { continue; }
@@ -4030,7 +4063,7 @@ FilterContainer.prototype.dnrFromCompiled = function(op, context, ...args) {
                 value: rule.__modifierValue,
             }];
             if ( rule.__modifierAction === AllowAction ) {
-                dnrAddRuleError(rule, 'Unhandled modifier exception');
+                dnrAddRuleError(rule, 'Unsupported modifier exception');
             }
             break;
         case 'redirect-rule': {
@@ -4043,7 +4076,7 @@ FilterContainer.prototype.dnrFromCompiled = function(op, context, ...args) {
             }
             const resource = context.extensionPaths.get(token);
             if ( rule.__modifierValue !== '' && resource === undefined ) {
-                dnrAddRuleWarning(rule, `Unpatchable redirect filter: ${rule.__modifierValue}`);
+                dnrAddRuleError(rule, `Unpatchable redirect filter: ${rule.__modifierValue}`);
             }
             const extensionPath = resource && resource.extensionPath || token;
             if ( rule.__modifierAction !== AllowAction ) {
@@ -4058,6 +4091,9 @@ FilterContainer.prototype.dnrFromCompiled = function(op, context, ...args) {
         }
         case 'removeparam':
             rule.action.type = 'redirect';
+            if ( rule.__modifierValue === '|' ) {
+                rule.__modifierValue = '';
+            }
             if ( rule.__modifierValue !== '' ) {
                 rule.action.redirect = {
                     transform: {
@@ -4066,7 +4102,7 @@ FilterContainer.prototype.dnrFromCompiled = function(op, context, ...args) {
                         }
                     }
                 };
-                if ( /^\/.+\/$/.test(rule.__modifierValue) ) {
+                if ( /^~?\/.+\/$/.test(rule.__modifierValue) ) {
                     dnrAddRuleError(rule, `Unsupported regex-based removeParam: ${rule.__modifierValue}`);
                 }
             } else {
@@ -4076,8 +4112,19 @@ FilterContainer.prototype.dnrFromCompiled = function(op, context, ...args) {
                     }
                 };
             }
+            if ( rule.condition === undefined ) {
+                rule.condition = {
+                };
+            }
+            if ( rule.condition.resourceTypes === undefined ) {
+                rule.condition.resourceTypes = [
+                    'main_frame',
+                    'sub_frame',
+                    'xmlhttprequest',
+                ];
+            }
             if ( rule.__modifierAction === AllowAction ) {
-                dnrAddRuleError(rule, 'Unhandled modifier exception');
+                dnrAddRuleError(rule, 'Unsupported modifier exception');
             }
             break;
         default:
@@ -4218,6 +4265,7 @@ FilterContainer.prototype.dnrFromCompiled = function(op, context, ...args) {
         filterCount: context.filterCount,
         acceptedFilterCount: context.acceptedFilterCount,
         rejectedFilterCount: context.rejectedFilterCount,
+        generichideExclusions,
     };
 };
 

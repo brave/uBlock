@@ -37,26 +37,32 @@ import {
     getDynamicRules,
     defaultRulesetsFromLanguage,
     enableRulesets,
-    getEnabledRulesetsStats,
-    updateRegexRules,
+    getEnabledRulesetsDetails,
+    updateDynamicRules,
 } from './ruleset-manager.js';
 
 import {
-    getInjectableCount,
-    registerInjectable,
+    registerInjectables,
 } from './scripting-manager.js';
 
 import {
-    matchesTrustedSiteDirective,
-    toggleTrustedSiteDirective,
-} from './trusted-sites.js';
+    getFilteringMode,
+    setFilteringMode,
+    getDefaultFilteringMode,
+    setDefaultFilteringMode,
+    syncWithDemotedOrigins,
+} from './mode-manager.js';
 
 /******************************************************************************/
 
 const rulesetConfig = {
     version: '',
-    enabledRulesets: [],
+    enabledRulesets: [ 'default' ],
+    autoReload: 1,
+    firstRun: false,
 };
+
+const UBOL_ORIGIN = runtime.getURL('').replace(/\/$/, '');
 
 /******************************************************************************/
 
@@ -69,14 +75,28 @@ async function loadRulesetConfig() {
     const configRule = dynamicRuleMap.get(CURRENT_CONFIG_BASE_RULE_ID);
     if ( configRule === undefined ) {
         rulesetConfig.enabledRulesets = await defaultRulesetsFromLanguage();
+        rulesetConfig.firstRun = true;
+        return;
+    }
+    let rawConfig;
+    try {
+        rawConfig = JSON.parse(self.atob(configRule.condition.urlFilter));
+    } catch(ex) {
+    }
+
+    // New format
+    if ( Array.isArray(rawConfig) ) {
+        rulesetConfig.version = rawConfig[0];
+        rulesetConfig.enabledRulesets = rawConfig[1];
+        rulesetConfig.autoReload = rawConfig[2];
         return;
     }
 
-    const match = /^\|\|example.invalid\/([^\/]+)\/(?:([^\/]+)\/)?/.exec(
+    // Legacy format. TODO: remove when next new format is widely in use.
+    const match = /^\|\|(?:example|ubolite)\.invalid\/([^\/]+)\/(?:([^\/]+)\/)?/.exec(
         configRule.condition.urlFilter
     );
     if ( match === null ) { return; }
-
     rulesetConfig.version = match[1];
     if ( match[2] ) {
         rulesetConfig.enabledRulesets =
@@ -95,13 +115,21 @@ async function saveRulesetConfig() {
             },
             condition: {
                 urlFilter: '',
+                initiatorDomains: [
+                    'ubolite.invalid',
+                ],
+                resourceTypes: [
+                    'main_frame',
+                ],
             },
         };
     }
-
-    const version = rulesetConfig.version;
-    const enabledRulesets = encodeURIComponent(rulesetConfig.enabledRulesets.join(' '));
-    const urlFilter = `||example.invalid/${version}/${enabledRulesets}/`;
+    const rawConfig = [
+        rulesetConfig.version,
+        rulesetConfig.enabledRulesets,
+        rulesetConfig.autoReload,
+    ];
+    const urlFilter = self.btoa(JSON.stringify(rawConfig));
     if ( urlFilter === configRule.condition.urlFilter ) { return; }
     configRule.condition.urlFilter = urlFilter;
 
@@ -114,107 +142,133 @@ async function saveRulesetConfig() {
 /******************************************************************************/
 
 async function hasGreatPowers(origin) {
+    if ( /^https?:\/\//.test(origin) === false ) { return false; }
     return browser.permissions.contains({
-        origins: [ `${origin}/*` ]
+        origins: [ `${origin}/*` ],
     });
 }
 
-function grantGreatPowers(hostname) {
-    return browser.permissions.request({
-        origins: [
-            `*://${hostname}/*`,
-        ]
+function hasOmnipotence() {
+    return browser.permissions.contains({
+        origins: [ '<all_urls>' ],
     });
 }
 
-function revokeGreatPowers(hostname) {
-    return browser.permissions.remove({
-        origins: [
-            `*://${hostname}/*`,
-        ]
+function onPermissionsRemoved(permissions) {
+    if ( permissions.origins?.includes('<all_urls>') ) {
+        updateDynamicRules();
+    }
+    syncWithDemotedOrigins(permissions.origins).then(( ) => {
+        registerInjectables(permissions.origins);
     });
 }
 
 /******************************************************************************/
 
 function onMessage(request, sender, callback) {
+
+    if ( sender.origin !== UBOL_ORIGIN ) { return; }
+
     switch ( request.what ) {
 
     case 'applyRulesets': {
         enableRulesets(request.enabledRulesets).then(( ) => {
             rulesetConfig.enabledRulesets = request.enabledRulesets;
-            return Promise.all([
-                saveRulesetConfig(),
-                registerInjectable(),
-            ]);
+            return saveRulesetConfig();
         }).then(( ) => {
+            registerInjectables();
             callback();
         });
         return true;
     }
 
-    case 'getRulesetData': {
+    case 'getOptionsPageData': {
         Promise.all([
+            getDefaultFilteringMode(),
             getRulesetDetails(),
             dnr.getEnabledRulesets(),
         ]).then(results => {
-            const [ rulesetDetails, enabledRulesets ] = results;
+            const [
+                defaultFilteringMode,
+                rulesetDetails,
+                enabledRulesets,
+            ] = results;
             callback({
+                defaultFilteringMode,
                 enabledRulesets,
                 rulesetDetails: Array.from(rulesetDetails.values()),
+                autoReload: rulesetConfig.autoReload === 1,
+                firstRun: rulesetConfig.firstRun,
             });
+            rulesetConfig.firstRun = false;
         });
         return true;
     }
 
-    case 'grantGreatPowers':
-        grantGreatPowers(request.hostname).then(granted => {
-            console.info(`Granted uBOL great powers on ${request.hostname}: ${granted}`);
-            callback(granted);
+    case 'setAutoReload':
+        rulesetConfig.autoReload = request.state ? 1 : 0;
+        saveRulesetConfig().then(( ) => {
+            callback();
         });
         return true;
 
     case 'popupPanelData': {
         Promise.all([
-            matchesTrustedSiteDirective(request),
+            getFilteringMode(request.hostname),
+            hasOmnipotence(),
             hasGreatPowers(request.origin),
-            getEnabledRulesetsStats(),
-            getInjectableCount(request.origin),
+            getEnabledRulesetsDetails(),
         ]).then(results => {
             callback({
-                isTrusted: results[0],
-                hasGreatPowers: results[1],
-                rulesetDetails: results[2],
-                injectableCount: results[3],
+                level: results[0],
+                autoReload: rulesetConfig.autoReload === 1,
+                hasOmnipotence: results[1],
+                hasGreatPowers: results[2],
+                rulesetDetails: results[3],
             });
         });
         return true;
     }
 
-    case 'revokeGreatPowers':
-        revokeGreatPowers(request.hostname).then(removed => {
-            console.info(`Revoked great powers from uBOL on ${request.hostname}: ${removed}`);
-            callback(removed);
+    case 'getFilteringMode': {
+        getFilteringMode(request.hostname).then(actualLevel => {
+            callback(actualLevel);
         });
         return true;
+    }
 
-    case 'toggleTrustedSiteDirective': {
-        toggleTrustedSiteDirective(request).then(response => {
-            registerInjectable().then(( ) => {
-                callback(response);
-            });
+    case 'setFilteringMode': {
+        getFilteringMode(request.hostname).then(actualLevel => {
+            if ( request.level === actualLevel ) { return actualLevel; }
+            return setFilteringMode(request.hostname, request.level);
+        }).then(actualLevel => {
+            registerInjectables();
+            callback(actualLevel);
+        });
+        return true;
+    }
+
+    case 'setDefaultFilteringMode': {
+        getDefaultFilteringMode(
+        ).then(beforeLevel =>
+            setDefaultFilteringMode(request.level).then(afterLevel =>
+                ({ beforeLevel, afterLevel })
+            )
+        ).then(({ beforeLevel, afterLevel }) => {
+            if ( beforeLevel === 1 || afterLevel === 1 ) {
+                updateDynamicRules();
+            }
+            if ( afterLevel !== beforeLevel ) {
+                registerInjectables();
+            }
+            callback(afterLevel);
         });
         return true;
     }
 
     default:
         break;
-
     }
-}
-
-async function onPermissionsChanged() {
-    await registerInjectable();
 }
 
 /******************************************************************************/
@@ -227,7 +281,7 @@ async function start() {
     const currentVersion = getCurrentVersion();
     if ( currentVersion !== rulesetConfig.version ) {
         console.log(`Version change: ${rulesetConfig.version} => ${currentVersion}`);
-        updateRegexRules().then(( ) => {
+        updateDynamicRules().then(( ) => {
             rulesetConfig.version = currentVersion;
             saveRulesetConfig();
         });
@@ -236,7 +290,7 @@ async function start() {
     // Unsure whether the browser remembers correctly registered css/scripts
     // after we quit the browser. For now uBOL will check unconditionally at
     // launch time whether content css/scripts are properly registered.
-    registerInjectable();
+    registerInjectables();
 
     const enabledRulesets = await dnr.getEnabledRulesets();
     console.log(`Enabled rulesets: ${enabledRulesets}`);
@@ -253,6 +307,9 @@ async function start() {
 
     runtime.onMessage.addListener(onMessage);
 
-    browser.permissions.onAdded.addListener(onPermissionsChanged);
-    browser.permissions.onRemoved.addListener(onPermissionsChanged);
+    browser.permissions.onRemoved.addListener(onPermissionsRemoved);
+
+    if ( rulesetConfig.firstRun ) {
+        runtime.openOptionsPage();
+    }
 })();

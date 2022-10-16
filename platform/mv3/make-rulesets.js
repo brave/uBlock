@@ -54,8 +54,15 @@ const commandLineArgs = (( ) => {
 const outputDir = commandLineArgs.get('output') || '.';
 const cacheDir = `${outputDir}/../mv3-data`;
 const rulesetDir = `${outputDir}/rulesets`;
-const scriptletDir = `${rulesetDir}/js`;
-const env = [ 'chromium', 'ubol', 'native_css_has' ];
+const scriptletDir = `${rulesetDir}/scripting`;
+const env = [
+    'chromium',
+    'mv3',
+    'native_css_has',
+    'ublock',
+    'ubol',
+    'user_stylesheet',
+];
 
 /******************************************************************************/
 
@@ -72,34 +79,10 @@ const uidint32 = (s) => {
     return parseInt(h,16) & 0x7FFFFFFF;
 };
 
-/******************************************************************************/
-
-const isUnsupported = rule =>
-    rule._error !== undefined;
-
-const isRegex = rule =>
-    rule.condition !== undefined &&
-    rule.condition.regexFilter !== undefined;
-
-const isRedirect = rule =>
-    rule.action !== undefined &&
-    rule.action.type === 'redirect' &&
-    rule.action.redirect.extensionPath !== undefined;
-
-const isCsp = rule =>
-    rule.action !== undefined &&
-    rule.action.type === 'modifyHeaders';
-
-const isRemoveparam = rule =>
-    rule.action !== undefined &&
-    rule.action.type === 'redirect' &&
-    rule.action.redirect.transform !== undefined;
-
-const isGood = rule =>
-    isUnsupported(rule) === false &&
-    isRedirect(rule) === false &&
-    isCsp(rule) === false &&
-    isRemoveparam(rule) === false;
+const hnSort = (a, b) =>
+    a.split('.').reverse().join('.').localeCompare(
+        b.split('.').reverse().join('.')
+    );
 
 /******************************************************************************/
 
@@ -165,7 +148,11 @@ const writeOps = [];
 
 const ruleResources = [];
 const rulesetDetails = [];
-const scriptingDetails = new Map();
+const declarativeDetails = new Map();
+const proceduralDetails = new Map();
+const scriptletStats = new Map();
+const specificDetails = new Map();
+const genericDetails = new Map();
 
 /******************************************************************************/
 
@@ -217,9 +204,38 @@ async function fetchAsset(assetDetails) {
 
 /******************************************************************************/
 
+const isUnsupported = rule =>
+    rule._error !== undefined;
+
+const isRegex = rule =>
+    rule.condition !== undefined &&
+    rule.condition.regexFilter !== undefined;
+
+const isRedirect = rule =>
+    rule.action !== undefined &&
+    rule.action.type === 'redirect' &&
+    rule.action.redirect.extensionPath !== undefined;
+
+const isCsp = rule =>
+    rule.action !== undefined &&
+    rule.action.type === 'modifyHeaders';
+
+const isRemoveparam = rule =>
+    rule.action !== undefined &&
+    rule.action.type === 'redirect' &&
+    rule.action.redirect.transform !== undefined;
+
+const isGood = rule =>
+    isUnsupported(rule) === false &&
+    isRedirect(rule) === false &&
+    isCsp(rule) === false &&
+    isRemoveparam(rule) === false;
+
+/******************************************************************************/
+
 async function processNetworkFilters(assetDetails, network) {
     const replacer = (k, v) => {
-        if ( k.startsWith('__') ) { return; }
+        if ( k.startsWith('_') ) { return; }
         if ( Array.isArray(v) ) {
             return v.sort();
         }
@@ -239,8 +255,8 @@ async function processNetworkFilters(assetDetails, network) {
     log(`\tRejected filter count: ${network.rejectedFilterCount}`);
     log(`Output rule count: ${rules.length}`);
 
-    const good = rules.filter(rule => isGood(rule) && isRegex(rule) === false);
-    log(`\tGood: ${good.length}`);
+    const plainGood = rules.filter(rule => isGood(rule) && isRegex(rule) === false);
+    log(`\tPlain good: ${plainGood.length}`);
 
     const regexes = rules.filter(rule => isGood(rule) && isRegex(rule));
     log(`\tMaybe good (regexes): ${regexes.length}`);
@@ -257,39 +273,46 @@ async function processNetworkFilters(assetDetails, network) {
     );
     log(`\tcsp= (discarded): ${headers.length}`);
 
-    const removeparams = rules.filter(rule =>
-        isUnsupported(rule) === false &&
-        isRemoveparam(rule)
+    const removeparamsGood = rules.filter(rule =>
+        isUnsupported(rule) === false && isRemoveparam(rule)
     );
-    log(`\tremoveparams= (discarded): ${removeparams.length}`);
+    const removeparamsBad = rules.filter(rule =>
+        isUnsupported(rule) && isRemoveparam(rule)
+    );
+    log(`\tremoveparams= (accepted/discarded): ${removeparamsGood.length}/${removeparamsBad.length}`);
 
     const bad = rules.filter(rule =>
         isUnsupported(rule)
     );
     log(`\tUnsupported: ${bad.length}`);
-    log(
-        bad.map(rule => rule._error.map(v => `\t\t${v}`)).join('\n'),
-        true
-    );
+    log(bad.map(rule => rule._error.map(v => `\t\t${v}`)).join('\n'), true);
 
     writeFile(
-        `${rulesetDir}/${assetDetails.id}.json`,
-        `${JSON.stringify(good, replacer)}\n`
+        `${rulesetDir}/main/${assetDetails.id}.json`,
+        `${JSON.stringify(plainGood, replacer)}\n`
     );
 
     if ( regexes.length !== 0 ) {
         writeFile(
-            `${rulesetDir}/${assetDetails.id}.regexes.json`,
+            `${rulesetDir}/regex/${assetDetails.id}.regexes.json`,
             `${JSON.stringify(regexes, replacer)}\n`
+        );
+    }
+
+    if ( removeparamsGood.length !== 0 ) {
+        writeFile(
+            `${rulesetDir}/removeparam/${assetDetails.id}.removeparams.json`,
+            `${JSON.stringify(removeparamsGood, replacer)}\n`
         );
     }
 
     return {
         total: rules.length,
-        accepted: good.length,
-        discarded: redirects.length + headers.length + removeparams.length,
+        plain: plainGood.length,
+        discarded: redirects.length + headers.length + removeparamsBad.length,
         rejected: bad.length,
         regexes: regexes.length,
+        removeparams: removeparamsGood.length,
     };
 }
 
@@ -344,46 +367,79 @@ function loadAllSourceScriptlets() {
 
 const globalPatchedScriptletsSet = new Set();
 
-function addScriptingAPIResources(id, entry, prop, fid) {
-    if ( entry[prop] === undefined ) { return; }
-    for ( const hn of entry[prop] ) {
-        let details = scriptingDetails.get(id);
-        if ( details === undefined ) {
-            details = {};
-            scriptingDetails.set(id, details);
+function addScriptingAPIResources(id, hostnames, fid) {
+    if ( hostnames === undefined ) { return; }
+    for ( const hn of hostnames ) {
+        let hostnamesToFidMap = specificDetails.get(id);
+        if ( hostnamesToFidMap === undefined ) {
+            hostnamesToFidMap = new Map();
+            specificDetails.set(id, hostnamesToFidMap);
         }
-        if ( details[prop] === undefined ) {
-            details[prop] = new Map();
-        }
-        let fids = details[prop].get(hn);
+        let fids = hostnamesToFidMap.get(hn);
         if ( fids === undefined ) {
-            details[prop].set(hn, fid);
+            hostnamesToFidMap.set(hn, fid);
         } else if ( fids instanceof Set ) {
             fids.add(fid);
         } else if ( fid !== fids ) {
             fids = new Set([ fids, fid ]);
-            details[prop].set(hn, fids);
+            hostnamesToFidMap.set(hn, fids);
         }
     }
 }
 
-const        toCSSFileId = s => (uidint32(s) & ~0b11) | 0b00;
-const         toJSFileId = s => (uidint32(s) & ~0b11) | 0b01;
-const toProceduralFileId = s => (uidint32(s) & ~0b11) | 0b10;
+const toCSSSpecific = s => (uidint32(s) & ~0b11) | 0b00;
 
-const pathFromFileName = fname => `${scriptletDir}/${fname.slice(0,2)}/${fname.slice(2)}.js`;
+const pathFromFileName = fname => `${fname.slice(-1)}/${fname.slice(0,-1)}.js`;
 
 /******************************************************************************/
 
-const COSMETIC_FILES_PER_RULESET = 12;
-const PROCEDURAL_FILES_PER_RULESET = 4;
+async function processGenericCosmeticFilters(assetDetails, bucketsMap, exclusions) {
+    const out = {
+        count: 0,
+        exclusionCount: 0,
+    };
+    if ( bucketsMap === undefined ) { return out; }
+    if ( bucketsMap.size === 0 ) { return out; }
+    const bucketsList = Array.from(bucketsMap);
+    const count = bucketsList.reduce((a, v) => a += v[1].length, 0);
+    if ( count === 0 ) { return out; }
+    out.count = count;
+
+    const selectorLists = bucketsList.map(v => [ v[0], v[1].join(',') ]);
+    const originalScriptletMap = await loadAllSourceScriptlets();
+
+    const patchedScriptlet = originalScriptletMap.get('css-generic')
+        .replace(
+            '$rulesetId$',
+            assetDetails.id
+        ).replace(
+            /\bself\.\$genericSelectorMap\$/m,
+            `${JSON.stringify(selectorLists, scriptletJsonReplacer)}`
+        );
+
+    writeFile(
+        `${scriptletDir}/generic/${assetDetails.id}.generic.js`,
+        patchedScriptlet
+    );
+
+    genericDetails.set(assetDetails.id, exclusions.sort());
+
+    log(`CSS-generic: ${count} plain CSS selectors`);
+
+    return out;
+}
+
+/******************************************************************************/
+
+const MAX_COSMETIC_FILTERS_PER_FILE = 256;
 
 // This merges selectors which are used by the same hostnames
 
-function groupCosmeticByHostnames(mapin) {
+function groupSelectorsByHostnames(mapin) {
     if ( mapin === undefined ) { return []; }
     const merged = new Map();
     for ( const [ selector, details ] of mapin ) {
+        if ( details.rejected ) { continue; }
         const json = JSON.stringify(details);
         let entries = merged.get(json);
         if ( entries === undefined ) {
@@ -406,7 +462,7 @@ function groupCosmeticByHostnames(mapin) {
 // Also, we sort the hostnames to increase likelihood that selector with
 // same hostnames will end up in same generated scriptlet.
 
-function groupCosmeticBySelectors(arrayin) {
+function groupHostnamesBySelectors(arrayin) {
     const contentMap = new Map();
     for ( const entry of arrayin ) {
         const id = uidint32(JSON.stringify(entry.selectors));
@@ -432,10 +488,6 @@ function groupCosmeticBySelectors(arrayin) {
             }
         }
     }
-    const hnSort = (a, b) =>
-        a.split('.').reverse().join('.').localeCompare(
-            b.split('.').reverse().join('.')
-        );
     const out = Array.from(contentMap).map(a => [
         a[0], {
             a: a[1].a,
@@ -477,14 +529,33 @@ const scriptletJsonReplacer = (k, v) => {
 
 /******************************************************************************/
 
+function argsMap2List(argsMap, hostnamesMap) {
+    const argsList = [];
+    const indexMap = new Map();
+    for ( const [ id, details ] of argsMap ) {
+        indexMap.set(id, argsList.length);
+        argsList.push(details);
+    }
+    for ( const [ hn, ids ] of hostnamesMap ) {
+        if ( typeof ids === 'number' ) {
+            hostnamesMap.set(hn, indexMap.get(ids));
+            continue;
+        }
+        for ( let i = 0; i < ids.length; i++ ) {
+            ids[i] = indexMap.get(ids[i]);
+        }
+    }
+    return argsList;
+}
+
+/******************************************************************************/
+
 async function processCosmeticFilters(assetDetails, mapin) {
     if ( mapin === undefined ) { return 0; }
 
-    const contentArray = groupCosmeticBySelectors(
-        groupCosmeticByHostnames(mapin)
+    const contentArray = groupHostnamesBySelectors(
+        groupSelectorsByHostnames(mapin)
     );
-    const contentPerFile =
-        Math.ceil(contentArray.length / COSMETIC_FILES_PER_RULESET);
 
     // We do not want more than n CSS files per subscription, so we will
     // group multiple unrelated selectors in the same file, and distinct
@@ -497,8 +568,8 @@ async function processCosmeticFilters(assetDetails, mapin) {
     const originalScriptletMap = await loadAllSourceScriptlets();
     const generatedFiles = [];
 
-    for ( let i = 0; i < contentArray.length; i += contentPerFile ) {
-        const slice = contentArray.slice(i, i + contentPerFile);
+    for ( let i = 0; i < contentArray.length; i += MAX_COSMETIC_FILTERS_PER_FILE ) {
+        const slice = contentArray.slice(i, i + MAX_COSMETIC_FILTERS_PER_FILE);
         const argsMap = slice.map(entry => [
             entry[0],
             {
@@ -511,44 +582,103 @@ async function processCosmeticFilters(assetDetails, mapin) {
             if ( details.y === undefined ) { continue; }
             scriptletHostnameToIdMap(details.y, id, hostnamesMap);
         }
+        const argsList = argsMap2List(argsMap, hostnamesMap);
         const patchedScriptlet = originalScriptletMap.get('css-specific')
             .replace(
                 '$rulesetId$',
                 assetDetails.id
             ).replace(
-                /\bself\.\$argsMap\$/m,
-                `${JSON.stringify(argsMap, scriptletJsonReplacer)}`
+                /\bself\.\$argsList\$/m,
+                `${JSON.stringify(argsList, scriptletJsonReplacer)}`
             ).replace(
                 /\bself\.\$hostnamesMap\$/m,
                 `${JSON.stringify(hostnamesMap, scriptletJsonReplacer)}`
             );
-        const fid = toCSSFileId(patchedScriptlet);
+        const fid = toCSSSpecific(patchedScriptlet);
         if ( globalPatchedScriptletsSet.has(fid) === false ) {
             globalPatchedScriptletsSet.add(fid);
             const fname = fnameFromFileId(fid);
-            writeFile(pathFromFileName(fname), patchedScriptlet, {});
+            writeFile(`${scriptletDir}/specific/${pathFromFileName(fname)}`, patchedScriptlet);
             generatedFiles.push(fname);
         }
         for ( const entry of slice ) {
-            addScriptingAPIResources(
-                assetDetails.id,
-                { matches: entry[1].y },
-                'matches',
-                fid
-            );
-            addScriptingAPIResources(
-                assetDetails.id,
-                { excludeMatches: entry[1].n },
-                'excludeMatches',
-                fid
-            );
+            addScriptingAPIResources(assetDetails.id, entry[1].y, fid);
         }
     }
 
     if ( generatedFiles.length !== 0 ) {
-        log(`CSS-related distinct filters: ${contentArray.length} distinct combined selectors`);
-        log(`CSS-related injectable files: ${generatedFiles.length}`);
+        log(`CSS-specific distinct filters: ${contentArray.length} distinct combined selectors`);
+        log(`CSS-specific injectable files: ${generatedFiles.length}`);
         log(`\t${generatedFiles.join(', ')}`);
+    }
+
+    return contentArray.length;
+}
+
+/******************************************************************************/
+
+async function processDeclarativeCosmeticFilters(assetDetails, mapin) {
+    if ( mapin === undefined ) { return 0; }
+    if ( mapin.size === 0 ) { return 0; }
+
+    // Distinguish declarative-compiled-as-procedural from actual procedural.
+    const declaratives = new Map();
+    mapin.forEach((details, jsonSelector) => {
+        const selector = JSON.parse(jsonSelector);
+        if ( selector.cssable !== true ) { return; }
+        declaratives.set(jsonSelector, details);
+    });
+    if ( declaratives.size === 0 ) { return 0; }
+
+    const contentArray = groupHostnamesBySelectors(
+        groupSelectorsByHostnames(declaratives)
+    );
+
+    const argsMap = contentArray.map(entry => [
+        entry[0],
+        {
+            a: entry[1].a,
+            n: entry[1].n,
+        }
+    ]);
+    const hostnamesMap = new Map();
+    for ( const [ id, details ] of contentArray ) {
+        if ( details.y === undefined ) { continue; }
+        scriptletHostnameToIdMap(details.y, id, hostnamesMap);
+    }
+
+    const argsList = argsMap2List(argsMap, hostnamesMap);
+    const originalScriptletMap = await loadAllSourceScriptlets();
+    const patchedScriptlet = originalScriptletMap.get('css-declarative')
+        .replace(
+            '$rulesetId$',
+            assetDetails.id
+        ).replace(
+            /\bself\.\$argsList\$/m,
+            `${JSON.stringify(argsList, scriptletJsonReplacer)}`
+        ).replace(
+            /\bself\.\$hostnamesMap\$/m,
+            `${JSON.stringify(hostnamesMap, scriptletJsonReplacer)}`
+        );
+    writeFile(`${scriptletDir}/declarative/${assetDetails.id}.declarative.js`, patchedScriptlet);
+
+    {
+        const hostnames = new Set();
+        for ( const entry of contentArray ) {
+            if ( Array.isArray(entry[1].y) === false ) { continue; }
+            for ( const hn of entry[1].y ) {
+                hostnames.add(hn);
+            }
+        }
+        if ( hostnames.has('*') ) {
+            hostnames.clear();
+            hostnames.add('*');
+        }
+        declarativeDetails.set(assetDetails.id, Array.from(hostnames).sort());
+    }
+
+    if ( contentArray.length !== 0 ) {
+        log(`Declarative-related distinct filters: ${contentArray.length} distinct combined selectors`);
     }
 
     return contentArray.length;
@@ -558,76 +688,66 @@ async function processCosmeticFilters(assetDetails, mapin) {
 
 async function processProceduralCosmeticFilters(assetDetails, mapin) {
     if ( mapin === undefined ) { return 0; }
+    if ( mapin.size === 0 ) { return 0; }
 
-    const contentArray = groupCosmeticBySelectors(
-        groupCosmeticByHostnames(mapin)
+    // Distinguish declarative-compiled-as-procedural from actual procedural.
+    const procedurals = new Map();
+    mapin.forEach((details, jsonSelector) => {
+        const selector = JSON.parse(jsonSelector);
+        if ( selector.cssable ) { return; }
+        procedurals.set(jsonSelector, details);
+    });
+    if ( procedurals.size === 0 ) { return 0; }
+
+    const contentArray = groupHostnamesBySelectors(
+        groupSelectorsByHostnames(procedurals)
     );
-    const contentPerFile =
-        Math.ceil(contentArray.length / PROCEDURAL_FILES_PER_RULESET);
 
-    // We do not want more than n CSS files per subscription, so we will
-    // group multiple unrelated selectors in the same file, and distinct
-    // css declarations will be injected programmatically according to the
-    // hostname of the current document.
-    //
-    // The cosmetic filters will be injected programmatically as content
-    // script and the decisions to activate the cosmetic filters will be
-    // done at injection time according to the document's hostname.
-    const originalScriptletMap = await loadAllSourceScriptlets();
-    const generatedFiles = [];
-
-    for ( let i = 0; i < contentArray.length; i += contentPerFile ) {
-        const slice = contentArray.slice(i, i + contentPerFile);
-        const argsMap = slice.map(entry => [
-            entry[0],
-            {
-                a: entry[1].a ? entry[1].a.map(v => JSON.parse(v)) : undefined,
-                n: entry[1].n
-            }
-        ]);
-        const hostnamesMap = new Map();
-        for ( const [ id, details ] of slice ) {
-            if ( details.y === undefined ) { continue; }
-            scriptletHostnameToIdMap(details.y, id, hostnamesMap);
+    const argsMap = contentArray.map(entry => [
+        entry[0],
+        {
+            a: entry[1].a,
+            n: entry[1].n,
         }
-        const patchedScriptlet = originalScriptletMap.get('css-specific-procedural')
-            .replace(
-                '$rulesetId$',
-                assetDetails.id
-            ).replace(
-                /\bself\.\$argsMap\$/m,
-                `${JSON.stringify(argsMap, scriptletJsonReplacer)}`
-            ).replace(
-                /\bself\.\$hostnamesMap\$/m,
-                `${JSON.stringify(hostnamesMap, scriptletJsonReplacer)}`
-            );
-        const fid = toProceduralFileId(patchedScriptlet);
-        if ( globalPatchedScriptletsSet.has(fid) === false ) {
-            globalPatchedScriptletsSet.add(fid);
-            const fname = fnameFromFileId(fid);
-            writeFile(pathFromFileName(fname), patchedScriptlet, {});
-            generatedFiles.push(fname);
-        }
-        for ( const entry of slice ) {
-            addScriptingAPIResources(
-                assetDetails.id,
-                { matches: entry[1].y },
-                'matches',
-                fid
-            );
-            addScriptingAPIResources(
-                assetDetails.id,
-                { excludeMatches: entry[1].n },
-                'excludeMatches',
-                fid
-            );
-        }
+    ]);
+    const hostnamesMap = new Map();
+    for ( const [ id, details ] of contentArray ) {
+        if ( details.y === undefined ) { continue; }
+        scriptletHostnameToIdMap(details.y, id, hostnamesMap);
     }
 
-    if ( generatedFiles.length !== 0 ) {
+    const argsList = argsMap2List(argsMap, hostnamesMap);
+    const originalScriptletMap = await loadAllSourceScriptlets();
+    const patchedScriptlet = originalScriptletMap.get('css-procedural')
+        .replace(
+            '$rulesetId$',
+            assetDetails.id
+        ).replace(
+            /\bself\.\$argsList\$/m,
+            `${JSON.stringify(argsList, scriptletJsonReplacer)}`
+        ).replace(
+            /\bself\.\$hostnamesMap\$/m,
+            `${JSON.stringify(hostnamesMap, scriptletJsonReplacer)}`
+        );
+    writeFile(`${scriptletDir}/procedural/${assetDetails.id}.procedural.js`, patchedScriptlet);
+
+    {
+        const hostnames = new Set();
+        for ( const entry of contentArray ) {
+            if ( Array.isArray(entry[1].y) === false ) { continue; }
+            for ( const hn of entry[1].y ) {
+                hostnames.add(hn);
+            }
+        }
+        if ( hostnames.has('*') ) {
+            hostnames.clear();
+            hostnames.add('*');
+        }
+        proceduralDetails.set(assetDetails.id, Array.from(hostnames).sort());
+    }
+
+    if ( contentArray.length !== 0 ) {
         log(`Procedural-related distinct filters: ${contentArray.length} distinct combined selectors`);
-        log(`Procedural-related injectable files: ${generatedFiles.length}`);
-        log(`\t${generatedFiles.join(', ')}`);
     }
 
     return contentArray.length;
@@ -729,39 +849,34 @@ async function processScriptletFilters(assetDetails, mapin) {
         for ( const [ argsHash, details ] of argsDetails ) {
             scriptletHostnameToIdMap(details.y, uidint32(argsHash), hostnamesMap);
         }
+
+        const argsList = argsMap2List(argsMap, hostnamesMap);
         const patchedScriptlet = originalScriptletMap.get(token)
             .replace(
                 '$rulesetId$',
                 assetDetails.id
             ).replace(
-                /\bself\.\$argsMap\$/m,
-                `${JSON.stringify(argsMap, scriptletJsonReplacer)}`
+                /\bself\.\$argsList\$/m,
+                `${JSON.stringify(argsList, scriptletJsonReplacer)}`
             ).replace(
                 /\bself\.\$hostnamesMap\$/m,
                 `${JSON.stringify(hostnamesMap, scriptletJsonReplacer)}`
             );
-        // ends-with 1 = scriptlet resource
-        const fid = toJSFileId(patchedScriptlet);
-        if ( globalPatchedScriptletsSet.has(fid) === false ) {
-            globalPatchedScriptletsSet.add(fid);
-            const fname = fnameFromFileId(fid);
-            writeFile(pathFromFileName(fname), patchedScriptlet, {});
-            generatedFiles.push(fname);
+        const fname = `${assetDetails.id}.${token}.js`;
+        const fpath = `${scriptletDir}/scriptlet/${fname}`;
+        writeFile(fpath, patchedScriptlet);
+        generatedFiles.push(fname);
+
+        const hostnameMatches = new Set(hostnamesMap.keys());
+        if ( hostnameMatches.has('*') ) {
+            hostnameMatches.clear();
+            hostnameMatches.add('*');
         }
-        for ( const details of argsDetails.values() ) {
-            addScriptingAPIResources(
-                assetDetails.id,
-                { matches: details.y },
-                'matches',
-                fid
-            );
-            addScriptingAPIResources(
-                assetDetails.id,
-                { excludeMatches: details.n },
-                'excludeMatches',
-                fid
-            );
+        let rulesetScriptlets = scriptletStats.get(assetDetails.id);
+        if ( rulesetScriptlets === undefined ) {
+            scriptletStats.set(assetDetails.id, rulesetScriptlets = []);
         }
+        rulesetScriptlets.push([ token, Array.from(hostnameMatches).sort() ]);
     }
 
     if ( generatedFiles.length !== 0 ) {
@@ -777,15 +892,18 @@ async function processScriptletFilters(assetDetails, mapin) {
 
 /******************************************************************************/
 
-const rulesetFromURLS = async function(assetDetails) {
+async function rulesetFromURLs(assetDetails) {
     log('============================');
     log(`Listset for '${assetDetails.id}':`);
 
-    const text = await fetchAsset(assetDetails);
-    if ( text === '' ) { return; }
+    if ( assetDetails.text === undefined ) {
+        const text = await fetchAsset(assetDetails);
+        if ( text === '' ) { return; }
+        assetDetails.text = text;
+    }
 
     const results = await dnrRulesetFromRawLists(
-        [ { name: assetDetails.id, text } ],
+        [ { name: assetDetails.id, text: assetDetails.text } ],
         { env }
     );
 
@@ -798,8 +916,8 @@ const rulesetFromURLS = async function(assetDetails) {
     const declarativeCosmetic = new Map();
     const proceduralCosmetic = new Map();
     const rejectedCosmetic = [];
-    if ( results.cosmetic ) {
-        for ( const [ selector, details ] of results.cosmetic ) {
+    if ( results.specificCosmetic ) {
+        for ( const [ selector, details ] of results.specificCosmetic ) {
             if ( details.rejected ) {
                 rejectedCosmetic.push(selector);
                 continue;
@@ -813,19 +931,28 @@ const rulesetFromURLS = async function(assetDetails) {
             proceduralCosmetic.set(JSON.stringify(parsed), details);
         }
     }
-    const cosmeticStats = await processCosmeticFilters(
+    if ( rejectedCosmetic.length !== 0 ) {
+        log(`Rejected cosmetic filters: ${rejectedCosmetic.length}`);
+        log(rejectedCosmetic.map(line => `\t${line}`).join('\n'), true);
+    }
+
+    const genericCosmeticStats = await processGenericCosmeticFilters(
+        assetDetails,
+        results.genericCosmetic,
+        results.network.generichideExclusions.filter(hn => hn.endsWith('.*') === false)
+    );
+    const specificCosmeticStats = await processCosmeticFilters(
         assetDetails,
         declarativeCosmetic
+    );
+    const declarativeStats = await processDeclarativeCosmeticFilters(
+        assetDetails,
+        proceduralCosmetic
     );
     const proceduralStats = await processProceduralCosmeticFilters(
         assetDetails,
         proceduralCosmetic
     );
-    if ( rejectedCosmetic.length !== 0 ) {
-        log(`Rejected cosmetic filters: ${rejectedCosmetic.length}`);
-        log(rejectedCosmetic.map(line => `\t${line}`).join('\n'));
-    }
-
     const scriptletStats = await processScriptletFilters(
         assetDetails,
         results.scriptlet
@@ -844,13 +971,16 @@ const rulesetFromURLS = async function(assetDetails) {
         },
         rules: {
             total: netStats.total,
-            accepted: netStats.accepted,
+            plain: netStats.plain,
+            regexes: netStats.regexes,
+            removeparams: netStats.removeparams,
             discarded: netStats.discarded,
             rejected: netStats.rejected,
-            regexes: netStats.regexes,
         },
         css: {
-            specific: cosmeticStats,
+            generic: genericCosmeticStats,
+            specific: specificCosmeticStats,
+            declarative: declarativeStats,
             procedural: proceduralStats,
         },
         scriptlets: {
@@ -861,9 +991,9 @@ const rulesetFromURLS = async function(assetDetails) {
     ruleResources.push({
         id: assetDetails.id,
         enabled: assetDetails.enabled,
-        path: `/rulesets/${assetDetails.id}.json`
+        path: `/rulesets/main/${assetDetails.id}.json`
     });
-};
+}
 
 /******************************************************************************/
 
@@ -905,11 +1035,12 @@ async function main() {
         'https://ublockorigin.pages.dev/filters/resource-abuse.txt',
         'https://ublockorigin.pages.dev/filters/unbreak.txt',
         'https://ublockorigin.pages.dev/filters/quick-fixes.txt',
+        'https://ublockorigin.pages.dev/filters/ubol-filters.txt',
         'https://secure.fanboy.co.nz/easylist.txt',
         'https://secure.fanboy.co.nz/easyprivacy.txt',
         'https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=1&mimetype=plaintext',
     ];
-    await rulesetFromURLS({
+    await rulesetFromURLs({
         id: 'default',
         name: 'Ads, trackers, miners, and more' ,
         enabled: true,
@@ -922,26 +1053,42 @@ async function main() {
         'ara-0',
         'EST-0',
     ];
+    // Merge lists which have same target languages
+    const langToListsMap = new Map();
     for ( const [ id, asset ] of Object.entries(assets) ) {
         if ( asset.content !== 'filters' ) { continue; }
         if ( asset.off !== true ) { continue; }
         if ( typeof asset.lang !== 'string' ) { continue; }
         if ( excludedLists.includes(id) ) { continue; }
-        const contentURL = Array.isArray(asset.contentURL)
-            ? asset.contentURL[0]
-            : asset.contentURL;
-        await rulesetFromURLS({
+        let ids = langToListsMap.get(asset.lang);
+        if ( ids === undefined ) {
+            langToListsMap.set(asset.lang, ids = []);
+        }
+        ids.push(id);
+    }
+    for ( const ids of langToListsMap.values() ) {
+        const urls = [];
+        for ( const id of ids ) {
+            const asset = assets[id];
+            const contentURL = Array.isArray(asset.contentURL)
+                ? asset.contentURL[0]
+                : asset.contentURL;
+            urls.push(contentURL);
+        }
+        const id = ids[0];
+        const asset = assets[id];
+        await rulesetFromURLs({
             id: id.toLowerCase(),
             lang: asset.lang,
             name: asset.title,
             enabled: false,
-            urls: [ contentURL ],
+            urls,
             homeURL: asset.supportURL,
         });
     }
 
     // Handpicked rulesets from assets.json
-    const handpicked = [ 'block-lan', 'dpollock-0' ];
+    const handpicked = [ 'block-lan', 'dpollock-0', 'adguard-spyware-url' ];
     for ( const id of handpicked ) {
         const asset = assets[id];
         if ( asset.content !== 'filters' ) { continue; }
@@ -949,7 +1096,7 @@ async function main() {
         const contentURL = Array.isArray(asset.contentURL)
             ? asset.contentURL[0]
             : asset.contentURL;
-        await rulesetFromURLS({
+        await rulesetFromURLs({
             id: id.toLowerCase(),
             name: asset.title,
             enabled: false,
@@ -959,7 +1106,14 @@ async function main() {
     }
 
     // Handpicked rulesets from abroad
-    await rulesetFromURLS({
+    await rulesetFromURLs({
+        id: 'cname-trackers',
+        name: 'AdGuard CNAME-cloaked trackers',
+        enabled: true,
+        urls: [ 'https://raw.githubusercontent.com/AdguardTeam/cname-trackers/master/combined_disguised_trackers.txt' ],
+        homeURL: 'https://github.com/AdguardTeam/cname-trackers#cname-cloaked-trackers',
+    });
+    await rulesetFromURLs({
         id: 'stevenblack-hosts',
         name: 'Steven Black\'s hosts file',
         enabled: false,
@@ -972,9 +1126,37 @@ async function main() {
         `${JSON.stringify(rulesetDetails, null, 1)}\n`
     );
 
+    // We sort the hostnames for convenience/performance in the extension's
+    // script manager -- the scripting API does a sort() internally.
+    for ( const [ rulesetId, hostnamesToFidsMap ] of specificDetails ) {
+        specificDetails.set(
+            rulesetId,
+            Array.from(hostnamesToFidsMap).sort()
+        );
+    }
     writeFile(
-        `${rulesetDir}/scripting-details.json`,
-        `${JSON.stringify(scriptingDetails, jsonSetMapReplacer)}\n`
+        `${rulesetDir}/specific-details.json`,
+        `${JSON.stringify(specificDetails, jsonSetMapReplacer)}\n`
+    );
+
+    writeFile(
+        `${rulesetDir}/declarative-details.json`,
+        `${JSON.stringify(declarativeDetails, jsonSetMapReplacer, 1)}\n`
+    );
+
+    writeFile(
+        `${rulesetDir}/procedural-details.json`,
+        `${JSON.stringify(proceduralDetails, jsonSetMapReplacer, 1)}\n`
+    );
+
+    writeFile(
+        `${rulesetDir}/scriptlet-details.json`,
+        `${JSON.stringify(scriptletStats, jsonSetMapReplacer, 1)}\n`
+    );
+
+    writeFile(
+        `${rulesetDir}/generic-details.json`,
+        `${JSON.stringify(genericDetails, jsonSetMapReplacer, 1)}\n`
     );
 
     await Promise.all(writeOps);
@@ -993,7 +1175,9 @@ async function main() {
     );
 
     // Log results
-    await fs.writeFile(`${outputDir}/log.txt`, stdOutput.join('\n') + '\n');
+    const logContent = stdOutput.join('\n') + '\n';
+    await fs.writeFile(`${outputDir}/log.txt`, logContent);
+    await fs.writeFile(`${cacheDir}/log.txt`, logContent);
 }
 
 main();

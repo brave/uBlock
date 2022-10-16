@@ -25,280 +25,618 @@
 
 /******************************************************************************/
 
-import { browser, dnr } from './ext.js';
+import { browser } from './ext.js';
 import { fetchJSON } from './fetch.js';
-import { matchesTrustedSiteDirective } from './trusted-sites.js';
+import { getFilteringModeDetails } from './mode-manager.js';
+import { getEnabledRulesetsDetails } from './ruleset-manager.js';
 
-import {
-    parsedURLromOrigin,
-    toBroaderHostname,
-    fidFromFileName,
-    fnameFromFileId,
-} from './utils.js';
+import * as ut from './utils.js';
 
 /******************************************************************************/
 
-let scriptingDetailsPromise;
+const resourceDetailPromises = new Map();
 
-function getScriptingDetails() {
-    if ( scriptingDetailsPromise !== undefined ) {
-        return scriptingDetailsPromise;
-    }
-    scriptingDetailsPromise = fetchJSON('/rulesets/scripting-details').then(entries => {
-        const out = new Map(entries);
-        for ( const details of out.values() ) {
-            details.matches = new Map(details.matches);
-            details.excludeMatches = new Map(details.excludeMatches);
+function getSpecificDetails() {
+    let promise = resourceDetailPromises.get('specific');
+    if ( promise !== undefined ) { return promise; }
+    promise = fetchJSON('/rulesets/specific-details').then(entries => {
+        const out = new Map();
+        for ( const entry of entries ) {
+            out.set(entry[0], new Map(entry[1]));
         }
         return out;
     });
-    return scriptingDetailsPromise;
+    resourceDetailPromises.set('specific', promise);
+    return promise;
+}
+
+function getDeclarativeDetails() {
+    let promise = resourceDetailPromises.get('declarative');
+    if ( promise !== undefined ) { return promise; }
+    promise = fetchJSON('/rulesets/declarative-details').then(
+        entries => new Map(entries)
+    );
+    resourceDetailPromises.set('declarative', promise);
+    return promise;
+}
+
+function getProceduralDetails() {
+    let promise = resourceDetailPromises.get('procedural');
+    if ( promise !== undefined ) { return promise; }
+    promise = fetchJSON('/rulesets/procedural-details').then(
+        entries => new Map(entries)
+    );
+    resourceDetailPromises.set('procedural', promise);
+    return promise;
+}
+
+function getScriptletDetails() {
+    let promise = resourceDetailPromises.get('scriptlet');
+    if ( promise !== undefined ) { return promise; }
+    promise = fetchJSON('/rulesets/scriptlet-details').then(
+        entries => new Map(entries)
+    );
+    resourceDetailPromises.set('scriptlet', promise);
+    return promise;
+}
+
+function getGenericDetails() {
+    let promise = resourceDetailPromises.get('generic');
+    if ( promise !== undefined ) { return promise; }
+    promise = fetchJSON('/rulesets/generic-details').then(
+        entries => new Map(entries)
+    );
+    resourceDetailPromises.set('generic', promise);
+    return promise;
 }
 
 /******************************************************************************/
 
-const matchesFromHostnames = hostnames => {
-    const out = [];
-    for ( const hn of hostnames ) {
-        if ( hn === '*' ) {
-            out.push('*://*/*');
-        } else {
-            out.push(`*://*.${hn}/*`);
-        }
-    }
-    return out;
-};
-
-const hostnamesFromMatches = origins => {
-    const out = [];
-    for ( const origin of origins ) {
-        const match = /^\*:\/\/([^\/]+)\/\*/.exec(origin);
-        if ( match === null ) { continue; }
-        out.push(match[1]);
-    }
-    return out;
-};
-
-const arrayEq = (a, b) => {
-    if ( a === undefined ) { return b === undefined; }
-    if ( b === undefined ) { return false; }
-    if ( a.length !== b.length ) { return false; }
-    for ( const i of a ) {
-        if ( b.includes(i) === false ) { return false; }
+// Important: We need to sort the arrays for fast comparison
+const arrayEq = (a = [], b = [], sort = true) => {
+    const alen = a.length;
+    if ( alen !== b.length ) { return false; }
+    if ( sort ) { a.sort(); b.sort(); }
+    for ( let i = 0; i < alen; i++ ) {
+        if ( a[i] !== b[i] ) { return false; }
     }
     return true;
 };
 
 /******************************************************************************/
 
-const toRegisterable = (fname, entry) => {
-    const directive = {
-        id: fname,
-        allFrames: true,
-    };
-    if ( entry.matches ) {
-        directive.matches = matchesFromHostnames(entry.matches);
-    } else {
-        directive.matches = [ '*://*/*' ];
-    }
-    if ( entry.excludeMatches ) {
-        directive.excludeMatches = matchesFromHostnames(entry.excludeMatches);
-    }
-    directive.js = [ `/rulesets/js/${fname.slice(0,2)}/${fname.slice(2)}.js` ];
-    if ( (fidFromFileName(fname) & RUN_AT_BIT) !== 0 ) {
-        directive.runAt = 'document_end';
-    } else {
-        directive.runAt = 'document_start';
-    }
-    if ( (fidFromFileName(fname) & MAIN_WORLD_BIT) !== 0 ) {
-        directive.world = 'MAIN';
-    }
-    return directive;
-};
+// The extensions API does not always return exactly what we fed it, so we
+// need to normalize some entries to be sure we properly detect changes when
+// comparing registered entries vs. entries to register.
 
-const RUN_AT_BIT =     0b10;
-const MAIN_WORLD_BIT = 0b01;
-
-/******************************************************************************/
-
-const shouldUpdate = (registered, candidate) => {
-    const matches = candidate.matches &&
-        matchesFromHostnames(candidate.matches);
-    if ( arrayEq(registered.matches, matches) === false ) {
-        return true;
-    }
-    const excludeMatches = candidate.excludeMatches &&
-        matchesFromHostnames(candidate.excludeMatches);
-    if ( arrayEq(registered.excludeMatches, excludeMatches) === false ) {
-        return true;
-    }
-    return false;
-};
-
-/******************************************************************************/
-
-async function getInjectableCount(origin) {
-    const url = parsedURLromOrigin(origin);
-    if ( url === undefined ) { return 0; }
-
-    const [
-        rulesetIds,
-        scriptingDetails,
-    ] = await Promise.all([
-        dnr.getEnabledRulesets(),
-        getScriptingDetails(),
-    ]);
-
-    let total = 0;
-
-    for ( const rulesetId of rulesetIds ) {
-        if ( scriptingDetails.has(rulesetId) === false ) { continue; }
-        const details = scriptingDetails.get(rulesetId);
-        let hn = url.hostname;
-        while ( hn !== '' ) {
-            const fids = details.matches?.get(hn);
-            if ( typeof fids === 'number' ) {
-                total += 1;
-            } else if ( Array.isArray(fids) ) {
-                total += fids.length;
-            }
-            hn = toBroaderHostname(hn);
+const normalizeRegisteredContentScripts = registered => {
+    for ( const entry of registered ) {
+        const { js } = entry;
+        for ( let i = 0; i < js.length; i++ ) {
+            const path = js[i];
+            if ( path.startsWith('/') ) { continue; }
+            js[i] = `/${path}`;
         }
     }
+    return registered;
+};
 
-    return total;
+/******************************************************************************/
+
+function registerGeneric(context, genericDetails) {
+    const { before, filteringModeDetails, rulesetsDetails } = context;
+
+    const excludeHostnames = [];
+    const js = [];
+    for ( const details of rulesetsDetails ) {
+        const hostnames = genericDetails.get(details.id);
+        if ( hostnames !== undefined ) {
+            excludeHostnames.push(...hostnames);
+        }
+        if ( details.css.generic.count === 0 ) { continue; }
+        js.push(`/rulesets/scripting/generic/${details.id}.generic.js`);
+    }
+
+    if ( js.length === 0 ) { return; }
+
+    js.push('/js/scripting/css-generic.js');
+
+    const matches = [];
+    const excludeMatches = [];
+    if ( filteringModeDetails.extendedGeneric.has('all-urls') ) {
+        excludeMatches.push(...ut.matchesFromHostnames(filteringModeDetails.none));
+        excludeMatches.push(...ut.matchesFromHostnames(filteringModeDetails.network));
+        excludeMatches.push(...ut.matchesFromHostnames(filteringModeDetails.extendedSpecific));
+        excludeMatches.push(...ut.matchesFromHostnames(excludeHostnames));
+        matches.push('<all_urls>');
+    } else {
+        matches.push(
+            ...ut.matchesFromHostnames(
+                ut.subtractHostnameIters(
+                    Array.from(filteringModeDetails.extendedGeneric),
+                    excludeHostnames
+                )
+            )
+        );
+    }
+
+    if ( matches.length === 0 ) { return; }
+
+    const registered = before.get('css-generic');
+    before.delete('css-generic'); // Important!
+
+    // register
+    if ( registered === undefined ) {
+        context.toAdd.push({
+            id: 'css-generic',
+            js,
+            matches,
+            excludeMatches,
+            runAt: 'document_idle',
+        });
+        return;
+    }
+
+    // update
+    const directive = { id: 'css-generic' };
+    if ( arrayEq(registered.js, js, false) === false ) {
+        directive.js = js;
+    }
+    if ( arrayEq(registered.matches, matches) === false ) {
+        directive.matches = matches;
+    }
+    if ( arrayEq(registered.excludeMatches, excludeMatches) === false ) {
+        directive.excludeMatches = excludeMatches;
+    }
+    if ( directive.js || directive.matches || directive.excludeMatches ) {
+        context.toUpdate.push(directive);
+    }
 }
 
 /******************************************************************************/
 
-async function registerInjectable() {
+function registerProcedural(context, proceduralDetails) {
+    const { before, filteringModeDetails, rulesetsDetails } = context;
+
+    const js = [];
+    const hostnameMatches = [];
+    for ( const details of rulesetsDetails ) {
+        if ( details.css.procedural === 0 ) { continue; }
+        js.push(`/rulesets/scripting/procedural/${details.id}.procedural.js`);
+        if ( proceduralDetails.has(details.id) ) {
+            hostnameMatches.push(...proceduralDetails.get(details.id));
+        }
+    }
+
+    if ( js.length === 0 ) { return; }
+
+    js.push('/js/scripting/css-procedural.js');
+
+    const {
+        none,
+        network,
+        extendedSpecific,
+        extendedGeneric,
+    } = filteringModeDetails;
+
+    const matches = [];
+    const excludeMatches = [];
+    if ( extendedSpecific.has('all-urls') || extendedGeneric.has('all-urls') ) {
+        excludeMatches.push(...ut.matchesFromHostnames(none));
+        excludeMatches.push(...ut.matchesFromHostnames(network));
+        matches.push(...ut.matchesFromHostnames(hostnameMatches));
+    } else if ( extendedSpecific.size !== 0 || extendedGeneric.size !== 0 ) {
+        matches.push(
+            ...ut.matchesFromHostnames(
+                ut.intersectHostnameIters(
+                    [ ...extendedSpecific, ...extendedGeneric ],
+                    hostnameMatches
+                )
+            )
+        );
+    }
+
+    if ( matches.length === 0 ) { return; }
+
+    const registered = before.get('css-procedural');
+    before.delete('css-procedural'); // Important!
+
+    // register
+    if ( registered === undefined ) {
+        context.toAdd.push({
+            id: 'css-procedural',
+            js,
+            matches,
+            excludeMatches,
+            runAt: 'document_end',
+        });
+        return;
+    }
+
+    // update
+    const directive = { id: 'css-procedural' };
+    if ( arrayEq(registered.js, js, false) === false ) {
+        directive.js = js;
+    }
+    if ( arrayEq(registered.matches, matches) === false ) {
+        directive.matches = matches;
+    }
+    if ( arrayEq(registered.excludeMatches, excludeMatches) === false ) {
+        directive.excludeMatches = excludeMatches;
+    }
+    if ( directive.js || directive.matches || directive.excludeMatches ) {
+        context.toUpdate.push(directive);
+    }
+}
+
+/******************************************************************************/
+
+function registerDeclarative(context, declarativeDetails) {
+    const { before, filteringModeDetails, rulesetsDetails } = context;
+
+    const js = [];
+    const hostnameMatches = [];
+    for ( const details of rulesetsDetails ) {
+        if ( details.css.declarative === 0 ) { continue; }
+        js.push(`/rulesets/scripting/declarative/${details.id}.declarative.js`);
+        if ( declarativeDetails.has(details.id) ) {
+            hostnameMatches.push(...declarativeDetails.get(details.id));
+        }
+    }
+
+    if ( js.length === 0 ) { return; }
+
+    js.push('/js/scripting/css-declarative.js');
+
+    const {
+        none,
+        network,
+        extendedSpecific,
+        extendedGeneric,
+    } = filteringModeDetails;
+
+    const matches = [];
+    const excludeMatches = [];
+    if ( extendedSpecific.has('all-urls') || extendedGeneric.has('all-urls') ) {
+        excludeMatches.push(...ut.matchesFromHostnames(none));
+        excludeMatches.push(...ut.matchesFromHostnames(network));
+        matches.push(...ut.matchesFromHostnames(hostnameMatches));
+    } else if ( extendedSpecific.size !== 0 || extendedGeneric.size !== 0 ) {
+        matches.push(
+            ...ut.matchesFromHostnames(
+                ut.intersectHostnameIters(
+                    [ ...extendedSpecific, ...extendedGeneric ],
+                    hostnameMatches
+                )
+            )
+        );
+    }
+
+    if ( matches.length === 0 ) { return; }
+
+    const registered = before.get('css-declarative');
+    before.delete('css-declarative'); // Important!
+
+    // register
+    if ( registered === undefined ) {
+        context.toAdd.push({
+            id: 'css-declarative',
+            js,
+            matches,
+            excludeMatches,
+            runAt: 'document_start',
+        });
+        return;
+    }
+
+    // update
+    const directive = { id: 'css-declarative' };
+    if ( arrayEq(registered.js, js, false) === false ) {
+        directive.js = js;
+    }
+    if ( arrayEq(registered.matches, matches) === false ) {
+        directive.matches = matches;
+    }
+    if ( arrayEq(registered.excludeMatches, excludeMatches) === false ) {
+        directive.excludeMatches = excludeMatches;
+    }
+    if ( directive.js || directive.matches || directive.excludeMatches ) {
+        context.toUpdate.push(directive);
+    }
+}
+
+/******************************************************************************/
+
+function registerScriptlet(context, scriptletDetails) {
+    const { before, filteringModeDetails, rulesetsDetails } = context;
+
+    const hasBroadHostPermission =
+        filteringModeDetails.extendedSpecific.has('all-urls') ||
+        filteringModeDetails.extendedGeneric.has('all-urls');
+
+    const permissionRevokedMatches = [
+        ...ut.matchesFromHostnames(filteringModeDetails.none),
+        ...ut.matchesFromHostnames(filteringModeDetails.network),
+    ];
+    const permissionGrantedHostnames = [
+        ...filteringModeDetails.extendedSpecific,
+        ...filteringModeDetails.extendedGeneric,
+    ];
+
+    for ( const rulesetId of rulesetsDetails.map(v => v.id) ) {
+        const scriptletList = scriptletDetails.get(rulesetId);
+        if ( scriptletList === undefined ) { continue; }
+
+        for ( const [ token, scriptletHostnames ] of scriptletList ) {
+            const id = `${rulesetId}.${token}`;
+            const registered = before.get(id);
+
+            const matches = [];
+            const excludeMatches = [];
+            if ( hasBroadHostPermission ) {
+                excludeMatches.push(...permissionRevokedMatches);
+                matches.push(...ut.matchesFromHostnames(scriptletHostnames));
+            } else if ( permissionGrantedHostnames.length !== 0 ) {
+                matches.push(
+                    ...ut.matchesFromHostnames(
+                        ut.intersectHostnameIters(
+                            permissionGrantedHostnames,
+                            scriptletHostnames
+                        )
+                    )
+                );
+            }
+            if ( matches.length === 0 ) { continue; }
+
+            before.delete(id); // Important!
+
+            // register
+            if ( registered === undefined ) {
+                context.toAdd.push({
+                    id,
+                    js: [ `/rulesets/scripting/scriptlet/${id}.js` ],
+                    matches,
+                    excludeMatches,
+                    runAt: 'document_start',
+                    world: 'MAIN',
+                });
+                continue;
+            }
+
+            // update
+            const directive = { id };
+            if ( arrayEq(registered.matches, matches) === false ) {
+                directive.matches = matches;
+            }
+            if ( arrayEq(registered.excludeMatches, excludeMatches) === false ) {
+                directive.excludeMatches = excludeMatches;
+            }
+            if ( directive.matches || directive.excludeMatches ) {
+                context.toUpdate.push(directive);
+            }
+        }
+    }
+}
+
+/******************************************************************************/
+
+function registerSpecific(context, specificDetails) {
+    const { filteringModeDetails } = context;
+
+    let toRegisterMap;
+    if (
+        filteringModeDetails.extendedSpecific.has('all-urls') ||
+        filteringModeDetails.extendedGeneric.has('all-urls')
+    ) {
+        toRegisterMap = registerSpecificAll(context, specificDetails);
+    } else {
+        toRegisterMap = registerSpecificSome(context, specificDetails);
+    }
+
+    for ( const [ fname, hostnames ] of toRegisterMap ) {
+        toRegisterableScript(context, fname, hostnames);
+    }
+}
+
+function registerSpecificSome(context, specificDetails) {
+    const { filteringModeDetails, rulesetsDetails } = context;
+    const toRegisterMap = new Map();
+
+    const targetHostnames = [
+        ...filteringModeDetails.extendedSpecific,
+        ...filteringModeDetails.extendedGeneric,
+    ];
+
+    const checkMatches = (hostnamesToFidsMap, hn) => {
+        let fids = hostnamesToFidsMap.get(hn);
+        if ( fids === undefined ) { return; }
+        if ( typeof fids === 'number' ) { fids = [ fids ]; }
+        for ( const fid of fids ) {
+            const fname = ut.fnameFromFileId(fid);
+            let existing = toRegisterMap.get(fname);
+            if ( existing ) {
+                if ( existing[0] === '*' ) { continue; }
+                existing.push(hn);
+            } else {
+                toRegisterMap.set(fname, existing = [ hn ]);
+            }
+            if ( hn !== '*' ) { continue; }
+            existing.length = 0;
+            existing.push('*');
+            break;
+        }
+    };
+
+    for ( const rulesetDetails of rulesetsDetails ) {
+        const hostnamesToFidsMap = specificDetails.get(rulesetDetails.id);
+        if ( hostnamesToFidsMap === undefined ) { continue; }
+        for ( let hn of targetHostnames ) {
+            while ( hn ) {
+                checkMatches(hostnamesToFidsMap, hn);
+                hn = ut.toBroaderHostname(hn);
+            }
+        }
+    }
+
+    return toRegisterMap;
+}
+
+function registerSpecificAll(context, specificDetails) {
+    const { filteringModeDetails, rulesetsDetails } = context;
+    const toRegisterMap = new Map();
+
+    const excludeSet = new Set([
+        ...filteringModeDetails.network,
+        ...filteringModeDetails.none,
+    ]);
+
+    for ( const rulesetDetails of rulesetsDetails ) {
+        const hostnamesToFidsMap = specificDetails.get(rulesetDetails.id);
+        if ( hostnamesToFidsMap === undefined ) { continue; }
+        for ( let [ hn, fids ] of hostnamesToFidsMap ) {
+            if ( excludeSet.has(hn) ) { continue; }
+            if ( ut.isDescendantHostnameOfIter(hn, excludeSet) ) { continue; }
+            if ( typeof fids === 'number' ) { fids = [ fids ]; }
+            for ( const fid of fids ) {
+                const fname = ut.fnameFromFileId(fid);
+                let existing = toRegisterMap.get(fname);
+                if ( existing ) {
+                    if ( existing[0] === '*' ) { continue; }
+                    existing.push(hn);
+                } else {
+                    toRegisterMap.set(fname, existing = [ hn ]);
+                }
+                if ( hn !== '*' ) { continue; }
+                existing.length = 0;
+                existing.push('*');
+                break;
+            }
+        }
+    }
+
+    return toRegisterMap;
+}
+
+const toRegisterableScript = (context, fname, hostnames) => {
+    if ( context.before.has(fname) ) {
+        return toUpdatableScript(context, fname, hostnames);
+    }
+    const matches = hostnames
+        ? ut.matchesFromHostnames(hostnames)
+        : [ '<all_urls>' ];
+    const excludeMatches = matches.length === 1 && matches[0] === '<all_urls>'
+        ? ut.matchesFromHostnames(context.filteringModeDetails.none)
+        : [];
+    const directive = {
+        id: fname,
+        allFrames: true,
+        matches,
+        excludeMatches,
+        js: [ `/rulesets/scripting/specific/${fname.slice(-1)}/${fname.slice(0,-1)}.js` ],
+        runAt: 'document_start',
+    };
+    context.toAdd.push(directive);
+};
+
+const toUpdatableScript = (context, fname, hostnames) => {
+    const registered = context.before.get(fname);
+    context.before.delete(fname); // Important!
+    const directive = { id: fname };
+    const matches = hostnames
+        ? ut.matchesFromHostnames(hostnames)
+        : [ '<all_urls>' ];
+    if ( arrayEq(registered.matches, matches) === false ) {
+        directive.matches = matches;
+    }
+    const excludeMatches = matches.length === 1 && matches[0] === '<all_urls>'
+        ? ut.matchesFromHostnames(context.filteringModeDetails.none)
+        : [];
+    if ( arrayEq(registered.excludeMatches, excludeMatches) === false ) {
+        directive.excludeMatches = excludeMatches;
+    }
+    if ( directive.matches || directive.excludeMatches ) {
+        context.toUpdate.push(directive);
+    }
+};
+
+/******************************************************************************/
+
+async function registerInjectables(origins) {
+    void origins;
+
+    if ( browser.scripting === undefined ) { return false; }
 
     const [
-        hostnames,
-        rulesetIds,
+        filteringModeDetails,
+        rulesetsDetails,
+        declarativeDetails,
+        proceduralDetails,
+        scriptletDetails,
+        specificDetails,
+        genericDetails,
         registered,
-        scriptingDetails,
     ] = await Promise.all([
-        browser.permissions.getAll(),
-        dnr.getEnabledRulesets(),
+        getFilteringModeDetails(),
+        getEnabledRulesetsDetails(),
+        getDeclarativeDetails(),
+        getProceduralDetails(),
+        getScriptletDetails(),
+        getSpecificDetails(),
+        getGenericDetails(),
         browser.scripting.getRegisteredContentScripts(),
-        getScriptingDetails(),
-    ]).then(results => {
-        results[0] = new Map(
-            hostnamesFromMatches(results[0].origins).map(hn => [ hn, false ])
-        );
-        return results;
-    });
-
-    if ( hostnames.has('*') && hostnames.size > 1 ) {
-        hostnames.clear();
-        hostnames.set('*', false);
-    }
-
-    await Promise.all(
-        Array.from(hostnames.keys()).map(
-            hn => matchesTrustedSiteDirective({ hostname: hn })
-                .then(trusted => hostnames.set(hn, trusted))
+    ]);
+    const before = new Map(
+        normalizeRegisteredContentScripts(registered).map(
+            entry => [ entry.id, entry ]
         )
     );
-
-    const toRegister = new Map();
-
-    const checkMatches = (details, hn) => {
-        let fids = details.matches?.get(hn);
-        if ( fids === undefined ) { return; }
-        if ( typeof fids === 'number' ) { fids = [ fids ]; }
-        for ( const fid of fids ) {
-            const fname = fnameFromFileId(fid);
-            const existing = toRegister.get(fname);
-            if ( existing ) {
-                existing.matches.push(hn);
-            } else {
-                toRegister.set(fname, { matches: [ hn ] });
-            }
-        }
+    const toAdd = [], toUpdate = [], toRemove = [];
+    const promises = [];
+    const context = {
+        filteringModeDetails,
+        rulesetsDetails,
+        before,
+        toAdd,
+        toUpdate,
+        toRemove,
     };
 
-    for ( const rulesetId of rulesetIds ) {
-        const details = scriptingDetails.get(rulesetId);
-        if ( details === undefined ) { continue; }
-        for ( let [ hn, trusted ] of hostnames ) {
-            if ( trusted ) { continue; }
-            while ( hn !== '' ) {
-                checkMatches(details, hn);
-                hn = toBroaderHostname(hn);
-            }
-        }
-    }
+    registerDeclarative(context, declarativeDetails);
+    registerProcedural(context, proceduralDetails);
+    registerScriptlet(context, scriptletDetails);
+    registerSpecific(context, specificDetails);
+    registerGeneric(context, genericDetails);
 
-    const checkExcludeMatches = (details, hn) => {
-        let fids = details.excludeMatches?.get(hn);
-        if ( fids === undefined ) { return; }
-        if ( typeof fids === 'number' ) { fids = [ fids ]; }
-        for ( const fid of fids ) {
-            const fname = fnameFromFileId(fid);
-            const existing = toRegister.get(fname);
-            if ( existing === undefined ) { continue; }
-            if ( existing.excludeMatches ) {
-                existing.excludeMatches.push(hn);
-            } else {
-                toRegister.set(fname, { excludeMatches: [ hn ] });
-            }
-        }
-    };
+    toRemove.push(...Array.from(before.keys()));
 
-    for ( const rulesetId of rulesetIds ) {
-        const details = scriptingDetails.get(rulesetId);
-        if ( details === undefined ) { continue; }
-        for ( let hn of hostnames.keys() ) {
-            while ( hn !== '' ) {
-                checkExcludeMatches(details, hn);
-                hn = toBroaderHostname(hn);
-            }
-        }
-    }
-
-    const before = new Map(registered.map(entry => [ entry.id, entry ]));
-
-    const toAdd = [];
-    const toUpdate = [];
-    for ( const [ fname, entry ] of toRegister ) {
-        if ( before.has(fname) === false ) {
-            toAdd.push(toRegisterable(fname, entry));
-            continue;
-        }
-        if ( shouldUpdate(before.get(fname), entry) ) {
-            toUpdate.push(toRegisterable(fname, entry));
-        }
-    }
-
-    const toRemove = [];
-    for ( const fname of before.keys() ) {
-        if ( toRegister.has(fname) ) { continue; }
-        toRemove.push(fname);
-    }
-
-    const todo = [];
     if ( toRemove.length !== 0 ) {
-        todo.push(browser.scripting.unregisterContentScripts({ ids: toRemove }));
         console.info(`Unregistered ${toRemove} content (css/js)`);
+        promises.push(
+            browser.scripting.unregisterContentScripts({ ids: toRemove })
+                .catch(reason => { console.info(reason); })
+        );
     }
     if ( toAdd.length !== 0 ) {
-        todo.push(browser.scripting.registerContentScripts(toAdd));
         console.info(`Registered ${toAdd.map(v => v.id)} content (css/js)`);
+        promises.push(
+            browser.scripting.registerContentScripts(toAdd)
+                .catch(reason => { console.info(reason); })
+        );
     }
     if ( toUpdate.length !== 0 ) {
-        todo.push(browser.scripting.updateContentScripts(toUpdate));
         console.info(`Updated ${toUpdate.map(v => v.id)} content (css/js)`);
+        promises.push(
+            browser.scripting.updateContentScripts(toUpdate)
+                .catch(reason => { console.info(reason); })
+        );
     }
-    if ( todo.length === 0 ) { return; }
+    if ( promises.length === 0 ) { return; }
 
-    return Promise.all(todo);
+    return Promise.all(promises);
 }
 
 /******************************************************************************/
 
 export {
-    getInjectableCount,
-    registerInjectable
+    registerInjectables
 };

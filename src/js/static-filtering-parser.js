@@ -19,8 +19,6 @@
     Home: https://github.com/gorhill/uBlock
 */
 
-/* globals document */
-
 'use strict';
 
 /******************************************************************************/
@@ -1391,6 +1389,9 @@ Parser.prototype.SelectorCompiler = class {
         this.reExtendedSyntaxReplacer = /\[-(?:abp|ext)-([a-z-]+)=(['"])(.+?)\2\]/g;
         this.abpProceduralOpReplacer = /:-abp-(?:contains|has)\(/g;
         this.nativeCssHas = instanceOptions.nativeCssHas === true;
+
+        // https://www.w3.org/TR/css-syntax-3/#typedef-ident-token
+        this.reInvalidIdentifier = /^\d/;
     }
 
     compile(raw, out, compileOptions = {}) {
@@ -1424,6 +1425,7 @@ Parser.prototype.SelectorCompiler = class {
                     if ( match === ':-abp-contains(' ) {
                         return ':has-text(';
                     } else if ( match === ':-abp-has(' ) {
+                        this.asProcedural = false;
                         return ':has(';
                     }
                     return match;
@@ -1499,45 +1501,32 @@ Parser.prototype.SelectorCompiler = class {
         case 'ClassSelector':
         case 'Combinator':
         case 'IdSelector':
+        case 'MediaFeature':
+        case 'Nth':
+        case 'Raw':
         case 'TypeSelector':
             out.push({ data });
             break;
-        case 'Declaration': {
+        case 'Declaration':
             if ( data.value ) {
                 this.astFlatten(data.value, args = []);
             }
             out.push({ data, args });
             args = undefined;
             break;
-        }
         case 'DeclarationList':
-            args = out;
-            out.push({ data });
-            break;
         case 'Identifier':
+        case 'MediaQueryList':
+        case 'Selector':
+        case 'SelectorList':
             args = out;
             out.push({ data });
             break;
-        case 'Nth': {
-            out.push({ data });
-            break;
-        }
+        case 'MediaQuery':
         case 'PseudoClassSelector':
         case 'PseudoElementSelector':
             if ( head ) { args = []; }
             out.push({ data, args });
-            break;
-        case 'Raw':
-            if ( head ) { args = []; }
-            out.push({ data, args });
-            break;
-        case 'Selector':
-            args = out;
-            out.push({ data });
-            break;
-        case 'SelectorList':
-            args = out;
-            out.push({ data });
             break;
         case 'Value':
             args = out;
@@ -1552,7 +1541,7 @@ Parser.prototype.SelectorCompiler = class {
             }
             let next = head.next;
             while ( next ) {
-                this.astFlatten(next.data, out);
+                this.astFlatten(next.data, args);
                 next = next.next;
             }
         }
@@ -1583,31 +1572,49 @@ Parser.prototype.SelectorCompiler = class {
         }
     }
 
-    astSerialize(parts) {
+    // https://github.com/uBlockOrigin/uBlock-issues/issues/2300
+    //   Unquoted attribute values are parsed as Identifier instead of String.
+    astSerializePart(part) {
         const out = [];
-        for ( const part of parts ) {
-            const { data } = part;
-            switch ( data.type ) {
-            case 'AttributeSelector':
-                out.push(
-                    data.matcher
-                        ? `[${data.name.name}${data.matcher}"${data.value.value}"]`
-                        : `[${data.name.name}]`
-                );
+        const { data } = part;
+        switch ( data.type ) {
+        case 'AttributeSelector': {
+            const name = data.name.name;
+            if ( this.reInvalidIdentifier.test(name) ) { return; }
+            if ( data.matcher === null ) {
+                out.push(`[${name}]`);
                 break;
-            case 'ClassSelector':
-                out.push(`.${data.name}`);
-                break;
-            case 'Combinator':
-                out.push(data.name === ' ' ? ' ' : ` ${data.name} `);
-                break;
-            case 'Identifier':
-                out.push(data.name);
-                break;
-            case 'IdSelector':
-                out.push(`#${data.name}`);
-                break;
-            case 'Nth': {
+            }
+            let value = data.value.value;
+            if ( typeof value !== 'string' ) {
+                value = data.value.name;
+            }
+            value = value.replace(/"/g, '\\$&');
+            let flags = '';
+            if ( typeof data.flags === 'string' ) {
+                if ( /^(is?|si?)$/.test(data.flags) === false ) { return; }
+                flags = ` ${data.flags}`;
+            }
+            out.push(`[${name}${data.matcher}"${value}"${flags}]`);
+            break;
+        }
+        case 'ClassSelector':
+            if ( this.reInvalidIdentifier.test(data.name) ) { return; }
+            out.push(`.${data.name}`);
+            break;
+        case 'Combinator':
+            out.push(data.name === ' ' ? ' ' : ` ${data.name} `);
+            break;
+        case 'Identifier':
+            if ( this.reInvalidIdentifier.test(data.name) ) { return; }
+            out.push(data.name);
+            break;
+        case 'IdSelector':
+            if ( this.reInvalidIdentifier.test(data.name) ) { return; }
+            out.push(`#${data.name}`);
+            break;
+        case 'Nth': {
+            if ( data.nth.type === 'AnPlusB' ) {
                 const a = parseInt(data.nth.a, 10) || null;
                 const b = parseInt(data.nth.b, 10) || null;
                 if ( a !== null ) {
@@ -1621,27 +1628,62 @@ Parser.prototype.SelectorCompiler = class {
                 } else if ( b !== null ) {
                     out.push(`${b}`);
                 }
-                break;
+            } else if ( data.nth.type === 'Identifier' ) {
+                out.push(data.nth.name);
             }
-            case 'ActionSelector':
+            break;
+        }
+        case 'PseudoClassSelector':
+        case 'PseudoElementSelector':
+            out.push(`:${data.name}`);
+            if ( Array.isArray(part.args) ) {
+                out.push(`(${this.astSerialize(part.args)})`);
+            }
+            break;
+        case 'Raw':
+            out.push(data.value);
+            break;
+        case 'TypeSelector':
+            if ( this.reInvalidIdentifier.test(data.name) ) { return; }
+            out.push(data.name);
+            break;
+        default:
+            break;
+        }
+        return out.join('');
+    }
+
+
+    astSerialize(parts, plainCSS = true) {
+        const out = [];
+        for ( const part of parts ) {
+            const { data } = part;
+            switch ( data.type ) {
+            case 'AttributeSelector':
+            case 'ClassSelector':
+            case 'Combinator':
+            case 'Identifier':
+            case 'IdSelector':
+            case 'Nth':
             case 'PseudoClassSelector':
             case 'PseudoElementSelector':
-                out.push(`:${data.name}`);
-                if ( Array.isArray(part.args) ) {
-                    out.push(`(${this.astSerialize(part.args)})`);
-                }
+            case 'TypeSelector': {
+                const s = this.astSerializePart(part);
+                if ( typeof s !== 'string' ) { return; }
+                out.push(s);
                 break;
+            }
             case 'Raw':
-                out.push(data.value);
+                if ( plainCSS ) { return; }
+                out.push(this.astSerializePart(part));
                 break;
             case 'Selector':
                 if ( out.length !== 0 ) { out.push(','); }
                 break;
-            case 'TypeSelector':
-                out.push(data.name);
+            case 'SelectorList':
                 break;
             default:
-                break;
+                return;
             }
         }
         return out.join('');
@@ -1671,55 +1713,15 @@ Parser.prototype.SelectorCompiler = class {
                 out.action = [ data.name, args ];
                 break;
             }
-            case 'AttributeSelector': {
-                const s = data.matcher
-                    ? `[${data.name.name}${data.matcher}"${data.value.value}"]`
-                    : `[${data.name.name}]`;
-                prelude.push(s);
+            case 'AttributeSelector':
+            case 'ClassSelector':
+            case 'Combinator':
+            case 'IdSelector':
+            case 'PseudoClassSelector':
+            case 'PseudoElementSelector':
+            case 'TypeSelector':
+                prelude.push(this.astSerializePart(part));
                 break;
-            }
-            case 'ClassSelector': {
-                const s = `.${data.name}`;
-                prelude.push(s);
-                break;
-            }
-            case 'Combinator': {
-                const s = data.name === ' ' ? ' ' : ` ${data.name} `;
-                prelude.push(s);
-                break;
-            }
-            case 'IdSelector': {
-                const s = `#${data.name}`;
-                prelude.push(s);
-                break;
-            }
-            case 'PseudoClassSelector': {
-                prelude.push(`:${data.name}`);
-                if ( Array.isArray(part.args) ) {
-                    prelude.push(`(${this.astSerialize(part.args)})`);
-                }
-                break;
-            }
-            case 'PseudoElementSelector': {
-                prelude.push(`::${data.name}`);
-                if ( Array.isArray(part.args) ) {
-                    prelude.push(`(${this.astSerialize(part.args)})`);
-                }
-                break;
-            }
-            case 'SelectorList':
-                break;
-            case 'Selector':
-                if ( prelude.length !== 0 ) {
-                    prelude.push(', ');
-                }
-                break;
-            case 'SelectorList':
-                break;
-            case 'TypeSelector': {
-                prelude.push(data.name);
-                break;
-            }
             case 'ProceduralSelector':
                 if ( prelude.length !== 0 ) {
                     if ( tasks.length === 0 ) {
@@ -1733,8 +1735,15 @@ Parser.prototype.SelectorCompiler = class {
                 if ( args === undefined ) { return; }
                 tasks.push([ data.name, args ]);
                 break;
-            default:
+            case 'Selector':
+                if ( prelude.length !== 0 ) {
+                    prelude.push(', ');
+                }
                 break;
+            case 'SelectorList':
+                break;
+            default:
+                return;
             }
         }
         if ( tasks.length === 0 && out.action === undefined ) {
@@ -1812,8 +1821,9 @@ Parser.prototype.SelectorCompiler = class {
 
         let arg;
         if ( Array.isArray(parts) && parts.length !== 0 ) {
-            arg = this.astSerialize(parts);
+            arg = this.astSerialize(parts, false);
         }
+        if ( arg === undefined ) { return; }
         switch ( operator ) {
         case 'has-text':
             return this.compileText(arg);
@@ -1871,6 +1881,7 @@ Parser.prototype.SelectorCompiler = class {
     // backslash characters.
     // Remove potentially present quotes before processing.
     compileText(s) {
+        if ( s === '' ) { return; }
         s = this.extractArg(s);
         const match = this.reParseRegexLiteral.exec(s);
         let regexDetails;
@@ -1923,15 +1934,12 @@ Parser.prototype.SelectorCompiler = class {
     }
 
     compileMediaQuery(s) {
-        if ( typeof self !== 'object' ) { return; }
-        if ( self === null ) { return; }
-        if ( typeof self.matchMedia !== 'function' ) { return; }
-        try {
-            const mql = self.matchMedia(s);
-            if ( mql instanceof self.MediaQueryList === false ) { return; }
-            if ( mql.media !== 'not all' ) { return s; }
-        } catch(ex) {
-        }
+        const parts = this.astFromRaw(s, 'mediaQueryList');
+        if ( parts === undefined ) { return; }
+        if ( this.astHasType(parts, 'Raw') ) { return; }
+        if ( this.astHasType(parts, 'MediaQuery') === false ) { return; }
+        // TODO: normalize by serializing resulting AST
+        return s;
     }
 
     compileUpwardArgument(s) {
@@ -1966,6 +1974,7 @@ Parser.prototype.SelectorCompiler = class {
     }
 
     compileAttrList(s) {
+        if ( s === '' ) { return; }
         const attrs = s.split('\s*,\s*');
         const out = [];
         for ( const attr of attrs ) {
@@ -1979,7 +1988,7 @@ Parser.prototype.SelectorCompiler = class {
     compileXpathExpression(s) {
         s = this.extractArg(s);
         try {
-            document.createExpression(s, null);
+            self.document.createExpression(s, null);
         } catch (e) {
             return;
         }
@@ -3139,6 +3148,7 @@ Parser.utils = Parser.prototype.utils = (( ) => {
         [ 'env_firefox', 'firefox' ],
         [ 'env_legacy', 'legacy' ],
         [ 'env_mobile', 'mobile' ],
+        [ 'env_mv3', 'mv3' ],
         [ 'env_safari', 'safari' ],
         [ 'cap_html_filtering', 'html_filtering' ],
         [ 'cap_user_stylesheet', 'user_stylesheet' ],

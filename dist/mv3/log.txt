@@ -1,4 +1,4 @@
-Version: 0.1.22.9248
+Version: 0.1.22.10135
 ============================
 Listset for 'default':
 	Fetching remote https://ublockorigin.pages.dev/filters/filters.txt
@@ -7,22 +7,23 @@ Listset for 'default':
 	Fetching remote https://ublockorigin.pages.dev/filters/resource-abuse.txt
 	Fetching remote https://ublockorigin.pages.dev/filters/unbreak.txt
 	Fetching remote https://ublockorigin.pages.dev/filters/quick-fixes.txt
+	Fetching remote https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/ubol-filters.txt
 	Fetching remote https://secure.fanboy.co.nz/easylist.txt
 	Fetching remote https://secure.fanboy.co.nz/easyprivacy.txt
 	Fetching remote https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=1&mimetype=plaintext
 	Fetching remote https://ublockorigin.pages.dev/filters/filters-2020.txt
 	Fetching remote https://ublockorigin.pages.dev/filters/filters-2021.txt
 	Fetching remote https://ublockorigin.pages.dev/filters/filters-2022.txt
-Input filter count: 79245
-	Accepted filter count: 76846
-	Rejected filter count: 151
-Output rule count: 21030
-	Good: 20225
-	Maybe good (regexes): 127
-	redirect-rule= (discarded): 434
+Input filter count: 79354
+	Accepted filter count: 76957
+	Rejected filter count: 152
+Output rule count: 20740
+	Plain good: 19927
+	Maybe good (regexes): 123
+	redirect-rule= (discarded): 0
 	csp= (discarded): 61
-	removeparams= (discarded): 22
-	Unsupported: 161
+	removeparams= (accepted/discarded): 23/5
+	Unsupported: 606
 		Entity not supported: booru.*
 		Entity not supported: silkengirl.*
 		Entity not supported: megalink.*
@@ -50,14 +51,15 @@ Output rule count: 21030
 		regexFilter is not RE2-compatible: ^https?:\/\/((?!www)[a-z]{3,}|\d{2})?\.?[-0-9a-z]{6,}\.[a-z]{2,6}\/(?:[a-z]{6,8}\/)?\/?\?o=[0-9a-z]{7}&u=[0-9a-z]{7}
 		Entity not supported: the-voice-of-germany.*
 		Entity not supported: pobre.*
-		regexFilter is not RE2-compatible: ^https:\/\/(?:www\d\.)?[-a-z]{6,}\.(?:com|info|net|org)\/(?=[-_a-zA-Z]{0,42}\d)(?=[-_0-9a-z]{0,42}[A-Z])[-_0-9a-zA-Z]{43}\/\?cid=[-_0-9a-zA-Z]{16,36}&sid=[_0-9a-f]{1,32}$
+		regexFilter is not RE2-compatible: ^https:\/\/(?:www\d\.)?[-a-z]{6,}\.(?:com|info|net|org)\/(?=[-_a-zA-Z]{0,42}\d)(?=[-_0-9a-z]{0,42}[A-Z])[-_0-9a-zA-Z]{43}\/\?cid=[-_0-9a-zA-Z]{16,36}(?:&qs\d=\S+)?&sid=[_0-9a-f]{1,32}$
+		regexFilter is not RE2-compatible: ^https:\/\/(?:www\d\.)?[-a-z]{6,}\.(?:com|info|net|org)\/(?=[-_a-zA-Z]{0,42}\d)(?=[-_0-9a-z]{0,42}[A-Z])[-_0-9a-zA-Z]{43}\/\?sid=[_0-9a-f]{1,32}(?:&qs\d=\S+)?&cid=[-_0-9a-zA-Z]{16,36}$
 		Entity not supported: pussyspace.*
 		regexFilter is not RE2-compatible: \/img\/(?!new).+\.gif
 		Entity not supported: slreamplay.*
 		regexFilter is not RE2-compatible: \/[a-z]{4,}\/(?!holly7)[0-9a-z]{3,}\d\.\d\.\d{1,2}\.[0-9a-f]{32}\.js$
 		Entity not supported: camwhores.*
-		regexFilter is not RE2-compatible: ^https:\/\/ltn\.hitomi\.la\/[A-Za-z]{4,}\/(?=[a-z]{0,19}[A-Z])[A-Za-z]{4,20}\.js$
 		regexFilter is not RE2-compatible: ^http:\/\/img[a-z]+\.(?:buzz|xyz)\/(?!shrinker).*
+		Strict partyness not supported: strict3p
 		Entity not supported: upvid.*
 		Entity not supported: uptomega.*
 		Entity not supported: clicknupload.*
@@ -143,6 +145,7 @@ Output rule count: 21030
 		Entity not supported: sms24.*
 		Entity not supported: viafree.*
 		Entity not supported: hotfrog.*
+		Strict partyness not supported: strict1p
 		Entity not supported: bloomberg.*
 		Entity not supported: bloomberg.*
 		Entity not supported: tube8.*
@@ -155,42 +158,486 @@ Output rule count: 21030
 		Entity not supported: streamingcommunity.*
 		Entity not supported: filepress.*
 		Entity not supported: bloomberg.*
+		Invalid network filter in default: $webrtc,domain=ack.net|allthetests.com|azvideo.net|champion.gg|clicknupload.link|colourlovers.com|csgolounge.com|dispatch.com|fastplay.to|go4up.com|gounlimited.to|janjua.pw|janjua.tv|jpost.com|megaup.net|merriam-webster.com|netdna-storage.com|ouo.io|ouo.press|rlslog.net|sourceforge.net|spanishdict.com|telegram.com|torlock.icu|torlock2.com|uptobox.com|videowood.tv|vidtodo.com|yts.gs|yts.mx
 		Entity not supported: soap2day.*
 		Entity not supported: 2embed.*
 		Entity not supported: pussyspace.*
-		Invalid network filter in default: $webrtc,domain=ack.net|allthetests.com|azvideo.net|champion.gg|clicknupload.link|colourlovers.com|csgolounge.com|dispatch.com|fastplay.to|go4up.com|gounlimited.to|janjua.pw|janjua.tv|jpost.com|megaup.net|merriam-webster.com|netdna-storage.com|ouo.io|ouo.press|rlslog.net|sourceforge.net|spanishdict.com|telegram.com|torlock.icu|torlock2.com|uptobox.com|videowood.tv|vidtodo.com|yts.gs|yts.mx
 		Entity not supported: slreamplay.*
-		Entity not supported: guardaserie.*
+		Unpatchable redirect filter: empty
+		Entity not supported: guardaserie.*,		Unpatchable redirect filter: google-analytics_analytics.js
 		Unsupported regex-based removeParam: /utm_source|utm_campaign|utm_content/
-		Entity not supported: silkengirl.*
-		Entity not supported: gmx.*
-		Entity not supported: arabseed.*
-		Entity not supported: streamzz.*
-		Entity not supported: streamingcommunity.*
-		Entity not supported: 1movies.*
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: abp-resource:blank-js
+		Unpatchable redirect filter: 2x2.png
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 32x32.png
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 2x2.png
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 32x32.png
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 2x2.png
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 3x2.png
+		Unpatchable redirect filter: 2x2.png
+		Unpatchable redirect filter: 2x2.png
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 2x2.png
+		Unpatchable redirect filter: 2x2.png
+		Entity not supported: silkengirl.*,		Unpatchable redirect filter: 2x2.png
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 32x32.png
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 2x2.png
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 1x1-transparent.gif
+		Unpatchable redirect filter: 1x1-transparent.gif
+		Unpatchable redirect filter: 32x32-transparent.png
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: noopframe
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: empty
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: fuckadblock.js-3.2.0
+		Unpatchable redirect filter: fuckadblock.js-3.2.0
+		Unpatchable redirect filter: fuckadblock.js-3.2.0
+		Unpatchable redirect filter: fuckadblock.js-3.2.0
+		Unpatchable redirect filter: fuckadblock.js-3.2.0
+		Unpatchable redirect filter: hd-main.js
+		Unpatchable redirect filter: hd-main.js
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: fuckadblock.js-3.2.0
+		Unpatchable redirect filter: fuckadblock.js-3.2.0
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: ligatus.com/*/angular-tag.js
+		Unpatchable redirect filter: ligatus.com/*/angular-tag.js
+		Unpatchable redirect filter: popads.net.js
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: fuckadblock.js-3.2.0
+		Unpatchable redirect filter: noopjs
+		Entity not supported: gmx.*,		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: googletagmanager.com/gtm.js:10
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs:10
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: googlesyndication_adsbygoogle.js
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: google-analytics.com/analytics.js
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs:10
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Entity not supported: arabseed.*,		Unpatchable redirect filter: googlesyndication_adsbygoogle.js
+		Entity not supported: streamzz.*,		Unpatchable redirect filter: empty
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noop.js:10
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: googlesyndication_adsbygoogle.js:5
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: googletagmanager_gtm.js
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: prebid-ads.js
+		Unpatchable redirect filter: prebid-ads.js
+		Unpatchable redirect filter: prebid-ads.js
+		Unpatchable redirect filter: prebid-ads.js
+		Unpatchable redirect filter: prebid-ads.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: googletagmanager_gtm.js:5
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: prebid-ads.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: amazon_apstag.js
+		Unpatchable redirect filter: noop.js
+		Entity not supported: streamingcommunity.*,		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		regexFilter is not RE2-compatible: ^https?:\/\/(?:[a-z]{2}\.)?[0-9a-z]{7,16}\.com\/[a-z](?=[a-z]{0,25}[0-9A-Z])[0-9a-zA-Z]{3,26}\/(?:[1-5]\d{4}|[3-9]\d{3})\??(?:_=\d+|v=\d)?$,		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: google-analytics.com/analytics.js:5
+		Unpatchable redirect filter: google-analytics.com/cx/api.js:5
+		Unpatchable redirect filter: googletagservices.com/gpt.js:5
+		Unpatchable redirect filter: googletagservices_gpt.js:5
+		Unpatchable redirect filter: googletagservices_gpt.js:5
+		Unpatchable redirect filter: scorecardresearch.com/beacon.js:5
+		Unpatchable redirect filter: google-analytics.com/ga.js:5
+		Unpatchable redirect filter: addthis.com/addthis_widget.js
+		Unpatchable redirect filter: googletagmanager_gtm.js:5
+		Unpatchable redirect filter: outbrain-widget.js:5
+		Unpatchable redirect filter: googletagmanager.com/gtm.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: fingerprint2.js
+		Unpatchable redirect filter: fingerprint2.js
+		Unpatchable redirect filter: fingerprint2.js
+		Unpatchable redirect filter: fingerprint2.js
+		Unpatchable redirect filter: fingerprint3.js:10
+		Unpatchable redirect filter: fingerprint2.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: amazon-adsystem.com/aax2/amzn_ads.js
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: amazon_apstag.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: googletagmanager_gtm.js
+		Unpatchable redirect filter: googletagservices_gpt.js
+		Unpatchable redirect filter: googletagservices_gpt.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: googletagmanager.com/gtm.js
+		Unpatchable redirect filter: google-analytics.com/analytics.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: amazon_apstag.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: prebid-ads.js
+		Unpatchable redirect filter: google-analytics.com/analytics.js
+		Unpatchable redirect filter: googletagmanager_gtm.js:5
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: nooptext
+		Entity not supported: 1movies.*,		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: nooptext
 		Unsupported regex-based removeParam: /^ad/
 		Unsupported regex-based removeParam: /^ad/
-		Entity not supported: discoveryplus.*
+		Unpatchable redirect filter: noop.txt
+		Entity not supported: discoveryplus.*,		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: noopvmap-1.0
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: nooptext
 		Entity not supported: carousell.*
-		Entity not supported: streamingcommunity.*
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: nooptext
+		Entity not supported: streamingcommunity.*,		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: noopframe
+		Unpatchable redirect filter: noopframe
+		Unpatchable redirect filter: noopframe
+		Unpatchable redirect filter: noopframe
+		Unpatchable redirect filter: noopframe
 		Unsupported regex-based removeParam: /^(?:correlator|f[cr-w]|p[e-sv]|[abdeg-or-x])/
-		Unhandled modifier exception
-		Unhandled modifier exception
+		Unsupported modifier exception
+		Unpatchable redirect filter: noop.html
+		Unpatchable redirect filter: noopframe
+		Unpatchable redirect filter: noop.html
+		Unsupported modifier exception
+		Unpatchable redirect filter: noop.html
 		Unsupported regex-based removeParam: /^(?:correlator|f[cr-w]|p[e-sv]|u_|ga_|url|dt|adk)/
-		Unhandled modifier exception
-		Entity not supported: the-voice-of-germany.*
-		Entity not supported: pobre.*
-		Unhandled modifier exception
-		Unhandled modifier exception
-		Unhandled modifier exception
-		Entity not supported: gmx.*
-CSS-related distinct filters: 4951 distinct combined selectors
-CSS-related injectable files: 12
-	0cn5p14, 1q5pup8, 0b8qid0, 1kd0mn0, 0v19m64, 0319bas, 0p8fu64, 0361p3s, 1miruk4, 1vcu40o, 09qmid8, 0dlchv8
-Procedural-related distinct filters: 593 distinct combined selectors
-Procedural-related injectable files: 4
-	1nl0lna, 0qggvjm, 1t6ti6u, 1f1an7a
-Rejected cosmetic filters: 1386
+		Unsupported modifier exception
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp4-1s
+		Unpatchable redirect filter: noopmp4-1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp4-1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp4-1s
+		Unpatchable redirect filter: noopmp4-1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp4-1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp4-1s
+		Unpatchable redirect filter: noopmp4-1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp4-1s
+		Unpatchable redirect filter: noopmp4-1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp4-1s
+		Entity not supported: the-voice-of-germany.*,		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noop-0.5s.mp3
+		Unpatchable redirect filter: noop-0.5s.mp3
+		Unpatchable redirect filter: noop-1s.mp4
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noop-0.1s.mp3
+		Entity not supported: pobre.*,		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp4-1s
+		Unpatchable redirect filter: noopmp4-1s
+		Unpatchable redirect filter: noop-1s.mp4
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp4-1s
+		Unpatchable redirect filter: noop-1s.mp4
+		Unsupported modifier exception
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 2x2.png
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 2x2.png
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: fuckadblock.js-3.2.0
+		Unpatchable redirect filter: fuckadblock.js-3.2.0
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: fuckadblock.js-3.2.0
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: fingerprint2.js
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: googletagservices_gpt.js
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: nooptext
+		Unsupported modifier exception
+		Unpatchable redirect filter: noopframe
+		Unpatchable redirect filter: noopframe
+		Unpatchable redirect filter: noop.html
+		Unsupported modifier exception
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noop-0.1s.mp3
+		Unpatchable redirect filter: noop-0.1s.mp3
+		Unpatchable redirect filter: noopmp4-1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 32x32.png
+		Unpatchable redirect filter: 32x32.png
+		Unpatchable redirect filter: 32x32.png
+		Unpatchable redirect filter: 32x32.png
+		Unpatchable redirect filter: 32x32.png
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: nobab2.js:10
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: google-ima.js:5
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp4-1s
+		Unpatchable redirect filter: noopmp3-0.1s
+		Entity not supported: gmx.*,		Unpatchable redirect filter: noop-0.1s.mp3
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+CSS-generic: 17048 plain CSS selectors
+CSS-specific distinct filters: 4969 distinct combined selectors
+CSS-specific injectable files: 20
+	1nc3kg4, 0nh2v2o, 19t4oqc, 0d6lu5c, 0lvv2gs, 14j7q8o, 0cvi2a0, 11n6j44, 0emkm7s, 1dofh9c, 1u2i7vk, 03ghe90, 1v2treg, 13mg5do, 1prldk4, 1qqal4c, 0uo66rg, 0ekr1jk, 0iuoj34, 0jglro4
+Procedural-related distinct filters: 602 distinct combined selectors
+Procedural-related injectable files: 3
+	03j44de, 0ft4fsq, 0h3j1v6
+Rejected cosmetic filters: 1397
 	Entity not supported: google.*###atvcap + #tvcap > .mnr-c > .commercial-unit-mobile-top
 	Entity not supported: google.*###center_col > #\5f Emc
 	Entity not supported: google.*###center_col > #main > .dfrd > .mnr-c > .c._oc._zs
@@ -695,7 +1142,11 @@ Rejected cosmetic filters: 1386
 	Entity not supported: vjav.*##.content > div:not([class]) > div.video-page + div[class]
 	Entity not supported: vjav.*##.video-page__content > div.left + div[class]:last-child
 	Entity not supported: vjav.*##.video-page__player + div[class] > div[class]
-	Entity not supported: thegay.*##.video-page__content > .right
+	Entity not supported: thegay.*##.content > div:not([class]) > .wrapper ~ div[class]:not(.wrapper)
+	Entity not supported: thegay.*##.underplayer__info > div[class]:first-child
+	Entity not supported: thegay.*##.video-page__content > div.left + div[class]:last-child
+	Entity not supported: thegay.*##div[style="display:flex !important"] > div
+	Entity not supported: mrgay.*##.right
 	Invalid filter: spankwire.com##:xpath(//*[contains(text(),"Advertisement")]):upward(1)
 	Entity not supported: bdupload.*##[href*="/dloadbutton.php"]
 	Entity not supported: arawatch.*##A[href$=".html"][rel="nofollow norefferer noopener"]
@@ -1390,6 +1841,8 @@ Rejected cosmetic filters: 1386
 	Entity not supported: yeptube.*##.spots
 	Entity not supported: yeptube.*##.thr-rcol
 	Entity not supported: wmoviesfree.*##.orange.big-color-btn
+	Entity not supported: filmpertutti.*##.ads
+	Entity not supported: filmpertutti.*##.no_pop
 	Entity not supported: pornhd8k.*###invideo_wrapper
 	Entity not supported: 1todaypk.*##[href="/watchnow.php"]
 	Entity not supported: todaypktv.*##.ad_watch_now
@@ -1557,6 +2010,11 @@ Rejected cosmetic filters: 1386
 	Entity not supported: moviesjoy.*##[href*="moviesflix4k"]
 	Entity not supported: moviesjoy.*##.premodal.modal
 	Entity not supported: moviesjoy.*##.show.modal-backdrop
+	Entity not supported: apkmaven.*###wpsafe-generate, #wpsafe-link:style(display: block !important;)
+	Entity not supported: apkmaven.*##div[id^="wpsafe-wait"]
+	Entity not supported: apkmaven.*###countdown
+	Entity not supported: apkmaven.*###download_link:style(display: block !important;)
+	Entity not supported: 1377x.*###chatme-box
 	Entity not supported: player.tormalayalamhd.*##[href="https://t.me/Russia_Vs_Ukraine_War3"]
 	Entity not supported: player.tormalayalamhd.*##a[onclick="openAuc();"]
 	Entity not supported: 90phut2.*##.uk-modal
@@ -1577,9 +2035,9 @@ Rejected cosmetic filters: 1386
 	Invalid filter: komorkomania.pl##:xpath(//*[string-length(@href) > 1600])
 	Invalid filter: polygamia.pl##:xpath(//*[string-length(@href) > 1600])
 	Invalid filter: open.fm##:xpath(//*[string-length(@href) > 1600])
-Scriptlet-related distinct filters: 1658
-Scriptlet-related injectable files: 6
-	0t5ui9p, 1lvsmph, 1hhg7k1, 040l819, 0r0cvo1, 1g7jmjp
+Scriptlet-related distinct filters: 1925
+Scriptlet-related injectable files: 9
+	06enhfp, 1nhvakd, 0mr7k6d, 19b56q1, 11odnmp, 12ieufd, 1qjcnvl, 0e2p5bp, 12jvemp
 ============================
 Listset for 'alb-0':
 	Fetching remote https://raw.githubusercontent.com/AnXh3L0/blocklist/master/albanian-easylist-addition/Albania.txt
@@ -1587,23 +2045,27 @@ Input filter count: 29
 	Accepted filter count: 29
 	Rejected filter count: 0
 Output rule count: 26
-	Good: 22
+	Plain good: 22
 	Maybe good (regexes): 0
 	redirect-rule= (discarded): 0
 	csp= (discarded): 0
-	removeparams= (discarded): 0
+	removeparams= (accepted/discarded): 0/0
 	Unsupported: 4
 		Entity not supported: filma24.*
 		Entity not supported: www.filma24.*
 		Entity not supported: www.filma24.*
 		Entity not supported: filma24.*
-CSS-related distinct filters: 97 distinct combined selectors
-CSS-related injectable files: 11
-	1dl63rg, 1qj43rk, 1g9skjk, 1rveqdg, 1o20eek, 0hhgu80, 17o0v80, 0au84dk, 1j8kqec, 0cipi5g, 00lnll0
-Procedural-related distinct filters: 11 distinct combined selectors
-Procedural-related injectable files: 4
-	04qaqnm, 1le71ai, 0svji32, 162f2ji
-Rejected cosmetic filters: 19
+CSS-generic: 6 plain CSS selectors
+CSS-specific distinct filters: 97 distinct combined selectors
+CSS-specific injectable files: 1
+	0pggmv0
+Procedural-related distinct filters: 9 distinct combined selectors
+Procedural-related injectable files: 1
+	1jrd2g6
+Rejected cosmetic filters: 22
+	Invalid filter: gazetatema.net###content > div > a:has-text()
+	Invalid filter: lajmifundit.al##.td_block_template_1 > a:has-text()
+	Invalid filter: lajmifundit.al##.td_block_template_1 > center > a:has-text()
 	Entity not supported: www.filma24.*###vidad
 	Entity not supported: www.filma24.*##.widgets
 	Entity not supported: www.filma24.*##.bottom.adrek-space > .widget
@@ -1630,152 +2092,226 @@ Input filter count: 673
 	Accepted filter count: 673
 	Rejected filter count: 0
 Output rule count: 664
-	Good: 664
+	Plain good: 664
 	Maybe good (regexes): 0
 	redirect-rule= (discarded): 0
 	csp= (discarded): 0
-	removeparams= (discarded): 0
+	removeparams= (accepted/discarded): 0/0
 	Unsupported: 0
 
-CSS-related distinct filters: 185 distinct combined selectors
-CSS-related injectable files: 12
-	1bsqshc, 0rl5to4, 1b9l710, 14hs1gk, 00qsf2c, 1ml3b74, 0vhm25k, 1f2bq4k, 06ffgio, 0q2nu7c, 1bnlmuo, 0gtnp9s
+CSS-generic: 3 plain CSS selectors
+CSS-specific distinct filters: 185 distinct combined selectors
+CSS-specific injectable files: 1
+	1rbisko
 ============================
 Listset for 'chn-0':
 	Fetching remote https://filters.adtidy.org/extension/ublock/filters/224.txt
-Input filter count: 18837
-	Accepted filter count: 18796
+Input filter count: 19078
+	Accepted filter count: 19036
 	Rejected filter count: 0
-Output rule count: 6724
-	Good: 6666
+Output rule count: 6661
+	Plain good: 6602
 	Maybe good (regexes): 14
-	redirect-rule= (discarded): 34
+	redirect-rule= (discarded): 0
 	csp= (discarded): 6
-	removeparams= (discarded): 0
-	Unsupported: 4
-		regexFilter is not RE2-compatible: ^(?!.*(bootstrapcdn.com|cdn.ampproject.org|cloudflare.com|disqus.com|disquscdn.com|dmca.com|ebacdn.com|facebook.net|fbcdn.net|fluidplayer.com|fontawesome.com|github.io|google.com|googleapis.com|googletagmanager.com|gstatic.com|jquery.com|jsdelivr.net|jwpcdn.com|jwplatform.com|polyfill.io|recaptcha.net|shrink.pe|twitter.com|ulogin.ru|unpkg.com|userapi.com|vidazoo.com|vk.com|yandex.|yastatic.net|ytimg.com|zencdn.net|player|youtube.com|cackle.me|googleoptimize.com|vuukle.com|chatango.com|twimg.com|google-analytics.com|hcaptcha.com|raincaptcha.com|media-imdb.com|blogger.com|hwcdn.net|instagram.com|wp.com)).*$
+	removeparams= (accepted/discarded): 0/0
+	Unsupported: 39
+		regexFilter is not RE2-compatible: ^(?!.*(bootstrapcdn.com|cdn.ampproject.org|cloudflare.com|disqus.com|disquscdn.com|dmca.com|ebacdn.com|facebook.net|fastlylb.net|fbcdn.net|fluidplayer.com|fontawesome.com|github.io|google.com|googleapis.com|googletagmanager.com|gstatic.com|jquery.com|jsdelivr.net|jwpcdn.com|jwplatform.com|polyfill.io|recaptcha.net|shrink.pe|twitter.com|ulogin.ru|unpkg.com|userapi.com|vidazoo.com|vk.com|yandex.|yastatic.net|ytimg.com|zencdn.net|player|youtube.com|cackle.me|googleoptimize.com|vuukle.com|chatango.com|twimg.com|google-analytics.com|hcaptcha.com|raincaptcha.com|media-imdb.com|blogger.com|hwcdn.net|instagram.com|wp.com)).*$
 		Invalid network filter in chn-0: @@||ad.alimama.com^$genericblock
 		Invalid network filter in chn-0: @@||cmechina.net^$genericblock
-		Unhandled modifier exception
-CSS-related distinct filters: 2611 distinct combined selectors
-CSS-related injectable files: 12
-	0fsll2o, 0868530, 0k2p7p8, 1r2te4k, 1vlsnj4, 154c5is, 1jp9odk, 0otsjms, 1dp0njg, 09vjfk8, 14ai630, 09tuqto
-Procedural-related distinct filters: 166 distinct combined selectors
-Procedural-related injectable files: 4
-	0t6eq9m, 1pcb2fi, 0eejk3i, 024hce2
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: googletagservices_gpt.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: googlesyndication.com/adsbygoogle.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: googlesyndication.com/adsbygoogle.js
+		Unpatchable redirect filter: googlesyndication.com/adsbygoogle.js
+		Unpatchable redirect filter: googletagservices_gpt.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: noop.txt
+		Unsupported modifier exception
+		Unpatchable redirect filter: noop-1s.mp4
+		Unpatchable redirect filter: noop-1s.mp4
+		Unpatchable redirect filter: noop-1s.mp4
+		Unpatchable redirect filter: noop-0.1s.mp3
+		Unpatchable redirect filter: noop-0.1s.mp3
+		Unpatchable redirect filter: noop-0.1s.mp3
+		Unpatchable redirect filter: noop-0.1s.mp3
+		Unpatchable redirect filter: noop-1s.mp4
+		Unpatchable redirect filter: noop-0.1s.mp3
+		Unpatchable redirect filter: noop-0.1s.mp3
+		Unpatchable redirect filter: noop-0.1s.mp3
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 1x1.gif
+CSS-generic: 635 plain CSS selectors
+CSS-specific distinct filters: 2591 distinct combined selectors
+CSS-specific injectable files: 11
+	16pnj8c, 0q571dk, 1u9krao, 0b1olfc, 0uhq6ls, 19hnm80, 02un6po, 0na4314, 120aus4, 1bvqgvk, 075csu0
+Procedural-related distinct filters: 168 distinct combined selectors
+Procedural-related injectable files: 1
+	0jrojqe
 Rejected cosmetic filters: 3
 	Entity not supported: 18comic.*##body .bot-per
 	Entity not supported: 18comic.*##.top-a2db
 	Entity not supported: 18comic.*##.modal-body > ul.pop-list
-Scriptlet-related distinct filters: 67
-Scriptlet-related injectable files: 6
-	0bhhh5l, 11fdmil, 082e4vh, 18v3tj1, 0mvp4ad, 0nc36t1
+Scriptlet-related distinct filters: 70
+Scriptlet-related injectable files: 7
+	08btl01, 19nl0eh, 0aov6gl, 0bgo2cl, 0khccu5, 0pmr2j5, 0dq0d9t
 ============================
 Listset for 'cze-0':
 	Fetching remote https://raw.githubusercontent.com/tomasko126/easylistczechandslovak/master/filters.txt
 	Fetching remote https://raw.githubusercontent.com/tomasko126/easylistczechandslovak/master/filters_ublock.txt
-Input filter count: 226
-	Accepted filter count: 226
+Input filter count: 228
+	Accepted filter count: 228
 	Rejected filter count: 0
-Output rule count: 120
-	Good: 113
+Output rule count: 122
+	Plain good: 115
 	Maybe good (regexes): 0
-	redirect-rule= (discarded): 6
+	redirect-rule= (discarded): 0
 	csp= (discarded): 1
-	removeparams= (discarded): 0
-	Unsupported: 0
-
-CSS-related distinct filters: 141 distinct combined selectors
-CSS-related injectable files: 12
-	1cp2678, 043qs8g, 1k2ou80, 1o4aroo, 1hdvglg, 148a1g0, 09mc980, 0d3h018, 1fmb4ls, 024skd4, 0b7j6vs, 023trdo
+	removeparams= (accepted/discarded): 0/0
+	Unsupported: 6
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: noop-0.1s.mp3
+		Unpatchable redirect filter: noop-1s.mp4
+		Unpatchable redirect filter: 1x1.gif
+CSS-generic: 36 plain CSS selectors
+CSS-specific distinct filters: 141 distinct combined selectors
+CSS-specific injectable files: 1
+	1n6o4gs
 Procedural-related distinct filters: 15 distinct combined selectors
-Procedural-related injectable files: 4
-	0b2sgle, 15frpj2, 0htafhi, 1bird52
-Scriptlet-related distinct filters: 22
-Scriptlet-related injectable files: 4
-	0ct0cip, 1qojpcd, 0mr3ut9, 0pqmb2t
+Procedural-related injectable files: 1
+	0mvokpq
+Scriptlet-related distinct filters: 30
+Scriptlet-related injectable files: 6
+	0m938lt, 097ehdt, 0av955l, 05bqmd9, 174lpqh, 1b5k8mh
 ============================
 Listset for 'deu-0':
 	Fetching remote https://easylist.to/easylistgermany/easylistgermany.txt
-Input filter count: 2189
-	Accepted filter count: 2189
+Input filter count: 2190
+	Accepted filter count: 2190
 	Rejected filter count: 0
-Output rule count: 1689
-	Good: 1685
+Output rule count: 1691
+	Plain good: 1687
 	Maybe good (regexes): 3
 	redirect-rule= (discarded): 0
 	csp= (discarded): 0
-	removeparams= (discarded): 0
+	removeparams= (accepted/discarded): 0/0
 	Unsupported: 1
 		Invalid network filter in deu-0: @@||gofeminin.de^$genericblock
-CSS-related distinct filters: 1164 distinct combined selectors
-CSS-related injectable files: 12
-	0544gok, 0346tf4, 0rq2j0o, 18ps85k, 1s1ns1g, 09194h0, 0m64ssk, 00immhk, 07e13ss, 1n1fnno, 1vsom3o, 0cpn6bs
+CSS-generic: 350 plain CSS selectors
+CSS-specific distinct filters: 1169 distinct combined selectors
+CSS-specific injectable files: 5
+	074f6r8, 10eiop0, 047m22g, 1me9lp0, 1q6nabg
 Procedural-related distinct filters: 83 distinct combined selectors
-Procedural-related injectable files: 4
-	0m5m2gq, 0r966ri, 1nmhdum, 035sfs2
+Procedural-related injectable files: 1
+	13jmkue
 ============================
 Listset for 'fin-0':
 	Fetching remote https://raw.githubusercontent.com/finnish-easylist-addition/finnish-easylist-addition/master/Finland_adb.txt
 	Fetching remote https://raw.githubusercontent.com/finnish-easylist-addition/finnish-easylist-addition/master/Finland_adb_uBO_extras.txt
-Input filter count: 169
-	Accepted filter count: 169
+Input filter count: 172
+	Accepted filter count: 172
 	Rejected filter count: 0
-Output rule count: 147
-	Good: 138
+Output rule count: 150
+	Plain good: 141
 	Maybe good (regexes): 3
-	redirect-rule= (discarded): 3
+	redirect-rule= (discarded): 0
 	csp= (discarded): 0
-	removeparams= (discarded): 0
-	Unsupported: 3
+	removeparams= (accepted/discarded): 0/0
+	Unsupported: 6
 		regexFilter is not RE2-compatible: telsu\.fi\/(?![^>]*\.\w{3}$).+
 		regexFilter is not RE2-compatible: telsu\.fi\/(?![^>].*\.(jpg|png|svg|ico)$).+
 		regexFilter is not RE2-compatible: telsu\.fi\/img\/(?!cloudcity|mindmax|navibg|prg|tvohjelmat)
-CSS-related distinct filters: 352 distinct combined selectors
-CSS-related injectable files: 12
-	0209ct8, 0ir6ogs, 0147tso, 1cia8b8, 0bfc3dc, 0i6lb30, 0f8bn6c, 1cm2rrk, 0lqk74g, 14r0q4k, 0k1d7is, 049s694
-Procedural-related distinct filters: 187 distinct combined selectors
-Procedural-related injectable files: 4
-	0odhene, 0gvusau, 17jigum, 1he9ici
-Rejected cosmetic filters: 2
-	Invalid filter: fin.afterdawn.com##.header:not(:matches-media((min-width: 750px))) + div[class] + div[class] .mobile-top-ad:-abp-has(+ .boxes):style(margin: unset !important)
-	Invalid filter: fin.afterdawn.com##.header:not(:matches-media((min-width: 750px))) + div[class] + div[class] .mobile-top-ad:not(+ .boxes):style(margin: -10px auto !important)
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: abp-resource:blank-mp3
+		Unpatchable redirect filter: abp-resource:blank-mp3
+CSS-generic: 52 plain CSS selectors
+CSS-specific distinct filters: 368 distinct combined selectors
+CSS-specific injectable files: 2
+	1puuj0o, 0rbthr0
+Procedural-related distinct filters: 177 distinct combined selectors
+Procedural-related injectable files: 1
+	11t738u
 Scriptlet-related distinct filters: 4
 Scriptlet-related injectable files: 3
-	0ngj1a9, 0g2dphl, 0ln2el9
+	1girtcp, 1qams1d, 1fkoufl
 ============================
 Listset for 'fra-0':
 	Fetching remote https://filters.adtidy.org/extension/ublock/filters/16.txt
-Input filter count: 21552
-	Accepted filter count: 21497
-	Rejected filter count: 49
-Output rule count: 7332
-	Good: 7281
+Input filter count: 21819
+	Accepted filter count: 21765
+	Rejected filter count: 48
+Output rule count: 7321
+	Plain good: 7270
 	Maybe good (regexes): 10
-	redirect-rule= (discarded): 28
+	redirect-rule= (discarded): 0
 	csp= (discarded): 5
-	removeparams= (discarded): 0
-	Unsupported: 8
-		regexFilter is not RE2-compatible: ^(?!.*(bootstrapcdn.com|cdn.ampproject.org|cloudflare.com|disqus.com|disquscdn.com|dmca.com|ebacdn.com|facebook.net|fbcdn.net|fluidplayer.com|fontawesome.com|github.io|google.com|googleapis.com|googletagmanager.com|gstatic.com|jquery.com|jsdelivr.net|jwpcdn.com|jwplatform.com|polyfill.io|recaptcha.net|shrink.pe|twitter.com|ulogin.ru|unpkg.com|userapi.com|vidazoo.com|vk.com|yandex.|yastatic.net|ytimg.com|zencdn.net|player|youtube.com|cackle.me|googleoptimize.com|vuukle.com|chatango.com|twimg.com|google-analytics.com|hcaptcha.com|raincaptcha.com|media-imdb.com|blogger.com|hwcdn.net|instagram.com|wp.com)).*$
+	removeparams= (accepted/discarded): 0/0
+	Unsupported: 36
+		regexFilter is not RE2-compatible: ^(?!.*(bootstrapcdn.com|cdn.ampproject.org|cloudflare.com|disqus.com|disquscdn.com|dmca.com|ebacdn.com|facebook.net|fastlylb.net|fbcdn.net|fluidplayer.com|fontawesome.com|github.io|google.com|googleapis.com|googletagmanager.com|gstatic.com|jquery.com|jsdelivr.net|jwpcdn.com|jwplatform.com|polyfill.io|recaptcha.net|shrink.pe|twitter.com|ulogin.ru|unpkg.com|userapi.com|vidazoo.com|vk.com|yandex.|yastatic.net|ytimg.com|zencdn.net|player|youtube.com|cackle.me|googleoptimize.com|vuukle.com|chatango.com|twimg.com|google-analytics.com|hcaptcha.com|raincaptcha.com|media-imdb.com|blogger.com|hwcdn.net|instagram.com|wp.com)).*$
 		Entity not supported: vidembed.*
 		Entity not supported: vidembed.*
 		Entity not supported: fmovies.*
 		Entity not supported: fmovies.*
 		Invalid network filter in fra-0: @@$webrtc,domain=stream4free.live
 		Invalid network filter in fra-0: $webrtc,domain=11anim.com|1337x.st|1337x.to|2ddl.ms|adyou.me|ajplugins.com|allitebooks.com|androidadult.com|animeid.tv|animekb.net|animeland.tv|animezone.pl|avametrie.fr|avgle.com|bdurls.com|bigspeeds.com|bindassbros.com|blizzboygames.net|bonstreams.net|catrumahminimalis.me|centrum-dramy.pl|cestpasbien.pro|chatytvgratis.net|chrt.pw|cineiz.io|cinemahd.co|cinemamkv.net|cinemitas.com|cinestrenostv.tv|clik.pw|cmacapps.com|cocostreaming.com|convertinmp4.com|cpabien.ws|crictime.com|crictime.is|daclips.com|datpiff.com|ddl.to|ddmix.net|ddownload.com|deltabit.co|deportesmax.info|descargas2020.com|djs.sk|dl-protect.info|dl-protect1.com|dompl3.info|doodstream.co|doodstream.com|downlink.top|draculastream.org|drakula.top|dropapk.com|dropapk.to|dualpaste.net|earnwithshortlink.com|ebook-planete.org|ebookdz.com|fileone.tv|filmeserialeonline.org|filmtelecharger.net|flashx.net|flashx.tv|fluvore.com|free-telechargement.org|free-telecharger.com|free-telecharger.net|free-telecharger.org|free-telecharger.xyz|freecardano.com|freenem.com|fullmatchesandshows.com|gamestorrent.co|ganol.ru|ganool.im|ganool123.com|gtaall.com|gum-gum-streaming.com|hdvid.online|healthoptimizer.net|heapfiles.com|hq-porns.com|ianimes.org|iegy.best|imagenesmy.com|imgazure.com|immunicity.st|ithepiratebay.com|javher.com|jheberg.net|jkanime.net|k-streaming.cc|k-streaming.com|kinohabr.net|kinokrad.co|kinoprofi.org|kinostuff.com|kinox.me|kinox.tv|kiss-anime.ws|kissasian.ch|kissasian.sh|kooralive.info|kora-live.tv|kvid.org|lafmacun.net|larati.net|latino-webtv.com|leggendaweb.com|leitor.net|lemondedekevin.fr|lewd.ninja|libertyvf.co|libertyvf.com|libertyvf.net|libertyvf.tv|liketvw.com|likeur.org|limpi.tv|liveflashplayer.org|lordhd.com|love-drama.pl|ma-famille-dabord-streaming.com|mangaku.in|mejortorrent.org|mejortorrent1.com|mimaletamusical.blogspot.com|mkvcage.com|mladipodnikatelia.sk|modsbase.com|monova.org|movie4k.is|movie4k.org|movies123.ac|mp4mania.xyz|multiimg.com|myfeed4u.com|mywatchseries.stream|netiap.com|nicoblog.org|nonpiusolo.com|novom.ru|o2tvseries.com|oasivip.com|oceanoffgames.com|oipeirates.online|onion.ly|onion.pet|openload.cc|openload.ch|openload.fun|opensubtitles.org|ovid.online|ovid.tv|papstream.info|pastehere.xyz|pcgamestorrents.com|pdf-giant.com|peeplink.in|pelislatino3gp.biz|pinoybay.ch|piratebayblocked.com|planet-streaming.net|planet-streaming1.com|planete-bd.org|planetfools.com|povwideo.cc|powvideo.cc|powvideo.net|putload.tv|radiofly.ws|reactor.cc|readmanga.today|regarder-le-bureau-des-legendes-streaming.com|regarder-malcolm-streaming.com|regarder-peaky-blinders-streaming.xyz|regarder-prison-break-streaming.com|rivosport.co|rojadirecta.fr|sawlive.tv|scuseami.net|senmanga.com|sharemods.com|sherlockonline.ru|shippuden.tv|short.pe|short2win.com|shrink-service.it|sintelevisor.com|sleeptimer.org|slyid.com|solarmovie.one|sorteosrd.com|srt.am|starmusiq.one|strdef.world|stream2watch.org|stream4free.live|streambeam.io|streamcdn.to|streamcloud.eu|streamhunter.net|streamhunter.top|streamplay.me|streamplay.to|subswiki.com|subtorrents.tv|supervideo.tv|tamilmv.cz|tarjetarojatvonline.com|telerium.tv|teleriumtv.com|teleriumtv.net|theappguruz.com|thepiratebay.cr|thepiratebay.vip|thevid.net|thevid.tv|thevideo.ch|thevideo.io|thevideo.me|thevideo.us|tomadivx.tv|topsimages.com|torlock.com|torlock2.com|toros.co|tpbprox.com|tubetitties.com|tvpor-internet.com|tvshqiphd.com|uii.io|ukpass.co|unblocked2.fun|unblocked2.vip|unblocksites.co|up-4.net|upbom.com|upbom.net|upload.ee|uploadfiles.eu|uploadocean.com|uppom.live|uptostream.com|upvid.host|vcrypt.net|veehd.com|vergol.com|verliga1.net|vertelevisor.com|vev.io|vev.red|videobin.co|videowood.tv|vidfile.net|vidop.icu|vidoza.co|vidoza.net|vidshare.tv|vidup.io|vidup.tv|viewasian.tv|vup.to|watchonline.to|watchpornfree.ws|wearesaudis.net|wlive.tv|wstream.to|wstream.video|x1337x.eu|x1337x.se|x1337x.ws|xclusivejams.com|xfilesharing.com|xrivonet.info|xvideosharing.com|yify-torrent.org|yifyddl.movie|zenexplayer.com|zeroshare.me|zipansion.com|zone-ebook.com
-		Unhandled modifier exception
-CSS-related distinct filters: 1184 distinct combined selectors
-CSS-related injectable files: 12
-	0mhmacs, 08h29b0, 0b773ko, 1jt9kt8, 076fnj0, 01q2adc, 0vddij0, 03usk38, 14vopos, 1i61vo4, 11o6fls, 1mvtv78
-Procedural-related distinct filters: 115 distinct combined selectors
-Procedural-related injectable files: 4
-	0n4jap2, 0jmr14a, 1lhjdvi, 04bt60i
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: googlesyndication.com/adsbygoogle.js
+		Unpatchable redirect filter: googlesyndication.com/adsbygoogle.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: amazon_apstag.js
+		Unpatchable redirect filter: google-analytics_ga.js
+		Unpatchable redirect filter: googletagservices_gpt.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: amazon_apstag.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop-vmap1.0.xml
+		Unpatchable redirect filter: noop-vmap1.0.xml
+		Unsupported modifier exception
+		Unpatchable redirect filter: noop-0.1s.mp3
+		Unpatchable redirect filter: noop-1s.mp4
+		Unpatchable redirect filter: noop-0.1s.mp3
+		Unpatchable redirect filter: noop-0.1s.mp3
+		Unpatchable redirect filter: noop-0.1s.mp3
+		Unpatchable redirect filter: noop-0.1s.mp3
+CSS-generic: 2657 plain CSS selectors
+CSS-specific distinct filters: 1186 distinct combined selectors
+CSS-specific injectable files: 5
+	0iv3k4s, 1creaq4, 0nia9f8, 0pdv0kk, 19kflfc
+Procedural-related distinct filters: 116 distinct combined selectors
+Procedural-related injectable files: 1
+	1pn6f2a
 Rejected cosmetic filters: 2
 	Entity not supported: torrent911.*###vpnvpn
 	Entity not supported: oxtorrent.*###vpnvpn
-Scriptlet-related distinct filters: 50
-Scriptlet-related injectable files: 6
-	1oukjkh, 0i3p0vl, 08tlg6d, 010aed5, 1757rtl, 16l5jd5
+Scriptlet-related distinct filters: 54
+Scriptlet-related injectable files: 7
+	10u4a7p, 0s5j6kd, 06pgoel, 0e907hd, 096uld1, 0ulij15, 0dsmhrd
 ============================
 Listset for 'grc-0':
 	Fetching remote https://www.void.gr/kargig/void-gr-filters.txt
@@ -1783,96 +2319,99 @@ Input filter count: 455
 	Accepted filter count: 455
 	Rejected filter count: 0
 Output rule count: 434
-	Good: 434
+	Plain good: 434
 	Maybe good (regexes): 0
 	redirect-rule= (discarded): 0
 	csp= (discarded): 0
-	removeparams= (discarded): 0
+	removeparams= (accepted/discarded): 0/0
 	Unsupported: 0
 
-CSS-related distinct filters: 164 distinct combined selectors
-CSS-related injectable files: 12
-	1op8418, 0qj3m3g, 0pb6qbg, 1jdq268, 1si8anc, 031bbak, 0vg0dhc, 1vtl35k, 15o8ksk, 160ffmo, 0lkaki4, 1g1f1ic
+CSS-generic: 1 plain CSS selectors
+CSS-specific distinct filters: 165 distinct combined selectors
+CSS-specific injectable files: 1
+	0ehbsqg
 Procedural-related distinct filters: 7 distinct combined selectors
-Procedural-related injectable files: 4
-	1215fl2, 1ichdcu, 0jaf83i, 1djk456
+Procedural-related injectable files: 1
+	0lqn0r2
 ============================
 Listset for 'hun-0':
 	Fetching remote https://raw.githubusercontent.com/hufilter/hufilter/master/hufilter-ublock.txt
-Input filter count: 325
-	Accepted filter count: 325
+Input filter count: 326
+	Accepted filter count: 326
 	Rejected filter count: 0
 Output rule count: 202
-	Good: 201
+	Plain good: 201
 	Maybe good (regexes): 1
 	redirect-rule= (discarded): 0
 	csp= (discarded): 0
-	removeparams= (discarded): 0
+	removeparams= (accepted/discarded): 0/0
 	Unsupported: 0
 
-CSS-related distinct filters: 445 distinct combined selectors
-CSS-related injectable files: 12
-	0ji9338, 188kmhs, 0a1evd4, 1navgig, 1lcph18, 1r3lbdc, 0qppfco, 07dhdi8, 0cbikgs, 0ckpnog, 1qu2v88, 1a3tg28
+CSS-generic: 60 plain CSS selectors
+CSS-specific distinct filters: 447 distinct combined selectors
+CSS-specific injectable files: 2
+	07mko00, 1pcdf9o
 Procedural-related distinct filters: 47 distinct combined selectors
-Procedural-related injectable files: 4
-	0n3icfa, 1tdstvu, 042hah6, 010uuq2
-Scriptlet-related distinct filters: 15
-Scriptlet-related injectable files: 5
-	1crc39l, 09i0qn9, 1ukjb8d, 0odlrht, 1tlcd7p
+Procedural-related injectable files: 1
+	0gf8hke
+Scriptlet-related distinct filters: 16
+Scriptlet-related injectable files: 6
+	0i4dm3l, 1rhllv5, 15ttv8h, 0rql769, 1tibfod, 1v5jnst
 ============================
 Listset for 'idn-0':
 	Fetching remote https://raw.githubusercontent.com/ABPindo/indonesianadblockrules/master/subscriptions/abpindo.txt
-Input filter count: 4295
-	Accepted filter count: 4292
+Input filter count: 4271
+	Accepted filter count: 4271
 	Rejected filter count: 0
-Output rule count: 3046
-	Good: 3046
+Output rule count: 3032
+	Plain good: 3032
 	Maybe good (regexes): 0
 	redirect-rule= (discarded): 0
 	csp= (discarded): 0
-	removeparams= (discarded): 0
+	removeparams= (accepted/discarded): 0/0
 	Unsupported: 0
 
-CSS-related distinct filters: 419 distinct combined selectors
-CSS-related injectable files: 12
-	10knfk0, 0rtupcc, 04mido8, 0s8nj4k, 0fonhjs, 08f48p0, 11mi48s, 0uceat8, 19ot8no, 19ipes8, 1j0bgtg, 1pfdrhc
+CSS-generic: 228 plain CSS selectors
+CSS-specific distinct filters: 403 distinct combined selectors
+CSS-specific injectable files: 2
+	16m0hak, 0gqat44
 Procedural-related distinct filters: 2 distinct combined selectors
-Procedural-related injectable files: 2
-	199pvjm, 1lnj09a
+Procedural-related injectable files: 1
+	1ankv52
 Rejected cosmetic filters: 1
 	Invalid filter: neonime.net##[data-src^="https://neonime.net/wp-content/"]:xpath(..)
 ============================
 Listset for 'ind-0':
 	Fetching remote https://easylist-downloads.adblockplus.org/indianlist.txt
-Input filter count: 5234
-	Accepted filter count: 5234
+Input filter count: 5244
+	Accepted filter count: 5244
 	Rejected filter count: 0
-Output rule count: 5201
-	Good: 5201
+Output rule count: 5207
+	Plain good: 5207
 	Maybe good (regexes): 0
 	redirect-rule= (discarded): 0
 	csp= (discarded): 0
-	removeparams= (discarded): 0
+	removeparams= (accepted/discarded): 0/0
 	Unsupported: 0
 
-CSS-related distinct filters: 2217 distinct combined selectors
-CSS-related injectable files: 12
-	15ekuus, 17s5kd4, 1ieh334, 0tt9fk8, 08cf18c, 1b6nrkg, 08eu7tc, 1cb1724, 14isg4s, 00nt8h0, 0ol3gp4, 027boco
-Procedural-related distinct filters: 73 distinct combined selectors
-Procedural-related injectable files: 4
-	05c015m, 1bufjbi, 1tb1mka, 12h5ttm
+CSS-specific distinct filters: 2233 distinct combined selectors
+CSS-specific injectable files: 9
+	18tn8v0, 08hau00, 0bssdvg, 1jh9sck, 13e7n4o, 03ghjo4, 0i66r5k, 1qijg4g, 1k68fgg
+Procedural-related distinct filters: 74 distinct combined selectors
+Procedural-related injectable files: 1
+	13eetsi
 ============================
 Listset for 'irn-0':
 	Fetching remote https://raw.githubusercontent.com/MasterKia/PersianBlocker/main/PersianBlocker.txt
-Input filter count: 1376
-	Accepted filter count: 1376
+Input filter count: 1365
+	Accepted filter count: 1365
 	Rejected filter count: 0
-Output rule count: 524
-	Good: 509
+Output rule count: 527
+	Plain good: 512
 	Maybe good (regexes): 0
 	redirect-rule= (discarded): 0
 	csp= (discarded): 0
-	removeparams= (discarded): 6
+	removeparams= (accepted/discarded): 6/8
 	Unsupported: 9
 		Strict partyness not supported: strict3p
 		Unsupported regex-based removeParam: /^utm_/
@@ -1883,15 +2422,16 @@ Output rule count: 524
 		Unsupported regex-based removeParam: /^utm_/
 		Unsupported regex-based removeParam: /^utm_/
 		Unsupported regex-based removeParam: /^utm_/
-CSS-related distinct filters: 326 distinct combined selectors
-CSS-related injectable files: 12
-	17ue23c, 09de7nc, 0leuf28, 1n84c6k, 038qc0s, 0cl0u5s, 0tkf2v4, 1njuhjg, 07bs78g, 0it18r8, 0g39avk, 03onb2g
-Procedural-related distinct filters: 63 distinct combined selectors
-Procedural-related injectable files: 4
-	1i0oapq, 177t3sa, 0ccjfae, 1hf3aqi
-Scriptlet-related distinct filters: 29
-Scriptlet-related injectable files: 4
-	1md8ek9, 02lgsfp, 0mb2ba9, 1alhr91
+CSS-generic: 6 plain CSS selectors
+CSS-specific distinct filters: 328 distinct combined selectors
+CSS-specific injectable files: 2
+	1ovd3uk, 1imip9o
+Procedural-related distinct filters: 69 distinct combined selectors
+Procedural-related injectable files: 1
+	1rj749a
+Scriptlet-related distinct filters: 33
+Scriptlet-related injectable files: 5
+	05skf05, 1me73rh, 1el3gq9, 0jhvsod, 14ju6td
 ============================
 Listset for 'isl-0':
 	Fetching remote https://adblock.gardar.net/is.abp.txt
@@ -1899,30 +2439,32 @@ Input filter count: 68
 	Accepted filter count: 68
 	Rejected filter count: 0
 Output rule count: 68
-	Good: 68
+	Plain good: 68
 	Maybe good (regexes): 0
 	redirect-rule= (discarded): 0
 	csp= (discarded): 0
-	removeparams= (discarded): 0
+	removeparams= (accepted/discarded): 0/0
 	Unsupported: 0
 
-CSS-related distinct filters: 43 distinct combined selectors
-CSS-related injectable files: 11
-	0t09shs, 1kb22dc, 0dllqn8, 0t59ci8, 0ru6r2k, 0mk84lg, 0jfcfok, 1pe5k34, 1stvoso, 0p16geo, 1prlc7c
+CSS-specific distinct filters: 43 distinct combined selectors
+CSS-specific injectable files: 1
+	19g0vjk
+Rejected cosmetic filters: 1
+	Invalid filter: pressan.is###13_3623
 ============================
 Listset for 'isr-0':
 	Fetching remote https://raw.githubusercontent.com/easylist/EasyListHebrew/master/EasyListHebrew.txt
 	Fetching remote https://raw.githubusercontent.com/easylist/EasyListHebrew/master/EasyListHebrew-uBO.txt
-Input filter count: 708
-	Accepted filter count: 707
+Input filter count: 709
+	Accepted filter count: 708
 	Rejected filter count: 1
-Output rule count: 278
-	Good: 245
+Output rule count: 276
+	Plain good: 243
 	Maybe good (regexes): 4
-	redirect-rule= (discarded): 11
+	redirect-rule= (discarded): 0
 	csp= (discarded): 1
-	removeparams= (discarded): 0
-	Unsupported: 17
+	removeparams= (accepted/discarded): 0/0
+	Unsupported: 28
 		regexFilter is not RE2-compatible: haaretz\.co\.il\/(?!.*\.(js)($|\?)).*
 		regexFilter is not RE2-compatible: ^(?![a-zA-Z0-9\-]+:\/+(api-mail|dal|dcx|isc|iscwne|6days|animals|astrology|b|buzzit|calendar|cars|celebs|e|elections|euro|fashion|finance|food|forums|fun|healthy|home|judaism|kids|mag|maps|milon|movies|mundial|nadlan|news|nick|olympics|search|sports|tags|tech|translate|travel|tv-guide|tv|usaelections|viva|vod|weather|www)\.walla\.co\.il\.?(\/|:|$))^[a-zA-Z0-9\-]+:\/+([a-zA-Z0-9\-]+\.)+walla\.co\.il\.?(\/|:|$)
 		regexFilter is not RE2-compatible: ^(?![a-zA-Z0-9\-]+:\/+www\.sheee\.co\.il\.?(\/|:|$))^[a-zA-Z0-9\-]+:\/+([a-zA-Z0-9\-]+\.)+sheee\.co\.il\.?(\/|:|$)
@@ -1936,65 +2478,99 @@ Output rule count: 278
 		Invalid network filter in isr-0: *$webrtc,domain=walla.co.il
 		Invalid network filter in isr-0: *$webrtc,domain=ynet.co.il
 		Invalid network filter in isr-0: *$webrtc,domain=mako.co.il
-		Invalid network filter in isr-0: *$webrtc,domain=13news.co.il|13tv.co.il
-		Invalid network filter in isr-0: *$webrtc,domain=yad2.co.il
 		Invalid network filter in isr-0: *$webrtc,domain=globes.co.il
 		Invalid network filter in isr-0: *$webrtc,domain=calcalist.co.il
-CSS-related distinct filters: 118 distinct combined selectors
-CSS-related injectable files: 12
-	1c3puc4, 1d68bvc, 1m2rvuc, 0q27ih8, 0ip9rfo, 12bp3ok, 1lp3bt0, 0anr1m0, 1os4b4k, 1gd6b0g, 1sjqiig, 1ksmpkg
+		Invalid network filter in isr-0: *$webrtc,domain=13news.co.il|13tv.co.il
+		Invalid network filter in isr-0: *$webrtc,domain=yad2.co.il
+		Unpatchable redirect filter: 2x2.png
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: noopmp4-1s
+		Unpatchable redirect filter: noopmp4-1s
+		Unpatchable redirect filter: noopmp4-1s
+		Unpatchable redirect filter: noopmp4-1s
+		Unpatchable redirect filter: noopjs
+CSS-generic: 5 plain CSS selectors
+CSS-specific distinct filters: 118 distinct combined selectors
+CSS-specific injectable files: 1
+	14ta8kk
 Procedural-related distinct filters: 3 distinct combined selectors
-Procedural-related injectable files: 3
-	0c9sfbq, 0e6iugu, 1iuhhh6
+Procedural-related injectable files: 1
+	1li60bm
 Rejected cosmetic filters: 3
 	Invalid filter: haaretz.co.il##span:has([href*="promo"]):xpath(..)
 	Entity not supported: sdarot.*###afterLoad:style(display: block !important)
 	Entity not supported: sdarot.*##[href*="channel22.co.il"]
-Scriptlet-related distinct filters: 11
-Scriptlet-related injectable files: 5
-	08h1gfd, 1blk175, 1upn1n1, 0028hs5, 1mvji4t
+Scriptlet-related distinct filters: 12
+Scriptlet-related injectable files: 6
+	038gr5p, 0jufv91, 1c6jrrd, 1l75lsl, 1eatfp5, 1k1ogml
 ============================
 Listset for 'ita-0':
 	Fetching remote https://easylist-downloads.adblockplus.org/easylistitaly.txt
-Input filter count: 5692
-	Accepted filter count: 5692
+Input filter count: 5693
+	Accepted filter count: 5693
 	Rejected filter count: 0
-Output rule count: 5422
-	Good: 5418
+Output rule count: 5423
+	Plain good: 5419
 	Maybe good (regexes): 3
 	redirect-rule= (discarded): 0
 	csp= (discarded): 0
-	removeparams= (discarded): 0
+	removeparams= (accepted/discarded): 0/0
 	Unsupported: 1
 		Invalid network filter in ita-0: $webrtc,domain=hentaisaturn.com|italydownload.com|mitoitalico.com|semprehawk.com
-CSS-related distinct filters: 2066 distinct combined selectors
-CSS-related injectable files: 12
-	1805gi4, 1sv7ksk, 04drfik, 0acht80, 00qf2rk, 0hsfnvs, 0qamju4, 1atv1ec, 0ktmub4, 0efe64g, 006tjg0, 1ockre8
+CSS-generic: 356 plain CSS selectors
+CSS-specific distinct filters: 2071 distinct combined selectors
+CSS-specific injectable files: 9
+	1448d1k, 0vtdsng, 1recn64, 1b21lic, 0cngqok, 0gc4bcs, 18fkvj4, 0ivql34, 1m8cb50
 Procedural-related distinct filters: 38 distinct combined selectors
-Procedural-related injectable files: 4
-	0sfclp6, 1k1u8nu, 1fbb992, 1mb7322
+Procedural-related injectable files: 1
+	14jb47i
 ============================
 Listset for 'jpn-1':
 	Fetching remote https://filters.adtidy.org/extension/ublock/filters/7.txt
-Input filter count: 1219
-	Accepted filter count: 1218
+Input filter count: 1243
+	Accepted filter count: 1242
 	Rejected filter count: 0
-Output rule count: 807
-	Good: 774
-	Maybe good (regexes): 11
-	redirect-rule= (discarded): 20
+Output rule count: 828
+	Plain good: 794
+	Maybe good (regexes): 12
+	redirect-rule= (discarded): 0
 	csp= (discarded): 0
-	removeparams= (discarded): 0
-	Unsupported: 2
+	removeparams= (accepted/discarded): 0/0
+	Unsupported: 22
 		regexFilter is not RE2-compatible: \/kyodopress_cms\/wp-content\/(themes\/kyodopress\/img_banner\/(?!bn_newspaper\.gif)|banners).*
-		regexFilter is not RE2-compatible: ^(?!.*(bootstrapcdn.com|cdn.ampproject.org|cloudflare.com|disqus.com|disquscdn.com|dmca.com|ebacdn.com|facebook.net|fbcdn.net|fluidplayer.com|fontawesome.com|github.io|google.com|googleapis.com|googletagmanager.com|gstatic.com|jquery.com|jsdelivr.net|jwpcdn.com|jwplatform.com|polyfill.io|recaptcha.net|shrink.pe|twitter.com|ulogin.ru|unpkg.com|userapi.com|vidazoo.com|vk.com|yandex.|yastatic.net|ytimg.com|zencdn.net|player|youtube.com|cackle.me|googleoptimize.com|vuukle.com|chatango.com|twimg.com|google-analytics.com|hcaptcha.com|raincaptcha.com|media-imdb.com|blogger.com|hwcdn.net|instagram.com|wp.com)).*$
-CSS-related distinct filters: 2038 distinct combined selectors
-CSS-related injectable files: 12
-	0ujuct0, 097ub04, 0a3tkd0, 019240g, 13eadfg, 09kkktk, 1ulons0, 12941jc, 1jtiiig, 0l85v18, 0simisk, 1f9nf2o
-Procedural-related distinct filters: 521 distinct combined selectors
-Procedural-related injectable files: 4
-	1p4qce2, 0bqt84q, 13g8326, 1hqn2r6
-Rejected cosmetic filters: 27
+		regexFilter is not RE2-compatible: ^(?!.*(bootstrapcdn.com|cdn.ampproject.org|cloudflare.com|disqus.com|disquscdn.com|dmca.com|ebacdn.com|facebook.net|fastlylb.net|fbcdn.net|fluidplayer.com|fontawesome.com|github.io|google.com|googleapis.com|googletagmanager.com|gstatic.com|jquery.com|jsdelivr.net|jwpcdn.com|jwplatform.com|polyfill.io|recaptcha.net|shrink.pe|twitter.com|ulogin.ru|unpkg.com|userapi.com|vidazoo.com|vk.com|yandex.|yastatic.net|ytimg.com|zencdn.net|player|youtube.com|cackle.me|googleoptimize.com|vuukle.com|chatango.com|twimg.com|google-analytics.com|hcaptcha.com|raincaptcha.com|media-imdb.com|blogger.com|hwcdn.net|instagram.com|wp.com)).*$
+		Unpatchable redirect filter: 32x32.png
+		Unpatchable redirect filter: 32x32.png
+		Unpatchable redirect filter: googlesyndication.com/adsbygoogle.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: googlesyndication.com/adsbygoogle.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: googlesyndication.com/adsbygoogle.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: noop.html
+CSS-generic: 113 plain CSS selectors
+CSS-specific distinct filters: 2056 distinct combined selectors
+CSS-specific injectable files: 9
+	1po8nv0, 19r37l0, 1vr7pt4, 019lbes, 02kks40, 0m66dm4, 15otlb8, 1ajqhhk, 1e4593c
+Procedural-related distinct filters: 531 distinct combined selectors
+Procedural-related injectable files: 3
+	031m3hq, 0ni9lki, 1sokgc6
+Rejected cosmetic filters: 29
 	Entity not supported: javmix.*##.home-h > h1:contains(ライブチャット)
 	Entity not supported: javmix.*##.home-h > h3:contains(Stripchat)
 	Entity not supported: hatenablog.*##.hatena-module-html > div.hatena-module-body > ins.adsbygoogle:upward(2)
@@ -2019,26 +2595,84 @@ Rejected cosmetic filters: 27
 	Entity not supported: javmix.*##div[style^="width: 300px; height: 250px"]
 	Entity not supported: javmix.*##div[style^="max-width: 1000px;"]
 	Entity not supported: javmix.*##div[style^="width: 728px; height: 90px"]
+	Entity not supported: renote.*##.ad__bit
+	Entity not supported: renote.*##div[class$="ad__container"]
 	Entity not supported: 9tsu.*##.ads-system
 	Entity not supported: 9tsu.*##.cactus-sidebar-content > .widget_text:not(.style-5)
 	Entity not supported: matome-plus.*##.amazontotalboxtest
-Scriptlet-related distinct filters: 34
-Scriptlet-related injectable files: 4
-	0e83jb9, 1iqeqi1, 0eootd5, 0v94b81
+Scriptlet-related distinct filters: 40
+Scriptlet-related injectable files: 5
+	03nf1l1, 123d4rd, 04vafj5, 1kosk3l, 19rrmlh
 ============================
 Listset for 'kor-1':
 	Fetching remote https://raw.githubusercontent.com/List-KR/List-KR/master/filter-uBO.txt
-Input filter count: 0
-	Accepted filter count: 0
+	Fetching remote https://raw.githubusercontent.com/List-KR/List-KR/master/filters-share/adservice.txt
+	Fetching remote https://raw.githubusercontent.com/List-KR/List-KR/master/filters-share/general_elemhide.txt
+	Fetching remote https://raw.githubusercontent.com/List-KR/List-KR/master/filters-share/adservice_firstparty.txt
+	Fetching remote https://raw.githubusercontent.com/List-KR/List-KR/master/filters-uBO/specific_ELEMHIDE.txt
+	Fetching remote https://raw.githubusercontent.com/List-KR/List-KR/master/filters-share/general_url.txt
+	Fetching remote https://raw.githubusercontent.com/List-KR/List-KR/master/filters-share/specific_URL.txt
+	Fetching remote https://raw.githubusercontent.com/List-KR/List-KR/master/filters-share/specific_ELEMHIDE.txt
+	Fetching remote https://raw.githubusercontent.com/List-KR/List-KR/master/filters-share/allowlist.txt
+	Fetching remote https://raw.githubusercontent.com/List-KR/List-KR/master/filters-share/extended_css_ELEMHIDE.txt
+	Fetching remote https://raw.githubusercontent.com/List-KR/List-KR/master/filters-share/extended_css_INJECTION.txt
+	Fetching remote https://raw.githubusercontent.com/List-KR/List-KR/master/filters-uBO/specific_REDIRECT.txt
+	Fetching remote https://raw.githubusercontent.com/List-KR/List-KR/master/filters-uBO/extended_css_ELEMHIDE.txt
+	Fetching remote https://raw.githubusercontent.com/List-KR/List-KR/master/filters-uBO/extended_css_INJECTION.txt
+	Fetching remote https://raw.githubusercontent.com/List-KR/List-KR/master/filters-uBO/scriptlets.txt
+	Fetching remote https://raw.githubusercontent.com/List-KR/List-KR/master/filters-share/lkscriptlet.txt
+	Fetching remote https://raw.githubusercontent.com/List-KR/List-KR/master/filters-share/javascript.txt
+	Fetching remote https://raw.githubusercontent.com/List-KR/List-KR/master/filters-uBO/javascript.txt
+	Fetching remote https://raw.githubusercontent.com/List-KR/List-KR/master/filters-uBO/antiadblock.txt
+	Fetching remote https://raw.githubusercontent.com/List-KR/List-KR/master/filters-share/removeparam.txt
+	Fetching remote https://raw.githubusercontent.com/List-KR/List-KR/master/filters-uBO/allowlist.txt
+	Fetching remote https://raw.githubusercontent.com/List-KR/List-KR/master/filters-share/specific_CSS.txt
+	Fetching remote https://raw.githubusercontent.com/List-KR/List-KR/master/filters-uBO/specific_CSS.txt
+Input filter count: 1050
+	Accepted filter count: 1046
 	Rejected filter count: 0
-Output rule count: 0
-	Good: 0
-	Maybe good (regexes): 0
+Output rule count: 766
+	Plain good: 657
+	Maybe good (regexes): 87
 	redirect-rule= (discarded): 0
 	csp= (discarded): 0
-	removeparams= (discarded): 0
-	Unsupported: 0
-
+	removeparams= (accepted/discarded): 1/0
+	Unsupported: 21
+		regexFilter is not RE2-compatible: ^https:\/\/static\.wixstatic\.com\/media\/[0-9a-z]{6}_[a-z0-9]{32}~(?!.{1,}doc).{1,}
+		regexFilter is not RE2-compatible: ^https:\/\/(www\.|)kookje\.co\.kr\/(mobile\/|)design\/(?!(bn_what300|.{0,}naver|popup|series\/)).{0,}
+		regexFilter is not RE2-compatible: ^https:\/\/thumb\.toomics\.com\/upload\/banner\/(?!main|cut)
+		Unpatchable redirect filter: noop-1s.mp4
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: 2x2.png
+		Unpatchable redirect filter: 2x2.png
+		Unpatchable redirect filter: 2x2.png
+		Unpatchable redirect filter: noop.html
+		Unpatchable redirect filter: googlesyndication_adsbygoogle.js
+		Unpatchable redirect filter: 2x2.png
+		Unpatchable redirect filter: 2x2.png
+		Unpatchable redirect filter: google-ima3.js
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: amazon_apstag.js
+		Unpatchable redirect filter: googletagservices_gpt.js
+		Unpatchable redirect filter: googletagservices_gpt.js
+CSS-generic: 3 plain CSS selectors
+CSS-specific distinct filters: 441 distinct combined selectors
+CSS-specific injectable files: 2
+	1a18ei0, 1t012lk
+Procedural-related distinct filters: 159 distinct combined selectors
+Procedural-related injectable files: 1
+	1m5np3u
+Rejected cosmetic filters: 3
+	Invalid filter: m.cafe.naver.com##img[src][alt="매니저 등록 배너"]:matches-path(/&|\\.|\\?)clubid=14605461(&|$)/)
+	Invalid filter: cafe.naver.com##img[src][alt="매니저 등록 배너"]:matches-path(/&|\\.|\\?)clubid=14605461(&|$)/)
+	Invalid filter: eggrank.com###right-sidebar > .inside-right-sidebar > div[class]:not(:has-text(Hi there, I'm EGG.))
+Scriptlet-related distinct filters: 55
+Scriptlet-related injectable files: 6
+	1gbi5a9, 03i2ull, 18be2d9, 19fnar1, 08snmvp, 1h0gl9t
 ============================
 Listset for 'ltu-0':
 	Fetching remote https://raw.githubusercontent.com/EasyList-Lithuania/easylist_lithuania/master/easylistlithuania.txt
@@ -2046,22 +2680,25 @@ Input filter count: 574
 	Accepted filter count: 574
 	Rejected filter count: 0
 Output rule count: 523
-	Good: 519
+	Plain good: 519
 	Maybe good (regexes): 1
-	redirect-rule= (discarded): 3
+	redirect-rule= (discarded): 0
 	csp= (discarded): 0
-	removeparams= (discarded): 0
-	Unsupported: 0
-
-CSS-related distinct filters: 282 distinct combined selectors
-CSS-related injectable files: 12
-	0te0oac, 1okficg, 16cvj2s, 070ld94, 0j9va7k, 09p04ks, 0bjnn70, 0novqc8, 0rlpiv8, 0em3jr8, 0vjloes, 091tb5s
+	removeparams= (accepted/discarded): 0/0
+	Unsupported: 3
+		Unpatchable redirect filter: 1x1-transparent.gif
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noopmp3-0.1s
+CSS-generic: 5 plain CSS selectors
+CSS-specific distinct filters: 281 distinct combined selectors
+CSS-specific injectable files: 2
+	1m20vno, 13f99t4
 Procedural-related distinct filters: 14 distinct combined selectors
-Procedural-related injectable files: 4
-	0ahc0mm, 1fo8ug2, 1qhb8me, 1co6n0m
-Scriptlet-related distinct filters: 6
-Scriptlet-related injectable files: 3
-	0pecjvd, 0abl5qd, 0oaaeah
+Procedural-related injectable files: 1
+	0p3e42u
+Scriptlet-related distinct filters: 7
+Scriptlet-related injectable files: 4
+	0semvil, 1mk8tht, 0mkv67l, 0rnd4it
 ============================
 Listset for 'lva-0':
 	Fetching remote https://raw.githubusercontent.com/Latvian-List/adblock-latvian/master/lists/latvian-list.txt
@@ -2069,16 +2706,16 @@ Input filter count: 185
 	Accepted filter count: 185
 	Rejected filter count: 0
 Output rule count: 144
-	Good: 144
+	Plain good: 144
 	Maybe good (regexes): 0
 	redirect-rule= (discarded): 0
 	csp= (discarded): 0
-	removeparams= (discarded): 0
+	removeparams= (accepted/discarded): 0/0
 	Unsupported: 0
 
-CSS-related distinct filters: 62 distinct combined selectors
-CSS-related injectable files: 11
-	1lufcek, 0fbo8ag, 1hst71g, 0d7me40, 1foa4k4, 0a6fdno, 09egiuc, 15u6nrc, 05tg8gc, 0ho2p2s, 027soas
+CSS-specific distinct filters: 62 distinct combined selectors
+CSS-specific injectable files: 1
+	1cp66eg
 ============================
 Listset for 'nld-0':
 	Fetching remote https://raw.githubusercontent.com/EasyDutch-uBO/EasyDutch/gh-pages/EasyDutch.txt
@@ -2092,44 +2729,50 @@ Listset for 'nld-0':
 	Fetching remote https://raw.githubusercontent.com/EasyDutch-uBO/EasyDutch/gh-pages/EasyDutch/Hide_Whitelist.txt
 	Fetching remote https://raw.githubusercontent.com/EasyDutch-uBO/EasyDutch/gh-pages/EasyDutch/Anti-Adblock.txt
 	Fetching remote https://raw.githubusercontent.com/EasyDutch-uBO/EasyDutch/gh-pages/EasyDutch/No_uBlock_Filters.txt
-Input filter count: 748
-	Accepted filter count: 745
+Input filter count: 752
+	Accepted filter count: 749
 	Rejected filter count: 0
-Output rule count: 644
-	Good: 635
+Output rule count: 645
+	Plain good: 636
 	Maybe good (regexes): 3
-	redirect-rule= (discarded): 5
+	redirect-rule= (discarded): 0
 	csp= (discarded): 0
-	removeparams= (discarded): 0
-	Unsupported: 1
+	removeparams= (accepted/discarded): 0/0
+	Unsupported: 6
 		Entity not supported: allestoringen.*
-CSS-related distinct filters: 642 distinct combined selectors
-CSS-related injectable files: 12
-	0m3j33o, 1959c1g, 1r4596k, 1vjckp4, 08q5h9k, 1vb3a4k, 02rj4uc, 1h8o5hs, 1blnn5s, 0sfcjhk, 0etbrh0, 0d8vet8
-Procedural-related distinct filters: 171 distinct combined selectors
-Procedural-related injectable files: 4
-	1l0q1iq, 03q5cta, 0n8e2v6, 0mo8djq
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: 2x2.png
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopmp3-0.1s
+CSS-generic: 15 plain CSS selectors
+CSS-specific distinct filters: 645 distinct combined selectors
+CSS-specific injectable files: 3
+	0ho1f1s, 154fcpk, 1to81dc
+Procedural-related distinct filters: 174 distinct combined selectors
+Procedural-related injectable files: 1
+	0r1nog6
 Rejected cosmetic filters: 1
 	Entity not supported: morningstar.*###ad_top_page
-Scriptlet-related distinct filters: 12
-Scriptlet-related injectable files: 5
-	0gac1q5, 00v5r59, 1vul5vl, 0tmr91t, 0vvvvtl
+Scriptlet-related distinct filters: 15
+Scriptlet-related injectable files: 8
+	0e9qmj1, 0kvpult, 1932s8l, 10l9e7h, 1sgpv3h, 1d3abrh, 0d640sh, 1avqchd
 ============================
 Listset for 'nor-0':
 	Fetching remote https://raw.githubusercontent.com/DandelionSprout/adfilt/master/NorwegianList.txt
 	Fetching remote https://raw.githubusercontent.com/DandelionSprout/adfilt/master/NorwegianExperimentalList%20alternate%20versions/AntiAdblockEntries.txt
 	Fetching remote https://raw.githubusercontent.com/DandelionSprout/adfilt/master/NorwegianExperimentalList%20alternate%20versions/NordicFilters-NotFirefox.txt
 	Fetching remote https://raw.githubusercontent.com/DandelionSprout/adfilt/master/NorwegianExperimentalList%20alternate%20versions/NordicFilters-NotBrave.txt
-Input filter count: 863
-	Accepted filter count: 856
+Input filter count: 862
+	Accepted filter count: 855
 	Rejected filter count: 0
-Output rule count: 485
-	Good: 428
-	Maybe good (regexes): 2
-	redirect-rule= (discarded): 3
+Output rule count: 484
+	Plain good: 435
+	Maybe good (regexes): 3
+	redirect-rule= (discarded): 0
 	csp= (discarded): 1
-	removeparams= (discarded): 21
-	Unsupported: 30
+	removeparams= (accepted/discarded): 23/4
+	Unsupported: 22
 		Entity not supported: discoveryplus.*
 		Entity not supported: gamereactor.*
 		Entity not supported: gamereactor.*
@@ -2141,31 +2784,24 @@ Output rule count: 485
 		Entity not supported: discoveryplus.*
 		Entity not supported: discoveryplus.*
 		Entity not supported: gamereactor.*
-		Invalid network filter in nor-0: ||5e529.v.fwmrm.net^$app=com.discovery.dplay
-		Invalid network filter in nor-0: ||ssl-dnnstream.tns-cs.net^$app=com.discovery.dplay
-		Invalid network filter in nor-0: ||discoverynordics.hb.omtrdc.net^$app=com.discovery.dplay
-		Invalid network filter in nor-0: ||widgets.sprinklecontent.com^$app=no.startsiden.bookmarks
-		Invalid network filter in nor-0: /tv2ads.js$app=dk.tv2.nyhedscenter
-		Invalid network filter in nor-0: -bazaar-$app=no.nettavisen.phonegap.na
-		Invalid network filter in nor-0: /bazaar/*$app=no.nettavisen.phonegap.na
-		Invalid network filter in nor-0: /resources/dfp/*$app=no.nettavisen.phonegap.na
-		Invalid network filter in nor-0: ||finn.no^$app=no.bt
-		Invalid network filter in nor-0: contentMarketing$app=no.sol
-		Invalid network filter in nor-0: /insert_grtv_stats.$xhr,app=com.gamereactor
-		Invalid network filter in nor-0: /prerolls/*$app=com.gamereactor
-		Invalid network filter in nor-0: /videojs.ima.$app=com.gamereactor
-		Invalid network filter in nor-0: @@||imasdk.googleapis.com/js/sdkloader/ima3.$app=com.gamereactor
-		Invalid network filter in nor-0: @@||openx.gamereactor.dk/www/delivery/fc.php$app=com.gamereactor
+		Entity not supported: gamereactor.*
+		Entity not supported: discoveryplus.*,		Unpatchable redirect filter: empty
+		Entity not supported: gamereactor.*,		Unpatchable redirect filter: noopmp4-1s
+		Entity not supported: gamereactor.*,		Unpatchable redirect filter: noopmp4-1s
 		Unsupported regex-based removeParam: /^rs[0-9]/
 		Unsupported regex-based removeParam: /^source=partnerads$/
 		Unsupported regex-based removeParam: /^source=tradedoubler$/
 		Unsupported regex-based removeParam: /^amp;/
-CSS-related distinct filters: 474 distinct combined selectors
-CSS-related injectable files: 12
-	0q1pock, 1uf50lk, 1kuj568, 0lleibc, 0vl97mc, 13arrpk, 0o128bc, 04j3p7s, 102ca1o, 1r23vjk, 0m5qa44, 12ceeek
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopmp3-0.1s
+CSS-generic: 124 plain CSS selectors
+CSS-specific distinct filters: 494 distinct combined selectors
+CSS-specific injectable files: 2
+	1cguhj0, 06ocb9g
 Procedural-related distinct filters: 140 distinct combined selectors
-Procedural-related injectable files: 4
-	0egrquq, 1dfdgb6, 075mpj2, 00pda3a
+Procedural-related injectable files: 1
+	1jlgj2q
 Rejected cosmetic filters: 53
 	Entity not supported: costume.*##.teaser__native:upward(4)
 	Entity not supported: eurosport.*##.AdContainer
@@ -2220,22 +2856,25 @@ Rejected cosmetic filters: 53
 	Entity not supported: gamereactor.*##div[class^=ad300]
 	Entity not supported: gamereactor.*##div[style*="width:300px;height:600px;"]
 	Entity not supported: gamereactor.*##div[style="min-height: 600px; margin-bottom: 20px;"]
-Scriptlet-related distinct filters: 12
-Scriptlet-related injectable files: 5
-	0it1ed1, 1jtq9il, 11jh745, 12j2l49, 1qp3kil
+Scriptlet-related distinct filters: 13
+Scriptlet-related injectable files: 6
+	0f94bid, 1h135h1, 1uairfp, 1ll47t1, 0jjt1et, 11gq29l
 ============================
 Listset for 'pol-0':
 	Fetching remote https://raw.githubusercontent.com/MajkiIT/polish-ads-filter/master/polish-adblock-filters/adblock.txt
-Input filter count: 1052
-	Accepted filter count: 1052
-	Rejected filter count: 0
-Output rule count: 807
-	Good: 745
-	Maybe good (regexes): 54
-	redirect-rule= (discarded): 1
+	Fetching remote https://raw.githubusercontent.com/olegwukr/polish-privacy-filters/master/anti-adblock.txt
+	Fetching remote https://raw.githubusercontent.com/MajkiIT/polish-ads-filter/master/polish-adblock-filters/adblock_ublock.txt
+	Fetching remote https://raw.githubusercontent.com/olegwukr/polish-privacy-filters/master/anti-adblock-suplement.txt
+Input filter count: 1429
+	Accepted filter count: 1427
+	Rejected filter count: 1
+Output rule count: 1054
+	Plain good: 958
+	Maybe good (regexes): 59
+	redirect-rule= (discarded): 0
 	csp= (discarded): 0
-	removeparams= (discarded): 0
-	Unsupported: 7
+	removeparams= (accepted/discarded): 0/0
+	Unsupported: 37
 		regexFilter is not RE2-compatible: ^https:\/\/eku24.net\/images\/slajdy\/(?!zyczenia)[a-z]{3,10}\/[a-zA-Z0-9_-]{10,50}\.jpg
 		regexFilter is not RE2-compatible: ^https:\/\/(?!horrortube)(?!filman.cc)(?!horlol.pl)[a-z.0-9]{3,15}\.[a-z]{2,3}\/
 		regexFilter is not RE2-compatible: https?:\/\/naekranie\.pl\/wp-content\/uploads\/[0-9]{4,4}\/[0-9]{2,2}\/(?!jpg)[0-9a-z]{7,10}$
@@ -2243,56 +2882,85 @@ Output rule count: 807
 		regexFilter is not RE2-compatible: ^http:\/\/((?!192\.168)(?!10\.)(?!172\.16)(?!172\.17)(?!172\.18)(?!172\.19)(?!172\.2)(?!172\.30)(?!172\.31)([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\/[a-zA-Z0-9]{30,}
 		regexFilter is not RE2-compatible: ^(http|https):\/\/www\.portel\.pl\/(?!pasaz)[-a-z0-9A-Z_%$&+=[\].]{1,200}\/[-a-z0-9A-Z_%$&+=[\]/.]{2,200}.(html|htm)
 		regexFilter is not RE2-compatible: ^(http|https):\/\/(?!www.speedvid)(?!streamcherry.com)(?!vshare)(?!vidoza)(?!openload)(?!www.youtube)[a-zA-Z0-9\W]{5,10}.[a-z]{2,20}\/(?!anime)[\w\W\d]{5,20}\/[a-z]{5,20}\/
-CSS-related distinct filters: 2582 distinct combined selectors
-CSS-related injectable files: 12
-	1499sc8, 1jac2uc, 15mnlsg, 0jji54g, 0vos8ug, 0ucjvus, 1nje6tg, 07kjtes, 1uhkoc8, 13qu5oc, 03viajs, 1iik5a4
-Procedural-related distinct filters: 91 distinct combined selectors
-Procedural-related injectable files: 4
-	1124kki, 01f7ci6, 0bpobem, 0sh35b2
-Rejected cosmetic filters: 1
+		Entity not supported: trojmiasto.*
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: nofab.js
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: googlesyndication.com/adsbygoogle.js
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: googlesyndication.com/adsbygoogle.js
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: nooptext
+		Unpatchable redirect filter: abp-resource:blank-mp3
+		Unpatchable redirect filter: noop-0.1s.mp3
+		Unpatchable redirect filter: noop-0.1s.mp3
+		Unpatchable redirect filter: noop-0.1s.mp3
+		Unpatchable redirect filter: noop-0.1s.mp3
+		Unpatchable redirect filter: noop-0.1s.mp3
+		Unpatchable redirect filter: noop-0.1s.mp3
+		Entity not supported: trojmiasto.*,		Unpatchable redirect filter: noopmp4-1s
+		Unpatchable redirect filter: noop-1s.mp4
+		Unpatchable redirect filter: noopmp4-1s
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: click2load.html
+CSS-generic: 61 plain CSS selectors
+CSS-specific distinct filters: 2687 distinct combined selectors
+CSS-specific injectable files: 11
+	0igcol0, 0t6kuqs, 1u2scnk, 12983v8, 07jj0sk, 1gt7gvs, 05atfio, 1g1hee4, 06gb88c, 1k71d4k, 1e7u4mc
+Procedural-related distinct filters: 198 distinct combined selectors
+Procedural-related injectable files: 1
+	05smr5a
+Rejected cosmetic filters: 15
 	Invalid filter: www.money.pl###app > div > div:matches-css(background-image: /^url\("https:\/\/v\.wpimg\.pl/)
-============================
-Listset for 'pol-2':
-	Fetching remote https://raw.githubusercontent.com/olegwukr/polish-privacy-filters/master/anti-adblock.txt
-Input filter count: 300
-	Accepted filter count: 300
-	Rejected filter count: 0
-Output rule count: 202
-	Good: 194
-	Maybe good (regexes): 5
-	redirect-rule= (discarded): 3
-	csp= (discarded): 0
-	removeparams= (discarded): 0
-	Unsupported: 0
-
-CSS-related distinct filters: 134 distinct combined selectors
-CSS-related injectable files: 12
-	1umh06k, 0o04p5s, 1drc6v4, 030cbi0, 13ilch4, 13k979s, 0mkk52s, 0tmnqno, 1vlpnks, 09frk6g, 0p7n3s8, 1n2h87o
-Procedural-related distinct filters: 10 distinct combined selectors
-Procedural-related injectable files: 4
-	1pkn90a, 0l0cf12, 1ib6522, 17dla6m
+	Invalid filter: www.dobreprogramy.pl##:xpath(//div[contains(text(), 'REKLAMA')])
+	Invalid filter: www.dobreprogramy.pl##:xpath(//a[not(contains(@href,','))][string-length(@href)>1600])
+	Invalid filter: www.wp.pl##:xpath(//div[@data-st-area='Zakupy'][count(*)=2][not(header)])
+	Invalid filter: www.wp.pl##:xpath(//div[count(*)=3][img[@class][@src]][*[count(*)=1]/*[count(*)=1]/*[count(*)=1]/*[count(*)=1]/*[count(*)=0]])
+	Invalid filter: wp.pl##:xpath(//div[count(*)=3][img[@class][@src]][*[count(*)=1]/*[count(*)=1]/*[count(*)=1]/*[count(*)=1]/*[count(*)=0]])
+	Invalid filter: parenting.pl##:xpath(//div[count(*)=1][*[count(*)=1]/*[count(*)=1]/*[count(*)=1]/*[count(*)=0]])
+	Invalid filter: parenting.pl##:xpath(//div[count(*)=1][*[count(*)=1]/*[count(*)=1]/*[count(*)=1]/*[count(*)=1]/*[count(*)=0]])
+	Invalid filter: elka.pl##:xpath(//*[@align="center"][contains(text(), 'reklama')])
+	Invalid filter: miedziowe.pl##:xpath(//*[@align="center"][contains(text(), 'reklama')])
+	Invalid filter: google.com##.rllt__link:has( > div[class]:has-text(Reklama)):xpath(..)
+	Invalid filter: google.pl##.rllt__link:has( > div[class]:has-text(Reklama)):xpath(..)
+	Invalid filter: stooq.pl##:xpath(//*[@align="center"]/*[@id][contains(text(),"REKLAMA")])
+	Invalid filter: stooq.com##:xpath(//*[@align="center"]/*[@id][contains(text(),"REKLAMA")])
+	Invalid filter: epidemia-koronawirus.pl##body > div:nth-of-type(1)[style^="display: block;"]:not(#page)
+Scriptlet-related distinct filters: 35
+Scriptlet-related injectable files: 6
+	196ok41, 0mgacpt, 09ctee5, 1bqpofp, 00i84cp, 1mf3pd1
 ============================
 Listset for 'rou-1':
 	Fetching remote https://road.adblock.ro/lista.txt
 	Fetching remote https://road.adblock.ro/road-ubo.txt
 No valid content for undefined
-Input filter count: 493
-	Accepted filter count: 492
+Input filter count: 498
+	Accepted filter count: 497
 	Rejected filter count: 0
-Output rule count: 390
-	Good: 387
+Output rule count: 392
+	Plain good: 389
 	Maybe good (regexes): 3
 	redirect-rule= (discarded): 0
 	csp= (discarded): 0
-	removeparams= (discarded): 0
+	removeparams= (accepted/discarded): 0/0
 	Unsupported: 0
 
-CSS-related distinct filters: 211 distinct combined selectors
-CSS-related injectable files: 12
-	1j094k4, 02k4vgs, 051b3eg, 104e1kk, 157fgqs, 0sik3b8, 1mr48g4, 1d4pmjc, 0o9llgk, 1up4108, 0pp3fb0, 1o9o3t4
-Procedural-related distinct filters: 74 distinct combined selectors
-Procedural-related injectable files: 4
-	07auuvi, 1hagkau, 0vif6h6, 15uhasq
+CSS-generic: 8 plain CSS selectors
+CSS-specific distinct filters: 217 distinct combined selectors
+CSS-specific injectable files: 1
+	0q0coco
+Procedural-related distinct filters: 79 distinct combined selectors
+Procedural-related injectable files: 1
+	0sj49uu
 ============================
 Listset for 'rus-0':
 	Fetching remote https://raw.githubusercontent.com/easylist/ruadlist/master/RuAdList-uBO.txt
@@ -2307,85 +2975,122 @@ Listset for 'rus-0':
 	Fetching remote https://raw.githubusercontent.com/easylist/ruadlist/master/advblock/specific_special.txt
 	Fetching remote https://raw.githubusercontent.com/easylist/ruadlist/master/advblock/thirdparty.txt
 	Fetching remote https://raw.githubusercontent.com/easylist/ruadlist/master/advblock/whitelist.txt
+	Fetching remote https://raw.githubusercontent.com/easylist/ruadlist/master/css-fixes-experimental.txt
 	Fetching remote https://raw.githubusercontent.com/easylist/ruadlist/master/js-fixes-experimental.txt
 	Fetching remote https://raw.githubusercontent.com/easylist/ruadlist/master/AWRL-non-sync.txt
-	Fetching remote https://raw.githubusercontent.com/easylist/ruadlist/master/css-fixes-experimental.txt
-Input filter count: 18460
-	Accepted filter count: 18442
-	Rejected filter count: 16
-Output rule count: 6001
-	Good: 5909
+Input filter count: 17350
+	Accepted filter count: 17332
+	Rejected filter count: 15
+Output rule count: 5990
+	Plain good: 5899
 	Maybe good (regexes): 21
-	redirect-rule= (discarded): 19
+	redirect-rule= (discarded): 0
 	csp= (discarded): 38
-	removeparams= (discarded): 10
-	Unsupported: 4
+	removeparams= (accepted/discarded): 9/2
+	Unsupported: 23
 		regexFilter is not RE2-compatible: ^(?!.*(24liveblog.com|24liveplus.com|acint.net|addthis.com|addthisedge.com|akamai.net|akamaiedge.net|alloha.tv|ampproject.org|anycomment.io|apester.com|api-ssl.bitly.com|api.corr.life|api.here.com|api.sypexgeo.net|app.hoversignal.com|appsmail.ru|bam.nr-data.net|blogger.com|bootstrapcdn.com|cackle.me|cdn.ampproject.org|cdn.iframe.ly|cdn.rawgit.com|cdnstats.ru|cdnvideo.ru|chartbeat.com|chatango.com|chatbro.com|chimpstatic.com|cloudflare.com|cloudflare.net|cloudfront.net|code.createjs.com|columbus.te.ua|cultserv.ru|disqus.com|disquscdn.com|dmca.com|each.im|ebacdn.com|edgecastcdn.net|ellinagraypel.com|embed.ex.co|embed.widgetpack.com|embedstorage.net|eurosolidarity.org|facebook.com|facebook.net|fastly.net|fastlylb.net|fbcdn.net|fbvkcdn.com|feonet.net|fluidplayer.com|fontawesome.com|fonts.w.tools|freecurrencyrates.com|fwcdn1.com|fwdcdn.com|gcdn.co|getsitecontrol.com|gismeteo.ru|gismeteo.ua|github.io|gitlab.io|google-analytics.com|google.com|googleadservices.com|googleapis.com|googleoptimize.com|googletagmanager.com|googletagservices.com|gravatar.com|gravitec.media|gravitec.net|gstatic.com|hcaptcha.com|hupso.com|hwcdn.net|hypercomments.com|ibytedtos.com|imgsmail.ru|imgur.com|informers.ukr.net|instagram.com|intensedebate.com|intercom.io|intercomcdn.com|intravideo.net|issuu.com|ivideon.com|jivosite.com|jquery.com|js-agent.newrelic.com|jsdelivr.net|jsonip.com|jwpcdn.com|jwplatform.com|keycaptcha.com|kin-x.com|kinogram.best|kinohod.ru|kinoplayer.co|kinotreiler.com|kitbit.net|kodik-add.com|kodikapi.com|libria.fun|licdn.com|likebtn.com|linkedin.com|lp4.io|luxnet.ua|mail.ru|mailchimp.com|mapbox.com|media-imdb.com|media.reformal.ru|mediator.media|meteobar.com|meteonova.ru|mirtesen.ru|netdna-cdn.com|ngenix.net|nuipogoda.ru|odnaknopka.ru|odnoklassniki.ru|ok.ru|oneall.com|onesignal.com|onthe.io|phnx.click|piktochart.com|pinterest.com|pixars.org|platformcraft.ru|playbuzz.com|player|player.panda.video|pljs.ru|plrjs.com|plyr.io|polldaddy.com|polyfill.io|pv.pjtsu.com|quiz.ink|raincaptcha.com|readymag.com|recaptcha.net|relap.io|renteres.ru|rumer.club|s5o.ru|securedtouch.com|selcdn.net|sendpulse.com|pluso.ru|shareaholic.com|shareaholic.net|sharethis.com|shrink.pe|sinoptik.ua|source.mmi.bemobile.ua|sporcle.com|sportradar.com|sportrecs.com|sports.ru|stackpathcdn.com|static.addtoany.com|statically.io|streamvid.club|telegram.im|telegram.org|tenews.org.ua|tenews.te.ua|tiktok.com|tilda.ws|tildacdn.com|tns-counter.ru|tolstoycomments.com|traq.li|trbcdn.net|trbna.com|ttrace.ru|tumblr.com|tvget.ru|tvsok.ru|twimg.com|twitter.com|typekit.net|uanews.org.ua|ui.ill.in.ua|unpkg.com|uptolike.com|userapi.com|usocial.pro|uweb.ru|vicomi.com|vidazoo.com|videocdn.tv|videoplayers.club|viglink.com|viqeo.tv|vk.com|vkontakte.ru|vuukle.com|widget.speechki.org|widget.vp.ru|widgets.getpocket.com|world-weather.ru|wp.com|yabber.cloud|yandex.ru|yandex.st|yastatic.net|yohoho.cc|yohoho.online|yoomoney.ru|youtube-nocookie.com|youtube.com|ytimg.com|zencdn.net)).*$
 		Entity not supported: m.rp5.*
-		Unhandled modifier exception
+		Unpatchable redirect filter: 32x32.png
+		Unpatchable redirect filter: 32x32.png
+		Unpatchable redirect filter: 1x1-transparent.gif
+		Unpatchable redirect filter: empty
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: silent-noeval.js
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: empty
+		Unpatchable redirect filter: noopjs
+		Unpatchable redirect filter: noopframe
+		Unsupported modifier exception
+		Unpatchable redirect filter: noopframe
 		Unsupported regex-based removeParam: /autostart|skin_name/
-CSS-related distinct filters: 5167 distinct combined selectors
-CSS-related injectable files: 12
-	118skis, 0dsj9i4, 0d3mvu0, 0mg8cbk, 1pub8pk, 1h0magk, 0d3ml6c, 1a3c0sg, 141qn4o, 1c1inok, 0b9cn2g, 11vceeg
-Procedural-related distinct filters: 948 distinct combined selectors
+		Unpatchable redirect filter: noopmp3-0.1s
+		Unpatchable redirect filter: noop-0.1s.mp3
+		Unpatchable redirect filter: noop-0.1s.mp3
+		Unpatchable redirect filter: empty
+		Unpatchable redirect filter: noop-0.1s.mp3
+CSS-generic: 306 plain CSS selectors
+CSS-specific distinct filters: 5176 distinct combined selectors
+CSS-specific injectable files: 21
+	09ono5o, 068brv8, 09tffh8, 1b3qm20, 0ejohgo, 1cibmh4, 1f2ua88, 1j4ap30, 016gkso, 0udfsn4, 09fstno, 1buhvs0, 1ss2ffs, 10annvg, 0cmp2ho, 1i2lru4, 1qri3q8, 1fvr3v0, 172hemg, 0as0m9s, 0t39n60
+Procedural-related distinct filters: 951 distinct combined selectors
 Procedural-related injectable files: 4
-	04bnf2u, 1047efe, 1ktvgb6, 0phcq32
-Rejected cosmetic filters: 8
-	Invalid filter: mail.ru##.grid__lcol .logo__img--vk[href="//mail.ru"] > .logo__text:matches-media((min-width: 1317px)):style(display: block !important; width: 78px !important; height: 40px !important; opacity: 1 !important; position: absolute !important; right: 0 !important; top: 15px !important; background-color: #005ff9 !important)
-	Invalid filter: mail.ru##.grid__lcol .logo__img--vk[href="//mail.ru"]:matches-media((min-width: 1317px)):style(background-size: auto 40px !important; background-position: 90px 50% !important)
-	Invalid filter: mail.ru##.grid__lcol .logo__img--vk[href="//mail.ru"] > .logo__text:matches-media((max-width: 1316px)):style(display: block !important; width: 60px !important; height: 40px !important; opacity: 1 !important; position: absolute !important; right: 0 !important; top: 15px !important; background-color: #005ff9 !important)
-	Invalid filter: mail.ru##.grid__lcol .logo__img--vk[href="//mail.ru"]:matches-media((max-width: 1316px)):style(background-size: auto 40px !important; background-position: 75px 50% !important)
-	Invalid filter: mail.ru##.grid__lcol .logo__img--vk[href="//mail.ru"] > .logo__text:matches-media((max-width: 1252px)):style(display: block !important; width: 60px !important; height: 40px !important; opacity: 1 !important; position: absolute !important; right: 0 !important; top: 15px !important; background-color: #005ff9 !important)
-	Invalid filter: mail.ru##.grid__lcol .logo__img--vk[href="//mail.ru"]:matches-media((max-width: 1252px)):style(background-size: auto 40px !important; background-position: 75px 50% !important)
-	Invalid filter: mail.ru##.grid__lcol .logo__img--vk[href="//mail.ru"] > .logo__text:matches-media((max-width: 1188px)):style(display: block !important; width: 60px !important; height: 40px !important; opacity: 1 !important; position: absolute !important; right: 0 !important; top: 15px !important; background-color: #005ff9 !important)
-	Invalid filter: mail.ru##.grid__lcol .logo__img--vk[href="//mail.ru"]:matches-media((max-width: 1188px)):style(background-size: auto 40px !important; background-position: 60px 50% !important)
-Scriptlet-related distinct filters: 220
-Scriptlet-related injectable files: 6
-	0eh00o9, 1er5qt1, 04uei6t, 0k679jp, 0iso7lh, 1emf7dd
+	174uc4a, 0n8oobm, 0k1lmp2, 1cn3t96
+Scriptlet-related distinct filters: 222
+Scriptlet-related injectable files: 7
+	0jh9gj5, 1bn3sfl, 1vqmdhp, 19f27t1, 0jhgst1, 1b10775, 1a113tt
 ============================
 Listset for 'spa-0':
 	Fetching remote https://easylist-downloads.adblockplus.org/easylistspanish.txt
-Input filter count: 1486
-	Accepted filter count: 1486
+Input filter count: 1254
+	Accepted filter count: 1254
 	Rejected filter count: 0
-Output rule count: 836
-	Good: 826
-	Maybe good (regexes): 9
+Output rule count: 714
+	Plain good: 705
+	Maybe good (regexes): 8
 	redirect-rule= (discarded): 0
 	csp= (discarded): 0
-	removeparams= (discarded): 0
+	removeparams= (accepted/discarded): 0/0
 	Unsupported: 1
-		Invalid network filter in spa-0: $webrtc,domain=allpeliculas.com|animeid.tv|booksmedicos.org|dompl3.info|gnula.biz|jkanime.net|mejortorrent.com|mejortorrent.org|mejortorrent1.com|pelispedia.tv
-CSS-related distinct filters: 760 distinct combined selectors
-CSS-related injectable files: 12
-	1s1ntik, 0h92jvs, 18utqb4, 03rpbr8, 0cjig0c, 1023uog, 0k63ol0, 17cki3c, 1ov27qg, 1u39jho, 1160uio, 1lovc2o
-Procedural-related distinct filters: 25 distinct combined selectors
-Procedural-related injectable files: 4
-	1m13ltm, 022d57e, 1otk236, 10aj6ei
+		Invalid network filter in spa-0: $webrtc,domain=allpeliculas.com|animeid.tv|booksmedicos.org|dompl3.info|gnula.biz|jkanime.net|pelispedia.tv
+CSS-generic: 221 plain CSS selectors
+CSS-specific distinct filters: 744 distinct combined selectors
+CSS-specific injectable files: 3
+	1abu0kk, 0o3g34c, 0de04kk
+Procedural-related distinct filters: 21 distinct combined selectors
+Procedural-related injectable files: 1
+	0jgsig6
 ============================
 Listset for 'spa-1':
 	Fetching remote https://filters.adtidy.org/extension/ublock/filters/9.txt
-Input filter count: 1417
-	Accepted filter count: 1412
+Input filter count: 1423
+	Accepted filter count: 1418
 	Rejected filter count: 0
-Output rule count: 944
-	Good: 909
+Output rule count: 947
+	Plain good: 912
 	Maybe good (regexes): 6
-	redirect-rule= (discarded): 24
+	redirect-rule= (discarded): 0
 	csp= (discarded): 0
-	removeparams= (discarded): 0
-	Unsupported: 5
+	removeparams= (accepted/discarded): 0/0
+	Unsupported: 29
 		Entity not supported: netcine.*
 		Entity not supported: netcine.*
 		Entity not supported: cuevana3.*
-		regexFilter is not RE2-compatible: ^(?!.*(bootstrapcdn.com|cdn.ampproject.org|cloudflare.com|disqus.com|disquscdn.com|dmca.com|ebacdn.com|facebook.net|fbcdn.net|fluidplayer.com|fontawesome.com|github.io|google.com|googleapis.com|googletagmanager.com|gstatic.com|jquery.com|jsdelivr.net|jwpcdn.com|jwplatform.com|polyfill.io|recaptcha.net|shrink.pe|twitter.com|ulogin.ru|unpkg.com|userapi.com|vidazoo.com|vk.com|yandex.|yastatic.net|ytimg.com|zencdn.net|player|youtube.com|cackle.me|googleoptimize.com|vuukle.com|chatango.com|twimg.com|google-analytics.com|hcaptcha.com|raincaptcha.com|media-imdb.com|blogger.com|hwcdn.net|instagram.com|wp.com)).*$
+		regexFilter is not RE2-compatible: ^(?!.*(bootstrapcdn.com|cdn.ampproject.org|cloudflare.com|disqus.com|disquscdn.com|dmca.com|ebacdn.com|facebook.net|fastlylb.net|fbcdn.net|fluidplayer.com|fontawesome.com|github.io|google.com|googleapis.com|googletagmanager.com|gstatic.com|jquery.com|jsdelivr.net|jwpcdn.com|jwplatform.com|polyfill.io|recaptcha.net|shrink.pe|twitter.com|ulogin.ru|unpkg.com|userapi.com|vidazoo.com|vk.com|yandex.|yastatic.net|ytimg.com|zencdn.net|player|youtube.com|cackle.me|googleoptimize.com|vuukle.com|chatango.com|twimg.com|google-analytics.com|hcaptcha.com|raincaptcha.com|media-imdb.com|blogger.com|hwcdn.net|instagram.com|wp.com)).*$
 		Entity not supported: anitube.*
-CSS-related distinct filters: 1047 distinct combined selectors
-CSS-related injectable files: 12
-	1v9qvng, 14ojhks, 08dmvvo, 005cbt0, 0a5ai50, 1g4muus, 0sns9l8, 0stem28, 0ke382g, 1eubteo, 1qbtvso, 0adathc
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: 1x1.gif
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: googlesyndication.com/adsbygoogle.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: googlesyndication.com/adsbygoogle.js
+		Unpatchable redirect filter: googlesyndication.com/adsbygoogle.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: googletagservices_gpt.js
+		Unpatchable redirect filter: googletagservices_gpt.js
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: googlesyndication.com/adsbygoogle.js
+		Unpatchable redirect filter: noop-0.1s.mp3
+		Unpatchable redirect filter: noop-1s.mp4
+CSS-generic: 81 plain CSS selectors
+CSS-specific distinct filters: 1060 distinct combined selectors
+CSS-specific injectable files: 5
+	0ektci4, 0hbeopc, 09r10gg, 18ivo48, 10lgnck
 Procedural-related distinct filters: 167 distinct combined selectors
-Procedural-related injectable files: 4
-	1mehhc6, 08le2o6, 12crtm6, 1oriaka
+Procedural-related injectable files: 1
+	05snl8a
 Rejected cosmetic filters: 8
 	Entity not supported: atomixhq.*##.featured-slides > li.slide:not([id]):has(a[href^="https://startgaming.net/"])
 	Entity not supported: atomixhq.*##.ads
@@ -2395,9 +3100,9 @@ Rejected cosmetic filters: 8
 	Entity not supported: lectulandia.*###rightPromo
 	Entity not supported: lectulandia.*##.perfbtns2
 	Entity not supported: lectulandia.*##.bloky > a > img
-Scriptlet-related distinct filters: 95
+Scriptlet-related distinct filters: 98
 Scriptlet-related injectable files: 6
-	1e9nbd1, 01iltf5, 0n3rqil, 1jmhiv1, 1a0l5q9, 1csm9ih
+	0e3oe1h, 0sp27f1, 1glv8d1, 1sbv7tt, 0f2h459, 0p0nb1d
 ============================
 Listset for 'svn-0':
 	Fetching remote https://raw.githubusercontent.com/betterwebleon/slovenian-list/master/filters.txt
@@ -2405,80 +3110,96 @@ Input filter count: 148
 	Accepted filter count: 148
 	Rejected filter count: 0
 Output rule count: 103
-	Good: 103
+	Plain good: 103
 	Maybe good (regexes): 0
 	redirect-rule= (discarded): 0
 	csp= (discarded): 0
-	removeparams= (discarded): 0
+	removeparams= (accepted/discarded): 0/0
 	Unsupported: 0
 
-CSS-related distinct filters: 167 distinct combined selectors
-CSS-related injectable files: 12
-	0hjvmfg, 0avcc7g, 0ejhk7g, 0d2koi4, 03pd5kc, 13qrt44, 17vbtl8, 025lre8, 02uql1g, 1om3v8s, 0rd3rhg, 1dbn2gs
+CSS-generic: 4 plain CSS selectors
+CSS-specific distinct filters: 167 distinct combined selectors
+CSS-specific injectable files: 1
+	134nt6c
 Procedural-related distinct filters: 2 distinct combined selectors
-Procedural-related injectable files: 2
-	1h4fmie, 1nm5lk2
+Procedural-related injectable files: 1
+	0mssc1i
 ============================
 Listset for 'swe-1':
 	Fetching remote https://raw.githubusercontent.com/lassekongo83/Frellwits-filter-lists/master/Frellwits-Swedish-Filter.txt
 	Fetching remote https://raw.githubusercontent.com/lassekongo83/Frellwits-filter-lists/master/Swedish/swe-ubo-filters.txt
 	Fetching remote https://raw.githubusercontent.com/lassekongo83/Frellwits-filter-lists/master/Swedish/chromium.txt
 	Fetching remote https://raw.githubusercontent.com/lassekongo83/Frellwits-filter-lists/master/Swedish/not_mobile.txt
-Input filter count: 1510
-	Accepted filter count: 1510
+Input filter count: 1523
+	Accepted filter count: 1523
 	Rejected filter count: 0
-Output rule count: 1145
-	Good: 1126
+Output rule count: 1156
+	Plain good: 1137
 	Maybe good (regexes): 2
-	redirect-rule= (discarded): 9
+	redirect-rule= (discarded): 0
 	csp= (discarded): 2
-	removeparams= (discarded): 3
-	Unsupported: 3
+	removeparams= (accepted/discarded): 3/3
+	Unsupported: 12
+		Unpatchable redirect filter: empty
+		Unpatchable redirect filter: 32x32.png
+		Unpatchable redirect filter: 32x32.png
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
 		Unsupported regex-based removeParam: /^ap/
 		Unsupported regex-based removeParam: /^browser/
+		Unpatchable redirect filter: click2load.html
+		Unpatchable redirect filter: click2load.html
+		Unpatchable redirect filter: click2load.html
+		Unpatchable redirect filter: noopmp4-1s
 		Unsupported regex-based removeParam: /^utm_/
-CSS-related distinct filters: 592 distinct combined selectors
-CSS-related injectable files: 12
-	0r0h3gs, 1emmoic, 0sp7l10, 0p3see4, 0j9fu6o, 1vgee04, 1j9g6io, 0m89s1k, 0brjjp8, 0ickl8o, 1rifdg8, 0ttsjac
-Procedural-related distinct filters: 249 distinct combined selectors
-Procedural-related injectable files: 4
-	06ai8ge, 0oolj2u, 172eq32, 02m5n02
-Scriptlet-related distinct filters: 56
-Scriptlet-related injectable files: 6
-	1730q09, 0do8pbl, 0t9gb2p, 1gt1bsh, 1vdki0h, 0l9ejah
+CSS-generic: 142 plain CSS selectors
+CSS-specific distinct filters: 594 distinct combined selectors
+CSS-specific injectable files: 3
+	0u369ig, 0bkck4k, 0ufroug
+Procedural-related distinct filters: 248 distinct combined selectors
+Procedural-related injectable files: 1
+	0ee8u76
+Scriptlet-related distinct filters: 67
+Scriptlet-related injectable files: 8
+	0f368kp, 1hkmi9t, 1pa1ckp, 0hue6g5, 1k1brpt, 081rdet, 0th4gt1, 01oml7d
 ============================
 Listset for 'tha-0':
 	Fetching remote https://raw.githubusercontent.com/easylist-thailand/easylist-thailand/master/subscription/easylist-thailand.txt
-Input filter count: 341
-	Accepted filter count: 341
+	Fetching remote https://raw.githubusercontent.com/easylist-thailand/easylist-thailand/master/subscription/ublock.txt
+Input filter count: 346
+	Accepted filter count: 346
 	Rejected filter count: 0
-Output rule count: 335
-	Good: 332
+Output rule count: 339
+	Plain good: 334
 	Maybe good (regexes): 3
 	redirect-rule= (discarded): 0
 	csp= (discarded): 0
-	removeparams= (discarded): 0
-	Unsupported: 0
-
-CSS-related distinct filters: 163 distinct combined selectors
-CSS-related injectable files: 12
-	01dt0v4, 000eqb4, 0u65mp8, 1q8fb48, 17an4t4, 037abs8, 11finjg, 0q5m1gk, 1jh2pac, 16skbj0, 140o6v0, 1t8j26k
-Procedural-related distinct filters: 1 distinct combined selectors
+	removeparams= (accepted/discarded): 0/0
+	Unsupported: 2
+		Unpatchable redirect filter: noopmp4-1s
+		Unpatchable redirect filter: noopmp3-0.1s
+CSS-specific distinct filters: 179 distinct combined selectors
+CSS-specific injectable files: 1
+	0saq8hg
+Procedural-related distinct filters: 11 distinct combined selectors
 Procedural-related injectable files: 1
-	08o4r3m
+	11uj97e
+Scriptlet-related distinct filters: 3
+Scriptlet-related injectable files: 3
+	1mq5641, 17o5tct, 1adnntd
 ============================
 Listset for 'tur-0':
 	Fetching remote https://filters.adtidy.org/extension/ublock/filters/13.txt
-Input filter count: 1809
-	Accepted filter count: 1809
+Input filter count: 1599
+	Accepted filter count: 1599
 	Rejected filter count: 0
-Output rule count: 1374
-	Good: 1331
+Output rule count: 1187
+	Plain good: 1148
 	Maybe good (regexes): 13
-	redirect-rule= (discarded): 19
+	redirect-rule= (discarded): 0
 	csp= (discarded): 0
-	removeparams= (discarded): 0
-	Unsupported: 11
+	removeparams= (accepted/discarded): 0/0
+	Unsupported: 26
 		Entity not supported: jetfilmizle.*
 		Entity not supported: filmmakinesi.*
 		Entity not supported: hdfilmcehennemi2.*
@@ -2488,15 +3209,31 @@ Output rule count: 1374
 		Entity not supported: filmmakinesi.*
 		regexFilter is not RE2-compatible: yenihaberden.com\/d\/other\/(?!yeni-haber-youtube)
 		Entity not supported: yabancidizi.*
-		Entity not supported: hdfilmcehennemi.*
-		regexFilter is not RE2-compatible: ^(?!.*(bootstrapcdn.com|cdn.ampproject.org|cloudflare.com|disqus.com|disquscdn.com|dmca.com|ebacdn.com|facebook.net|fbcdn.net|fluidplayer.com|fontawesome.com|github.io|google.com|googleapis.com|googletagmanager.com|gstatic.com|jquery.com|jsdelivr.net|jwpcdn.com|jwplatform.com|polyfill.io|recaptcha.net|shrink.pe|twitter.com|ulogin.ru|unpkg.com|userapi.com|vidazoo.com|vk.com|yandex.|yastatic.net|ytimg.com|zencdn.net|player|youtube.com|cackle.me|googleoptimize.com|vuukle.com|chatango.com|twimg.com|google-analytics.com|hcaptcha.com|raincaptcha.com|media-imdb.com|blogger.com|hwcdn.net|instagram.com|wp.com)).*$
-CSS-related distinct filters: 1685 distinct combined selectors
-CSS-related injectable files: 12
-	099h468, 1h164u0, 1kks3rg, 1fans04, 1ls4vo4, 1jc3s9c, 0m1vpu4, 1pp9jbo, 1k1hbak, 1gj6ce4, 0d45578, 1lhhhks
-Procedural-related distinct filters: 336 distinct combined selectors
-Procedural-related injectable files: 4
-	1j4mkom, 03t8f5i, 0p5kf16, 1bsb3li
-Rejected cosmetic filters: 144
+		regexFilter is not RE2-compatible: ^(?!.*(bootstrapcdn.com|cdn.ampproject.org|cloudflare.com|disqus.com|disquscdn.com|dmca.com|ebacdn.com|facebook.net|fastlylb.net|fbcdn.net|fluidplayer.com|fontawesome.com|github.io|google.com|googleapis.com|googletagmanager.com|gstatic.com|jquery.com|jsdelivr.net|jwpcdn.com|jwplatform.com|polyfill.io|recaptcha.net|shrink.pe|twitter.com|ulogin.ru|unpkg.com|userapi.com|vidazoo.com|vk.com|yandex.|yastatic.net|ytimg.com|zencdn.net|player|youtube.com|cackle.me|googleoptimize.com|vuukle.com|chatango.com|twimg.com|google-analytics.com|hcaptcha.com|raincaptcha.com|media-imdb.com|blogger.com|hwcdn.net|instagram.com|wp.com)).*$
+		Unpatchable redirect filter: googlesyndication.com/adsbygoogle.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: googletagservices_gpt.js
+		Unpatchable redirect filter: noop.js
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: noop.txt
+		Unpatchable redirect filter: noop-vmap1.0.xml
+		Unpatchable redirect filter: noop-1s.mp4
+		Unpatchable redirect filter: noop-0.1s.mp3
+		Unpatchable redirect filter: noop-0.1s.mp3
+		Unpatchable redirect filter: noop-0.1s.mp3
+		Unpatchable redirect filter: noop-1s.mp4
+		Unpatchable redirect filter: noop-1s.mp4
+CSS-generic: 107 plain CSS selectors
+CSS-specific distinct filters: 1484 distinct combined selectors
+CSS-specific injectable files: 6
+	0h8d87g, 1cbg6eo, 0s427e0, 0k07lgs, 0dae82s, 06p3b20
+Procedural-related distinct filters: 318 distinct combined selectors
+Procedural-related injectable files: 2
+	043p4o6, 1sm9836
+Rejected cosmetic filters: 147
 	Entity not supported: torrentarsivi.*###wrapfabtest { height: 1px !important; }
 	Entity not supported: torrentarsivi.*###eazy_ad_unblocker_holder
 	Entity not supported: vipfilmlerizle.*##.video-content > div[id^="welcomeDiv"] { remove: true; }
@@ -2587,6 +3324,10 @@ Rejected cosmetic filters: 144
 	Entity not supported: filmizletv.*##.content-container > div > a > img
 	Entity not supported: yabancidizi.*##hr[style^="margin: 5px 0;"][style*="border-color: #42e3d0;"]
 	Entity not supported: webteizle.*##a[href^="https://accounts.binance.me/"]
+	Entity not supported: hdfilmcehennemi2.*##a[href^="https://bgel.moderjat.com/?partner"]
+	Entity not supported: hdfilmcehennemi.*##a[href^="https://bgel.moderjat.com/?partner"]
+	Entity not supported: hdfilmcehennemi2.*##.rotorfon-top-indent
+	Entity not supported: hdfilmcehennemi.*##.rotorfon-top-indent
 	Entity not supported: hdfilmcehennemi2.*##.card-money
 	Entity not supported: hdfilmcehennemi.*##.card-money
 	Entity not supported: hdfilmcehennemi2.*##.money-text
@@ -2607,7 +3348,6 @@ Rejected cosmetic filters: 144
 	Entity not supported: 31vakti.*###advid > iframe + div[style^="display: block;"][style*="position: absolute;"][style*="z-index:"]
 	Entity not supported: radyodinle.*##.ad-right-area
 	Entity not supported: fullhdizle.*##a[href^="https://bit.ly/"]
-	Entity not supported: fullhdfilmizlesene.*##a[href^="https://bit.ly/"]
 	Entity not supported: hdfilmcehennemi2.*##a[href^="https://bit.ly/"]
 	Entity not supported: filmyani.*##a[href^="https://bit.ly/"]
 	Entity not supported: yabancidizi.*###rek-container
@@ -2641,32 +3381,33 @@ Rejected cosmetic filters: 144
 	Entity not supported: fullhdfilmizlesene.*##.psk
 	Entity not supported: fullhdfilmizlesene.*##.rekgec-div
 	Entity not supported: webteizle.*##img[alt="reklam"]
-Scriptlet-related distinct filters: 74
-Scriptlet-related injectable files: 6
-	1nm36p9, 1rbk12h, 0m0llct, 1s20hb5, 0djar7l, 1cljg09
+Scriptlet-related distinct filters: 77
+Scriptlet-related injectable files: 7
+	153rebp, 17r798h, 06j0e9p, 07utm6p, 0oga2ml, 1h6efpd, 1j24m85
 ============================
 Listset for 'vie-1':
 	Fetching remote https://raw.githubusercontent.com/abpvn/abpvn/master/filter/abpvn_ublock.txt
-Input filter count: 734
-	Accepted filter count: 734
+Input filter count: 746
+	Accepted filter count: 746
 	Rejected filter count: 0
-Output rule count: 562
-	Good: 557
+Output rule count: 565
+	Plain good: 560
 	Maybe good (regexes): 3
 	redirect-rule= (discarded): 0
 	csp= (discarded): 2
-	removeparams= (discarded): 0
+	removeparams= (accepted/discarded): 0/0
 	Unsupported: 0
 
-CSS-related distinct filters: 411 distinct combined selectors
-CSS-related injectable files: 12
-	03v562c, 1c95plc, 1bt2a0c, 0215seo, 0nu0048, 17ej318, 1pcn6sc, 0k22b38, 1jlbdq8, 0208ma4, 01a7gtk, 1r6m8kg
+CSS-generic: 24 plain CSS selectors
+CSS-specific distinct filters: 416 distinct combined selectors
+CSS-specific injectable files: 2
+	0tin0a8, 12n0i14
 Procedural-related distinct filters: 8 distinct combined selectors
-Procedural-related injectable files: 4
-	1iaj2cu, 1pn229u, 0bnl076, 1m1rq1i
-Scriptlet-related distinct filters: 38
+Procedural-related injectable files: 1
+	12lfusu
+Scriptlet-related distinct filters: 39
 Scriptlet-related injectable files: 6
-	05spqtd, 17e5lhp, 04i7vs1, 10ko0ft, 0f6n7l1, 06hqv35
+	127vhc1, 0ujpd2h, 1ftsr09, 0sgr5vl, 1b2744t, 1c6bi1p
 ============================
 Listset for 'block-lan':
 	Fetching remote https://ublockorigin.github.io/uAssets/filters/lan-block.txt
@@ -2674,11 +3415,11 @@ Input filter count: 44
 	Accepted filter count: 44
 	Rejected filter count: 0
 Output rule count: 10
-	Good: 4
+	Plain good: 4
 	Maybe good (regexes): 6
 	redirect-rule= (discarded): 0
 	csp= (discarded): 0
-	removeparams= (discarded): 0
+	removeparams= (accepted/discarded): 0/0
 	Unsupported: 0
 
 ============================
@@ -2688,24 +3429,99 @@ Input filter count: 11389
 	Accepted filter count: 11389
 	Rejected filter count: 0
 Output rule count: 1
-	Good: 1
+	Plain good: 1
 	Maybe good (regexes): 0
 	redirect-rule= (discarded): 0
 	csp= (discarded): 0
-	removeparams= (discarded): 0
+	removeparams= (accepted/discarded): 0/0
+	Unsupported: 0
+
+============================
+Listset for 'adguard-spyware-url':
+	Fetching remote https://filters.adtidy.org/extension/ublock/filters/17.txt
+Input filter count: 791
+	Accepted filter count: 790
+	Rejected filter count: 0
+Output rule count: 285
+	Plain good: 0
+	Maybe good (regexes): 0
+	redirect-rule= (discarded): 0
+	csp= (discarded): 0
+	removeparams= (accepted/discarded): 237/48
+	Unsupported: 48
+		Unsupported regex-based removeParam: /^__s=[A-Za-z0-9]{6\,}/
+		Unsupported regex-based removeParam: /utm_/
+		Unsupported regex-based removeParam: /web_only|_branch_referrer/
+		Unsupported regex-based removeParam: /premiumVisit|utm_compaign/
+		Unsupported regex-based removeParam: /utm_partner_id|frommail/
+		Unsupported regex-based removeParam: /^(udid|DeviceID|ver|appbuild|vendor|model|device_name|device_type|instanceid|device_year|connection_class|appsflyerid)/
+		Unsupported regex-based removeParam: /^subid/
+		Unsupported regex-based removeParam: /^mkt_tok/
+		Unsupported regex-based removeParam: /fx_(source|medium|campaign)/
+		Unsupported regex-based removeParam: /^cx_/
+		Unsupported regex-based removeParam: /distributorid|wfr|ifr|share_relation/
+		Unsupported regex-based removeParam: /cUrl|ref/
+		Unsupported regex-based removeParam: /topicPageSponsorship|^itm_/
+		Unsupported regex-based removeParam: /^utm_/
+		Unsupported regex-based removeParam: /^utm_cid/
+		Unsupported regex-based removeParam: /entries/
+		Unsupported regex-based removeParam: /mcorgid|mid|ts/
+		Unsupported regex-based removeParam: /^dc_trk_/
+		Unsupported regex-based removeParam: /^(ppref|ref|pid)=/
+		Unsupported regex-based removeParam: /^(_requestid|reff)=/
+		Unsupported regex-based removeParam: /spm=|scm=|from=|keyori=|sugg=|search=|mp=|c=|^abtest|^abbucket|pos=|themeID=|algArgs=|clickTrackInfo=|acm=|item_id=|version=|up_id=|pvid=/
+		Unsupported modifier exception
+		Unsupported modifier exception
+		Unsupported modifier exception
+		Unsupported modifier exception
+		Unsupported modifier exception
+		Unsupported modifier exception
+		Unsupported modifier exception
+		Unsupported modifier exception
+		Unsupported modifier exception
+		Unsupported modifier exception
+		Unsupported modifier exception
+		Unsupported modifier exception
+		Unsupported modifier exception
+		Unsupported modifier exception
+		Unsupported modifier exception
+		Unsupported modifier exception
+		Unsupported modifier exception
+		Unsupported modifier exception
+		Unsupported modifier exception
+		Unsupported modifier exception
+		Unsupported modifier exception
+		Unsupported modifier exception
+		Unsupported modifier exception
+		Unsupported regex-based removeParam: /^\/_ui\/desktop\/common\/js\/uiAnalytics\//
+		Unsupported regex-based removeParam: /cdt|ref/
+		Unsupported regex-based removeParam: ~/^(primer|subset_id)=/
+		Unsupported modifier exception
+============================
+Listset for 'cname-trackers':
+	Fetching remote https://raw.githubusercontent.com/AdguardTeam/cname-trackers/master/combined_disguised_trackers.txt
+Input filter count: 53609
+	Accepted filter count: 42219
+	Rejected filter count: 0
+Output rule count: 3
+	Plain good: 3
+	Maybe good (regexes): 0
+	redirect-rule= (discarded): 0
+	csp= (discarded): 0
+	removeparams= (accepted/discarded): 0/0
 	Unsupported: 0
 
 ============================
 Listset for 'stevenblack-hosts':
 	Fetching remote https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
-Input filter count: 148942
-	Accepted filter count: 148942
+Input filter count: 152589
+	Accepted filter count: 152589
 	Rejected filter count: 0
 Output rule count: 2
-	Good: 2
+	Plain good: 2
 	Maybe good (regexes): 0
 	redirect-rule= (discarded): 0
 	csp= (discarded): 0
-	removeparams= (discarded): 0
+	removeparams= (accepted/discarded): 0/0
 	Unsupported: 0
 
