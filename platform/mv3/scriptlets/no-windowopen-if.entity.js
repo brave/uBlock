@@ -28,15 +28,15 @@
 
 /******************************************************************************/
 
-/// name no-windowopen-if
-/// alias no-windowOpen-if
-/// alias nowoif
+/// name no-windowopen-if.entity
+/// alias no-windowOpen-if.entity
+/// alias nowoif.entity
 
 /******************************************************************************/
 
 // Important!
 // Isolate from global scope
-(function uBOL_noWindowOpenIf() {
+(function uBOL_noWindowOpenIfEntity() {
 
 /******************************************************************************/
 
@@ -44,7 +44,7 @@
 
 const argsList = self.$argsList$;
 
-const hostnamesMap = new Map(self.$hostnamesMap$);
+const entitiesMap = new Map(self.$entitiesMap$);
 
 /******************************************************************************/
 
@@ -126,11 +126,15 @@ const scriptlet = (
 
 /******************************************************************************/
 
-let hn;
-try { hn = document.location.hostname; } catch(ex) { }
-while ( hn ) {
-    if ( hostnamesMap.has(hn) ) {
-        let argsIndices = hostnamesMap.get(hn);
+const hnparts = [];
+try { hnparts.push(...document.location.hostname.split('.')); } catch(ex) { }
+const hnpartslen = hnparts.length - 1;
+for ( let i = 0; i < hnpartslen; i++ ) {
+    for ( let j = hnpartslen; j > i; j-- ) {
+        const hn = hnparts.slice(i).join('.');
+        const en = hnparts.slice(i,j).join('.');
+        let argsIndices = entitiesMap.get(en);
+        if ( argsIndices === undefined ) { continue; }
         if ( typeof argsIndices === 'number' ) { argsIndices = [ argsIndices ]; }
         for ( const argsIndex of argsIndices ) {
             const details = argsList[argsIndex];
@@ -138,21 +142,13 @@ while ( hn ) {
             try { scriptlet(...details.a); } catch(ex) {}
         }
     }
-    if ( hn === '*' ) { break; }
-    const pos = hn.indexOf('.');
-    if ( pos !== -1 ) {
-        hn = hn.slice(pos + 1);
-    } else {
-        hn = '*';
-    }
 }
 
 argsList.length = 0;
-hostnamesMap.clear();
+entitiesMap.clear();
 
 /******************************************************************************/
 
 })();
 
 /******************************************************************************/
-

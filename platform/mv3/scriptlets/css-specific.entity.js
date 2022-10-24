@@ -19,21 +19,33 @@
     Home: https://github.com/gorhill/uBlock
 */
 
-(function() {
-    'use strict';
-    const noopfn = function() {
-    };
-    window.addthis = {
-        addEventListener: noopfn,
-        button: noopfn,
-        counter: noopfn,
-        init: noopfn,
-        layers: noopfn,
-        ready: noopfn,
-        sharecounters: {
-            getShareCounts: noopfn
-        },
-        toolbox: noopfn,
-        update: noopfn
-    };
+/* jshint esversion:11 */
+
+'use strict';
+
+/******************************************************************************/
+
+/// name css-specific.entity
+
+/******************************************************************************/
+
+// Important!
+// Isolate from global scope
+(function uBOL_cssSpecificEntityImport() {
+
+/******************************************************************************/
+
+// $rulesetId$
+
+const argsList = self.$argsList$;
+
+const entitiesMap = new Map(self.$entitiesMap$);
+
+self.specificEntityImports = self.specificEntityImports || [];
+self.specificEntityImports.push({ argsList, entitiesMap });
+
+/******************************************************************************/
+
 })();
+
+/******************************************************************************/

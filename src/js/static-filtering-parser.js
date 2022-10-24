@@ -1614,6 +1614,7 @@ Parser.prototype.SelectorCompiler = class {
             out.push(`#${data.name}`);
             break;
         case 'Nth': {
+            if ( data.selector !== null ) { return; }
             if ( data.nth.type === 'AnPlusB' ) {
                 const a = parseInt(data.nth.a, 10) || null;
                 const b = parseInt(data.nth.b, 10) || null;
@@ -1637,7 +1638,9 @@ Parser.prototype.SelectorCompiler = class {
         case 'PseudoElementSelector':
             out.push(`:${data.name}`);
             if ( Array.isArray(part.args) ) {
-                out.push(`(${this.astSerialize(part.args)})`);
+                const arg = this.astSerialize(part.args);
+                if ( typeof arg !== 'string' ) { return; }
+                out.push(`(${arg})`);
             }
             break;
         case 'Raw':
@@ -1974,7 +1977,7 @@ Parser.prototype.SelectorCompiler = class {
     }
 
     compileAttrList(s) {
-        if ( s === '' ) { return; }
+        if ( s === '' ) { return s; }
         const attrs = s.split('\s*,\s*');
         const out = [];
         for ( const attr of attrs ) {
@@ -2981,6 +2984,9 @@ const ExtOptionsIterator = class {
         }
         if ( i === i0 ) { value.bad = true; }
         value.hn = parser.raw.slice(slices[i0+1], slices[i+1]);
+        if ( parser.hasUnicode() && parser.reUnicodeChar.test(value.hn) ) {
+            value.hn = parser.normalizeHostnameValue(value.hn, 0b0110);
+        }
         if ( i < this.r ) { i += 3; }
         this.l = i;
         return this;

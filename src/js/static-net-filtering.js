@@ -1740,11 +1740,6 @@ const FilterOriginEntityHit = class extends FilterOriginHit {
     static compile(entity) {
         return [ FilterOriginEntityHit.fid, entity ];
     }
-
-    static dnrFromCompiled(args, rule) {
-        dnrAddRuleError(rule, `FilterOriginEntityHit: Entity ${args[1]} not supported`);
-        super.dnrFromCompiled(args, rule);
-    }
 };
 
 registerFilterClass(FilterOriginEntityHit);
@@ -1758,11 +1753,6 @@ const FilterOriginEntityMiss = class extends FilterOriginMiss {
 
     static compile(entity) {
         return [ FilterOriginEntityMiss.fid, entity ];
-    }
-
-    static dnrFromCompiled(args, rule) {
-        dnrAddRuleError(rule, `FilterOriginEntityMiss: Entity ${args[1]} not supported`);
-        super.dnrFromCompiled(args, rule);
     }
 };
 
@@ -4062,6 +4052,36 @@ FilterContainer.prototype.dnrFromCompiled = function(op, context, ...args) {
         }
     }
 
+    // Detect and attempt salvage of rules with entity-based hostnames.
+    for ( const rule of ruleset ) {
+        if ( rule.condition === undefined ) { continue; }
+        if (
+            Array.isArray(rule.condition.initiatorDomains) &&
+            rule.condition.initiatorDomains.some(hn => hn.endsWith('.*'))
+        ) {
+            const domains = rule.condition.initiatorDomains.filter(
+                hn => hn.endsWith('.*') === false
+            );
+            if ( domains.length === 0 ) {
+                dnrAddRuleError(rule, `Could not salvage rule with only entity-based domain= option: ${rule.condition.initiatorDomains.join('|')}`);
+            } else {
+                rule.condition.initiatorDomains = domains;
+            }
+        }
+        if (
+            Array.isArray(rule.condition.excludedInitiatorDomains) &&
+            rule.condition.excludedInitiatorDomains.some(hn => hn.endsWith('.*'))
+        ) {
+            const domains = rule.condition.excludedInitiatorDomains.filter(
+                hn => hn.endsWith('.*') === false
+            );
+            rule.condition.excludedInitiatorDomains =
+                domains.length !== 0
+                    ? domains
+                    : undefined;
+        }
+    }
+
     // Patch modifier filters
     for ( const rule of ruleset ) {
         if ( rule.__modifierType === undefined ) { continue; }
@@ -4257,6 +4277,7 @@ FilterContainer.prototype.dnrFromCompiled = function(op, context, ...args) {
     }
 
     // Patch id
+    const rulesetFinal = [];
     {
         let ruleId = 1;
         for ( const rule of rulesetMap.values() ) {
@@ -4265,20 +4286,19 @@ FilterContainer.prototype.dnrFromCompiled = function(op, context, ...args) {
             } else {
                 rule.id = 0;
             }
+            rulesetFinal.push(rule);
         }
         for ( const invalid of context.invalid ) {
-            rulesetMap.set(ruleId++, {
-                _error: [ invalid ],
-            });
+            rulesetFinal.push({ _error: [ invalid ] });
         }
     }
 
     return {
-        ruleset: Array.from(rulesetMap.values()),
+        ruleset: rulesetFinal,
         filterCount: context.filterCount,
         acceptedFilterCount: context.acceptedFilterCount,
         rejectedFilterCount: context.rejectedFilterCount,
-        generichideExclusions,
+        generichideExclusions: Array.from(new Set(generichideExclusions)),
     };
 };
 
