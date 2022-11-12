@@ -19,15 +19,17 @@
     Home: https://github.com/gorhill/uBlock
 */
 
+/* jshint esversion:11 */
+
 'use strict';
 
-import { runtime } from './ext.js';
 import { dom } from './dom.js';
 
 /******************************************************************************/
 
-(async ( ) => {
-    const manifest = runtime.getManifest();
-
-    dom.text('#aboutNameVer', `${manifest.name} ${manifest.version}`);
-})();
+const mql = self.matchMedia('(prefers-color-scheme: dark)');
+const theme = mql instanceof Object && mql.matches === true
+    ? 'dark'
+    : 'light';
+dom.cl.toggle(dom.html, 'dark', theme === 'dark');
+dom.cl.toggle(dom.html, 'light', theme !== 'dark');

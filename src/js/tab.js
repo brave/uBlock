@@ -41,7 +41,6 @@ import {
 import {
     domainFromHostname,
     hostnameFromURI,
-    isNetworkURI,
     originFromURI,
 } from './uri-utils.js';
 
@@ -917,6 +916,10 @@ vAPI.Tabs = class extends vAPI.Tabs {
     //   For non-network URIs, defer scriptlet injection to content script. The
     //   reason for this is that we need the effective URL and this information
     //   is not available at this point.
+    //
+    // https://github.com/uBlockOrigin/uBlock-issues/issues/2343
+    //   uBO's isolated world in Firefox just does not work as expected at
+    //   point, so we have to wait before injecting scriptlets.
     onNavigation(details) {
         super.onNavigation(details);
         const { frameId, tabId, url } = details;
@@ -930,11 +933,7 @@ vAPI.Tabs = class extends vAPI.Tabs {
         const pageStore = µb.pageStoreFromTabId(tabId);
         if ( pageStore === null ) { return; }
         pageStore.setFrameURL(details);
-        if (
-            µb.canInjectScriptletsNow &&
-            isNetworkURI(url) &&
-            pageStore.getNetFilteringSwitch()
-        ) {
+        if ( pageStore.getNetFilteringSwitch() ) {
             scriptletFilteringEngine.injectNow(details);
         }
     }

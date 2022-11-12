@@ -4,243 +4,243 @@
     "description": "extension name."
   },
   "extShortDesc": {
-    "message": "Eksperimental at permission-less na pangharang ng content. Hinaharang ang mga ad, tracker, miner, at higit pa pagka-install.",
+    "message": "Эксперыментальны блакавальнік змесціва, які не патрабуе дазволаў. Блакуе рэкламу, трэкеры, майнеры і іншае адразу пасля ўсталявання.",
     "description": "this will be in the Chrome web store: must be 132 characters or less"
   },
   "perRulesetStats": {
-    "message": "{{ruleCount}} (na) mga patakaran, mula sa {{filterCount}} (na) mga network filter",
+    "message": "{{ruleCount}} правілаў, сканвертаваных з {{filterCount}} сеткавых фільтраў",
     "description": "Appears aside each filter list in the _3rd-party filters_ pane"
   },
   "dashboardName": {
-    "message": "uBO Lite — Dashboard",
+    "message": "uBO Lite — Панэль кіравання",
     "description": "English: uBO Lite — Dashboard"
   },
   "dashboardUnsavedWarning": {
-    "message": "Babala! Hindi pa na-save ang ilan mong mga pagbabago.",
+    "message": "Увага! Ёсць незахаваныя змены",
     "description": "A warning in the dashboard when navigating away from unsaved changes"
   },
   "dashboardUnsavedWarningStay": {
-    "message": "Manatili",
+    "message": "Застацца",
     "description": "Label for button to prevent navigating away from unsaved changes"
   },
   "dashboardUnsavedWarningIgnore": {
-    "message": "Balewalain",
+    "message": "Iгнараваць",
     "description": "Label for button to ignore unsaved changes"
   },
   "settingsPageName": {
-    "message": "Mga Setting",
+    "message": "Налады",
     "description": "appears as tab name in dashboard"
   },
   "3pPageName": {
-    "message": "Listahan ng mga filter",
+    "message": "Спісы фільтраў",
     "description": "appears as tab name in dashboard"
   },
   "1pPageName": {
-    "message": "Mga filter ko",
+    "message": "Мае фільтры",
     "description": "appears as tab name in dashboard"
   },
   "whitelistPageName": {
-    "message": "Mga pinagkakatiwalaang site",
+    "message": "Давераныя сайты",
     "description": "appears as tab name in dashboard"
   },
   "aboutPageName": {
-    "message": "Tungkol",
+    "message": "Пра пашырэнне",
     "description": "appears as tab name in dashboard"
   },
   "aboutPrivacyPolicy": {
-    "message": "Patakaran sa pagkapribado",
+    "message": "Палітыка прыватнасці",
     "description": "Link to privacy policy on GitHub (English)"
   },
   "popupPowerSwitchInfo": {
-    "message": "Paandarin/patayin ang uBO Lite para sa site na ito",
+    "message": "Адключыць/уключыць uBO Lite для гэтага сайта",
     "description": "Tooltip for the main power button in the popup panel"
   },
   "popupTipDashboard": {
-    "message": "Buksan ang dashboard",
+    "message": "Адкрыць панэль кіравання",
     "description": "English: Click to open the dashboard"
   },
   "popupTipZapper": {
-    "message": "Buksan ang pantanggal ng elemento",
+    "message": "Перайсці ў рэжым імгненнага хавання элементаў",
     "description": "Tooltip for the element-zapper icon in the popup panel"
   },
   "popupTipPicker": {
-    "message": "Buksan ang tagapili ng elemento",
+    "message": "Перайсці ў рэжым выбару элементаў",
     "description": "English: Enter element picker mode"
   },
   "popupTipReport": {
-    "message": "Mag-ulat ng isyu sa site na ito",
+    "message": "Паведаміць аб праблеме з сайтам",
     "description": "Tooltip used for the 'chat' icon in the panel"
   },
   "popupTipSaveRules": {
-    "message": "Pindutin upang gawing permanente ang mga pagbabago mo.",
+    "message": "Націсніце, каб захаваць змены.",
     "description": "Tooltip when hovering over the padlock in the dynamic filtering pane."
   },
   "popupTipRevertRules": {
-    "message": "Pindutin upang kanselahin ang mga pagbabago mo.",
+    "message": "Націсніце, каб скасаваць змены.",
     "description": "Tooltip when hovering over the eraser in the dynamic filtering pane."
   },
   "popupMoreButton": {
-    "message": "Higit pa",
+    "message": "Больш",
     "description": "Label to be used to show popup panel sections"
   },
   "popupGrantGreatPowers": {
-    "message": "Pindutin upang magkaroon ng karagdagang pahintulot ang uBO Lite sa site na ito.\nMas epektibo ang pagharang sa content kung may mga karagdagang pahintulot.",
+    "message": "Націсніце, каб даць uBO Lite пашыраныя дазволы на гэтым сайце.\nПашыраныя дазволы дазваляюць эфектыўней блакаваць змесціва.",
     "description": "Label to be used to show popup panel sections"
   },
   "popupRevokeGreatPowers": {
-    "message": "Pindutin upang matanggal ang karagdagang pahintulot ng uBO Lite sa site na ito.",
+    "message": "Націсніце, каб адклікаць пашыраныя дазволы на гэтым сайце",
     "description": "Label to be used to show popup panel sections"
   },
   "popupLessButton": {
-    "message": "Mas konti",
+    "message": "Менш",
     "description": "Label to be used to hide popup panel sections"
   },
   "settingsIconBadgePrompt": {
-    "message": "Ipakita ang bilang ng mga hinarang na hiling sa icon",
+    "message": "Паказваць колькасць заблакаваных запытаў на значцы",
     "description": "English: Show the number of blocked requests on the icon"
   },
   "settingsAppearance": {
-    "message": "Hitsura",
+    "message": "Выгляд",
     "description": "Section for controlling user interface appearance"
   },
   "settingsThemeLabel": {
-    "message": "Tema",
+    "message": "Тэма",
     "description": "Label for checkbox to enable a custom dark theme"
   },
   "settingsThemeAccent0Label": {
-    "message": "Pinasadyang kulay ng accent",
+    "message": "Уласны колеравы акцэнт",
     "description": "Label for checkbox to pick an accent color"
   },
   "settingsNoCSPReportsPrompt": {
-    "message": "Harangin ang mga ulat ng CSP",
+    "message": "Блакаваць справаздачы CSP",
     "description": "background information: https://github.com/gorhill/uBlock/issues/3150"
   },
   "omnipotenceLabel": {
-    "message": "Paandarin ang karagdagang pagfi-filter sa lahat ng mga website",
+    "message": "Уключыць пашыраную фільтрацыю на ўсіх вэб-сайтах",
     "description": "Header for a ruleset section in 'Filter lists pane'"
   },
   "omnipotenceLegend": {
-    "message": "Mapapaandar lang ang karagdagang pagfi-filter sa isang website pagkatapos mong pahintulutan ang uBO Lite na baguhin ang datos ng nasabing website. Sa setting na ito, maaari mong bigyan ng pahintulot ang uBO Lite para sa karagdagang pagfi-filter sa lahat ng mga website sa isang pindutan lang.",
+    "message": "uBO Lite можа прымяняць пашыраную фільтрацыю на пэўным сайце толькі пасля таго, як вы яўна дасце пашырэнню дазвол на змяненне звестак на гэтым сайце. Гэтая налада дазваляе выдаць дазвол на пашыраную фільтрацыю на ўсіх сайтах адначасова.",
     "description": "Header for a ruleset section in 'Filter lists pane'"
   },
   "3pGroupDefault": {
-    "message": "Default",
+    "message": "Прадвызначана",
     "description": "Header for a ruleset section in 'Filter lists pane'"
   },
   "3pGroupAds": {
-    "message": "Mga ad",
+    "message": "Рэклама",
     "description": "Header for a ruleset section in 'Filter lists pane'"
   },
   "3pGroupPrivacy": {
-    "message": "Pagkapribado",
+    "message": "Прыватнасць",
     "description": "Header for a ruleset section in 'Filter lists pane'"
   },
   "3pGroupMalware": {
-    "message": "Mga domain na may malware",
+    "message": "Дамены шкодных праграм",
     "description": "Header for a ruleset section in 'Filter lists pane'"
   },
   "3pGroupAnnoyances": {
-    "message": "Mga nakakaabalang bagay",
+    "message": "Надакучлівасці",
     "description": "Header for a ruleset section in 'Filter lists pane'"
   },
   "3pGroupMisc": {
-    "message": "Iba pa",
+    "message": "Рознае",
     "description": "Header for a ruleset section in 'Filter lists pane'"
   },
   "3pGroupRegions": {
-    "message": "Mga rehiyon o wika",
+    "message": "Рэгіёны, мовы",
     "description": "Header for a ruleset section in 'Filter lists pane'"
   },
   "1pFormatHint": {
-    "message": "Isang filter kada linya. Pwedeng simpleng hostname o EasyList-compatible ang filter. Hindi papansinin ang mga linyang nagsisimula sa <code>!</code>.",
+    "message": "One filter per line. A filter can be a plain hostname, or an EasyList-compatible filter. Lines prefixed with <code>!</code> will be ignored.",
     "description": "Short information about how to create custom filters"
   },
   "1pImport": {
-    "message": "I-import at idagdag",
+    "message": "Import and append",
     "description": "English: Import and append"
   },
   "1pExport": {
-    "message": "I-export",
+    "message": "Экспартаваць",
     "description": "English: Export"
   },
   "1pExportFilename": {
-    "message": "mga-static-filter-ko-sa-ublock_{{datetime}}.txt",
+    "message": "my-ublock-static-filters_{{datetime}}.txt",
     "description": "English: my-ublock-static-filters_{{datetime}}.txt"
   },
   "whitelistPrompt": {
-    "message": "Idinidikta nito kung sa aling mga webpage papatayin ang uBO Lite. Isang entry kada linya.",
+    "message": "The trusted site directives dictate on which web pages uBO Lite should be disabled. One entry per line.",
     "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
-    "message": "I-import at idagdag",
+    "message": "Import and append",
     "description": "English: Import and append"
   },
   "whitelistExport": {
-    "message": "I-export",
+    "message": "Export",
     "description": "English: Export"
   },
   "whitelistExportFilename": {
-    "message": "mga-pinagkakatiwalaan-kong-site-sa-ublock_{{datetime}}.txt",
+    "message": "my-ublock-trusted-sites_{{datetime}}.txt",
     "description": "The default filename to use for import/export purpose"
   },
   "aboutChangelog": {
-    "message": "Talaan ng mga pagbabago",
+    "message": "Changelog",
     "description": ""
   },
   "aboutCode": {
-    "message": "Source code (GPLv3)",
+    "message": "Зыходны код (GPLv3)",
     "description": "English: Source code (GPLv3)"
   },
   "aboutContributors": {
-    "message": "Mga nag-ambag",
+    "message": "Contributors",
     "description": "English: Contributors"
   },
   "aboutSourceCode": {
-    "message": "Source code",
+    "message": "Зыходны код",
     "description": "Link text to source code repo"
   },
   "aboutTranslations": {
-    "message": "Mga pagsasalin",
+    "message": "Пераклады",
     "description": "Link text to translations repo"
   },
   "aboutFilterLists": {
-    "message": "Listahan ng mga filter",
+    "message": "Спісы фільтраў",
     "description": "Link text to uBO's own filter lists repo"
   },
   "aboutDependencies": {
-    "message": "Mga panlabas na dependency (angkop sa GPLv3)",
+    "message": "External dependencies (GPLv3-compatible):",
     "description": "Shown in the About pane"
   },
   "genericSubmit": {
-    "message": "Ipadala",
+    "message": "Submit",
     "description": "for generic 'Submit' buttons"
   },
   "genericApplyChanges": {
-    "message": "Ilapat ang mga pagbabago",
+    "message": "Apply changes",
     "description": "for generic 'Apply changes' buttons"
   },
   "genericRevert": {
-    "message": "Kanselahin",
+    "message": "Revert",
     "description": "for generic 'Revert' buttons"
   },
   "firstRunSectionLabel": {
-    "message": "Mabuhay",
+    "message": "Вітаем",
     "description": "The header text for the welcome message section"
   },
   "firstRunDescription": {
-    "message": "Maligayang pagdating sa uBO Lite. Dito mo mapipili ang default na mode sa pagfi-filter para sa lahat ng mga website.\n\nAng default na mode ay <em>Basic</em> dahil hindi nito kailangan ng mga karagdagang pahintulot. Pwede mong pahintulutan ang uBO Lite, kung nagtitiwala ka sa amin, na basahin at baguhin ang data ng lahat ng mga website para sa karagdagang kakayahan sa pagfi-filter.",
+    "message": "You have just installed uBO Lite. You can choose here the default filtering mode to use on all websites.\n\nBy default, <em>Basic</em> mode is selected because it does not require the permission to read and change data. If you trust uBO Lite, you can give it broad permission to read and change data on all websites in order to enable more advanced filtering capabilities for all websites by default.",
     "description": "Descriptive text shown at first install time only "
   },
   "defaultFilteringModeSectionLabel": {
-    "message": "Default na mode sa pagfi-filter",
+    "message": "Default filtering mode",
     "description": "The header text for the default filtering mode section"
   },
   "defaultFilteringModeDescription": {
-    "message": "Mas sinusunod ang mode sa pagfi-filter na pinasadya para sa isang website kaysa sa pangkalahatang mode sa pagfi-filter. Mababago mo ang mode sa pagfi-filter sa isang website sa kung anong mode ang mas mainam. May kalakasan at kahinaan ang bawat mode.",
+    "message": "The default filtering mode will be overriden by per-website filtering modes. You can adjust the filtering mode on any given website according to whichever mode works best on that website. Each mode has its advantages and disadvantages.",
     "description": "This describes the default filtering mode setting"
   },
   "filteringMode0Name": {
-    "message": "walang pagfi-filter",
+    "message": "no filtering",
     "description": "Name of blocking mode 0"
   },
   "filteringMode1Name": {
@@ -248,31 +248,31 @@
     "description": "Name of blocking mode 1"
   },
   "filteringMode2Name": {
-    "message": "pinainam",
+    "message": "optimal",
     "description": "Name of blocking mode 2"
   },
   "filteringMode3Name": {
-    "message": "kumpleto",
+    "message": "complete",
     "description": "Name of blocking mode 3"
   },
   "basicFilteringModeDescription": {
-    "message": "Basic na network filtering mula sa mga napiling listahan ng mga filter.\n\nHindi kailangan ng pahintulot na basahin o baguhin ang mga data ng website.",
+    "message": "Basic network filtering from selected filter lists.\n\nDoes not require permission to read and change data on websites.",
     "description": "This describes the 'basic' filtering mode"
   },
   "optimalFilteringModeDescription": {
-    "message": "Pinainam na network filtering at partikular na karagdagang pagfi-filter mula sa mga napiling listahan ng mga filter.\n\nKailangan ang pahintulot na basahin o baguhin ang mga data ng lahat ng mga website.",
+    "message": "Advanced network filtering plus specific extended filtering from selected filter lists.\n\nRequires broad permission to read and change data on all websites.",
     "description": "This describes the 'optimal' filtering mode"
   },
   "completeFilteringModeDescription": {
-    "message": "Pinainam na network filtering, partikular at generikong karagdagang pagfi-filter mula sa mga napiling listahan ng mga filter.\n\nKailangan ang pahintulot na basahin o baguhin ang mga data ng lahat ng mga website.\n\nMaaaring mas malaki ang konsyumo sa resource dahil sa generikong karagdagang pagfi-filter.",
+    "message": "Advanced network filtering plus specific and generic extended filtering from selected filter lists.\n\nRequires broad permission to read and change data on all websites.\n\nGeneric extended filtering may cause higher webpage resources usage.",
     "description": "This describes the 'complete' filtering mode"
   },
   "behaviorSectionLabel": {
-    "message": "Ugali",
+    "message": "Паводзіны",
     "description": "The header text for the 'Behavior' section"
   },
   "autoReloadLabel": {
-    "message": "Awtomatikong i-reload ang pahina kapag binago ang mode sa pagfi-filter",
+    "message": "Automatically reload page when changing filtering mode",
     "description": "Label for a checkbox in the options page"
   }
 }

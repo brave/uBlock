@@ -282,12 +282,6 @@ async function processNetworkFilters(assetDetails, network) {
     });
     log(`\tredirect=: ${redirects.length}`);
 
-    const headers = rules.filter(rule =>
-        isUnsupported(rule) === false &&
-        isCsp(rule)
-    );
-    log(`\tcsp= (discarded): ${headers.length}`);
-
     const removeparamsGood = rules.filter(rule =>
         isUnsupported(rule) === false && isRemoveparam(rule)
     );
@@ -295,6 +289,12 @@ async function processNetworkFilters(assetDetails, network) {
         isUnsupported(rule) && isRemoveparam(rule)
     );
     log(`\tremoveparams= (accepted/discarded): ${removeparamsGood.length}/${removeparamsBad.length}`);
+
+    const csps = rules.filter(rule =>
+        isUnsupported(rule) === false &&
+        isCsp(rule)
+    );
+    log(`\tcsp=: ${csps.length}`);
 
     const bad = rules.filter(rule =>
         isUnsupported(rule)
@@ -328,14 +328,22 @@ async function processNetworkFilters(assetDetails, network) {
         );
     }
 
+    if ( csps.length !== 0 ) {
+        writeFile(
+            `${rulesetDir}/csp/${assetDetails.id}.json`,
+            `${JSON.stringify(csps, replacer, 1)}\n`
+        );
+    }
+
     return {
         total: rules.length,
         plain: plainGood.length,
-        discarded: redirects.length + headers.length + removeparamsBad.length,
+        discarded: removeparamsBad.length,
         rejected: bad.length,
         regex: regexes.length,
         removeparam: removeparamsGood.length,
         redirect: redirects.length,
+        csp: csps.length,
     };
 }
 
@@ -934,7 +942,10 @@ async function processDomainScriptletFilters(assetDetails, domainBased, original
             continue;
         }
         const normalized = parseScriptletFilter(rawFilter, originalScriptletMap);
-        if ( normalized === undefined ) { continue; }
+        if ( normalized === undefined ) {
+            log(`Discarded unsupported scriptlet filter: ${rawFilter}`, true);
+            continue;
+        }
         let argsDetails = scriptletDetails.get(normalized.token);
         if ( argsDetails === undefined ) {
             argsDetails = new Map();
@@ -1038,7 +1049,10 @@ async function processEntityScriptletFilters(assetDetails, entityBased, original
             continue;
         }
         const normalized = parseScriptletFilter(rawFilter, originalScriptletMap, '.entity');
-        if ( normalized === undefined ) { continue; }
+        if ( normalized === undefined ) {
+            log(`Discarded unsupported scriptlet filter: ${rawFilter}`, true);
+            continue;
+        }
         let argsDetails = scriptletMap.get(normalized.token);
         if ( argsDetails === undefined ) {
             argsDetails = new Map();
@@ -1216,6 +1230,7 @@ async function rulesetFromURLs(assetDetails) {
             regex: netStats.regex,
             removeparam: netStats.removeparam,
             redirect: netStats.redirect,
+            csp: netStats.csp,
             discarded: netStats.discarded,
             rejected: netStats.rejected,
         },
@@ -1276,8 +1291,8 @@ async function main() {
         'https://ublockorigin.github.io/uAssets/filters/unbreak.txt',
         'https://ublockorigin.github.io/uAssets/filters/quick-fixes.txt',
         'https://ublockorigin.github.io/uAssets/filters/ubol-filters.txt',
-        'https://secure.fanboy.co.nz/easylist.txt',
-        'https://secure.fanboy.co.nz/easyprivacy.txt',
+        'https://ublockorigin.github.io/uAssets/thirdparties/easylist.txt',
+        'https://ublockorigin.github.io/uAssets/thirdparties/easyprivacy.txt',
         'https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=1&mimetype=plaintext',
     ];
     await rulesetFromURLs({

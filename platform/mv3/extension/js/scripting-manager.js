@@ -200,12 +200,14 @@ function registerProcedural(context, proceduralDetails) {
     const { before, filteringModeDetails, rulesetsDetails } = context;
 
     const js = [];
-    const hostnameMatches = [];
+    const hostnameMatches = new Set();
     for ( const details of rulesetsDetails ) {
         if ( details.css.procedural === 0 ) { continue; }
         js.push(`/rulesets/scripting/procedural/${details.id}.js`);
         if ( proceduralDetails.has(details.id) ) {
-            hostnameMatches.push(...proceduralDetails.get(details.id));
+            for ( const hn of proceduralDetails.get(details.id) ) {
+                hostnameMatches.add(hn);
+            }
         }
     }
 
@@ -247,6 +249,7 @@ function registerProcedural(context, proceduralDetails) {
         context.toAdd.push({
             id: 'css-procedural',
             js,
+            allFrames: true,
             matches,
             excludeMatches,
             runAt: 'document_end',
@@ -323,6 +326,7 @@ function registerDeclarative(context, declarativeDetails) {
         context.toAdd.push({
             id: 'css-declarative',
             js,
+            allFrames: true,
             matches,
             excludeMatches,
             runAt: 'document_start',
@@ -396,6 +400,7 @@ function registerScriptlet(context, scriptletDetails) {
                 context.toAdd.push({
                     id,
                     js: [ `/rulesets/scripting/scriptlet/${id}.js` ],
+                    allFrames: true,
                     matches,
                     excludeMatches,
                     runAt: 'document_start',
@@ -460,6 +465,7 @@ function registerScriptletEntity(context) {
         context.toAdd.push({
             id: 'scriptlet.entity',
             js,
+            allFrames: true,
             matches,
             excludeMatches,
             runAt: 'document_start',
@@ -664,6 +670,7 @@ function registerSpecificEntity(context) {
         context.toAdd.push({
             id: 'css-specific.entity',
             js,
+            allFrames: true,
             matches,
             excludeMatches,
             runAt: 'document_start',
