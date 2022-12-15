@@ -794,11 +794,7 @@ vAPI.setIcon = (( ) => {
         // Insert the badge text in the title if:
         // - the platform does not support browserAction.setIcon(); OR
         // - the rendering of the badge is disabled
-        if (
-            browserAction.setTitle !== undefined && (
-                browserAction.setIcon === undefined || (parts & 0b1000) !== 0
-            )
-        ) {
+        if ( browserAction.setTitle !== undefined ) {
             browserAction.setTitle({
                 tabId: tab.id,
                 title: titleTemplate.replace(
@@ -918,6 +914,9 @@ vAPI.messaging = {
             } catch(ex) {
                 this.onPortDisconnect(port);
             }
+        }
+        if ( this.defaultHandler ) {
+            this.defaultHandler(message, null, ( ) => { });
         }
     },
 
@@ -1259,6 +1258,15 @@ vAPI.Net = class {
         return false;
     }
 };
+
+/******************************************************************************/
+/******************************************************************************/
+
+// To be defined by platform-specific code.
+
+vAPI.scriptletsInjector = (( ) => {
+    self.uBO_scriptletsInjected = true;
+}).toString();
 
 /******************************************************************************/
 /******************************************************************************/

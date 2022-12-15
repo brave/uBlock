@@ -34,6 +34,16 @@ const nonVisualElements = {
     style: true,
 };
 
+const regexFromString = (s, exact = false) => {
+    if ( s === '' ) { return /^/; }
+    const match = /^\/(.+)\/([i]?)$/.exec(s);
+    if ( match !== null ) {
+        return new RegExp(match[1], match[2] || undefined);
+    }
+    const reStr = s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(exact ? `^${reStr}$` : reStr, 'i');
+};
+
 // 'P' stands for 'Procedural'
 
 class PSelectorTask {
@@ -55,11 +65,7 @@ class PSelectorVoidTask extends PSelectorTask {
 class PSelectorHasTextTask extends PSelectorTask {
     constructor(task) {
         super();
-        let arg0 = task[1], arg1;
-        if ( Array.isArray(task[1]) ) {
-            arg1 = arg0[1]; arg0 = arg0[0];
-        }
-        this.needle = new RegExp(arg0, arg1);
+        this.needle = regexFromString(task[1]);
     }
     transpose(node, output) {
         if ( this.needle.test(node.textContent) ) {
@@ -84,6 +90,22 @@ PSelectorIfTask.prototype.target = true;
 class PSelectorIfNotTask extends PSelectorIfTask {
 }
 PSelectorIfNotTask.prototype.target = false;
+
+class PSelectorMatchesAttrTask extends PSelectorTask {
+    constructor(task) {
+        super();
+        this.reAttr = regexFromString(task[1].attr, true);
+        this.reValue = regexFromString(task[1].value, true);
+    }
+    transpose(node, output) {
+        const attrs = node.getAttributeNames();
+        for ( const attr of attrs ) {
+            if ( this.reAttr.test(attr) === false ) { continue; }
+            if ( this.reValue.test(node.getAttribute(attr)) === false ) { continue; }
+            output.push(node);
+        }
+    }
+}
 
 class PSelectorMatchesCSSTask extends PSelectorTask {
     constructor(task) {
@@ -139,11 +161,7 @@ class PSelectorMatchesMediaTask extends PSelectorTask {
 class PSelectorMatchesPathTask extends PSelectorTask {
     constructor(task) {
         super();
-        let arg0 = task[1], arg1;
-        if ( Array.isArray(task[1]) ) {
-            arg1 = arg0[1]; arg0 = arg0[0];
-        }
-        this.needle = new RegExp(arg0, arg1);
+        this.needle = regexFromString(task[1]);
     }
     transpose(node, output) {
         if ( this.needle.test(self.location.pathname + self.location.search) ) {
@@ -344,26 +362,6 @@ class PSelectorXpathTask extends PSelectorTask {
 
 class PSelector {
     constructor(o) {
-        if ( PSelector.prototype.operatorToTaskMap === undefined ) {
-            PSelector.prototype.operatorToTaskMap = new Map([
-                [ 'has', PSelectorIfTask ],
-                [ 'has-text', PSelectorHasTextTask ],
-                [ 'if', PSelectorIfTask ],
-                [ 'if-not', PSelectorIfNotTask ],
-                [ 'matches-css', PSelectorMatchesCSSTask ],
-                [ 'matches-css-after', PSelectorMatchesCSSAfterTask ],
-                [ 'matches-css-before', PSelectorMatchesCSSBeforeTask ],
-                [ 'matches-media', PSelectorMatchesMediaTask ],
-                [ 'matches-path', PSelectorMatchesPathTask ],
-                [ 'min-text-length', PSelectorMinTextLengthTask ],
-                [ 'not', PSelectorIfNotTask ],
-                [ 'others', PSelectorOthersTask ],
-                [ 'spath', PSelectorSpathTask ],
-                [ 'upward', PSelectorUpwardTask ],
-                [ 'watch-attr', PSelectorWatchAttrs ],
-                [ 'xpath', PSelectorXpathTask ],
-            ]);
-        }
         this.raw = o.raw;
         this.selector = o.selector;
         this.tasks = [];
@@ -373,7 +371,6 @@ class PSelector {
             const ctor = this.operatorToTaskMap.get(task[0]) || PSelectorVoidTask;
             tasks.push(new ctor(task));
         }
-        // Initialize only after all tasks have been successfully instantiated
         this.tasks = tasks;
     }
     prime(input) {
@@ -417,16 +414,34 @@ class PSelector {
         return false;
     }
 }
-PSelector.prototype.operatorToTaskMap = undefined;
+PSelector.prototype.operatorToTaskMap = new Map([
+    [ 'has', PSelectorIfTask ],
+    [ 'has-text', PSelectorHasTextTask ],
+    [ 'if', PSelectorIfTask ],
+    [ 'if-not', PSelectorIfNotTask ],
+    [ 'matches-attr', PSelectorMatchesAttrTask ],
+    [ 'matches-css', PSelectorMatchesCSSTask ],
+    [ 'matches-css-after', PSelectorMatchesCSSAfterTask ],
+    [ 'matches-css-before', PSelectorMatchesCSSBeforeTask ],
+    [ 'matches-media', PSelectorMatchesMediaTask ],
+    [ 'matches-path', PSelectorMatchesPathTask ],
+    [ 'min-text-length', PSelectorMinTextLengthTask ],
+    [ 'not', PSelectorIfNotTask ],
+    [ 'others', PSelectorOthersTask ],
+    [ 'spath', PSelectorSpathTask ],
+    [ 'upward', PSelectorUpwardTask ],
+    [ 'watch-attr', PSelectorWatchAttrs ],
+    [ 'xpath', PSelectorXpathTask ],
+]);
 
 class PSelectorRoot extends PSelector {
-    constructor(o, styleToken) {
+    constructor(o) {
         super(o);
         this.budget = 200; // I arbitrary picked a 1/5 second
         this.raw = o.raw;
         this.cost = 0;
         this.lastAllowanceTime = 0;
-        this.styleToken = styleToken;
+        this.action = o.action;
     }
     prime(input) {
         try {
@@ -456,16 +471,8 @@ class ProceduralFilterer {
         let mustCommit = false;
         for ( const selector of selectors ) {
             if ( this.selectors.has(selector.raw) ) { continue; }
-            let style, styleToken;
-            if ( selector.action === undefined ) {
-                style = vAPI.hideStyle;
-            } else if ( selector.action[0] === 'style' ) {
-                style = selector.action[1];
-            }
-            if ( style !== undefined ) {
-                styleToken = this.styleTokenFromStyle(style);
-            }
-            const pselector = new PSelectorRoot(selector, styleToken);
+            const pselector = new PSelectorRoot(selector);
+            this.primeProceduralSelector(pselector);
             this.selectors.set(selector.raw, pselector);
             addedSelectors.push(pselector);
             mustCommit = true;
@@ -480,12 +487,21 @@ class ProceduralFilterer {
         }
     }
 
+    // This allows to perform potentially expensive initialization steps
+    // before the filters are ready to be applied.
+    primeProceduralSelector(pselector) {
+        if ( pselector.action === undefined ) {
+            this.styleTokenFromStyle(vAPI.hideStyle);
+        } else if ( pselector.action[0] === 'style' ) {
+            this.styleTokenFromStyle(pselector.action[1]);
+        }
+        return pselector;
+    }
+
     commitNow() {
         if ( this.selectors.size === 0 ) { return; }
 
         this.mustApplySelectors = false;
-
-        //console.time('procedural selectors/dom layout changed');
 
         // https://github.com/uBlockOrigin/uBlock-issues/issues/341
         //   Be ready to unhide nodes which no longer matches any of
@@ -513,11 +529,10 @@ class ProceduralFilterer {
             t0 = t1;
             if ( nodes.length === 0 ) { continue; }
             pselector.hit = true;
-            this.styleNodes(nodes, pselector.styleToken);
+            this.processNodes(nodes, pselector.action);
         }
 
-        this.unstyleNodes(toUnstyle);
-        //console.timeEnd('procedural selectors/dom layout changed');
+        this.unprocessNodes(toUnstyle);
     }
 
     styleTokenFromStyle(style) {
@@ -533,25 +548,60 @@ class ProceduralFilterer {
         return styleToken;
     }
 
-    styleNodes(nodes, styleToken) {
-        if ( styleToken === undefined ) {
+    processNodes(nodes, action) {
+        const op = action && action[0] || '';
+        const arg = op !== '' ? action[1] : '';
+        switch ( op ) {
+        case '':
+            /* fall through */
+        case 'style': {
+            const styleToken = this.styleTokenFromStyle(
+                arg === '' ? vAPI.hideStyle : arg
+            );
             for ( const node of nodes ) {
-                node.textContent = '';
-                node.remove();
+                node.setAttribute(this.masterToken, '');
+                node.setAttribute(styleToken, '');
+                this.styledNodes.add(node);
             }
-            return;
+            break;
         }
-        for ( const node of nodes ) {
-            node.setAttribute(this.masterToken, '');
-            node.setAttribute(styleToken, '');
-            this.styledNodes.add(node);
+        case 'remove': {
+            for ( const node of nodes ) {
+                node.remove();
+                node.textContent = '';
+            }
+            break;
+        }
+        case 'remove-attr': {
+            const reAttr = regexFromString(arg, true);
+            for ( const node of nodes ) {
+                for ( const name of node.getAttributeNames() ) {
+                    if ( reAttr.test(name) === false ) { continue; }
+                    node.removeAttribute(name);
+                }
+            }
+            break;
+        }
+        case 'remove-class': {
+            const reClass = regexFromString(arg, true);
+            for ( const node of nodes ) {
+                const cl = node.classList;
+                for ( const name of cl.values() ) {
+                    if ( reClass.test(name) === false ) { continue; }
+                    cl.remove(name);
+                }
+            }
+            break;
+        }
+        default:
+            break;
         }
     }
 
     // TODO: Current assumption is one style per hit element. Could be an
     //       issue if an element has multiple styling and one styling is
     //       brought back. Possibly too rare to care about this for now.
-    unstyleNodes(nodes) {
+    unprocessNodes(nodes) {
         for ( const node of nodes ) {
             if ( this.styledNodes.has(node) ) { continue; }
             node.removeAttribute(this.masterToken);
@@ -559,7 +609,9 @@ class ProceduralFilterer {
     }
 
     createProceduralFilter(o) {
-        return new PSelectorRoot(typeof o === 'string' ? JSON.parse(o) : o);
+        return this.primeProceduralSelector(
+            new PSelectorRoot(typeof o === 'string' ? JSON.parse(o) : o)
+        );
     }
 
     onDOMCreated() {

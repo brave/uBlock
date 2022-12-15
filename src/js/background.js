@@ -176,8 +176,8 @@ const µBlock = {  // jshint ignore:line
 
     // Read-only
     systemSettings: {
-        compiledMagic: 47,  // Increase when compiled format changes
-        selfieMagic: 47,    // Increase when selfie format changes
+        compiledMagic: 50,  // Increase when compiled format changes
+        selfieMagic: 50,    // Increase when selfie format changes
     },
 
     // https://github.com/uBlockOrigin/uBlock-issues/issues/759#issuecomment-546654501
@@ -210,6 +210,9 @@ const µBlock = {  // jshint ignore:line
     selectedFilterLists: [],
     availableFilterLists: {},
     badLists: new Map(),
+
+    inMemoryFilters: [],
+    inMemoryFiltersCompiled: '',
 
     // https://github.com/uBlockOrigin/uBlock-issues/issues/974
     //   This can be used to defer filtering decision-making.

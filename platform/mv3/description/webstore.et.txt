@@ -1,0 +1,31 @@
+uBO Lite (uBOL) on MV3-l põhinev katsetusjärgus *lubadeta* sisutõkestaja.
+
+Tavaline reeglitekogum vastab uBlock Origini tavalisele filtritekogumile:
+
+- uBlock Origini sisseehitatud filtriteloendid
+- EasyList
+- EasyPrivacy
+Peter Lowe'i reklaamides ja jälitamisserverite loend
+- AdGuardi CNAME-varjatud jälgijad
+
+Reeglitekogumeid saate lisada valikute lehelt ehk avanenud paneelis klõpsake _Cogs_ ikooni.
+
+uBOL on läbinisti deklaratiivne ehk filtreerimiseks pole vaja kogu aeg töötavat uBOLi protsessi ja CSS/JS süstipõhist sisu filtreerib tegelikult brauser, mitte laiendus. Teisisõnu, uBOL ei kasuta sisu tõkestamisel protsessori/mälu ressursse. uBOLi teenuse toimimise protsessi on vaja _vaid_ juhul, kui kasutate hüpikpaneeli või valikute lehekülgi.
+
+uBOL ei nõua paigaldamise ajal teadatuntud andmete lugemise ja muutmise luba, seega võrreldes seda nõudva äpiga uBlock Origin või muu sisutõkestiga on uBOL-i piiratus üks selle funktsioonidest.
+
+Kuid uBOL võimaldab *selgesõnaliselt* anda täpsemaid lubasid teie valitud veebilehtedele, et neid saaks paremini filtreerida ilufiltrite ja skriptisüstidega.
+
+To grant extended permissions on a given site, open the popup panel and pick a higher filtering mode such as Optimal or Complete.
+
+The browser will then warn you about the effects of granting the additional permissions requested by the extension on the current site, and you will have to tell the browser whether you accept or decline the request.
+
+If you accept uBOL's request for additional permissions on the current site, it will be able to better filter content for the current site.
+
+You can set the default filtering mode from uBOL's options page. Kui määrate optimaalse või põhjaliku režiimi tavaliseks, peate andma uBOLile loa kõikide veebilehtede andmete lugemiseks ja muutmiseks.
+
+Keep in mind this is still a work in progress, with these end goals:
+
+- No broad host permissions at install time -- extended permissions are granted explicitly by the user on a per-site basis.
+
+- Entirely declarative for reliability and CPU/memory efficiency.

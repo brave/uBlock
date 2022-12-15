@@ -1019,6 +1019,12 @@ var rnd = function( a, b ){ return Math.round((b-a)*Math.random()+a); },
                 }
             }
 
+            if ( isRange && escaped === false && ']' === ch )
+            {
+                isRange = false;
+                chars.push(range[0], '-');
+            }
+
             if ( isRange )
             {
                 if ( chars.length )

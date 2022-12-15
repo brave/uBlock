@@ -784,6 +784,12 @@ const bootstrap = function(ev) {
     }
     const pickerDoc = ev.target.contentDocument;
 
+    pickerDoc.documentElement.style.setProperty(
+        'color-scheme',
+        'dark light',
+        'important'
+    );
+
     const style = pickerDoc.createElement('style');
     style.textContent = [
         'body {',
@@ -855,16 +861,16 @@ pickerRoot.style.cssText = [
     'border: 0',
     'border-radius: 0',
     'box-shadow: none',
-    'color-scheme: light',
+    'color-scheme: light dark',
     'display: block',
     'height: 100%',
     'left: 0',
     'margin: 0',
     'opacity: 1',
-    'position: fixed',
     'outline: 0',
     'padding: 0',
     'pointer-events:none;',
+    'position: fixed',
     'top: 0',
     'visibility: visible',
     'width: 100%',

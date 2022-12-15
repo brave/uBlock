@@ -216,11 +216,11 @@
     "description": "Label to be used to hide popup panel sections"
   },
   "popupTipGlobalRules": {
-    "message": "Yleiset säännöt: sarake säännöille, joita käytetään kaikilla sivustoilla.",
+    "message": "Yleiset säännöt: Sarake säännöille, joita käytetään kaikilla sivustoilla.",
     "description": "Tooltip when hovering the top-most cell of the global-rules column."
   },
   "popupTipLocalRules": {
-    "message": "Paikalliset säännöt: sarake säännöille, joita käytetään vain nykyisellä sivustolla.\nPaikalliset säännöt ohittavat yleiset säännöt.",
+    "message": "Paikalliset säännöt: Sarake säännöille, joita käytetään vain nykyisellä sivustolla.\nPaikalliset säännöt ohittavat yleiset säännöt.",
     "description": "Tooltip when hovering the top-most cell of the local-rules column."
   },
   "popupTipSaveRules": {
@@ -460,7 +460,7 @@
     "description": "A checkbox in the 'Filter lists' pane"
   },
   "3pListsOfBlockedHostsHeader": {
-    "message": "Luettelo estetyistä osoitteista",
+    "message": "Lista estetyistä osoitteista",
     "description": "English: Lists of blocked hosts"
   },
   "3pApplyChanges": {
@@ -1056,7 +1056,7 @@
     "description": "English: Reset to default settings..."
   },
   "aboutRestoreDataConfirm": {
-    "message": "Kaikki asetuksesi korvataan {{time}} varmuuskopioiduilla tiedoilla, jonka jälkeen uBlock₀ käynnistyy uudelleen.\n\nKorvataanko kaikki nykyiset asetukset varmuuskopion tiedoilla?",
+    "message": "Kaikki asetuksesi korvataan {{time}} varmuuskopioiduilla tiedoilla ja uBlock₀ käynnistyy uudelleen.\n\nKorvataanko kaikki nykyiset asetukset varmuuskopioduilla tiedoilla?",
     "description": "Message asking user to confirm restore"
   },
   "aboutRestoreDataError": {
@@ -1144,7 +1144,7 @@
     "description": "English: Close this window"
   },
   "docblockedDontWarn": {
-    "message": "Älä varoita minua tästä sivusta uudelleen",
+    "message": "Älä varoita tästä sivustosta uudelleen",
     "description": "Label for checkbox in document-blocked page"
   },
   "docblockedProceed": {
@@ -1176,7 +1176,7 @@
     "description": "tooltip"
   },
   "cloudNoData": {
-    "message": "...\n...",
+    "message": "…\n…",
     "description": ""
   },
   "cloudDeviceNamePrompt": {
@@ -1260,7 +1260,7 @@
     "description": "Message used in frame placeholders"
   },
   "dummy": {
-    "message": "Tämän täytyy olla viimeinen merkintä",
+    "message": "Tämän on oltava viimeinen merkintä",
     "description": "so we dont need to deal with comma for last entry"
   }
 }

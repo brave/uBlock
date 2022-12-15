@@ -2,7 +2,6 @@
 
 import datetime
 import json
-import jwt
 import os
 import re
 import requests
@@ -13,7 +12,6 @@ import tempfile
 import time
 import zipfile
 
-from distutils.version import StrictVersion
 from string import Template
 
 # - Download target (raw) uBlock0.chromium.zip from GitHub

@@ -113,16 +113,6 @@ const getElementBoundingClientRect = function(elem) {
 
 /******************************************************************************/
 
-const elementsFromPoint = function(parent, x, y) {
-    const elems = parent.elementsFromPoint(x, y);
-    if ( elems.length !== 0 && elems[0].shadowRoot !== null ) {
-        return elementsFromPoint(elems[0].shadowRoot, x, y);
-    }
-    return elems;
-};
-
-/******************************************************************************/
-
 const highlightElements = function(elems, force) {
     // To make mouse move handler more efficient
     if (
@@ -564,11 +554,11 @@ const filtersFrom = function(x, y) {
     //   Network filter candidates from all other elements found at [x,y].
     // https://www.reddit.com/r/uBlockOrigin/comments/qmjk36/
     //   Extract network candidates first.
-    const magicAttr = `${vAPI.sessionId}-clickblind`;
-    pickerRoot.setAttribute(magicAttr, '');
-    const elems = elementsFromPoint(document, x, y);
-    pickerRoot.removeAttribute(magicAttr);
     if ( typeof x === 'number' ) {
+        const magicAttr = `${vAPI.sessionId}-clickblind`;
+        pickerRoot.setAttribute(magicAttr, '');
+        const elems = document.elementsFromPoint(x, y);
+        pickerRoot.removeAttribute(magicAttr);
         for ( const elem of elems ) {
             netFilterFromElement(elem);
         }
@@ -580,14 +570,11 @@ const filtersFrom = function(x, y) {
     // https://github.com/gorhill/uBlock/issues/2519
     // https://github.com/uBlockOrigin/uBlock-issues/issues/17
     //   Prepend `body` if full selector is ambiguous.
-    for ( const elem of elems ) {
+    let elem = first;
+    while ( elem && elem !== document.body ) {
         cosmeticFilterFromElement(elem);
+        elem = elem.parentNode;
     }
-    //let elem = first;
-    //while ( elem && elem !== document.body ) {
-    //    cosmeticFilterFromElement(elem);
-    //    elem = elem.parentNode;
-    //}
     // The body tag is needed as anchor only when the immediate child
     // uses `nth-of-type`.
     let i = cosmeticFilterCandidates.length;
@@ -769,9 +756,17 @@ const filterToDOMInterface = (( ) => {
         try {
             const o = JSON.parse(raw);
             elems = vAPI.domFilterer.createProceduralFilter(o).exec();
-            style = o.action === undefined || o.action[0] !== 'style'
-                ? vAPI.hideStyle
-                : o.action[1];
+            switch ( o.action && o.action[0] || '' ) {
+            case '':
+            case 'remove':
+                style = vAPI.hideStyle;
+                break;
+            case 'style':
+                style = o.action[1];
+                break;
+            default:
+                break;
+            }
         } catch(ex) {
             return;
         }
@@ -822,6 +817,7 @@ const filterToDOMInterface = (( ) => {
         const rootElem = document.documentElement;
         for ( const { elem, style } of lastResultset ) {
             if ( elem === pickerRoot ) { continue; }
+            if ( style === undefined ) { continue; }
             if ( elem === rootElem && style === vAPI.hideStyle ) { continue; }
             let styleToken = vAPI.epickerStyleProxies.get(style);
             if ( styleToken === undefined ) {
@@ -1285,6 +1281,7 @@ const pickerCSSStyle = [
     'border: 0',
     'border-radius: 0',
     'box-shadow: none',
+    'color-scheme: light dark',
     'display: block',
     'filter: none',
     'height: 100vh',
@@ -1304,7 +1301,6 @@ const pickerCSSStyle = [
     'visibility: hidden',
     'width: 100%',
     'z-index: 2147483647',
-    'color-scheme: light dark',
     ''
 ];
 

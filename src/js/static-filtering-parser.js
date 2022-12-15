@@ -1343,7 +1343,6 @@ Parser.prototype.SelectorCompiler = class {
 
         this.reEatBackslashes = /\\([()])/g;
         this.reEscapeRegex = /[.*+?^${}()|[\]\\]/g;
-        this.regexToRawValue = new Map();
         // https://github.com/gorhill/uBlock/issues/2793
         this.normalizedOperators = new Map([
             [ '-abp-has', 'has' ],
@@ -1361,6 +1360,7 @@ Parser.prototype.SelectorCompiler = class {
             'has-text',
             'if',
             'if-not',
+            'matches-attr',
             'matches-css',
             'matches-css-after',
             'matches-css-before',
@@ -1378,6 +1378,8 @@ Parser.prototype.SelectorCompiler = class {
         ]);
         this.proceduralActionNames = new Set([
             'remove',
+            'remove-attr',
+            'remove-class',
             'style',
         ]);
         this.normalizedExtendedSyntaxOperators = new Map([
@@ -1547,8 +1549,9 @@ Parser.prototype.SelectorCompiler = class {
         }
         if ( data.type !== 'PseudoClassSelector' ) { return; }
 
-        // Post-analysis
-        // Mind https://w3c.github.io/csswg-drafts/selectors-4/#has-pseudo
+        // Post-analysis, mind:
+        // - https://w3c.github.io/csswg-drafts/selectors-4/#has-pseudo
+        // - https://w3c.github.io/csswg-drafts/selectors-4/#negation
         data.name = this.normalizedOperators.get(data.name) || data.name;
         if ( this.proceduralOperatorNames.has(data.name) ) {
             data.type = 'ProceduralSelector';
@@ -1558,20 +1561,45 @@ Parser.prototype.SelectorCompiler = class {
             data.type = 'Error';
             return;
         }
-        if ( this.maybeProceduralOperatorNames.has(data.name) ) {
-            if ( this.astHasType(args, 'ProceduralSelector') ) {
+        if ( this.maybeProceduralOperatorNames.has(data.name) === false ) {
+            return;
+        }
+        if ( this.astHasType(args, 'ActionSelector') ) {
+            data.type = 'Error';
+            return;
+        }
+        if ( this.astHasType(args, 'ProceduralSelector') ) {
+            data.type = 'ProceduralSelector';
+            return;
+        }
+        switch ( data.name ) {
+        case 'has':
+            if (
+                this.asProcedural ||
+                this.nativeCssHas !== true ||
+                this.astHasName(args, 'has')
+            ) {
                 data.type = 'ProceduralSelector';
-            } else if ( data.name === 'has' ) {
-                if (
-                    this.asProcedural ||
-                    this.nativeCssHas !== true ||
-                    this.astHasName(args, 'has')
-                ) {
-                    data.type = 'ProceduralSelector';
-                } else if ( this.astHasType(args, 'PseudoElementSelector') ) {
-                    data.type = 'Error';
-                }
+            } else if ( this.astHasType(args, 'PseudoElementSelector') ) {
+                data.type = 'Error';
             }
+            break;
+        case 'not': {
+            if ( this.astHasType(args, 'Combinator', 0) === false ) { break; }
+            const selectors = this.astSelectorsFromSelectorList(args);
+            if ( Array.isArray(selectors) === false || selectors.length === 0 ) {
+                data.type = 'Error';
+                break;
+            }
+            for ( const selector of selectors ) {
+                if ( this.astIsValidSelector(selector) ) { continue; }
+                data.type = 'Error';
+                break;
+            }
+            break;
+        }
+        default:
+            break;
         }
     }
 
@@ -1696,7 +1724,7 @@ Parser.prototype.SelectorCompiler = class {
         return out.join('');
     }
 
-    astCompile(parts) {
+    astCompile(parts, details = {}) {
         if ( Array.isArray(parts) === false ) { return; }
         if ( parts.length === 0 ) { return; }
         if ( parts[0].data.type !== 'SelectorList' ) { return; }
@@ -1707,6 +1735,8 @@ Parser.prototype.SelectorCompiler = class {
             const { data } = part;
             switch ( data.type ) {
             case 'ActionSelector': {
+                if ( details.noaction ) { return; }
+                if ( out.action !== undefined ) { return; }
                 if ( prelude.length !== 0 ) {
                     if ( tasks.length === 0 ) {
                         out.selector = prelude.join('');
@@ -1729,7 +1759,7 @@ Parser.prototype.SelectorCompiler = class {
             case 'TypeSelector':
                 prelude.push(this.astSerializePart(part));
                 break;
-            case 'ProceduralSelector':
+            case 'ProceduralSelector': {
                 if ( prelude.length !== 0 ) {
                     let spath = prelude.join('');
                     prelude.length = 0;
@@ -1744,6 +1774,7 @@ Parser.prototype.SelectorCompiler = class {
                 if ( args === undefined ) { return; }
                 tasks.push([ data.name, args ]);
                 break;
+            }
             case 'Selector':
                 if ( prelude.length !== 0 ) {
                     prelude.push(', ');
@@ -1768,11 +1799,15 @@ Parser.prototype.SelectorCompiler = class {
         return out;
     }
 
-    astHasType(parts, type) {
+    astHasType(parts, type, depth = 0x7FFFFFFF) {
         if ( Array.isArray(parts) === false ) { return false; }
         for ( const part of parts ) {
             if ( part.data.type === type ) { return true; }
-            if ( Array.isArray(part.args) && this.astHasType(part.args, type) ) {
+            if (
+                Array.isArray(part.args) &&
+                depth !== 0 &&
+                this.astHasType(part.args, type, depth-1)
+            ) {
                 return true;
             }
         }
@@ -1788,6 +1823,45 @@ Parser.prototype.SelectorCompiler = class {
             }
         }
         return false;
+    }
+
+    astSelectorsFromSelectorList(args) {
+        if ( args.length < 3 ) { return; }
+        if ( args[0].data instanceof Object === false ) { return; }
+        if ( args[0].data.type !== 'SelectorList' ) { return; }
+        if ( args[1].data instanceof Object === false ) { return; }
+        if ( args[1].data.type !== 'Selector' ) { return; }
+        const out = [];
+        let beg = 1, end = 0, i = 2;
+        for (;;) {
+            if ( i < args.length ) {
+                const type = args[i].data instanceof Object && args[i].data.type;
+                if ( type === 'Selector' ) {
+                    end = i;
+                }
+            } else {
+                end = args.length;
+            }
+            if ( end !== 0 ) {
+                const components = args.slice(beg+1, end);
+                if ( components.length === 0 ) { return; }
+                out.push(components);
+                if ( end === args.length ) { break; }
+                beg = end; end = 0;
+            }
+            if ( i === args.length ) { break; }
+            i += 1;
+        }
+        return out;
+    }
+
+    astIsValidSelector(components) {
+        const len = components.length;
+        if ( len === 0 ) { return false; }
+        if ( components[0].data.type === 'Combinator' ) { return false; }
+        if ( len === 1 ) { return true; }
+        if ( components[len-1].data.type === 'Combinator' ) { return false; }
+        return true;
     }
 
     translateAdguardCSSInjectionFilter(suffix) {
@@ -1815,23 +1889,20 @@ Parser.prototype.SelectorCompiler = class {
     compileArgumentAst(operator, parts) {
         switch ( operator ) {
         case 'has': {
-            let r = this.astCompile(parts);
+            let r = this.astCompile(parts, { noaction: true });
             if ( typeof r === 'string' ) {
                 r = { selector: r.replace(/^\s*:scope\s*/, ' ') };
             }
             return r;
         }
         case 'not': {
-            return this.astCompile(parts);
+            return this.astCompile(parts, { noaction: true });
         }
         default:
             break;
         }
-
-        let arg;
-        if ( Array.isArray(parts) && parts.length !== 0 ) {
-            arg = this.astSerialize(parts, false);
-        }
+        if ( Array.isArray(parts) === false || parts.length === 0 ) { return; }
+        const arg = this.astSerialize(parts, false);
         if ( arg === undefined ) { return; }
         switch ( operator ) {
         case 'has-text':
@@ -1840,6 +1911,8 @@ Parser.prototype.SelectorCompiler = class {
             return this.compileSelector(arg);
         case 'if-not':
             return this.compileSelector(arg);
+        case 'matches-attr':
+            return this.compileMatchAttrArgument(arg);
         case 'matches-css':
             return this.compileCSSDeclaration(arg);
         case 'matches-css-after':
@@ -1856,6 +1929,10 @@ Parser.prototype.SelectorCompiler = class {
             return this.compileNoArgument(arg);
         case 'remove':
             return this.compileNoArgument(arg);
+        case 'remove-attr':
+            return this.compileText(arg);
+        case 'remove-class':
+            return this.compileText(arg);
         case 'style':
             return this.compileStyleProperties(arg);
         case 'upward':
@@ -1879,11 +1956,62 @@ Parser.prototype.SelectorCompiler = class {
         return false;
     }
 
-    extractArg(s) {
-        if ( /^(['"]).+\1$/.test(s) ) {
-            s = s.slice(1, -1);
+    unquoteString(s) {
+        const end = s.length;
+        if ( end === 0 ) {
+            return { s: '', end };
         }
-        return s.replace(/\\(['"])/g, '$1');
+        if ( /^['"]/.test(s) === false ) {
+            return { s, i: end };
+        }
+        const quote = s.charCodeAt(0);
+        const out = [];
+        let i = 1, c = 0;
+        for (;;) {
+            c = s.charCodeAt(i);
+            if ( c === quote ) {
+                i += 1;
+                break;
+            }
+            if ( c === 0x5C /* '\\' */ ) {
+                i += 1;
+                if ( i === end ) { break; }
+                c = s.charCodeAt(i);
+                if ( c !== 0x5C && c !== quote ) {
+                    out.push(0x5C);
+                }
+            }
+            out.push(c);
+            i += 1;
+            if ( i === end ) { break; }
+        }
+        return { s: String.fromCharCode(...out), i };
+    }
+
+    compileMatchAttrArgument(s) {
+        if ( s === '' ) { return; }
+        let attr = '', value = '';
+        let r = this.unquoteString(s);
+        if ( r.i === s.length ) {
+            const pos = r.s.indexOf('=');
+            if ( pos === -1 ) {
+                attr = r.s;
+            } else {
+                attr = r.s.slice(0, pos);
+                value = r.s.slice(pos+1);
+            }
+        } else {
+            attr = r.s;
+            if ( s.charCodeAt(r.i) !== 0x3D ) { return; }
+            value = s.slice(r.i+1);
+        }
+        if ( attr === '' ) { return; }
+        if ( value.length !== 0 ) {
+            r = this.unquoteString(value);
+            if ( r.i !== value.length ) { return; }
+            value = r.s;
+        }
+        return { attr, value };
     }
 
     // When dealing with literal text, we must first eat _some_
@@ -1891,21 +2019,9 @@ Parser.prototype.SelectorCompiler = class {
     // Remove potentially present quotes before processing.
     compileText(s) {
         if ( s === '' ) { return; }
-        s = this.extractArg(s);
-        const match = this.reParseRegexLiteral.exec(s);
-        let regexDetails;
-        if ( match !== null ) {
-            regexDetails = match[1];
-            if ( this.isBadRegex(regexDetails) ) { return; }
-            if ( match[2] ) {
-                regexDetails = [ regexDetails, match[2] ];
-            }
-        } else {
-            regexDetails = s.replace(this.reEatBackslashes, '$1')
-                            .replace(this.reEscapeRegex, '\\$&');
-            this.regexToRawValue.set(regexDetails, s);
-        }
-        return regexDetails;
+        const r = this.unquoteString(s);
+        if ( r.i !== s.length ) { return; }
+        return r.s;
     }
 
     compileCSSDeclaration(s) {
@@ -1930,7 +2046,6 @@ Parser.prototype.SelectorCompiler = class {
             }
         } else {
             regexDetails = '^' + value.replace(this.reEscapeRegex, '\\$&') + '$';
-            this.regexToRawValue.set(regexDetails, value);
         }
         return { name, pseudo, value: regexDetails };
     }
@@ -1995,13 +2110,14 @@ Parser.prototype.SelectorCompiler = class {
     }
 
     compileXpathExpression(s) {
-        s = this.extractArg(s);
+        const r = this.unquoteString(s);
+        if ( r.i !== s.length ) { return; }
         try {
-            self.document.createExpression(s, null);
+            globalThis.document.createExpression(r.s, null);
         } catch (e) {
             return;
         }
-        return s;
+        return r.s;
     }
 };
 
@@ -2016,14 +2132,17 @@ Parser.prototype.proceduralOperatorTokens = new Map([
     [ 'has-text', 0b01 ],
     [ 'if', 0b00 ],
     [ 'if-not', 0b00 ],
+    [ 'matches-attr', 0b11 ],
     [ 'matches-css', 0b11 ],
     [ 'matches-media', 0b11 ],
     [ 'matches-path', 0b11 ],
     [ 'min-text-length', 0b01 ],
     [ 'not', 0b01 ],
     [ 'nth-ancestor', 0b00 ],
-    [ 'others', 0b01 ],
+    [ 'others', 0b11 ],
     [ 'remove', 0b11 ],
+    [ 'remove-attr', 0b11 ],
+    [ 'remove-class', 0b11 ],
     [ 'style', 0b11 ],
     [ 'upward', 0b01 ],
     [ 'watch-attr', 0b11 ],
@@ -3009,11 +3128,11 @@ Parser.utils = Parser.prototype.utils = (( ) => {
 
     class regex {
         static firstCharCodeClass(s) {
-            return /^[\x01%0-9A-Za-z]/.test(s) ? 1 : 0;
+            return /^[\x01\x03%0-9A-Za-z]/.test(s) ? 1 : 0;
         }
 
         static lastCharCodeClass(s) {
-            return /[\x01%0-9A-Za-z]$/.test(s) ? 1 : 0;
+            return /[\x01\x03%0-9A-Za-z]$/.test(s) ? 1 : 0;
         }
 
         static tokenizableStrFromNode(node) {
@@ -3027,6 +3146,7 @@ Parser.utils = Parser.prototype.utils = (( ) => {
             }
             case 2: /* T_ALTERNATION, 'Alternation' */
             case 8: /* T_CHARGROUP, 'CharacterGroup' */ {
+                if ( node.flags.NegativeMatch ) { return '\x01'; }
                 let firstChar = 0;
                 let lastChar = 0;
                 for ( let i = 0; i < node.val.length; i++ ) {
@@ -3042,21 +3162,33 @@ Parser.utils = Parser.prototype.utils = (( ) => {
                 return String.fromCharCode(firstChar, lastChar);
             }
             case 4: /* T_GROUP, 'Group' */ {
-                if ( node.flags.NegativeLookAhead === 1 ) { return '\x01'; }
-                if ( node.flags.NegativeLookBehind === 1 ) { return '\x01'; }
+                if (
+                    node.flags.NegativeLookAhead === 1 ||
+                    node.flags.NegativeLookBehind === 1
+                ) {
+                    return '';
+                }
                 return this.tokenizableStrFromNode(node.val);
             }
             case 16: /* T_QUANTIFIER, 'Quantifier' */ {
+                if ( node.flags.max === 0 ) { return ''; }
                 const s = this.tokenizableStrFromNode(node.val);
                 const first = this.firstCharCodeClass(s);
                 const last = this.lastCharCodeClass(s);
-                if ( node.flags.min === 0 && first === 0 && last === 0 ) {
-                    return '';
+                if ( node.flags.min !== 0 ) {
+                    return String.fromCharCode(first, last);
                 }
-                return String.fromCharCode(first, last);
+                return String.fromCharCode(first+2, last+2);
             }
             case 64: /* T_HEXCHAR, 'HexChar' */ {
-                return String.fromCharCode(parseInt(node.val.slice(1), 16));
+                if (
+                    node.flags.Code === '01' ||
+                    node.flags.Code === '02' ||
+                    node.flags.Code === '03'
+                ) {
+                    return '\x00';
+                }
+                return node.flags.Char;
             }
             case 128: /* T_SPECIAL, 'Special' */ {
                 const flags = node.flags;
@@ -3142,13 +3274,33 @@ Parser.utils = Parser.prototype.utils = (( ) => {
 
         static toTokenizableStr(reStr) {
             if ( regexAnalyzer === null ) { return ''; }
+            let s = '';
             try {
-                return this.tokenizableStrFromNode(
+                s = this.tokenizableStrFromNode(
                     regexAnalyzer(reStr, false).tree()
                 );
             } catch(ex) {
             }
-            return '';
+            // Process optional sequences
+            const reOptional = /[\x02\x03]+/;
+            for (;;) {
+                const match = reOptional.exec(s);
+                if ( match === null ) { break; }
+                const left = s.slice(0, match.index);
+                const middle = match[0];
+                const right = s.slice(match.index + middle.length);
+                s = left;
+                s += this.firstCharCodeClass(right) === 1 ||
+                        this.firstCharCodeClass(middle) === 1
+                    ? '\x01'
+                    : '\x00';
+                s += this.lastCharCodeClass(left) === 1 ||
+                        this.lastCharCodeClass(middle) === 1
+                    ? '\x01'
+                    : '\x00';
+                s += right;
+            }
+            return s;
         }
     }
 
@@ -3206,7 +3358,7 @@ Parser.utils = Parser.prototype.utils = (( ) => {
                 if ( match === null ) { break; }
 
                 switch ( match[1] ) {
-                case 'if':
+                case 'if': {
                     let expr = match[2].trim();
                     const target = expr.charCodeAt(0) === 0x21 /* '!' */;
                     if ( target ) { expr = expr.slice(1); }
@@ -3220,7 +3372,8 @@ Parser.utils = Parser.prototype.utils = (( ) => {
                     }
                     stack.push(startDiscard);
                     break;
-                case 'endif':
+                }
+                case 'endif': {
                     stack.pop();
                     const stopDiscard = shouldDiscard() === false;
                     if ( discard && stopDiscard ) {
@@ -3228,6 +3381,7 @@ Parser.utils = Parser.prototype.utils = (( ) => {
                         discard = false;
                     }
                     break;
+                }
                 default:
                     break;
                 }

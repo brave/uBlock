@@ -27,10 +27,7 @@ import logger from './logger.js';
 import µb from './background.js';
 import { sessionFirewall } from './filtering-engines.js';
 
-import {
-    StaticExtFilteringHostnameDB,
-    StaticExtFilteringSessionDB,
-} from './static-ext-filtering-db.js';
+import { StaticExtFilteringHostnameDB } from './static-ext-filtering-db.js';
 
 /******************************************************************************/
 
@@ -38,7 +35,6 @@ const pselectors = new Map();
 const duplicates = new Set();
 
 const filterDB = new StaticExtFilteringHostnameDB(2);
-const sessionFilterDB = new StaticExtFilteringSessionDB();
 
 let acceptedCount = 0;
 let discardedCount = 0;
@@ -56,20 +52,33 @@ const htmlFilteringEngine = {
     },
 };
 
-const PSelectorHasTextTask = class {
+const regexFromString = (s, exact = false) => {
+    if ( s === '' ) { return /^/; }
+    const match = /^\/(.+)\/([i]?)$/.exec(s);
+    if ( match !== null ) {
+        return new RegExp(match[1], match[2] || undefined);
+    }
+    const reStr = s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(exact ? `^${reStr}$` : reStr, 'i');
+};
+
+class PSelectorVoidTask {
     constructor(task) {
-        let arg0 = task[1], arg1;
-        if ( Array.isArray(task[1]) ) {
-            arg1 = arg0[1]; arg0 = arg0[0];
-        }
-        this.needle = new RegExp(arg0, arg1);
+        console.info(`[uBO] HTML filtering: :${task[0]}() operator is not supported`);
+    }
+    transpose() {
+    }
+}
+class PSelectorHasTextTask {
+    constructor(task) {
+        this.needle = regexFromString(task[1]);
     }
     transpose(node, output) {
         if ( this.needle.test(node.textContent) ) {
             output.push(node);
         }
     }
-};
+}
 
 const PSelectorIfTask = class {
     constructor(task) {
@@ -80,17 +89,14 @@ const PSelectorIfTask = class {
             output.push(node);
         }
     }
-    get invalid() {
-        return this.pselector.invalid;
-    }
 };
 PSelectorIfTask.prototype.target = true;
 
-const PSelectorIfNotTask = class extends PSelectorIfTask {
-};
+class PSelectorIfNotTask extends PSelectorIfTask {
+}
 PSelectorIfNotTask.prototype.target = false;
 
-const PSelectorMinTextLengthTask = class {
+class PSelectorMinTextLengthTask {
     constructor(task) {
         this.min = task[1];
     }
@@ -99,9 +105,9 @@ const PSelectorMinTextLengthTask = class {
             output.push(node);
         }
     }
-};
+}
 
-const PSelectorSpathTask = class {
+class PSelectorSpathTask {
     constructor(task) {
         this.spath = task[1];
         this.nth = /^(?:\s*[+~]|:)/.test(this.spath);
@@ -132,9 +138,9 @@ const PSelectorSpathTask = class {
             `:scope > :nth-child(${pos})${selector}`
         );
     }
-};
+}
 
-const PSelectorUpwardTask = class {
+class PSelectorUpwardTask {
     constructor(task) {
         const arg = task[1];
         if ( typeof arg === 'number' ) {
@@ -160,11 +166,11 @@ const PSelectorUpwardTask = class {
         }
         output.push(node);
     }
-};
+}
 PSelectorUpwardTask.prototype.i = 0;
 PSelectorUpwardTask.prototype.s = '';
 
-const PSelectorXpathTask = class {
+class PSelectorXpathTask {
     constructor(task) {
         this.xpe = task[1];
     }
@@ -184,25 +190,17 @@ const PSelectorXpathTask = class {
             }
         }
     }
-};
+}
 
-const PSelector = class {
+class PSelector {
     constructor(o) {
         this.raw = o.raw;
         this.selector = o.selector;
         this.tasks = [];
         if ( !o.tasks ) { return; }
         for ( const task of o.tasks ) {
-            const ctor = this.operatorToTaskMap.get(task[0]);
-            if ( ctor === undefined ) {
-                this.invalid = true;
-                break;
-            }
+            const ctor = this.operatorToTaskMap.get(task[0]) || PSelectorVoidTask;
             const pselector = new ctor(task);
-            if ( pselector instanceof PSelectorIfTask && pselector.invalid ) {
-                this.invalid = true;
-                break;
-            }
             this.tasks.push(pselector);
         }
     }
@@ -215,7 +213,6 @@ const PSelector = class {
         return Array.from(root.querySelectorAll(this.selector));
     }
     exec(input) {
-        if ( this.invalid ) { return []; }
         let nodes = this.prime(input);
         for ( const task of this.tasks ) {
             if ( nodes.length === 0 ) { break; }
@@ -228,7 +225,6 @@ const PSelector = class {
         return nodes;
     }
     test(input) {
-        if ( this.invalid ) { return false; }
         const nodes = this.prime(input);
         for ( const node of nodes ) {
             let output = [ node ];
@@ -244,7 +240,7 @@ const PSelector = class {
         }
         return false;
     }
-};
+}
 PSelector.prototype.operatorToTaskMap = new Map([
     [ 'has', PSelectorIfTask ],
     [ 'has-text', PSelectorHasTextTask ],
@@ -257,9 +253,8 @@ PSelector.prototype.operatorToTaskMap = new Map([
     [ 'upward', PSelectorUpwardTask ],
     [ 'xpath', PSelectorXpathTask ],
 ]);
-PSelector.prototype.invalid = false;
 
-const logOne = function(details, exception, selector) {
+function logOne(details, exception, selector) {
     µb.filteringContext
         .duplicate()
         .fromTabId(details.tabId)
@@ -272,9 +267,9 @@ const logOne = function(details, exception, selector) {
             raw: `${exception === 0 ? '##' : '#@#'}^${selector}`
         })
         .toLogger();
-};
+}
 
-const applyProceduralSelector = function(details, selector) {
+function applyProceduralSelector(details, selector) {
     let pselector = pselectors.get(selector);
     if ( pselector === undefined ) {
         pselector = new PSelector(JSON.parse(selector));
@@ -290,9 +285,9 @@ const applyProceduralSelector = function(details, selector) {
         logOne(details, 0, pselector.raw);
     }
     return modified;
-};
+}
 
-const applyCSSSelector = function(details, selector) {
+function applyCSSSelector(details, selector) {
     const nodes = docRegister.querySelectorAll(selector);
     let modified = false;
     for ( const node of nodes ) {
@@ -303,7 +298,7 @@ const applyCSSSelector = function(details, selector) {
         logOne(details, 0, selector);
     }
     return modified;
-};
+}
 
 htmlFilteringEngine.reset = function() {
     filterDB.clear();
@@ -332,6 +327,14 @@ htmlFilteringEngine.compile = function(parser, writer) {
 
     writer.select('HTML_FILTERS');
 
+    // Only exception filters are allowed to be global.
+    if ( parser.hasOptions() === false ) {
+        if ( exception ) {
+            writer.push([ 64, '', 1, compiled ]);
+        }
+        return;
+    }
+
     // TODO: Mind negated hostnames, they are currently discarded.
 
     for ( const { hn, not, bad } of parser.extOptions() ) {
@@ -346,13 +349,6 @@ htmlFilteringEngine.compile = function(parser, writer) {
         }
         writer.push([ 64, hn, kind, compiled ]);
     }
-};
-
-htmlFilteringEngine.compileTemporary = function(parser) {
-    return {
-        session: sessionFilterDB,
-        selector: parser.result.compiled,
-    };
 };
 
 htmlFilteringEngine.fromCompiledContent = function(reader) {
@@ -374,10 +370,6 @@ htmlFilteringEngine.fromCompiledContent = function(reader) {
     }
 };
 
-htmlFilteringEngine.getSession = function() {
-    return sessionFilterDB;
-};
-
 htmlFilteringEngine.retrieve = function(details) {
     const hostname = details.hostname;
 
@@ -385,9 +377,6 @@ htmlFilteringEngine.retrieve = function(details) {
     const procedurals = new Set();
     const exceptions = new Set();
 
-    if ( sessionFilterDB.isNotEmpty ) {
-        sessionFilterDB.retrieve([ null, exceptions ]);
-    }
     filterDB.retrieve(
         hostname,
         [ plains, exceptions, procedurals, exceptions ]
