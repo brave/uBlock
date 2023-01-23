@@ -36,12 +36,12 @@ const nonVisualElements = {
 
 const regexFromString = (s, exact = false) => {
     if ( s === '' ) { return /^/; }
-    const match = /^\/(.+)\/([i]?)$/.exec(s);
+    const match = /^\/(.+)\/([imu]*)$/.exec(s);
     if ( match !== null ) {
         return new RegExp(match[1], match[2] || undefined);
     }
     const reStr = s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    return new RegExp(exact ? `^${reStr}$` : reStr, 'i');
+    return new RegExp(exact ? `^${reStr}$` : reStr);
 };
 
 // 'P' stands for 'Procedural'

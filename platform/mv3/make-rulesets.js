@@ -30,8 +30,8 @@ import process from 'process';
 import { createHash } from 'crypto';
 import redirectResourcesMap from './js/redirect-resources.js';
 import { dnrRulesetFromRawLists } from './js/static-dnr-filtering.js';
-import { StaticFilteringParser } from './js/static-filtering-parser.js';
 import { fnameFromFileId } from './js/utils.js';
+import * as sfp from './js/static-filtering-parser.js';
 
 /******************************************************************************/
 
@@ -202,7 +202,7 @@ async function fetchAsset(assetDetails) {
             );
         }
         parts = await Promise.all(newParts);
-        parts = StaticFilteringParser.utils.preparser.expandIncludes(parts, env);
+        parts = sfp.utils.preparser.expandIncludes(parts, env);
     }
     const text = parts.join('\n');
 
@@ -1361,14 +1361,6 @@ async function main() {
     }
 
     // Handpicked rulesets from abroad
-    await rulesetFromURLs({
-        id: 'cname-trackers',
-        name: 'AdGuard CNAME-cloaked trackers',
-        enabled: true,
-        urls: [ 'https://raw.githubusercontent.com/AdguardTeam/cname-trackers/master/combined_disguised_trackers.txt' ],
-        homeURL: 'https://github.com/AdguardTeam/cname-trackers#cname-cloaked-trackers',
-    });
-
     await rulesetFromURLs({
         id: 'stevenblack-hosts',
         name: 'Steven Black\'s hosts file',

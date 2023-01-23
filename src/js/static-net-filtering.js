@@ -29,8 +29,8 @@ import { queueTask, dropTask } from './tasks.js';
 import BidiTrieContainer from './biditrie.js';
 import HNTrieContainer from './hntrie.js';
 import { sparseBase64 } from './base64-custom.js';
-import { StaticFilteringParser } from './static-filtering-parser.js';
 import { CompiledListReader } from './static-filtering-io.js';
+import * as sfp from './static-filtering-parser.js';
 
 import {
     domainFromHostname,
@@ -178,6 +178,24 @@ const typeValueToDNRTypeName = [
     'other',
 ];
 
+const MODIFIER_TYPE_REDIRECT = 1;
+const MODIFIER_TYPE_REDIRECTRULE = 2;
+const MODIFIER_TYPE_REMOVEPARAM = 3;
+const MODIFIER_TYPE_CSP = 4;
+
+const modifierTypeFromName = new Map([
+    [ 'redirect', MODIFIER_TYPE_REDIRECT ],
+    [ 'redirect-rule', MODIFIER_TYPE_REDIRECTRULE ],
+    [ 'removeparam', MODIFIER_TYPE_REMOVEPARAM ],
+    [ 'csp', MODIFIER_TYPE_CSP ],
+]);
+
+const modifierNameFromType = new Map([
+    [ MODIFIER_TYPE_REDIRECT, 'redirect' ],
+    [ MODIFIER_TYPE_REDIRECTRULE, 'redirect-rule' ],
+    [ MODIFIER_TYPE_REMOVEPARAM, 'removeparam' ],
+    [ MODIFIER_TYPE_CSP, 'csp' ],
+]);
 
 //const typeValueFromCatBits = catBits => (catBits >>> TypeBitsOffset) & 0b11111;
 
@@ -199,6 +217,7 @@ const   INVALID_TOKEN_HASH = 0xFFFFFFFF;
 // See the following as short-lived registers, used during evaluation. They are
 // valid until the next evaluation.
 
+let $requestMethodBit = 0;
 let $requestTypeValue = 0;
 let $requestURL = '';
 let $requestURLRaw = '';
@@ -219,6 +238,22 @@ const $docEntity = {
             const pos = $docDomain.indexOf('.');
             this.entity = pos !== -1
                 ? `${$docHostname.slice(0, pos - $docDomain.length)}.*`
+                : '';
+        }
+        return this.entity;
+    },
+};
+
+const $requestEntity = {
+    entity: '',
+    last: '',
+    compute() {
+        if ( this.last !== $requestHostname ) {
+            this.last = $requestHostname;
+            const requestDomain = domainFromHostname($requestHostname);
+            const pos = requestDomain.indexOf('.');
+            this.entity = pos !== -1
+                ? `${$requestHostname.slice(0, pos - requestDomain.length)}.*`
                 : '';
         }
         return this.entity;
@@ -301,12 +336,14 @@ class LogData {
         const regex = [];
         const options = [];
         const denyallow = [];
-        const domains = [];
+        const fromDomains = [];
+        const toDomains = [];
         const logData = {
             pattern,
             regex,
             denyallow,
-            domains,
+            fromDomains,
+            toDomains,
             options,
             isRegex: false,
         };
@@ -334,8 +371,11 @@ class LogData {
         if ( denyallow.length !== 0 ) {
             options.push(`denyallow=${denyallow.join('|')}`);
         }
-        if ( domains.length !== 0 ) {
-            options.push(`domain=${domains.join('|')}`);
+        if ( fromDomains.length !== 0 ) {
+            options.push(`from=${fromDomains.join('|')}`);
+        }
+        if ( toDomains.length !== 0 ) {
+            options.push(`to=${toDomains.join('|')}`);
         }
         if ( options.length !== 0 ) {
             raw += '$' + options.join(',');
@@ -376,14 +416,14 @@ const roundToFilterDataPageSize =
 
 let filterData = new Int32Array(FILTER_DATA_PAGE_SIZE * 5);
 let filterDataWritePtr = 2;
-function filterDataGrow(len) {
+const filterDataGrow = len => {
     if ( len <= filterData.length ) { return; }
     const newLen = roundToFilterDataPageSize(len);
     const newBuf = new Int32Array(newLen);
     newBuf.set(filterData);
     filterData = newBuf;
-}
-function filterDataShrink() {
+};
+const filterDataShrink = ( ) => {
     const newLen = Math.max(
         roundToFilterDataPageSize(filterDataWritePtr),
         FILTER_DATA_PAGE_SIZE
@@ -392,37 +432,37 @@ function filterDataShrink() {
     const newBuf = new Int32Array(newLen);
     newBuf.set(filterData.subarray(0, filterDataWritePtr));
     filterData = newBuf;
-}
-function filterDataAlloc(...args) {
+};
+const filterDataAlloc = (...args) => {
     const len = args.length;
     const idata = filterDataAllocLen(len);
     for ( let i = 0; i < len; i++ ) {
         filterData[idata+i] = args[i];
     }
     return idata;
-}
-function filterDataAllocLen(len) {
+};
+const filterDataAllocLen = len => {
     const idata = filterDataWritePtr;
     filterDataWritePtr += len;
     if ( filterDataWritePtr > filterData.length ) {
         filterDataGrow(filterDataWritePtr);
     }
     return idata;
-}
+};
 const filterSequenceAdd = (a, b) => {
     const iseq = filterDataAllocLen(2);
     filterData[iseq+0] = a;
     filterData[iseq+1] = b;
     return iseq;
 };
-function filterDataReset() {
+const filterDataReset = ( ) => {
     filterData.fill(0);
     filterDataWritePtr = 2;
-}
-function filterDataToSelfie() {
+};
+const filterDataToSelfie = ( ) => {
     return JSON.stringify(Array.from(filterData.subarray(0, filterDataWritePtr)));
-}
-function filterDataFromSelfie(selfie) {
+};
+const filterDataFromSelfie = selfie => {
     if ( typeof selfie !== 'string' || selfie === '' ) { return false; }
     const data = JSON.parse(selfie);
     if ( Array.isArray(data) === false ) { return false; }
@@ -431,21 +471,21 @@ function filterDataFromSelfie(selfie) {
     filterData.set(data);
     filterDataShrink();
     return true;
-}
+};
 
 const filterRefs = [ null ];
 let filterRefsWritePtr = 1;
-const filterRefAdd = function(ref) {
+const filterRefAdd = ref => {
     const i = filterRefsWritePtr;
     filterRefs[i] = ref;
     filterRefsWritePtr += 1;
     return i;
 };
-function filterRefsReset() {
+const filterRefsReset = ( ) => {
     filterRefs.fill(null);
     filterRefsWritePtr = 1;
-}
-function filterRefsToSelfie() {
+};
+const filterRefsToSelfie = ( ) => {
     const refs = [];
     for ( let i = 0; i < filterRefsWritePtr; i++ ) {
         const v = filterRefs[i];
@@ -471,8 +511,8 @@ function filterRefsToSelfie() {
         refs.push({ t: 3, v: out });
     }
     return JSON.stringify(refs);
-}
-function filterRefsFromSelfie(selfie) {
+};
+const filterRefsFromSelfie = selfie => {
     if ( typeof selfie !== 'string' || selfie === '' ) { return false; }
     const refs = JSON.parse(selfie);
     if ( Array.isArray(refs) === false ) { return false; }
@@ -493,7 +533,7 @@ function filterRefsFromSelfie(selfie) {
     }
     filterRefsWritePtr = refs.length;
     return true;
-}
+};
 
 /******************************************************************************/
 
@@ -502,7 +542,7 @@ const destHNTrieContainer = new HNTrieContainer();
 
 /******************************************************************************/
 
-const bidiTrieMatchExtra = function(l, r, ix) {
+const bidiTrieMatchExtra = (l, r, ix) => {
     for (;;) {
         $patternMatchLeft = l;
         $patternMatchRight = r;
@@ -516,11 +556,11 @@ const bidiTrieMatchExtra = function(l, r, ix) {
 
 const bidiTrie = new BidiTrieContainer(bidiTrieMatchExtra);
 
-const bidiTriePrime = function() {
+const bidiTriePrime = ( ) => {
     bidiTrie.reset(keyvalStore.getItem('SNFE.bidiTrie'));
 };
 
-const bidiTrieOptimize = function(shrink = false) {
+const bidiTrieOptimize = (shrink = false) => {
     keyvalStore.setItem('SNFE.bidiTrie', bidiTrie.optimize(shrink));
 };
 
@@ -537,7 +577,7 @@ const filterClasses = [];
 const filterArgsToUnit = new Map();
 let   filterClassIdGenerator = 0;
 
-const registerFilterClass = function(fc) {
+const registerFilterClass = fc => {
     const fid = filterClassIdGenerator++;
     fc.fid = fid;
     fc.fidstr = `${fid}`;
@@ -572,9 +612,9 @@ const filterHasOriginHit = idata => {
 const filterGetDomainOpt = (idata, out) => {
     const fc = filterClasses[filterData[idata+0]];
     if ( fc.getDomainOpt === undefined ) { return; }
-    const domainOpt = fc.getDomainOpt(idata);
-    if ( out === undefined ) { return domainOpt; }
-    out.push(domainOpt);
+    const fromOpt = fc.getDomainOpt(idata);
+    if ( out === undefined ) { return fromOpt; }
+    out.push(fromOpt);
 };
 
 const filterGetRegexPattern = (idata, out) => {
@@ -679,7 +719,7 @@ const dnrAddRuleError = (rule, msg) => {
                 FilterBucketIf
                     FilterBucketIfOriginHits
                     FilterBucketIfRegexHits
-            FilterOriginHitAny
+            FilterDomainHitAny
 
     A single filter can be made of many parts, in which case FilterCompositeAll
     is used to hold all the parts, and where all the parts must be a match in
@@ -689,7 +729,7 @@ const dnrAddRuleError = (rule, msg) => {
 
 /******************************************************************************/
 
-const FilterPatternAny = class {
+class FilterPatternAny {
     static match() {
         return true;
     }
@@ -709,13 +749,13 @@ const FilterPatternAny = class {
         details.pattern.push('*');
         details.regex.push('^');
     }
-};
+}
 
 registerFilterClass(FilterPatternAny);
 
 /******************************************************************************/
 
-const FilterImportant = class {
+class FilterImportant {
     static match() {
         return ($isBlockImportant = true);
     }
@@ -738,13 +778,13 @@ const FilterImportant = class {
     static logData(idata, details) {
         details.options.unshift('important');
     }
-};
+}
 
 registerFilterClass(FilterImportant);
 
 /******************************************************************************/
 
-const FilterPatternPlain = class {
+class FilterPatternPlain {
     static isBidiTrieable(idata) {
         return filterData[idata+2] <= 255;
     }
@@ -827,14 +867,14 @@ const FilterPatternPlain = class {
         );
         return `${pattern} ${filterData[idata+3]}`;
     }
-};
+}
 
 FilterPatternPlain.isPatternPlain = true;
 
 registerFilterClass(FilterPatternPlain);
 
 
-const FilterPatternPlain1 = class extends FilterPatternPlain {
+class FilterPatternPlain1 extends FilterPatternPlain {
     static match(idata) {
         const left = $tokenBeg - 1;
         const n = filterData[idata+2];
@@ -852,12 +892,12 @@ const FilterPatternPlain1 = class extends FilterPatternPlain {
         $patternMatchRight = left + n;
         return true;
     }
-};
+}
 
 registerFilterClass(FilterPatternPlain1);
 
 
-const FilterPatternPlainX = class extends FilterPatternPlain {
+class FilterPatternPlainX extends FilterPatternPlain {
     static match(idata) {
         const left = $tokenBeg - filterData[idata+3];
         const n = filterData[idata+2];
@@ -875,13 +915,13 @@ const FilterPatternPlainX = class extends FilterPatternPlain {
         $patternMatchRight = left + n;
         return true;
     }
-};
+}
 
 registerFilterClass(FilterPatternPlainX);
 
 /******************************************************************************/
 
-const FilterPatternGeneric = class {
+class FilterPatternGeneric {
     static hasRegexPattern() {
         return true;
     }
@@ -975,7 +1015,7 @@ const FilterPatternGeneric = class {
             filterData[idata+2]
         );
     }
-};
+}
 
 FilterPatternGeneric.isSlow = true;
 
@@ -983,7 +1023,7 @@ registerFilterClass(FilterPatternGeneric);
 
 /******************************************************************************/
 
-const FilterAnchorHnLeft = class {
+class FilterAnchorHnLeft {
     static match(idata) {
         const len = $requestHostname.length;
         const haystackCodes = bidiTrie.haystack;
@@ -1046,13 +1086,13 @@ const FilterAnchorHnLeft = class {
     static logData(idata, details) {
         details.pattern.unshift('||');
     }
-};
+}
 
 registerFilterClass(FilterAnchorHnLeft);
 
 /******************************************************************************/
 
-const FilterAnchorHn = class extends FilterAnchorHnLeft {
+class FilterAnchorHn extends FilterAnchorHnLeft {
     static match(idata) {
         return super.match(idata) && filterData[idata+3] === $patternMatchRight;
     }
@@ -1074,13 +1114,13 @@ const FilterAnchorHn = class extends FilterAnchorHnLeft {
         details.pattern.push('^');
         details.regex.push('\\.?', restrSeparator);
     }
-};
+}
 
 registerFilterClass(FilterAnchorHn);
 
 /******************************************************************************/
 
-const FilterAnchorLeft = class {
+class FilterAnchorLeft {
     static match() {
         return $patternMatchLeft === 0;
     }
@@ -1104,13 +1144,13 @@ const FilterAnchorLeft = class {
         details.pattern.unshift('|');
         details.regex.unshift('^');
     }
-};
+}
 
 registerFilterClass(FilterAnchorLeft);
 
 /******************************************************************************/
 
-const FilterAnchorRight = class {
+class FilterAnchorRight {
     static match() {
         return $patternMatchRight === $requestURL.length;
     }
@@ -1134,13 +1174,13 @@ const FilterAnchorRight = class {
         details.pattern.push('|');
         details.regex.push('$');
     }
-};
+}
 
 registerFilterClass(FilterAnchorRight);
 
 /******************************************************************************/
 
-const FilterTrailingSeparator = class {
+class FilterTrailingSeparator {
     static match() {
         if ( $patternMatchRight === $requestURL.length ) { return true; }
         if ( isSeparatorChar(bidiTrie.haystack[$patternMatchRight]) ) {
@@ -1169,13 +1209,13 @@ const FilterTrailingSeparator = class {
         details.pattern.push('^');
         details.regex.push(restrSeparator);
     }
-};
+}
 
 registerFilterClass(FilterTrailingSeparator);
 
 /******************************************************************************/
 
-const FilterRegex = class {
+class FilterRegex {
     static hasRegexPattern() {
         return true;
     }
@@ -1222,7 +1262,7 @@ const FilterRegex = class {
         if ( rule.condition === undefined ) {
             rule.condition = {};
         }
-        if ( StaticFilteringParser.utils.regex.isRE2(args[1]) === false ) {
+        if ( sfp.utils.regex.isRE2(args[1]) === false ) {
             dnrAddRuleError(rule, `regexFilter is not RE2-compatible: ${args[1]}`);
         }
         rule.condition.regexFilter = args[1];
@@ -1257,11 +1297,87 @@ const FilterRegex = class {
             filterData[idata+3] !== 0 ? ' (match-case)' : '',
         ].join('');
     }
-};
+}
 
 FilterRegex.isSlow = true;
 
 registerFilterClass(FilterRegex);
+
+/******************************************************************************/
+
+class FilterMethod {
+    static match(idata) {
+        if ( $requestMethodBit === 0 ) { return false; }
+        const methodBits = filterData[idata+1];
+        const notMethodBits = filterData[idata+2];
+        return (methodBits !== 0 && ($requestMethodBit & methodBits) !== 0) ||
+               (notMethodBits !== 0 && ($requestMethodBit & notMethodBits) === 0);
+    }
+
+    static compile(details) {
+        return [ FilterMethod.fid, details.methodBits, details.notMethodBits ];
+    }
+
+    static fromCompiled(args) {
+        const idata = filterDataAllocLen(3);
+        filterData[idata+0] = args[0];  // fid
+        filterData[idata+1] = args[1];  // methodBits
+        filterData[idata+2] = args[2];  // notMethodBits
+        return idata;
+    }
+
+    static dnrFromCompiled(args, rule) {
+        rule.condition = rule.condition || {};
+        const rc = rule.condition;
+        let methodBits = args[1];
+        let notMethodBits = args[2];
+        if ( methodBits !== 0 && rc.requestMethods === undefined ) {
+            rc.requestMethods = [];
+        }
+        if ( notMethodBits !== 0 && rc.excludedRequestMethods === undefined ) {
+            rc.excludedRequestMethods = [];
+        }
+        for ( let i = 1; methodBits !== 0 || notMethodBits !== 0; i++ ) {
+            const bit = 1 << i;
+            const methodName = FilteringContext.getMethodName(bit);
+            if ( (methodBits & bit) !== 0 ) {
+                methodBits &= ~bit;
+                rc.requestMethods.push(methodName);
+            } else if ( (notMethodBits & bit) !== 0 ) {
+                notMethodBits &= ~bit;
+                rc.excludedRequestMethods.push(methodName);
+            }
+        }
+    }
+
+    static keyFromArgs(args) {
+        return `${args[1]} ${args[2]}`;
+    }
+
+    static logData(idata, details) {
+        const methods = [];
+        let methodBits = filterData[idata+1];
+        let notMethodBits = filterData[idata+2];
+        for ( let i = 0; methodBits !== 0 || notMethodBits !== 0; i++ ) {
+            const bit = 1 << i;
+            const methodName = FilteringContext.getMethodName(bit);
+            if ( (methodBits & bit) !== 0 ) {
+                methodBits &= ~bit;
+                methods.push(methodName);
+            } else if ( (notMethodBits & bit) !== 0 ) {
+                notMethodBits &= ~bit;
+                methods.push(`~${methodName}`);
+            }
+        }
+        details.options.push(`method=${methods.join('|')}`);
+    }
+
+    static dumpInfo(idata) {
+        return `0b${filterData[idata+1].toString(2)} 0b${filterData[idata+2].toString(2)}`;
+    }
+}
+
+registerFilterClass(FilterMethod);
 
 /******************************************************************************/
 
@@ -1271,7 +1387,7 @@ registerFilterClass(FilterRegex);
 // script: 4 => bit 3
 // ...
 
-const FilterNotType = class {
+class FilterNotType {
     static match(idata) {
         return $requestTypeValue !== 0 &&
             (filterData[idata+1] & (1 << ($requestTypeValue - 1))) === 0;
@@ -1323,7 +1439,7 @@ const FilterNotType = class {
     static dumpInfo(idata) {
         return `0b${filterData[idata+1].toString(2)}`;
     }
-};
+}
 
 registerFilterClass(FilterNotType);
 
@@ -1369,16 +1485,16 @@ const domainOptIterator = new DomainOptIterator('');
 
 /******************************************************************************/
 
-// The optimal class is picked according to the content of the `domain=`
+// The optimal class is picked according to the content of the `from=`
 // filter option.
-function compileDomainOpt(iterable, prepend, units) {
+const compileDomainOpt = (ctors, iterable, prepend, units) => {
     const hostnameHits = [];
     const hostnameMisses = [];
     const entityHits = [];
     const entityMisses = [];
     for ( const s of iterable ) {
         const len = s.length;
-        const beg = len > 1 && s.charCodeAt(0) === 0x7E ? 1 : 0;
+        const beg = len > 1 && s.charCodeAt(0) === 0x7E /* '~' */ ? 1 : 0;
         if ( len <= beg ) {  continue; }
         if ( s.endsWith('.*') === false ) {
             if ( beg === 0 ) {
@@ -1407,17 +1523,17 @@ function compileDomainOpt(iterable, prepend, units) {
     const compiledHit = [];
     if ( toTrie.length !== 0 ) {
         compiledHit.push(
-            FilterOriginHitSet.compile(toTrie.sort(), trieWhich)
+            ctors[2].compile(toTrie.sort(), trieWhich)
         );
     }
     for ( const hn of hostnameHits ) {
-        compiledHit.push(FilterOriginHit.compile(hn));
+        compiledHit.push(ctors[0].compile(hn));
     }
     for ( const hn of entityHits ) {
-        compiledHit.push(FilterOriginEntityHit.compile(hn));
+        compiledHit.push(ctors[1].compile(hn));
     }
     if ( compiledHit.length > 1 ) {
-        compiledHit[0] = FilterOriginHitAny.compile(compiledHit.slice());
+        compiledHit[0] = FilterDomainHitAny.compile(compiledHit.slice());
         compiledHit.length = 1;
     }
     toTrie.length = trieWhich = 0;
@@ -1434,14 +1550,14 @@ function compileDomainOpt(iterable, prepend, units) {
     const compiledMiss = [];
     if ( toTrie.length !== 0 ) {
         compiledMiss.push(
-            FilterOriginMissSet.compile(toTrie.sort(), trieWhich)
+            ctors[5].compile(toTrie.sort(), trieWhich)
         );
     }
     for ( const hn of hostnameMisses ) {
-        compiledMiss.push(FilterOriginMiss.compile(hn));
+        compiledMiss.push(ctors[3].compile(hn));
     }
     for ( const hn of entityMisses ) {
-        compiledMiss.push(FilterOriginEntityMiss.compile(hn));
+        compiledMiss.push(ctors[4].compile(hn));
     }
     if ( prepend ) {
         if ( compiledHit.length !== 0 ) {
@@ -1458,28 +1574,20 @@ function compileDomainOpt(iterable, prepend, units) {
             units.push(compiledHit[0]);
         }
     }
-}
+};
 
 /******************************************************************************/
 
-const FilterOriginHit = class {
+class FilterDomainHit {
     static getDomainOpt(idata) {
-        return origHNTrieContainer.extractHostname(
+        return this.hntrieContainer.extractHostname(
             filterData[idata+1],
             filterData[idata+2]
         );
     }
 
-    static hasOriginHit() {
-        return true;
-    }
-
-    static getMatchTarget() {
-        return $docHostname;
-    }
-
     static match(idata) {
-        return origHNTrieContainer.matchesHostname(
+        return this.hntrieContainer.matchesHostname(
             this.getMatchTarget(),
             filterData[idata+1],
             filterData[idata+2]
@@ -1487,96 +1595,51 @@ const FilterOriginHit = class {
     }
 
     static compile(hostname) {
-        return [ FilterOriginHit.fid, hostname ];
+        return [ this.fid, hostname ];
     }
 
     static fromCompiled(args) {
         const idata = filterDataAllocLen(3);
-        filterData[idata+0] = args[0];                                      // fid
-        filterData[idata+1] = origHNTrieContainer.storeHostname(args[1]);   // i
-        filterData[idata+2] = args[1].length;                               // n
+        filterData[idata+0] = args[0];                                     // fid
+        filterData[idata+1] = this.hntrieContainer.storeHostname(args[1]); // i
+        filterData[idata+2] = args[1].length;                              // n
         return idata;
     }
 
     static dnrFromCompiled(args, rule) {
         rule.condition = rule.condition || {};
-        if ( rule.condition.initiatorDomains === undefined ) {
-            rule.condition.initiatorDomains = [];
+        const prop = this.dnrConditionName;
+        if ( rule.condition[prop] === undefined ) {
+            rule.condition[prop] = [];
         }
-        rule.condition.initiatorDomains.push(args[1]);
-    }
-
-    static logData(idata, details) {
-        details.domains.push(this.getDomainOpt(idata));
+        rule.condition[prop].push(args[1]);
     }
 
     static dumpInfo(idata) {
         return this.getDomainOpt(idata);
     }
-};
-
-registerFilterClass(FilterOriginHit);
+}
 
 /******************************************************************************/
 
-const FilterOriginMiss = class extends FilterOriginHit {
-    static hasOriginHit() {
-        return false;
-    }
-
-    static match(idata) {
-        return super.match(idata) === false;
-    }
-
-    static compile(hostname) {
-        return [ FilterOriginMiss.fid, hostname ];
-    }
-
-    static dnrFromCompiled(args, rule) {
-        rule.condition = rule.condition || {};
-        if ( rule.condition.excludedInitiatorDomains === undefined ) {
-            rule.condition.excludedInitiatorDomains = [];
-        }
-        rule.condition.excludedInitiatorDomains.push(args[1]);
-    }
-
-    static logData(idata, details) {
-        details.domains.push(`~${this.getDomainOpt(idata)}`);
-    }
-};
-
-registerFilterClass(FilterOriginMiss);
-
-/******************************************************************************/
-
-const FilterOriginHitSet = class {
+class FilterDomainHitSet {
     static getDomainOpt(idata) {
-        return origHNTrieContainer.extractDomainOpt(
+        return this.hntrieContainer.extractDomainOpt(
             filterData[idata+1],
             filterData[idata+2]
         );
-    }
-
-    static hasOriginHit() {
-        return true;
     }
 
     static getTrieCount(idata) {
         const itrie = filterData[idata+4];
         if ( itrie === 0 ) { return 0; }
         return Array.from(
-            origHNTrieContainer.trieIterator(filterData[idata+4])
+            this.hntrieContainer.trieIterator(filterData[idata+4])
         ).length;
     }
 
     static getLastResult(idata) {
         return filterData[idata+5];
-    }
-
-    static getMatchTarget(which) {
-        return (which & 0b01) !== 0
-            ? $docHostname
-            : $docEntity.compute();
     }
 
     static getMatchedHostname(idata) {
@@ -1596,7 +1659,7 @@ const FilterOriginHitSet = class {
         const itrie = filterData[idata+4] || this.toTrie(idata);
         if ( itrie === 0 ) { return false; }
         if ( (which & 0b01) !== 0 ) {
-            const pos = origHNTrieContainer
+            const pos = this.hntrieContainer
                 .setNeedle(docHostname)
                 .matches(itrie);
             if ( pos !== -1 ) {
@@ -1605,7 +1668,7 @@ const FilterOriginHitSet = class {
             }
         }
         if ( (which & 0b10) !== 0 ) {
-            const pos = origHNTrieContainer
+            const pos = this.hntrieContainer
                 .setNeedle(this.getMatchTarget(0b10))
                 .matches(itrie);
             if ( pos !== -1 ) {
@@ -1618,7 +1681,7 @@ const FilterOriginHitSet = class {
     }
 
     static add(idata, hn) {
-        origHNTrieContainer.setNeedle(hn).add(filterData[idata+4]);
+        this.hntrieContainer.setNeedle(hn).add(filterData[idata+4]);
         filterData[idata+3] |= hn.charCodeAt(hn.length - 1) !== 0x2A /* '*' */
             ? 0b01
             : 0b10;
@@ -1627,28 +1690,27 @@ const FilterOriginHitSet = class {
 
     static create(fid = -1) {
         const idata = filterDataAllocLen(7);
-        filterData[idata+0] = fid !== -1 ? fid : FilterOriginHitSet.fid;
+        filterData[idata+0] = fid !== -1 ? fid : this.fid;
         filterData[idata+1] = 0;
         filterData[idata+2] = 0;
         filterData[idata+3] = 0;
-        filterData[idata+4] = origHNTrieContainer.createTrie();
+        filterData[idata+4] = this.hntrieContainer.createTrie();
         filterData[idata+5] = -1;           // $lastResult
         filterData[idata+6] = filterRefAdd({ $last: '' });
         return idata;
     }
 
     static compile(hostnames, which) {
-        return [
-            FilterOriginHitSet.fid,
-            hostnames.join('|'),
-            which
-        ];
+        const stringified = Array.isArray(hostnames)
+            ? hostnames.join('|')
+            : hostnames;
+        return [ this.fid, stringified, which ];
     }
 
     static fromCompiled(args) {
         const idata = filterDataAllocLen(7);
         filterData[idata+0] = args[0];      // fid
-        filterData[idata+1] = origHNTrieContainer.storeDomainOpt(args[1]);
+        filterData[idata+1] = this.hntrieContainer.storeDomainOpt(args[1]);
         filterData[idata+2] = args[1].length;
         filterData[idata+3] = args[2];      // which
         filterData[idata+4] = 0;            // itrie
@@ -1659,16 +1721,17 @@ const FilterOriginHitSet = class {
 
     static dnrFromCompiled(args, rule) {
         rule.condition = rule.condition || {};
-        if ( rule.condition.initiatorDomains === undefined ) {
-            rule.condition.initiatorDomains = [];
+        const prop = this.dnrConditionName;
+        if ( rule.condition[prop] === undefined ) {
+            rule.condition[prop] = [];
         }
-        rule.condition.initiatorDomains.push(...args[1].split('|'));
+        rule.condition[prop].push(...args[1].split('|'));
     }
 
     static toTrie(idata) {
         if ( filterData[idata+2] === 0 ) { return 0; }
         const itrie = filterData[idata+4] =
-            origHNTrieContainer.createTrieFromStoredDomainOpt(
+            this.hntrieContainer.createTrieFromStoredDomainOpt(
                 filterData[idata+1],
                 filterData[idata+2]
             );
@@ -1679,20 +1742,92 @@ const FilterOriginHitSet = class {
         return args[1];
     }
 
-    static logData(idata, details) {
-        details.domains.push(this.getDomainOpt(idata));
-    }
-
     static dumpInfo(idata) {
         return `0b${filterData[idata+3].toString(2)} ${this.getDomainOpt(idata)}`;
     }
-};
-
-registerFilterClass(FilterOriginHitSet);
+}
 
 /******************************************************************************/
 
-const FilterOriginMissSet = class extends FilterOriginHitSet {
+// Implement the following filter option:
+// - domain=
+// - from=
+
+class FilterFromDomainHit extends FilterDomainHit {
+    static hasOriginHit() {
+        return true;
+    }
+
+    static getMatchTarget() {
+        return $docHostname;
+    }
+
+    static get dnrConditionName() {
+        return 'initiatorDomains';
+    }
+
+    static logData(idata, details) {
+        details.fromDomains.push(this.getDomainOpt(idata));
+    }
+}
+Object.defineProperty(FilterFromDomainHit, 'hntrieContainer', {
+    value: origHNTrieContainer
+});
+
+class FilterFromDomainMiss extends FilterFromDomainHit {
+    static hasOriginHit() {
+        return false;
+    }
+
+    static get dnrConditionName() {
+        return 'excludedInitiatorDomains';
+    }
+
+    static match(idata) {
+        return super.match(idata) === false;
+    }
+
+    static logData(idata, details) {
+        details.fromDomains.push(`~${this.getDomainOpt(idata)}`);
+    }
+}
+
+class FilterFromEntityHit extends FilterFromDomainHit {
+    static getMatchTarget() {
+        return $docEntity.compute();
+    }
+}
+
+class FilterFromEntityMiss extends FilterFromDomainMiss {
+    static getMatchTarget() {
+        return $docEntity.compute();
+    }
+}
+
+class FilterFromDomainHitSet extends FilterDomainHitSet {
+    static hasOriginHit() {
+        return true;
+    }
+
+    static getMatchTarget(which) {
+        return (which & 0b01) !== 0
+            ? $docHostname
+            : $docEntity.compute();
+    }
+
+    static get dnrConditionName() {
+        return 'initiatorDomains';
+    }
+
+    static logData(idata, details) {
+        details.fromDomains.push(this.getDomainOpt(idata));
+    }
+}
+Object.defineProperty(FilterFromDomainHitSet, 'hntrieContainer', {
+    value: origHNTrieContainer
+});
+
+class FilterFromDomainMissSet extends FilterFromDomainHitSet {
     static hasOriginHit() {
         return false;
     }
@@ -1701,66 +1836,153 @@ const FilterOriginMissSet = class extends FilterOriginHitSet {
         return super.match(idata) === false;
     }
 
-    static compile(hostnames, which) {
-        return [
-            FilterOriginMissSet.fid,
-            hostnames.join('|'),
-            which
-        ];
+    static logData(idata, details) {
+        details.fromDomains.push('~' + this.getDomainOpt(idata).replace(/\|/g, '|~'));
     }
 
-    static dnrFromCompiled(args, rule) {
-        rule.condition = rule.condition || {};
-        if ( rule.condition.excludedInitiatorDomains === undefined ) {
-            rule.condition.excludedInitiatorDomains = [];
-        }
-        rule.condition.excludedInitiatorDomains.push(...args[1].split('|'));
+    static get dnrConditionName() {
+        return 'excludedInitiatorDomains';
+    }
+}
+
+registerFilterClass(FilterFromDomainHit);
+registerFilterClass(FilterFromDomainMiss);
+registerFilterClass(FilterFromEntityHit);
+registerFilterClass(FilterFromEntityMiss);
+registerFilterClass(FilterFromDomainHitSet);
+registerFilterClass(FilterFromDomainMissSet);
+
+const fromOptClasses = [
+    FilterFromDomainHit,
+    FilterFromEntityHit,
+    FilterFromDomainHitSet,
+    FilterFromDomainMiss,
+    FilterFromEntityMiss,
+    FilterFromDomainMissSet,
+];
+
+const compileFromDomainOpt = (...args) => {
+    return compileDomainOpt(fromOptClasses, ...args);
+};
+
+/******************************************************************************/
+
+// Implement the following filter option:
+// - to=
+
+class FilterToDomainHit extends FilterDomainHit {
+    static getMatchTarget() {
+        return $requestHostname;
     }
 
-    static keyFromArgs(args) {
-        return args[1];
+    static get dnrConditionName() {
+        return 'requestDomains';
     }
 
     static logData(idata, details) {
-        details.domains.push(
-            '~' + this.getDomainOpt(idata).replace(/\|/g, '|~')
-        );
+        details.toDomains.push(this.getDomainOpt(idata));
     }
-};
+}
+Object.defineProperty(FilterToDomainHit, 'hntrieContainer', {
+    value: destHNTrieContainer
+});
 
-registerFilterClass(FilterOriginMissSet);
+class FilterToDomainMiss extends FilterToDomainHit {
+    static get dnrConditionName() {
+        return 'excludedRequestDomains';
+    }
 
-/******************************************************************************/
+    static match(idata) {
+        return super.match(idata) === false;
+    }
 
-const FilterOriginEntityHit = class extends FilterOriginHit {
+    static logData(idata, details) {
+        details.toDomains.push(`~${this.getDomainOpt(idata)}`);
+    }
+}
+
+class FilterToEntityHit extends FilterToDomainHit {
     static getMatchTarget() {
-        return $docEntity.compute();
+        return $requestEntity.compute();
     }
+}
 
-    static compile(entity) {
-        return [ FilterOriginEntityHit.fid, entity ];
-    }
-};
-
-registerFilterClass(FilterOriginEntityHit);
-
-/******************************************************************************/
-
-const FilterOriginEntityMiss = class extends FilterOriginMiss {
+class FilterToEntityMiss extends FilterToDomainMiss {
     static getMatchTarget() {
-        return $docEntity.compute();
+        return $requestEntity.compute();
+    }
+}
+
+class FilterToDomainHitSet extends FilterDomainHitSet {
+    static getMatchTarget(which) {
+        return (which & 0b01) !== 0
+            ? $requestHostname
+            : $requestEntity.compute();
     }
 
-    static compile(entity) {
-        return [ FilterOriginEntityMiss.fid, entity ];
+    static get dnrConditionName() {
+        return 'requestDomains';
     }
+
+    static logData(idata, details) {
+        details.toDomains.push(this.getDomainOpt(idata));
+    }
+}
+Object.defineProperty(FilterToDomainHitSet, 'hntrieContainer', {
+    value: destHNTrieContainer
+});
+
+class FilterToDomainMissSet extends FilterToDomainHitSet {
+    static match(idata) {
+        return super.match(idata) === false;
+    }
+
+    static get dnrConditionName() {
+        return 'excludedRequestDomains';
+    }
+
+    static logData(idata, details) {
+        details.toDomains.push('~' + this.getDomainOpt(idata).replace(/\|/g, '|~'));
+    }
+}
+
+registerFilterClass(FilterToDomainHit);
+registerFilterClass(FilterToDomainMiss);
+registerFilterClass(FilterToEntityHit);
+registerFilterClass(FilterToEntityMiss);
+registerFilterClass(FilterToDomainHitSet);
+registerFilterClass(FilterToDomainMissSet);
+
+const toOptClasses = [
+    FilterToDomainHit,
+    FilterToEntityHit,
+    FilterToDomainHitSet,
+    FilterToDomainMiss,
+    FilterToEntityMiss,
+    FilterToDomainMissSet,
+];
+
+const compileToDomainOpt = (...args) => {
+    return compileDomainOpt(toOptClasses, ...args);
 };
-
-registerFilterClass(FilterOriginEntityMiss);
 
 /******************************************************************************/
 
-const FilterModifier = class {
+class FilterDenyAllow extends FilterToDomainMissSet {
+    static compile(details) {
+        return super.compile(details.denyallowOpt, 0b01);
+    }
+
+    static logData(idata, details) {
+        details.denyallow.push(this.getDomainOpt(idata));
+    }
+}
+
+registerFilterClass(FilterDenyAllow);
+
+/******************************************************************************/
+
+class FilterModifier {
     static getModifierType(idata) {
         return filterData[idata+2];
     }
@@ -1797,7 +2019,7 @@ const FilterModifier = class {
 
     static dnrFromCompiled(args, rule) {
         rule.__modifierAction = args[1];
-        rule.__modifierType = StaticFilteringParser.netOptionTokenNames.get(args[2]);
+        rule.__modifierType = modifierNameFromType.get(args[2]);
         rule.__modifierValue = args[3];
     }
 
@@ -1806,7 +2028,7 @@ const FilterModifier = class {
     }
 
     static logData(idata, details) {
-        let opt = StaticFilteringParser.netOptionTokenNames.get(filterData[idata+2]);
+        let opt = modifierNameFromType.get(filterData[idata+2]);
         const refs = filterRefs[filterData[idata+3]];
         if ( refs.value !== '' ) {
             opt += `=${refs.value}`;
@@ -1815,19 +2037,19 @@ const FilterModifier = class {
     }
 
     static dumpInfo(idata) {
-        const s = StaticFilteringParser.netOptionTokenNames.get(filterData[idata+2]);
+        const s = modifierNameFromType.get(filterData[idata+2]);
         const refs = filterRefs[filterData[idata+3]];
         if ( refs.value === '' ) { return s; }
         return `${s}=${refs.value}`;
     }
-};
+}
 
 registerFilterClass(FilterModifier);
 
 // Helper class for storing instances of FilterModifier which were found to
 // be a match.
 
-const FilterModifierResult = class {
+class FilterModifierResult {
     constructor(imodifierunit, env) {
         this.imodifierunit = imodifierunit;
         this.refs = filterRefs[filterData[imodifierunit+3]];
@@ -1858,11 +2080,11 @@ const FilterModifierResult = class {
         r.modifier = true;
         return r;
     }
-};
+}
 
 /******************************************************************************/
 
-const FilterCollection = class {
+class FilterCollection {
     static getCount(idata) {
         let n = 0;
         this.forEach(idata, ( ) => { n += 1; });
@@ -1929,13 +2151,13 @@ const FilterCollection = class {
     static dumpInfo(idata) {
         return this.getCount(idata);
     }
-};
+}
 
 registerFilterClass(FilterCollection);
 
 /******************************************************************************/
 
-const FilterOriginHitAny = class extends FilterCollection {
+class FilterDomainHitAny extends FilterCollection {
     static getDomainOpt(idata) {
         const domainOpts = [];
         this.forEach(idata, iunit => {
@@ -1945,8 +2167,11 @@ const FilterOriginHitAny = class extends FilterCollection {
         return domainOpts.join('|');
     }
 
-    static hasOriginHit() {
-        return true;
+    static hasOriginHit(idata) {
+        this.forEach(idata, iunit => {
+            if ( filterHasOriginHit(iunit) ) { return true; }
+        });
+        return false;
     }
 
     static match(idata) {
@@ -1959,19 +2184,19 @@ const FilterOriginHitAny = class extends FilterCollection {
     }
 
     static compile(fdata) {
-        return super.compile(FilterOriginHitAny, fdata);
+        return super.compile(FilterDomainHitAny, fdata);
     }
 
     static fromCompiled(args) {
         return super.fromCompiled(args);
     }
-};
+}
 
-registerFilterClass(FilterOriginHitAny);
+registerFilterClass(FilterDomainHitAny);
 
 /******************************************************************************/
 
-const FilterCompositeAll = class extends FilterCollection {
+class FilterCompositeAll extends FilterCollection {
     // FilterPatternPlain is assumed to be first filter in sequence. This can
     // be revisited if needed.
     static isBidiTrieable(idata) {
@@ -2053,7 +2278,7 @@ const FilterCompositeAll = class extends FilterCollection {
     static fromCompiled(args) {
         return super.fromCompiled(args);
     }
-};
+}
 
 registerFilterClass(FilterCompositeAll);
 
@@ -2061,7 +2286,7 @@ registerFilterClass(FilterCompositeAll);
 
 // Dictionary of hostnames
 
-const FilterHostnameDict = class {
+class FilterHostnameDict {
     static getCount(idata) {
         const itrie = filterData[idata+1];
         if ( itrie !== 0 ) {
@@ -2119,61 +2344,16 @@ const FilterHostnameDict = class {
     static dumpInfo(idata) {
         return this.getCount(idata);
     }
-};
+}
 
 registerFilterClass(FilterHostnameDict);
-
-/******************************************************************************/
-
-const FilterDenyAllow = class {
-    static match(idata) {
-        return destHNTrieContainer
-            .setNeedle($requestHostname)
-            .matches(filterData[idata+1]) === -1;
-    }
-
-    static compile(details) {
-        return [ FilterDenyAllow.fid, details.denyallowOpt ];
-    }
-
-    static fromCompiled(args) {
-        const itrie = destHNTrieContainer.createTrieFromIterable(
-            domainOptIterator.reset(args[1])
-        );
-        const idata = filterDataAllocLen(3);
-        filterData[idata+0] = args[0];                  // fid
-        filterData[idata+1] = itrie;                    // itrie
-        filterData[idata+2] = filterRefAdd(args[1]);    // denyallowOpt
-        return idata;
-    }
-
-    static dnrFromCompiled(args, rule) {
-        rule.condition = rule.condition || {};
-        rule.condition.excludedRequestDomains = rule.condition.excludedRequestDomains || [];
-        rule.condition.excludedRequestDomains.push(...args[1].split('|'));
-    }
-
-    static keyFromArgs(args) {
-        return args[1];
-    }
-
-    static logData(idata, details) {
-        details.denyallow.push(filterRefs[filterData[idata+2]]);
-    }
-
-    static dumpInfo(idata) {
-        return filterRefs[filterData[idata+2]];
-    }
-};
-
-registerFilterClass(FilterDenyAllow);
 
 /******************************************************************************/
 
 // Dictionary of hostnames for filters which only purpose is to match
 // the document origin.
 
-const FilterJustOrigin = class extends FilterOriginHitSet {
+class FilterJustOrigin extends FilterFromDomainHitSet {
     static create(fid = -1) {
         return super.create(fid !== -1 ? fid : FilterJustOrigin.fid);
     }
@@ -2185,19 +2365,19 @@ const FilterJustOrigin = class extends FilterOriginHitSet {
 
     static logData(idata, details) {
         this.logPattern(idata, details);
-        details.domains.push(this.getMatchedHostname(idata));
+        details.fromDomains.push(this.getMatchedHostname(idata));
     }
 
     static dumpInfo(idata) {
         return this.getTrieCount(idata);
     }
-};
+}
 
 registerFilterClass(FilterJustOrigin);
 
 /******************************************************************************/
 
-const FilterHTTPSJustOrigin = class extends FilterJustOrigin {
+class FilterHTTPSJustOrigin extends FilterJustOrigin {
     static match(idata) {
         return $requestURL.startsWith('https://') && super.match(idata);
     }
@@ -2210,13 +2390,13 @@ const FilterHTTPSJustOrigin = class extends FilterJustOrigin {
         details.pattern.push('|https://');
         details.regex.push('^https://');
     }
-};
+}
 
 registerFilterClass(FilterHTTPSJustOrigin);
 
 /******************************************************************************/
 
-const FilterHTTPJustOrigin = class extends FilterJustOrigin {
+class FilterHTTPJustOrigin extends FilterJustOrigin {
     static match(idata) {
         return $requestURL.startsWith('http://') && super.match(idata);
     }
@@ -2229,13 +2409,13 @@ const FilterHTTPJustOrigin = class extends FilterJustOrigin {
         details.pattern.push('|http://');
         details.regex.push('^http://');
     }
-};
+}
 
 registerFilterClass(FilterHTTPJustOrigin);
 
 /******************************************************************************/
 
-const FilterPlainTrie = class {
+class FilterPlainTrie {
     static match(idata) {
         if ( bidiTrie.matches(filterData[idata+1], $tokenBeg) !== 0 ) {
             filterData[idata+2] = bidiTrie.$iu;
@@ -2292,13 +2472,13 @@ const FilterPlainTrie = class {
     static dumpInfo(idata) {
         return `${Array.from(bidiTrie.trieIterator(filterData[idata+1])).length}`;
     }
-};
+}
 
 registerFilterClass(FilterPlainTrie);
 
 /******************************************************************************/
 
-const FilterBucket = class extends FilterCollection {
+class FilterBucket extends FilterCollection {
     static getCount(idata) {
         return filterData[idata+2];
     }
@@ -2466,7 +2646,7 @@ const FilterBucket = class extends FilterCollection {
     static dumpInfo(idata) {
         return this.getCount(idata);
     }
-};
+}
 
 registerFilterClass(FilterBucket);
 
@@ -2474,9 +2654,9 @@ registerFilterClass(FilterBucket);
 
 // Filter bucket objects which have a pre-test method before being treated
 // as a plain filter bucket -- the pre-test method should be fast as it is
-// used to avoid having to iterate through the content of the filter bicket.
+// used to avoid having to iterate through the content of the filter bucket.
 
-const FilterBucketIf = class extends FilterBucket {
+class FilterBucketIf extends FilterBucket {
     static getCount(idata) {
         return super.getCount(filterData[idata+1]);
     }
@@ -2506,13 +2686,13 @@ const FilterBucketIf = class extends FilterBucket {
     static logData(idata, details) {
         filterLogData(filterData[idata+1], details);
     }
-};
+}
 
 registerFilterClass(FilterBucketIf);
 
 /******************************************************************************/
 
-const FilterBucketIfOriginHits = class extends FilterBucketIf {
+class FilterBucketIfOriginHits extends FilterBucketIf {
     static preTest(idata) {
         return filterMatch(filterData[idata+2]);
     }
@@ -2538,7 +2718,7 @@ const FilterBucketIfOriginHits = class extends FilterBucketIf {
 
     static create(coallesced, ibucket) {
         const units = [];
-        compileDomainOpt(coallesced, false, units);
+        compileFromDomainOpt(coallesced, false, units);
         const ihittest = filterFromCompiled(units[0]);
         const ipretest = super.create(
             FilterBucketIfOriginHits.fid,
@@ -2547,13 +2727,13 @@ const FilterBucketIfOriginHits = class extends FilterBucketIf {
         );
         return ipretest;
     }
-};
+}
 
 registerFilterClass(FilterBucketIfOriginHits);
 
 /******************************************************************************/
 
-const FilterBucketIfRegexHits = class extends FilterBucketIf {
+class FilterBucketIfRegexHits extends FilterBucketIf {
     static preTest(idata) {
         return filterRefs[filterData[idata+2]].test($requestURLRaw);
     }
@@ -2585,13 +2765,13 @@ const FilterBucketIfRegexHits = class extends FilterBucketIf {
     static dumpInfo(idata) {
         return filterRefs[filterData[idata+2]].source;
     }
-};
+}
 
 registerFilterClass(FilterBucketIfRegexHits);
 
 /******************************************************************************/
 
-const FilterStrictParty = class {
+class FilterStrictParty {
     // TODO: diregard `www.`?
     static match(idata) {
         return ($requestHostname === $docHostname) === (filterData[idata+1] === 0);
@@ -2625,17 +2805,17 @@ const FilterStrictParty = class {
             filterData[idata+1] === 0 ? 'strict1p' : 'strict3p'
         );
     }
-};
+}
 
 registerFilterClass(FilterStrictParty);
 
 /******************************************************************************/
 
-const FilterOnHeaders = class {
+class FilterOnHeaders {
     static match(idata) {
         const refs = filterRefs[filterData[idata+1]];
         if ( refs.$parsed === null ) {
-            refs.$parsed = StaticFilteringParser.parseHeaderValue(refs.headerOpt);
+            refs.$parsed = sfp.parseHeaderValue(refs.headerOpt);
         }
         const { bad, name, not, re, value } = refs.$parsed;
         if ( bad ) { return false; }
@@ -2670,7 +2850,7 @@ const FilterOnHeaders = class {
         }
         details.options.push(opt);
     }
-};
+}
 
 registerFilterClass(FilterOnHeaders);
 
@@ -2855,38 +3035,42 @@ const urlTokenizer = new (class {
 /******************************************************************************/
 
 class FilterCompiler {
-    constructor(parser, other = undefined) {
-        this.parser = parser;
+    constructor(other = undefined) {
         if ( other !== undefined ) {
             return Object.assign(this, other);
         }
-        this.reBadCSP = /(?:=|;)\s*report-(?:to|uri)\b/;
         this.reToken = /[%0-9A-Za-z]+/g;
-        this.domainOptList = [];
+        this.fromDomainOptList = [];
+        this.toDomainOptList = [];
         this.tokenIdToNormalizedType = new Map([
-            [ parser.OPTTokenCname, bitFromType('cname') ],
-            [ parser.OPTTokenCss, bitFromType('stylesheet') ],
-            [ parser.OPTTokenDoc, bitFromType('main_frame') ],
-            [ parser.OPTTokenFont, bitFromType('font') ],
-            [ parser.OPTTokenFrame, bitFromType('sub_frame') ],
-            [ parser.OPTTokenGenericblock, bitFromType('unsupported') ],
-            [ parser.OPTTokenGhide, bitFromType('generichide') ],
-            [ parser.OPTTokenImage, bitFromType('image') ],
-            [ parser.OPTTokenInlineFont, bitFromType('inline-font') ],
-            [ parser.OPTTokenInlineScript, bitFromType('inline-script') ],
-            [ parser.OPTTokenMedia, bitFromType('media') ],
-            [ parser.OPTTokenObject, bitFromType('object') ],
-            [ parser.OPTTokenOther, bitFromType('other') ],
-            [ parser.OPTTokenPing, bitFromType('ping') ],
-            [ parser.OPTTokenPopunder, bitFromType('popunder') ],
-            [ parser.OPTTokenPopup, bitFromType('popup') ],
-            [ parser.OPTTokenScript, bitFromType('script') ],
-            [ parser.OPTTokenShide, bitFromType('specifichide') ],
-            [ parser.OPTTokenXhr, bitFromType('xmlhttprequest') ],
-            [ parser.OPTTokenWebrtc, bitFromType('unsupported') ],
-            [ parser.OPTTokenWebsocket, bitFromType('websocket') ],
+            [ sfp.NODE_TYPE_NET_OPTION_NAME_CNAME, bitFromType('cname') ],
+            [ sfp.NODE_TYPE_NET_OPTION_NAME_CSS, bitFromType('stylesheet') ],
+            [ sfp.NODE_TYPE_NET_OPTION_NAME_DOC, bitFromType('main_frame') ],
+            [ sfp.NODE_TYPE_NET_OPTION_NAME_FONT, bitFromType('font') ],
+            [ sfp.NODE_TYPE_NET_OPTION_NAME_FRAME, bitFromType('sub_frame') ],
+            [ sfp.NODE_TYPE_NET_OPTION_NAME_GENERICBLOCK, bitFromType('unsupported') ],
+            [ sfp.NODE_TYPE_NET_OPTION_NAME_GHIDE, bitFromType('generichide') ],
+            [ sfp.NODE_TYPE_NET_OPTION_NAME_IMAGE, bitFromType('image') ],
+            [ sfp.NODE_TYPE_NET_OPTION_NAME_INLINEFONT, bitFromType('inline-font') ],
+            [ sfp.NODE_TYPE_NET_OPTION_NAME_INLINESCRIPT, bitFromType('inline-script') ],
+            [ sfp.NODE_TYPE_NET_OPTION_NAME_MEDIA, bitFromType('media') ],
+            [ sfp.NODE_TYPE_NET_OPTION_NAME_OBJECT, bitFromType('object') ],
+            [ sfp.NODE_TYPE_NET_OPTION_NAME_OTHER, bitFromType('other') ],
+            [ sfp.NODE_TYPE_NET_OPTION_NAME_PING, bitFromType('ping') ],
+            [ sfp.NODE_TYPE_NET_OPTION_NAME_POPUNDER, bitFromType('popunder') ],
+            [ sfp.NODE_TYPE_NET_OPTION_NAME_POPUP, bitFromType('popup') ],
+            [ sfp.NODE_TYPE_NET_OPTION_NAME_SCRIPT, bitFromType('script') ],
+            [ sfp.NODE_TYPE_NET_OPTION_NAME_SHIDE, bitFromType('specifichide') ],
+            [ sfp.NODE_TYPE_NET_OPTION_NAME_XHR, bitFromType('xmlhttprequest') ],
+            [ sfp.NODE_TYPE_NET_OPTION_NAME_WEBRTC, bitFromType('unsupported') ],
+            [ sfp.NODE_TYPE_NET_OPTION_NAME_WEBSOCKET, bitFromType('websocket') ],
         ]);
-        this.excludedOptionSet = new Set();
+        this.modifierIdToNormalizedId = new Map([
+            [ sfp.NODE_TYPE_NET_OPTION_NAME_CSP, MODIFIER_TYPE_CSP ],
+            [ sfp.NODE_TYPE_NET_OPTION_NAME_REDIRECT, MODIFIER_TYPE_REDIRECT ],
+            [ sfp.NODE_TYPE_NET_OPTION_NAME_REDIRECTRULE, MODIFIER_TYPE_REDIRECTRULE ],
+            [ sfp.NODE_TYPE_NET_OPTION_NAME_REMOVEPARAM, MODIFIER_TYPE_REMOVEPARAM ],
+        ]);
         // These top 100 "bad tokens" are collated using the "miss" histogram
         // from tokenHistograms(). The "score" is their occurrence among the
         // 200K+ URLs used in the benchmark and executed against default
@@ -3014,10 +3198,12 @@ class FilterCompiler {
         this.patternMatchCase = false;
         this.party = AnyParty;
         this.optionUnitBits = 0;
-        this.domainOpt = '';
+        this.fromDomainOpt = '';
+        this.toDomainOpt = '';
         this.denyallowOpt = '';
         this.headerOpt = undefined;
         this.isPureHostname = false;
+        this.isGeneric = false;
         this.isRegex = false;
         this.strictParty = 0;
         this.token = '*';
@@ -3025,6 +3211,8 @@ class FilterCompiler {
         this.tokenBeg = 0;
         this.typeBits = 0;
         this.notTypeBits = 0;
+        this.methodBits = 0;
+        this.notMethodBits = 0;
         this.wildcardPos = -1;
         this.caretPos = -1;
         return this;
@@ -3037,7 +3225,7 @@ class FilterCompiler {
     }
 
     clone() {
-        return new FilterCompiler(this.parser, this);
+        return new FilterCompiler(this);
     }
 
     normalizeRegexSource(s) {
@@ -3049,10 +3237,19 @@ class FilterCompiler {
         return '';
     }
 
-    excludeOptions(options) {
-        for ( const option of options ) {
-            this.excludedOptionSet.add(option);
+    processMethodOption(value) {
+        for ( const method of value.split('|') ) {
+            if ( method.charCodeAt(0) === 0x7E /* '~' */ ) {
+                const bit = FilteringContext.getMethod(method.slice(1)) || 0;
+                if ( bit === 0 ) { continue; }
+                this.notMethodBits |= bit;
+            } else {
+                const bit = FilteringContext.getMethod(method) || 0;
+                if ( bit === 0 ) { continue; }
+                this.methodBits |= bit;
+            }
         }
+        this.methodBits &= ~this.notMethodBits;
     }
 
     // https://github.com/chrisaljoudi/uBlock/issues/589
@@ -3083,21 +3280,12 @@ class FilterCompiler {
         this.party |= firstParty ? FirstParty : ThirdParty;
     }
 
-    processHostnameList(s, modeBits, out = []) {
-        let beg = 0;
-        let slen = s.length;
+    processHostnameList(iter, out = []) {
         let i = 0;
-        while ( beg < slen ) {
-            let end = s.indexOf('|', beg);
-            if ( end === -1 ) { end = slen; }
-            const hn = this.parser.normalizeHostnameValue(
-                s.slice(beg, end),
-                modeBits
-            );
-            if ( hn !== undefined ) {
-                out[i] = hn; i += 1;
-            }
-            beg = end + 1;
+        for ( const { hn, not, bad } of iter ) {
+            if ( bad ) { return ''; }
+            out[i] = not ? `~${hn}` : hn;
+            i += 1;
         }
         out.length = i;
         return i === 1 ? out[0] : out.join('|');
@@ -3105,133 +3293,206 @@ class FilterCompiler {
 
     processModifierOption(modifier, value) {
         if ( this.modifyType !== undefined ) { return false; }
-        this.modifyType = modifier;
+        const normalized = this.modifierIdToNormalizedId.get(modifier);
+        if ( normalized === undefined ) { return false; }
+        this.modifyType = normalized;
         this.modifyValue = value || '';
         return true;
     }
 
-    processOptions() {
-        const { parser } = this;
-        for ( let { id, val, not } of parser.netOptions() ) {
-            switch ( id ) {
-            case parser.OPTToken1p:
-                this.processPartyOption(true, not);
+    processCspOption(value) {
+        this.modifyType = MODIFIER_TYPE_CSP;
+        this.modifyValue = value || '';
+        this.optionUnitBits |= this.CSP_BIT;
+        return true;
+    }
+
+    processOptionWithValue(parser, id) {
+        switch ( id ) {
+            case sfp.NODE_TYPE_NET_OPTION_NAME_CSP:
+                if ( this.processCspOption(parser.getNetOptionValue(id)) === false ) { return false; }
                 break;
-            case parser.OPTToken1pStrict:
-                this.strictParty = this.strictParty === -1 ? 0 : 1;
-                this.optionUnitBits |= this.STRICT_PARTY_BIT;
-                break;
-            case parser.OPTToken3p:
-                this.processPartyOption(false, not);
-                break;
-            case parser.OPTToken3pStrict:
-                this.strictParty = this.strictParty === 1 ? 0 : -1;
-                this.optionUnitBits |= this.STRICT_PARTY_BIT;
-                break;
-            case parser.OPTTokenAll:
-                this.processTypeOption(-1);
-                break;
-            // https://github.com/uBlockOrigin/uAssets/issues/192
-            case parser.OPTTokenBadfilter:
-                this.badFilter = true;
-                break;
-            case parser.OPTTokenCsp:
-                if ( this.processModifierOption(id, val) === false ) {
-                    return false;
-                }
-                if ( val !== undefined && this.reBadCSP.test(val) ) {
-                    return false;
-                }
-                this.optionUnitBits |= this.CSP_BIT;
-                break;
-            // https://github.com/gorhill/uBlock/issues/2294
-            //   Detect and discard filter if domain option contains
-            //   nonsensical characters.
-            case parser.OPTTokenDomain:
-                this.domainOpt = this.processHostnameList(
-                    val,
-                    0b1010,
-                    this.domainOptList
+            case sfp.NODE_TYPE_NET_OPTION_NAME_DENYALLOW:
+                this.denyallowOpt = this.processHostnameList(
+                    parser.getNetFilterDenyallowOptionIterator(),
                 );
-                if ( this.domainOpt === '' ) { return false; }
-                this.optionUnitBits |= this.DOMAIN_BIT;
-                break;
-            case parser.OPTTokenDenyAllow:
-                this.denyallowOpt = this.processHostnameList(val, 0b0000);
                 if ( this.denyallowOpt === '' ) { return false; }
                 this.optionUnitBits |= this.DENYALLOW_BIT;
                 break;
-            // https://www.reddit.com/r/uBlockOrigin/comments/d6vxzj/
-            //   Add support for `elemhide`. Rarely used but it happens.
-            case parser.OPTTokenEhide:
-                this.processTypeOption(parser.OPTTokenShide, not);
-                this.processTypeOption(parser.OPTTokenGhide, not);
+            case sfp.NODE_TYPE_NET_OPTION_NAME_FROM:
+                this.fromDomainOpt = this.processHostnameList(
+                    parser.getNetFilterFromOptionIterator(),
+                    this.fromDomainOptList
+                );
+                if ( this.fromDomainOpt === '' ) { return false; }
+                this.optionUnitBits |= this.FROM_BIT;
                 break;
-            case parser.OPTTokenHeader:
-                this.headerOpt = val !== undefined ? val : '';
+            case sfp.NODE_TYPE_NET_OPTION_NAME_HEADER: {
+                this.headerOpt = parser.getNetOptionValue(id) || '';
                 this.optionUnitBits |= this.HEADER_BIT;
                 break;
-            case parser.OPTTokenImportant:
-                if ( this.action === AllowAction ) { return false; }
-                this.optionUnitBits |= this.IMPORTANT_BIT;
-                this.action = BlockImportant;
+            }
+            case sfp.NODE_TYPE_NET_OPTION_NAME_METHOD:
+                this.processMethodOption(parser.getNetOptionValue(id));
+                this.optionUnitBits |= this.METHOD_BIT;
                 break;
-            // Used by Adguard:
-            // https://kb.adguard.com/en/general/how-to-create-your-own-ad-filters#empty-modifier
-            case parser.OPTTokenEmpty:
-                id = this.action === AllowAction
-                    ? parser.OPTTokenRedirectRule
-                    : parser.OPTTokenRedirect;
-                if ( this.processModifierOption(id, 'empty') === false ) {
+            case sfp.NODE_TYPE_NET_OPTION_NAME_REDIRECT:
+                if ( this.action === AllowAction ) {
+                    id = sfp.NODE_TYPE_NET_OPTION_NAME_REDIRECTRULE;
+                }
+                if ( this.processModifierOption(id, parser.getNetOptionValue(id)) === false ) {
                     return false;
                 }
                 this.optionUnitBits |= this.REDIRECT_BIT;
                 break;
-            case parser.OPTTokenMatchCase:
-                this.patternMatchCase = true;
-                break;
-            case parser.OPTTokenMp4:
-                id = this.action === AllowAction
-                    ? parser.OPTTokenRedirectRule
-                    : parser.OPTTokenRedirect;
-                if ( this.processModifierOption(id, 'noopmp4-1s') === false ) {
+            case sfp.NODE_TYPE_NET_OPTION_NAME_REDIRECTRULE:
+                if ( this.processModifierOption(id, parser.getNetOptionValue(id)) === false ) {
                     return false;
                 }
                 this.optionUnitBits |= this.REDIRECT_BIT;
                 break;
-            case parser.OPTTokenNoop:
-                break;
-            case parser.OPTTokenRemoveparam:
-                if ( this.processModifierOption(id, val) === false ) {
+            case sfp.NODE_TYPE_NET_OPTION_NAME_REMOVEPARAM:
+                if ( this.processModifierOption(id, parser.getNetOptionValue(id)) === false ) {
                     return false;
                 }
                 this.optionUnitBits |= this.REMOVEPARAM_BIT;
                 break;
-            case parser.OPTTokenRedirect:
-                if ( this.action === AllowAction ) {
-                    id = parser.OPTTokenRedirectRule;
-                }
-                if ( this.processModifierOption(id, val) === false ) {
-                    return false;
-                }
-                this.optionUnitBits |= this.REDIRECT_BIT;
+            case sfp.NODE_TYPE_NET_OPTION_NAME_TO:
+                this.toDomainOpt = this.processHostnameList(
+                    parser.getNetFilterToOptionIterator(),
+                    this.toDomainOptList
+                );
+                if ( this.toDomainOpt === '' ) { return false; }
+                this.optionUnitBits |= this.TO_BIT;
                 break;
-            case parser.OPTTokenRedirectRule:
-                if ( this.excludedOptionSet.has(parser.OPTTokenRedirectRule) ) {
-                    return false;
-                }
-                if ( this.processModifierOption(id, val) === false ) {
-                    return false;
-                }
-                this.optionUnitBits |= this.REDIRECT_BIT;
-                break;
-            case parser.OPTTokenInvalid:
-                return false;
             default:
-                if ( this.tokenIdToNormalizedType.has(id) === false ) {
-                    return false;
+                break;
+        }
+        return true;
+    }
+
+    process(parser) {
+        // important!
+        this.reset();
+
+        if ( parser.hasError() ) {
+            return this.FILTER_INVALID;
+        }
+
+        if ( parser.isException() ) {
+            this.action = AllowAction;
+        }
+
+        if ( parser.isLeftHnAnchored() ) {
+            this.anchor |= 0b100;
+        } else if ( parser.isLeftAnchored() ) {
+            this.anchor |= 0b010;
+        }
+        if ( parser.isRightAnchored() ) {
+            this.anchor |= 0b001;
+        }
+
+        this.pattern = parser.getNetPattern();
+        if ( parser.isHostnamePattern() ) {
+            this.isPureHostname = true;
+        } else if ( parser.isGenericPattern() ) {
+            this.isGeneric = true;
+        } else if ( parser.isRegexPattern() ) {
+            this.isRegex = true;
+        }
+
+        for ( const type of parser.getNodeTypes() ) {
+            switch ( type ) {
+            case sfp.NODE_TYPE_NET_OPTION_NAME_1P:
+                this.processPartyOption(true, parser.isNegatedOption(type));
+                break;
+            case sfp.NODE_TYPE_NET_OPTION_NAME_STRICT1P:
+                this.strictParty = this.strictParty === -1 ? 0 : 1;
+                this.optionUnitBits |= this.STRICT_PARTY_BIT;
+                break;
+            case sfp.NODE_TYPE_NET_OPTION_NAME_3P:
+                this.processPartyOption(false, parser.isNegatedOption(type));
+                break;
+            case sfp.NODE_TYPE_NET_OPTION_NAME_STRICT3P:
+                this.strictParty = this.strictParty === 1 ? 0 : -1;
+                this.optionUnitBits |= this.STRICT_PARTY_BIT;
+                break;
+            case sfp.NODE_TYPE_NET_OPTION_NAME_ALL:
+                this.processTypeOption(-1);
+                break;
+            case sfp.NODE_TYPE_NET_OPTION_NAME_BADFILTER:
+                this.badFilter = true;
+                break;
+            case sfp.NODE_TYPE_NET_OPTION_NAME_CNAME:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_CSS:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_DOC:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_FONT:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_FRAME:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_GENERICBLOCK:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_GHIDE:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_IMAGE:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_INLINEFONT:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_INLINESCRIPT:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_MEDIA:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_OBJECT:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_OTHER:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_PING:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_POPUNDER:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_POPUP:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_SCRIPT:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_SHIDE:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_XHR:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_WEBRTC:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_WEBSOCKET:
+                this.processTypeOption(type, parser.isNegatedOption(type));
+                break;
+            case sfp.NODE_TYPE_NET_OPTION_NAME_CSP:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_DENYALLOW:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_FROM:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_HEADER:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_METHOD:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_REDIRECT:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_REDIRECTRULE:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_REMOVEPARAM:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_TO:
+                if ( this.processOptionWithValue(parser, type) === false ) {
+                    return this.FILTER_INVALID;
                 }
-                this.processTypeOption(id, not);
+                break;
+            case sfp.NODE_TYPE_NET_OPTION_NAME_EHIDE: {
+                const not = parser.isNegatedOption(type);
+                this.processTypeOption(sfp.NODE_TYPE_NET_OPTION_NAME_SHIDE, not);
+                this.processTypeOption(sfp.NODE_TYPE_NET_OPTION_NAME_GHIDE, not);
+                break;
+            }
+            case sfp.NODE_TYPE_NET_OPTION_NAME_EMPTY: {
+                const id = this.action === AllowAction
+                    ? sfp.NODE_TYPE_NET_OPTION_NAME_REDIRECTRULE
+                    : sfp.NODE_TYPE_NET_OPTION_NAME_REDIRECT;
+                if ( this.processModifierOption(id, 'empty') === false ) {
+                    return this.FILTER_INVALID;
+                }
+                this.optionUnitBits |= this.REDIRECT_BIT;
+                break;
+            }
+            case sfp.NODE_TYPE_NET_OPTION_NAME_IMPORTANT:
+                this.optionUnitBits |= this.IMPORTANT_BIT;
+                this.action = BlockImportant;
+                break;
+            case sfp.NODE_TYPE_NET_OPTION_NAME_MATCHCASE:
+                this.patternMatchCase = true;
+                break;
+            case sfp.NODE_TYPE_NET_OPTION_NAME_MP4: {
+                const id = this.action === AllowAction
+                    ? sfp.NODE_TYPE_NET_OPTION_NAME_REDIRECTRULE
+                    : sfp.NODE_TYPE_NET_OPTION_NAME_REDIRECT;
+                if ( this.processModifierOption(id, 'noopmp4-1s') === false ) {
+                    return this.FILTER_INVALID;
+                }
+                this.optionUnitBits |= this.REDIRECT_BIT;
+                break;
+            }
+            default:
                 break;
             }
         }
@@ -3258,10 +3519,10 @@ class FilterCompiler {
         }
 
         // CSP directives implicitly apply only to document/subdocument.
-        if ( this.modifyType === this.parser.OPTTokenCsp ) {
+        if ( this.modifyType === MODIFIER_TYPE_CSP ) {
             if ( this.typeBits === 0 ) {
-                this.processTypeOption(this.parser.OPTTokenDoc, false);
-                this.processTypeOption(this.parser.OPTTokenFrame, false);
+                this.processTypeOption(sfp.NODE_TYPE_NET_OPTION_NAME_DOC, false);
+                this.processTypeOption(sfp.NODE_TYPE_NET_OPTION_NAME_FRAME, false);
             }
         }
 
@@ -3270,85 +3531,29 @@ class FilterCompiler {
         //   toggle off `unsupported` bit.
         if ( this.typeBits & unsupportedTypeBit ) {
             this.typeBits &= ~unsupportedTypeBit;
-            if ( this.typeBits === 0 ) { return false; }
+            if ( this.typeBits === 0 ) { return this.FILTER_UNSUPPORTED; }
         }
-
-        return true;
-    }
-
-    process() {
-        // important!
-        this.reset();
-
-        if ( this.parser.hasError() ) {
-            return this.FILTER_INVALID;
-        }
-
-        // Filters which pattern is a single character other than `*` and have
-        // no narrowing options are discarded as invalid.
-        if ( this.parser.patternIsDubious() ) {
-            return this.FILTER_INVALID;
-        }
-
-        // block or allow filter?
-        // Important: this must be executed before parsing options
-        if ( this.parser.isException() ) {
-            this.action = AllowAction;
-        }
-
-        this.isPureHostname = this.parser.patternIsPlainHostname();
 
         // Plain hostname? (from HOSTS file)
-        if ( this.isPureHostname && this.parser.hasOptions() === false ) {
-            this.pattern = this.parser.patternToLowercase();
+        if ( this.isPureHostname && parser.hasOptions() === false ) {
             this.anchor |= 0b100;
             return this.FILTER_OK;
-        }
-
-        // options
-        if ( this.parser.hasOptions() && this.processOptions() === false ) {
-            return this.FILTER_UNSUPPORTED;
         }
 
         // regex?
-        if ( this.parser.patternIsRegex() ) {
-            this.isRegex = true;
-            // https://github.com/gorhill/uBlock/issues/1246
-            //   If the filter is valid, use the corrected version of the
-            //   source string -- this ensure reverse-lookup will work fine.
-            this.pattern = this.normalizeRegexSource(this.parser.getNetPattern());
-            if ( this.pattern === '' ) {
-                return this.FILTER_UNSUPPORTED;
-            }
+        if ( this.isRegex ) {
             return this.FILTER_OK;
         }
 
-        const pattern = this.parser.patternIsMatchAll()
-            ? '*'
-            : this.parser.patternToLowercase();
-
-        if ( this.parser.patternIsLeftHostnameAnchored() ) {
-            this.anchor |= 0b100;
-        } else if ( this.parser.patternIsLeftAnchored() ) {
-            this.anchor |= 0b010;
-        }
-        if ( this.parser.patternIsRightAnchored() ) {
-            this.anchor |= 0b001;
+        if ( this.isGeneric ) {
+            this.wildcardPos = this.pattern.indexOf('*');
+            this.caretPos = this.pattern.indexOf('^');
         }
 
-        if ( this.parser.patternHasWildcard() ) {
-            this.wildcardPos = pattern.indexOf('*');
-        }
-
-        if ( this.parser.patternHasCaret() ) {
-            this.caretPos = pattern.indexOf('^');
-        }
-
-        if ( pattern.length > 1024 ) {
+        if ( this.pattern.length > 1024 ) {
             return this.FILTER_UNSUPPORTED;
         }
 
-        this.pattern = pattern;
         return this.FILTER_OK;
     }
 
@@ -3362,9 +3567,7 @@ class FilterCompiler {
 
     makeToken() {
         if ( this.pattern === '*' ) {
-            if ( this.modifyType !== this.parser.OPTTokenRemoveparam ) {
-                return;
-            }
+            if ( this.modifyType !== MODIFIER_TYPE_REMOVEPARAM ) { return; }
             return this.extractTokenFromQuerypruneValue();
         }
         if ( this.isRegex ) {
@@ -3413,7 +3616,7 @@ class FilterCompiler {
     //   Mind `\b` directives: `/\bads\b/` should result in token being `ads`,
     //   not `bads`.
     extractTokenFromRegex(pattern) {
-        pattern = StaticFilteringParser.utils.regex.toTokenizableStr(pattern);
+        pattern = sfp.utils.regex.toTokenizableStr(pattern);
         this.reToken.lastIndex = 0;
         let bestToken;
         let bestBadness = 0x7FFFFFFF;
@@ -3472,9 +3675,9 @@ class FilterCompiler {
     }
 
     isJustOrigin() {
-        if ( this.optionUnitBits !== this.DOMAIN_BIT ) { return false; }
+        if ( this.optionUnitBits !== this.FROM_BIT ) { return false; }
         if ( this.isRegex ) { return false; }
-        if ( this.domainOpt.includes('~') ) { return false; }
+        if ( this.fromDomainOpt.includes('~') ) { return false; }
         if ( this.pattern === '*' ) { return true; }
         if ( this.anchor !== 0b010 ) { return false; }
         if ( /^(?:http[s*]?:(?:\/\/)?)$/.test(this.pattern) ) { return true; }
@@ -3488,8 +3691,8 @@ class FilterCompiler {
                s.charCodeAt(l-2) === 0x2E /* '.' */;
     }
 
-    compile(writer) {
-        const r = this.process();
+    compile(parser, writer) {
+        const r = this.process(parser);
 
         // Ignore non-static network filters
         if ( r === this.FILTER_INVALID ) { return false; }
@@ -3497,7 +3700,7 @@ class FilterCompiler {
         // Ignore filters with unsupported options
         if ( r === this.FILTER_UNSUPPORTED ) {
             const who = writer.properties.get('name') || '?';
-            this.error = `Invalid network filter in ${who}: ${this.parser.raw}`;
+            this.error = `Invalid network filter in ${who}: ${parser.raw}`;
             return false;
         }
 
@@ -3510,8 +3713,8 @@ class FilterCompiler {
         // Reminder:
         //   `redirect=` is a combination of a `redirect-rule` filter and a
         //   block filter.
-        if ( this.modifyType === this.parser.OPTTokenRedirect ) {
-            this.modifyType = this.parser.OPTTokenRedirectRule;
+        if ( this.modifyType === MODIFIER_TYPE_REDIRECT ) {
+            this.modifyType = MODIFIER_TYPE_REDIRECTRULE;
             const parsedBlock = this.clone();
             parsedBlock.modifyType = undefined;
             parsedBlock.optionUnitBits &= ~this.REDIRECT_BIT;
@@ -3548,7 +3751,7 @@ class FilterCompiler {
             } else /* 'http:' */ {
                 this.tokenHash = ANY_HTTP_TOKEN_HASH;
             }
-            for ( const hn of this.domainOptList ) {
+            for ( const hn of this.fromDomainOptList ) {
                 this.compileToAtomicFilter(hn, writer);
             }
             return;
@@ -3556,10 +3759,25 @@ class FilterCompiler {
 
         const units = [];
 
-        // Pattern
-        this.compilePattern(units);
+        // Method(s)
+        if ( this.methodBits !== 0 || this.notMethodBits !== 0 ) {
+            units.push(FilterMethod.compile(this));
+        }
 
-        // Anchor
+        // Not types
+        if ( this.notTypeBits !== 0 ) {
+            units.push(FilterNotType.compile(this));
+        }
+
+        // Strict partiness
+        if ( this.strictParty !== 0 ) {
+            units.push(FilterStrictParty.compile(this));
+        }
+
+        // Pattern
+        const patternClass = this.compilePattern(units);
+
+        // Anchor: must never appear before pattern unit
         if ( (this.anchor & 0b100) !== 0 ) {
             if ( this.isPureHostname ) {
                 units.push(FilterAnchorHn.compile());
@@ -3573,21 +3791,20 @@ class FilterCompiler {
             units.push(FilterAnchorRight.compile());
         }
 
-        // Not types
-        if ( this.notTypeBits !== 0 ) {
-            units.push(FilterNotType.compile(this));
-        }
-
-        // Strict partiness
-        if ( this.strictParty !== 0 ) {
-            units.push(FilterStrictParty.compile(this));
-        }
-
         // Origin
-        if ( this.domainOpt !== '' ) {
-            compileDomainOpt(
-                this.domainOptList,
-                units.length !== 0 && filterClasses[units[0][0]].isSlow === true,
+        if ( this.fromDomainOpt !== '' ) {
+            compileFromDomainOpt(
+                this.fromDomainOptList,
+                units.length !== 0 && patternClass.isSlow === true,
+                units
+            );
+        }
+
+        // Destination
+        if ( this.toDomainOpt !== '' ) {
+            compileToDomainOpt(
+                this.toDomainOptList,
+                units.length !== 0 && patternClass.isSlow === true,
                 units
             );
         }
@@ -3630,29 +3847,30 @@ class FilterCompiler {
     compilePattern(units) {
         if ( this.isRegex ) {
             units.push(FilterRegex.compile(this));
-            return;
+            return FilterRegex;
         }
         if ( this.pattern === '*' ) {
             units.push(FilterPatternAny.compile());
-            return;
+            return FilterPatternAny;
         }
         if ( this.tokenHash === NO_TOKEN_HASH ) {
             units.push(FilterPatternGeneric.compile(this));
-            return;
+            return FilterPatternGeneric;
         }
         if ( this.wildcardPos === -1 ) {
             if ( this.caretPos === -1 ) {
                 units.push(FilterPatternPlain.compile(this));
-                return;
+                return FilterPatternPlain;
             }
             if ( this.caretPos === (this.pattern.length - 1) ) {
                 this.pattern = this.pattern.slice(0, -1);
                 units.push(FilterPatternPlain.compile(this));
                 units.push(FilterTrailingSeparator.compile());
-                return;
+                return FilterPatternPlain;
             }
         }
         units.push(FilterPatternGeneric.compile(this));
+        return FilterPatternGeneric;
     }
 
     compileToAtomicFilter(fdata, writer) {
@@ -3688,15 +3906,17 @@ class FilterCompiler {
     }
 }
 
-FilterCompiler.prototype.DOMAIN_BIT       = 0b000000001;
-FilterCompiler.prototype.DENYALLOW_BIT    = 0b000000010;
-FilterCompiler.prototype.HEADER_BIT       = 0b000000100;
-FilterCompiler.prototype.STRICT_PARTY_BIT = 0b000001000;
-FilterCompiler.prototype.CSP_BIT          = 0b000010000;
-FilterCompiler.prototype.REMOVEPARAM_BIT  = 0b000100000;
-FilterCompiler.prototype.REDIRECT_BIT     = 0b001000000;
-FilterCompiler.prototype.NOT_TYPE_BIT     = 0b010000000;
-FilterCompiler.prototype.IMPORTANT_BIT    = 0b100000000;
+FilterCompiler.prototype.FROM_BIT         = 0b00000000001;
+FilterCompiler.prototype.TO_BIT           = 0b00000000010;
+FilterCompiler.prototype.DENYALLOW_BIT    = 0b00000000100;
+FilterCompiler.prototype.HEADER_BIT       = 0b00000001000;
+FilterCompiler.prototype.STRICT_PARTY_BIT = 0b00000010000;
+FilterCompiler.prototype.CSP_BIT          = 0b00000100000;
+FilterCompiler.prototype.REMOVEPARAM_BIT  = 0b00001000000;
+FilterCompiler.prototype.REDIRECT_BIT     = 0b00010000000;
+FilterCompiler.prototype.NOT_TYPE_BIT     = 0b00100000000;
+FilterCompiler.prototype.IMPORTANT_BIT    = 0b01000000000;
+FilterCompiler.prototype.METHOD_BIT       = 0b10000000000;
 
 FilterCompiler.prototype.FILTER_OK          = 0;
 FilterCompiler.prototype.FILTER_INVALID     = 1;
@@ -3732,11 +3952,6 @@ FilterContainer.prototype.prime = function() {
         keyvalStore.getItem('SNFE.destHNTrieContainer.trieDetails')
     );
     bidiTriePrime();
-    // Remove entries with obsolete name.
-    // TODO: Remove before publishing 1.41.0
-    keyvalStore.removeItem('SNFE.filterOrigin.trieDetails');
-    keyvalStore.removeItem('SNFE.FilterHostnameDict.trieDetails');
-    keyvalStore.removeItem('SNFE.filterDocOrigin.trieDetails');
 };
 
 /******************************************************************************/
@@ -4530,8 +4745,8 @@ FilterContainer.prototype.unserialize = async function(s) {
 
 /******************************************************************************/
 
-FilterContainer.prototype.createCompiler = function(parser) {
-    return new FilterCompiler(parser);
+FilterContainer.prototype.createCompiler = function() {
+    return new FilterCompiler();
 };
 
 /******************************************************************************/
@@ -4557,7 +4772,7 @@ FilterContainer.prototype.fromCompiled = function(reader) {
 
 FilterContainer.prototype.matchAndFetchModifiers = function(
     fctxt,
-    modifierType
+    modifierName
 ) {
     const typeBits = typeNameToTypeValue[fctxt.type] || otherTypeBitValue;
 
@@ -4566,6 +4781,7 @@ FilterContainer.prototype.matchAndFetchModifiers = function(
     $docHostname = fctxt.getDocHostname();
     $docDomain = fctxt.getDocDomain();
     $requestHostname = fctxt.getHostname();
+    $requestMethodBit = fctxt.method || 0;
     $requestTypeValue = (typeBits & TypeBitsMask) >>> TypeBitsOffset;
 
     const partyBits = fctxt.is3rdPartyToDoc() ? ThirdParty : FirstParty;
@@ -4599,7 +4815,7 @@ FilterContainer.prototype.matchAndFetchModifiers = function(
 
     const results = [];
     const env = {
-        type: StaticFilteringParser.netOptionTokenIds.get(modifierType) || 0,
+        type: modifierTypeFromName.get(modifierName) || 0,
         bits: 0,
         th: 0,
         iunit: 0,
@@ -4866,6 +5082,7 @@ FilterContainer.prototype.matchRequestReverse = function(type, url) {
     // Prime tokenizer: we get a normalized URL in return.
     $requestURL = urlTokenizer.setURL(url);
     $requestURLRaw = url;
+    $requestMethodBit = 0;
     $requestTypeValue = (typeBits & TypeBitsMask) >>> TypeBitsOffset;
     $isBlockImportant = false;
     this.$filterUnit = 0;
@@ -4933,6 +5150,7 @@ FilterContainer.prototype.matchRequest = function(fctxt, modifiers = 0) {
     $docHostname = fctxt.getDocHostname();
     $docDomain = fctxt.getDocDomain();
     $requestHostname = fctxt.getHostname();
+    $requestMethodBit = fctxt.method || 0;
     $requestTypeValue = (typeBits & TypeBitsMask) >>> TypeBitsOffset;
     $isBlockImportant = false;
 
@@ -4967,6 +5185,7 @@ FilterContainer.prototype.matchHeaders = function(fctxt, headers) {
     $docHostname = fctxt.getDocHostname();
     $docDomain = fctxt.getDocDomain();
     $requestHostname = fctxt.getHostname();
+    $requestMethodBit = fctxt.method || 0;
     $requestTypeValue = (typeBits & TypeBitsMask) >>> TypeBitsOffset;
     $httpHeaders.init(headers);
 
@@ -5008,7 +5227,7 @@ FilterContainer.prototype.redirectRequest = function(redirectEngine, fctxt) {
 function parseRedirectRequestValue(directive) {
     if ( directive.cache === null ) {
         directive.cache =
-            StaticFilteringParser.parseRedirectValue(directive.value);
+            sfp.parseRedirectValue(directive.value);
     }
     return directive.cache;
 }
@@ -5121,7 +5340,7 @@ FilterContainer.prototype.filterQuery = function(fctxt) {
 function parseQueryPruneValue(directive) {
     if ( directive.cache === null ) {
         directive.cache =
-            StaticFilteringParser.parseQueryPruneValue(directive.value);
+            sfp.parseQueryPruneValue(directive.value);
     }
     return directive.cache;
 }
@@ -5228,7 +5447,7 @@ FilterContainer.prototype.dump = function() {
         switch ( fc ) {
         case FilterBucket:
         case FilterCompositeAll:
-        case FilterOriginHitAny: {
+        case FilterDomainHitAny: {
             fc.forEach(idata, i => {
                 dumpUnit(i, depth+1);
             });

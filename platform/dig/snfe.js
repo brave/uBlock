@@ -28,8 +28,8 @@
 
 import { strict as assert } from 'assert';
 import { createRequire } from 'module';
-import { readFileSync, writeFileSync } from 'fs';
-import { dirname, resolve } from 'path';
+import { readFile, writeFile, mkdir } from 'fs/promises';
+import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -81,11 +81,12 @@ function nanoToMicro(bigint) {
 }
 
 async function read(path) {
-    return readFileSync(resolve(__dirname, path), 'utf8');
+    return readFile(path, 'utf8');
 }
 
 async function write(path, data) {
-    return writeFileSync(resolve(__dirname, path), data, 'utf8');
+    await mkdir(dirname(path), { recursive: true });
+    return writeFile(path, data, 'utf8');
 }
 
 /******************************************************************************/
@@ -342,23 +343,27 @@ async function bench() {
 
     let start = process.hrtime.bigint();
     await engine.useLists([
-        read('assets/ublock/badware.txt')
-            .then(raw => ({ name: 'badware', raw })),
         read('assets/ublock/filters.txt')
             .then(raw => ({ name: 'filters', raw })),
         read('assets/ublock/filters-2020.txt')
             .then(raw => ({ name: 'filters-2020', raw })),
         read('assets/ublock/filters-2021.txt')
             .then(raw => ({ name: 'filters-2021', raw })),
+        read('assets/ublock/filters-2022.txt')
+            .then(raw => ({ name: 'filters-2022', raw })),
+        read('assets/ublock/badware.txt')
+            .then(raw => ({ name: 'badware', raw })),
         read('assets/ublock/privacy.txt')
             .then(raw => ({ name: 'privacy', raw })),
+        read('assets/ublock/quick-fixes.txt')
+            .then(raw => ({ name: 'quick-fixes.txt', raw })),
         read('assets/ublock/resource-abuse.txt')
             .then(raw => ({ name: 'resource-abuse', raw })),
         read('assets/ublock/unbreak.txt')
             .then(raw => ({ name: 'unbreak.txt', raw })),
-        read('assets/thirdparties/easylist-downloads.adblockplus.org/easylist.txt')
+        read('assets/thirdparties/easylist/easylist.txt')
             .then(raw => ({ name: 'easylist', raw })),
-        read('assets/thirdparties/easylist-downloads.adblockplus.org/easyprivacy.txt')
+        read('assets/thirdparties/easylist/easyprivacy.txt')
             .then(raw => ({ name: 'easyprivacy', raw })),
         read('assets/thirdparties/pgl.yoyo.org/as/serverlist')
             .then(raw => ({ name: 'PGL', raw })),

@@ -36,6 +36,16 @@ const logDate = new Date();
 const logDateTimezoneOffset = logDate.getTimezoneOffset() * 60000;
 const loggerEntries = [];
 
+const COLUMN_TIMESTAMP = 0;
+const COLUMN_FILTER = 1;
+const COLUMN_MESSAGE = 1;
+const COLUMN_RESULT = 2;
+const COLUMN_INITIATOR = 3;
+const COLUMN_PARTYNESS = 4;
+const COLUMN_METHOD = 5;
+const COLUMN_TYPE = 6;
+const COLUMN_URL = 7;
+
 let filteredLoggerEntries = [];
 let filteredLoggerEntryVoidedCount = 0;
 
@@ -62,6 +72,82 @@ const tabIdFromAttribute = function(elem) {
     return isNaN(tabId) ? 0 : tabId;
 };
 
+
+/******************************************************************************/
+/******************************************************************************/
+
+const onStartMovingWidget = (( ) => {
+    let widget = null;
+    let ondone = null;
+    let mx0 = 0, my0 = 0;
+    let mx1 = 0, my1 = 0;
+    let l0 = 0, t0 = 0;
+    let pw = 0, ph = 0;
+    let cw = 0, ch = 0;
+    let timer;
+
+    const eatEvent = function(ev) {
+        ev.stopPropagation();
+        ev.preventDefault();
+    };
+
+    const move = ( ) => {
+        timer = undefined;
+        const l1 = Math.min(Math.max(l0 + mx1 - mx0, 0), pw - cw);
+        if ( (l1+cw/2) < (pw/2) ) {
+            widget.style.left = `${l1/pw*100}%`;
+            widget.style.right = '';
+        } else {
+            widget.style.right = `${(pw-l1-cw)/pw*100}%`;
+            widget.style.left = '';
+        }
+        const t1 = Math.min(Math.max(t0 + my1 - my0, 0), ph - ch);
+        widget.style.top = `${t1/ph*100}%`;
+        widget.style.bottom = '';
+    };
+
+    const moveAsync = ev => {
+        if ( timer !== undefined ) { return; }
+        mx1 = ev.pageX;
+        my1 = ev.pageY;
+        timer = self.requestAnimationFrame(move);
+        eatEvent(ev);
+    };
+
+    const stop = ev => {
+        if ( timer !== undefined ) {
+            self.cancelAnimationFrame(timer);
+            timer = undefined;
+        }
+        if ( widget.classList.contains('moving') === false ) { return; }
+        widget.classList.remove('moving');
+        self.removeEventListener('mousemove', moveAsync, { capture: true });
+        eatEvent(ev);
+        widget = null;
+        if ( ondone !== null ) {
+            ondone();
+            ondone = null;
+        }
+    };
+
+    return function(ev, target, callback) {
+        if ( dom.cl.has(target, 'moving') ) { return; }
+        widget = target;
+        ondone = callback || null;
+        mx0 = ev.pageX; my0 = ev.pageY;
+        const widgetParent = widget.parentElement;
+        const crect = widget.getBoundingClientRect();
+        const prect = widgetParent.getBoundingClientRect();
+        pw = prect.width; ph = prect.height;
+        cw = crect.width; ch = crect.height;
+        l0 = crect.x - prect.x; t0 = crect.y - prect.y;
+        widget.classList.add('moving');
+        self.addEventListener('mousemove', moveAsync, { capture: true });
+        self.addEventListener('mouseup', stop, { capture: true, once: true });
+        eatEvent(ev);
+    };
+})();
+
 /******************************************************************************/
 /******************************************************************************/
 
@@ -69,8 +155,8 @@ const tabIdFromAttribute = function(elem) {
 //
 const modalDialog = (( ) => {
     const overlay = qs$('#modalOverlay');
-    const container = qs$(overlay, ':scope > div > div:nth-of-type(1)');
-    const closeButton = qs$(overlay, ':scope > div > div:nth-of-type(2)');
+    const container = qs$('#modalOverlayContainer');
+    const closeButton = qs$(overlay, ':scope .closeButton');
     let onDestroyed;
 
     const removeChildren = logger.removeAllChildren = function(node) {
@@ -114,6 +200,7 @@ const modalDialog = (( ) => {
 })();
 
 self.logger.modalDialog = modalDialog;
+
 
 /******************************************************************************/
 /******************************************************************************/
@@ -211,7 +298,6 @@ const LogEntry = function(details) {
             this[prop] = details[prop];
         }
     }
-    this.type = details.stype || details.type;
     if ( details.aliasURL !== undefined ) {
         this.aliased = true;
     }
@@ -233,6 +319,7 @@ LogEntry.prototype = {
     domain: '',
     filter: undefined,
     id: '',
+    method: '',
     realm: '',
     tabDomain: '',
     tabHostname: '',
@@ -413,17 +500,20 @@ const parseLogEntry = function(details) {
         textContent.push('');
     }
 
-    // Cell 5
+    // Cell 5: method
+    textContent.push(entry.method || '');
+
+    // Cell 6
     textContent.push(
         normalizeToStr(prettyRequestTypes[entry.type] || entry.type)
     );
 
-    // Cell 6
+    // Cell 7
     textContent.push(normalizeToStr(details.url));
 
     // Hidden cells -- useful for row-filtering purpose
 
-    // Cell 7
+    // Cell 8
     if ( entry.aliased ) {
         textContent.push(`aliasURL=${details.aliasURL}`);
     }
@@ -534,49 +624,56 @@ const viewPort = (( ) => {
                 : 0;
         });
         const reservedWidth =
-            cellWidths[0] + cellWidths[2] + cellWidths[4] + cellWidths[5];
-        cellWidths[6] = 0.5;
-        if ( cellWidths[1] === 0 && cellWidths[3] === 0 ) {
-            cellWidths[6] = 1;
-        } else if ( cellWidths[1] === 0 ) {
-            cellWidths[3] = 0.35;
-            cellWidths[6] = 0.65;
-        } else if ( cellWidths[3] === 0 ) {
-            cellWidths[1] = 0.35;
-            cellWidths[6] = 0.65;
+            cellWidths[COLUMN_TIMESTAMP] +
+            cellWidths[COLUMN_RESULT] +
+            cellWidths[COLUMN_PARTYNESS] +
+            cellWidths[COLUMN_METHOD] +
+            cellWidths[COLUMN_TYPE];
+        cellWidths[COLUMN_URL] = 0.5;
+        if ( cellWidths[COLUMN_FILTER] === 0 && cellWidths[COLUMN_INITIATOR] === 0 ) {
+            cellWidths[COLUMN_URL] = 1;
+        } else if ( cellWidths[COLUMN_FILTER] === 0 ) {
+            cellWidths[COLUMN_INITIATOR] = 0.35;
+            cellWidths[COLUMN_URL] = 0.65;
+        } else if ( cellWidths[COLUMN_INITIATOR] === 0 ) {
+            cellWidths[COLUMN_FILTER] = 0.35;
+            cellWidths[COLUMN_URL] = 0.65;
         } else {
-            cellWidths[1] = 0.25;
-            cellWidths[3] = 0.25;
-            cellWidths[6] = 0.5;
+            cellWidths[COLUMN_FILTER] = 0.25;
+            cellWidths[COLUMN_INITIATOR] = 0.25;
+            cellWidths[COLUMN_URL] = 0.5;
         }
         const style = qs$('#vwRendererRuntimeStyles');
         const cssRules = [
             '#vwContent .logEntry {',
             `  height: ${newLineHeight}px;`,
             '}',
-            '#vwContent .logEntry > div > span:nth-of-type(1) {',
-            `  width: ${cellWidths[0]}px;`,
+            `#vwContent .logEntry > div > span:nth-of-type(${COLUMN_TIMESTAMP+1}) {`,
+            `  width: ${cellWidths[COLUMN_TIMESTAMP]}px;`,
             '}',
-            '#vwContent .logEntry > div > span:nth-of-type(2) {',
-            `  width: calc(calc(100% - ${reservedWidth}px) * ${cellWidths[1]});`,
+            `#vwContent .logEntry > div > span:nth-of-type(${COLUMN_FILTER+1}) {`,
+            `  width: calc(calc(100% - ${reservedWidth}px) * ${cellWidths[COLUMN_FILTER]});`,
             '}',
-            '#vwContent .logEntry > div.messageRealm > span:nth-of-type(2) {',
-            `  width: calc(100% - ${cellWidths[0]}px);`,
+            `#vwContent .logEntry > div.messageRealm > span:nth-of-type(${COLUMN_MESSAGE+1}) {`,
+            `  width: calc(100% - ${cellWidths[COLUMN_MESSAGE]}px);`,
             '}',
-            '#vwContent .logEntry > div > span:nth-of-type(3) {',
-            `  width: ${cellWidths[2]}px;`,
+            `#vwContent .logEntry > div > span:nth-of-type(${COLUMN_RESULT+1}) {`,
+            `  width: ${cellWidths[COLUMN_RESULT]}px;`,
             '}',
-            '#vwContent .logEntry > div > span:nth-of-type(4) {',
-            `  width: calc(calc(100% - ${reservedWidth}px) * ${cellWidths[3]});`,
+            `#vwContent .logEntry > div > span:nth-of-type(${COLUMN_INITIATOR+1}) {`,
+            `  width: calc(calc(100% - ${reservedWidth}px) * ${cellWidths[COLUMN_INITIATOR]});`,
             '}',
-            '#vwContent .logEntry > div > span:nth-of-type(5) {',
-            `  width: ${cellWidths[4]}px;`,
+            `#vwContent .logEntry > div > span:nth-of-type(${COLUMN_PARTYNESS+1}) {`,
+            `  width: ${cellWidths[COLUMN_PARTYNESS]}px;`,
             '}',
-            '#vwContent .logEntry > div > span:nth-of-type(6) {',
-            `  width: ${cellWidths[5]}px;`,
+            `#vwContent .logEntry > div > span:nth-of-type(${COLUMN_METHOD+1}) {`,
+            `  width: ${cellWidths[COLUMN_METHOD]}px;`,
             '}',
-            '#vwContent .logEntry > div > span:nth-of-type(7) {',
-            `  width: calc(calc(100% - ${reservedWidth}px) * ${cellWidths[6]});`,
+            `#vwContent .logEntry > div > span:nth-of-type(${COLUMN_TYPE+1}) {`,
+            `  width: ${cellWidths[COLUMN_TYPE]}px;`,
+            '}',
+            `#vwContent .logEntry > div > span:nth-of-type(${COLUMN_URL+1}) {`,
+            `  width: calc(calc(100% - ${reservedWidth}px) * ${cellWidths[COLUMN_URL]});`,
             '}',
             '',
         ];
@@ -651,8 +748,8 @@ const viewPort = (( ) => {
         }
 
         // Timestamp
-        span = div.children[0];
-        span.textContent = cells[0];
+        span = div.children[COLUMN_TIMESTAMP];
+        span.textContent = cells[COLUMN_TIMESTAMP];
 
         // Tab id
         if ( details.tabId !== undefined ) {
@@ -666,8 +763,8 @@ const viewPort = (( ) => {
             if ( details.type !== undefined ) {
                 dom.attr(div, 'data-type', details.type);
             }
-            span = div.children[1];
-            span.textContent = cells[1];
+            span = div.children[COLUMN_MESSAGE];
+            span.textContent = cells[COLUMN_MESSAGE];
             return div;
         }
 
@@ -692,23 +789,23 @@ const viewPort = (( ) => {
                 dom.attr(div, 'data-modifier', '');
             }
         }
-        span = div.children[1];
-        if ( renderFilterToSpan(span, cells[1]) === false ) {
-            span.textContent = cells[1];
+        span = div.children[COLUMN_FILTER];
+        if ( renderFilterToSpan(span, cells[COLUMN_FILTER]) === false ) {
+            span.textContent = cells[COLUMN_FILTER];
         }
 
         // Event
-        if ( cells[2] === '--' ) {
+        if ( cells[COLUMN_RESULT] === '--' ) {
             dom.attr(div, 'data-status', '1');
-        } else if ( cells[2] === '++' ) {
+        } else if ( cells[COLUMN_RESULT] === '++' ) {
             dom.attr(div, 'data-status', '2');
-        } else if ( cells[2] === '**' ) {
+        } else if ( cells[COLUMN_RESULT] === '**' ) {
             dom.attr(div, 'data-status', '3');
-        } else if ( cells[2] === '<<' ) {
+        } else if ( cells[COLUMN_RESULT] === '<<' ) {
             divcl.add('redirect');
         }
-        span = div.children[2];
-        span.textContent = cells[2];
+        span = div.children[COLUMN_RESULT];
+        span.textContent = cells[COLUMN_RESULT];
 
         // Origins
         if ( details.tabHostname ) {
@@ -717,12 +814,12 @@ const viewPort = (( ) => {
         if ( details.docHostname ) {
             dom.attr(div, 'data-dochn', details.docHostname);
         }
-        span = div.children[3];
-        span.textContent = cells[3];
+        span = div.children[COLUMN_INITIATOR];
+        span.textContent = cells[COLUMN_INITIATOR];
 
         // Partyness
         if (
-            cells[4] !== '' &&
+            cells[COLUMN_PARTYNESS] !== '' &&
             details.realm === 'network' &&
             details.domain !== undefined
         ) {
@@ -733,12 +830,16 @@ const viewPort = (( ) => {
             text += ` \u21d2 ${details.domain}`;
             dom.attr(div, 'data-parties', text);
         }
-        span = div.children[4];
-        span.textContent = cells[4];
+        span = div.children[COLUMN_PARTYNESS];
+        span.textContent = cells[COLUMN_PARTYNESS];
+
+        // Method
+        span = div.children[COLUMN_METHOD];
+        span.textContent = cells[COLUMN_METHOD];
 
         // Type
-        span = div.children[5];
-        span.textContent = cells[5];
+        span = div.children[COLUMN_TYPE];
+        span.textContent = cells[COLUMN_TYPE];
 
         // URL
         let re;
@@ -747,10 +848,10 @@ const viewPort = (( ) => {
         } else if ( filteringType === 'dynamicUrl' ) {
             re = regexFromURLFilteringResult(filter.rule.join(' '));
         }
-        nodeFromURL(div.children[6], cells[6], re);
+        nodeFromURL(div.children[COLUMN_URL], cells[COLUMN_URL], re);
 
         // Alias URL (CNAME, etc.)
-        if ( cells.length > 7 ) {
+        if ( cells.length > 8 ) {
             const pos = details.textContent.lastIndexOf('\taliasURL=');
             if ( pos !== -1 ) {
                 dom.attr(div, 'data-aliasid', details.id);
@@ -1099,15 +1200,41 @@ const pageSelectorFromURLHash = (( ) => {
 
 /******************************************************************************/
 
-const reloadTab = function(ev) {
+const reloadTab = function(bypassCache = false) {
     const tabId = tabIdFromPageSelector();
     if ( tabId <= 0 ) { return; }
     messaging.send('loggerUI', {
         what: 'reloadTab',
-        tabId: tabId,
-        bypassCache: ev && (ev.ctrlKey || ev.metaKey || ev.shiftKey),
+        tabId,
+        bypassCache,
     });
 };
+
+dom.on('#refresh', 'click', ev => {
+    reloadTab(ev.ctrlKey || ev.metaKey || ev.shiftKey);
+});
+
+dom.on(document, 'keydown', ev => {
+    if ( ev.isComposing ) { return; }
+    let bypassCache = false;
+    switch ( ev.key ) {
+        case 'F5':
+            bypassCache = ev.ctrlKey || ev.metaKey || ev.shiftKey;
+            break;
+        case 'r':
+            if ( (ev.ctrlKey || ev.metaKey) !== true ) { return; }
+            break;
+        case 'R':
+            if ( (ev.ctrlKey || ev.metaKey) !== true ) { return; }
+            bypassCache = true;
+            break;
+        default:
+            return;
+    }
+    reloadTab(bypassCache);
+    ev.preventDefault();
+    ev.stopPropagation();
+}, { capture: true });
 
 /******************************************************************************/
 /******************************************************************************/
@@ -1242,7 +1369,14 @@ const reloadTab = function(ev) {
         const target = ev.target;
         const tcl = target.classList;
 
-        // Select a mode
+        // Close entry tools
+        if ( tcl.contains('closeButton') ) {
+            ev.stopPropagation();
+            toggleOff();
+            return;
+        }
+
+        // Select a pane
         if ( tcl.contains('header') ) {
             ev.stopPropagation();
             dom.attr(dialog, 'data-pane', dom.attr(target, 'data-pane'));
@@ -1360,16 +1494,6 @@ const reloadTab = function(ev) {
             return;
         }
 
-        // Force a reload of the tab
-        if ( tcl.contains('reload') ) {
-            ev.stopPropagation();
-            messaging.send('loggerUI', {
-                what: 'reloadTab',
-                tabId: targetTabId,
-            });
-            return;
-        }
-
         // Highlight corresponding element in target web page
         if ( tcl.contains('picker') ) {
             ev.stopPropagation();
@@ -1468,7 +1592,7 @@ const reloadTab = function(ev) {
     };
 
     const filterFromTargetRow = function() {
-        return dom.text(targetRow.children[1]);
+        return dom.text(targetRow.children[COLUMN_FILTER]);
     };
 
     const aliasURLFromID = function(id) {
@@ -1476,13 +1600,13 @@ const reloadTab = function(ev) {
         for ( const entry of loggerEntries ) {
             if ( entry.id !== id || entry.aliased ) { continue; }
             const fields = entry.textContent.split('\t');
-            return fields[6] || '';
+            return fields[COLUMN_URL] || '';
         }
         return '';
     };
 
     const toSummaryPaneFilterNode = async function(receiver, filter) {
-        receiver.children[1].textContent = filter;
+        receiver.children[COLUMN_FILTER].textContent = filter;
         if ( dom.cl.has(targetRow, 'canLookup') === false ) { return; }
         const isException = reIsExceptionFilter.test(filter);
         let isExcepted = false;
@@ -1498,7 +1622,7 @@ const reloadTab = function(ev) {
     };
 
     const fillSummaryPaneFilterList = async function(rows) {
-        const rawFilter = targetRow.children[1].textContent;
+        const rawFilter = targetRow.children[COLUMN_FILTER].textContent;
 
         const nodeFromFilter = function(filter, lists) {
             const fragment = document.createDocumentFragment();
@@ -1561,7 +1685,7 @@ const reloadTab = function(ev) {
         } else if ( dom.cl.has(targetRow, 'extendedRealm') ) {
             const response = await messaging.send('loggerUI', {
                 what: 'listsFromCosmeticFilter',
-                url: targetRow.children[6].textContent,
+                url: targetRow.children[COLUMN_URL].textContent,
                 rawFilter: rawFilter,
             });
             handleResponse(response);
@@ -1619,19 +1743,19 @@ const reloadTab = function(ev) {
         // Partyness
         text = dom.attr(tr, 'data-parties') || '';
         if ( text !== '' ) {
-            rows[5].children[1].textContent = `(${trch[4].textContent})\u2002${text}`;
+            rows[5].children[1].textContent = `(${trch[COLUMN_PARTYNESS].textContent})\u2002${text}`;
         } else {
             rows[5].style.display = 'none';
         }
         // Type
-        text = trch[5].textContent;
+        text = trch[COLUMN_TYPE].textContent;
         if ( text !== '' ) {
             rows[6].children[1].textContent = text;
         } else {
             rows[6].style.display = 'none';
         }
         // URL
-        const canonicalURL = trch[6].textContent;
+        const canonicalURL = trch[COLUMN_URL].textContent;
         if ( canonicalURL !== '' ) {
             const attr = dom.attr(tr, 'data-status') || '';
             if ( attr !== '' ) {
@@ -1640,7 +1764,7 @@ const reloadTab = function(ev) {
                     dom.attr(rows[7], 'data-modifier', '');
                 }
             }
-            rows[7].children[1].appendChild(dom.clone(trch[6]));
+            rows[7].children[1].appendChild(dom.clone(trch[COLUMN_URL]));
         } else {
             rows[7].style.display = 'none';
         }
@@ -1815,14 +1939,7 @@ const reloadTab = function(ev) {
     };
 
     const fillDialog = function(domains) {
-        dialog = modalDialog.create(
-            '#netFilteringDialog',
-            ( ) => {
-                targetURLs = [];
-                targetRow = null;
-                dialog = null;
-            }
-        );
+        dialog = dom.clone('#templates .netFilteringDialog');
         dom.cl.toggle(
             dialog,
             'extendedRealm',
@@ -1838,7 +1955,27 @@ const reloadTab = function(ev) {
         dom.on(dialog, 'click', ev => { onClick(ev); }, true);
         dom.on(dialog, 'change', onSelectChange, true);
         dom.on(dialog, 'input', onInputChange, true);
-        modalDialog.show();
+        const container = qs$('#netInspector .entryTools');
+        if ( container.firstChild ) {
+            container.replaceChild(dialog, container.firstChild);
+        } else {
+            container.append(dialog);
+        }
+        dom.on(qs$(dialog, '.moveBand'), 'mousedown', ev => {
+            if ( ev.button !== 0 ) { return; }
+            onStartMovingWidget(ev, container, ( ) => {
+                const widget = qs$('#netInspector .entryTools');
+                vAPI.localStorage.setItem(
+                    'loggerUI.entryTools',
+                    JSON.stringify({
+                        bottom: widget.style.bottom,
+                        left: widget.style.left,
+                        right: widget.style.right,
+                        top: widget.style.top,
+                    })
+                );
+            });
+        });
     };
 
     const toggleOn = async function(ev) {
@@ -1846,8 +1983,8 @@ const reloadTab = function(ev) {
         if ( targetRow === null ) { return; }
         ev.stopPropagation();
         targetTabId = tabIdFromAttribute(targetRow);
-        targetType = targetRow.children[5].textContent.trim() || '';
-        targetURLs = createTargetURLs(targetRow.children[6].textContent);
+        targetType = targetRow.children[COLUMN_TYPE].textContent.trim() || '';
+        targetURLs = createTargetURLs(targetRow.children[COLUMN_URL].textContent);
         targetPageHostname = dom.attr(targetRow, 'data-tabhn') || '';
         targetFrameHostname = dom.attr(targetRow, 'data-dochn') || '';
 
@@ -1863,10 +2000,33 @@ const reloadTab = function(ev) {
         fillDialog(domains);
     };
 
+    const toggleOff = function() {
+        const container = qs$('#netInspector .entryTools');
+        if ( container.firstChild ) {
+            container.firstChild.remove();
+        }
+        targetURLs = [];
+        targetRow = null;
+        dialog = null;
+    };
+
+    // Restore position of entry tools dialog
+    vAPI.localStorage.getItemAsync(
+        'loggerUI.entryTools',
+    ).then(response => {
+        if ( typeof response !== 'string' ) { return; }
+        const settings = JSON.parse(response);
+        const widget = qs$('#netInspector .entryTools');
+        widget.style.bottom = settings.bottom || '';
+        widget.style.left = settings.left || '';
+        widget.style.right = settings.right || '';
+        widget.style.top = settings.top || '';
+    });
+
     dom.on(
         '#netInspector',
         'click',
-        '.canDetails > span:nth-of-type(2),.canDetails > span:nth-of-type(3),.canDetails > span:nth-of-type(5)',
+        '.canDetails > span:not(:nth-of-type(4)):not(:nth-of-type(8))',
         ev => { toggleOn(ev); }
     );
 })();
@@ -2640,7 +2800,7 @@ const loggerSettings = (( ) => {
             maxEntryCount: 2000,    // per-tab
             maxLoadCount: 20,       // per-tab
         },
-        columns: [ true, true, true, true, true, true, true, true ],
+        columns: [ true, true, true, true, true, true, true, true, true ],
         linesPerEntry: 4,
     };
 
@@ -2800,7 +2960,6 @@ dom.on(window, 'beforeunload', releaseView);
 /******************************************************************************/
 
 dom.on('#pageSelector', 'change', pageSelectorChanged);
-dom.on('#refresh', 'click', reloadTab);
 dom.on('#netInspector .vCompactToggler', 'click', toggleVCompactView);
 dom.on('#pause', 'click', pauseNetInspector);
 
