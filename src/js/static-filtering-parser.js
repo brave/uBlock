@@ -66,6 +66,12 @@ export const AST_TYPE_NETWORK                       = iota++;
 export const AST_TYPE_EXTENDED                      = iota++;
 
 iota = 0;
+export const AST_TYPE_NETWORK_PATTERN_ANY           = iota++;
+export const AST_TYPE_NETWORK_PATTERN_HOSTNAME      = iota++;
+export const AST_TYPE_NETWORK_PATTERN_PLAIN         = iota++;
+export const AST_TYPE_NETWORK_PATTERN_REGEX         = iota++;
+export const AST_TYPE_NETWORK_PATTERN_GENERIC       = iota++;
+export const AST_TYPE_NETWORK_PATTERN_BAD           = iota++;
 export const AST_TYPE_EXTENDED_COSMETIC             = iota++;
 export const AST_TYPE_EXTENDED_SCRIPTLET            = iota++;
 export const AST_TYPE_EXTENDED_HTML                 = iota++;
@@ -76,9 +82,6 @@ export const AST_FLAG_UNSUPPORTED                   = 1 << iota++;
 export const AST_FLAG_IGNORE                        = 1 << iota++;
 export const AST_FLAG_HAS_ERROR                     = 1 << iota++;
 export const AST_FLAG_IS_EXCEPTION                  = 1 << iota++;
-export const AST_FLAG_HAS_WHITESPACE                = 1 << iota++;
-export const AST_FLAG_HAS_UPPERCASE                 = 1 << iota++;
-export const AST_FLAG_HAS_UNICODE                   = 1 << iota++;
 export const AST_FLAG_EXT_STRONG                    = 1 << iota++;
 export const AST_FLAG_EXT_STYLE                     = 1 << iota++;
 export const AST_FLAG_NET_PATTERN_LEFT_HNANCHOR     = 1 << iota++;
@@ -195,12 +198,6 @@ export const NODE_FLAG_ERROR                        = 1 << iota++;
 export const NODE_FLAG_IS_NEGATED                   = 1 << iota++;
 export const NODE_FLAG_OPTION_HAS_VALUE             = 1 << iota++;
 export const NODE_FLAG_PATTERN_UNTOKENIZABLE        = 1 << iota++;
-export const NODE_FLAG_PATTERN_ANY                  = 1 << iota++;
-export const NODE_FLAG_PATTERN_PLAIN                = 1 << iota++;
-export const NODE_FLAG_PATTERN_HOSTNAME             = 1 << iota++;
-export const NODE_FLAG_PATTERN_GENERIC              = 1 << iota++;
-export const NODE_FLAG_PATTERN_REGEX                = 1 << iota++;
-export const NODE_FLAG_PATTERN_BAD                  = 1 << iota++;
 
 export const nodeTypeFromOptionName = new Map([
     [ '', NODE_TYPE_NET_OPTION_NAME_UNKNOWN ],
@@ -309,6 +306,235 @@ export const nodeNameFromNodeType = new Map([
         nodeNameFromNodeType.set(type, name);
     }
 }
+
+/******************************************************************************/
+
+// Precomputed AST layouts for most common filters.
+
+const astTemplates = {
+    // ||example.com^
+    netHnAnchoredHostnameAscii: {
+        flags: AST_FLAG_NET_PATTERN_LEFT_HNANCHOR |
+            AST_FLAG_NET_PATTERN_RIGHT_PATHANCHOR,
+        type: NODE_TYPE_LINE_BODY,
+        begFromBeg: 0,
+        endFromEnd: 0,
+        children: [{
+            type: NODE_TYPE_NET_RAW,
+            begFromBeg: 0,
+            endFromEnd: 0,
+            children: [{
+                type: NODE_TYPE_NET_PATTERN_RAW,
+                begFromBeg: 0,
+                endFromEnd: 0,
+                register: true,
+                children: [{
+                    type: NODE_TYPE_NET_PATTERN_LEFT_HNANCHOR,
+                    begFromBeg: 0,
+                    endFromBeg: 2,
+                }, {
+                    type: NODE_TYPE_NET_PATTERN,
+                    begFromBeg: 2,
+                    endFromEnd: -1,
+                    register: true,
+                }, {
+                    type: NODE_TYPE_NET_PATTERN_PART_SPECIAL,
+                    begFromEnd: -1,
+                    endFromEnd: 0,
+                }],
+            }],
+        }],
+    },
+    // ||example.com^$third-party
+    net3pHnAnchoredHostnameAscii: {
+        flags: AST_FLAG_NET_PATTERN_LEFT_HNANCHOR |
+            AST_FLAG_NET_PATTERN_RIGHT_PATHANCHOR |
+            AST_FLAG_HAS_OPTIONS,
+        type: NODE_TYPE_LINE_BODY,
+        begFromBeg: 0,
+        endFromEnd: 0,
+        children: [{
+            type: NODE_TYPE_NET_RAW,
+            begFromBeg: 0,
+            endFromEnd: 0,
+            children: [{
+                type: NODE_TYPE_NET_PATTERN_RAW,
+                begFromBeg: 0,
+                endFromEnd: 0,
+                register: true,
+                children: [{
+                    type: NODE_TYPE_NET_PATTERN_LEFT_HNANCHOR,
+                    begFromBeg: 0,
+                    endFromBeg: 2,
+                }, {
+                    type: NODE_TYPE_NET_PATTERN,
+                    begFromBeg: 2,
+                    endFromEnd: -13,
+                    register: true,
+                }, {
+                    type: NODE_TYPE_NET_PATTERN_PART_SPECIAL,
+                    begFromEnd: -13,
+                    endFromEnd: -12,
+                }],
+            }, {
+                type: NODE_TYPE_NET_OPTIONS_ANCHOR,
+                begFromEnd: -12,
+                endFromEnd: -11,
+            }, {
+                type: NODE_TYPE_NET_OPTIONS,
+                begFromEnd: -11,
+                endFromEnd: 0,
+                register: true,
+                children: [{
+                    type: NODE_TYPE_NET_OPTION_RAW,
+                    begFromBeg: 0,
+                    endFromEnd: 0,
+                    children: [{
+                        type: NODE_TYPE_NET_OPTION_NAME_3P,
+                        begFromBeg: 0,
+                        endFromEnd: 0,
+                        register: true,
+                    }],
+                }],
+            }],
+        }],
+    },
+    // ||example.com/path/to/resource
+    netHnAnchoredPlainAscii: {
+        flags: AST_FLAG_NET_PATTERN_LEFT_HNANCHOR,
+        type: NODE_TYPE_LINE_BODY,
+        begFromBeg: 0,
+        endFromEnd: 0,
+        children: [{
+            type: NODE_TYPE_NET_RAW,
+            begFromBeg: 0,
+            endFromEnd: 0,
+            children: [{
+                type: NODE_TYPE_NET_PATTERN_RAW,
+                begFromBeg: 0,
+                endFromEnd: 0,
+                register: true,
+                children: [{
+                    type: NODE_TYPE_NET_PATTERN_LEFT_HNANCHOR,
+                    begFromBeg: 0,
+                    endFromBeg: 2,
+                }, {
+                    type: NODE_TYPE_NET_PATTERN,
+                    begFromBeg: 2,
+                    endFromEnd: 0,
+                    register: true,
+                }],
+            }],
+        }],
+    },
+    // example.com
+    // -resource.
+    netPlainAscii: {
+        type: NODE_TYPE_LINE_BODY,
+        begFromBeg: 0,
+        endFromEnd: 0,
+        children: [{
+            type: NODE_TYPE_NET_RAW,
+            begFromBeg: 0,
+            endFromEnd: 0,
+            children: [{
+                type: NODE_TYPE_NET_PATTERN_RAW,
+                begFromBeg: 0,
+                endFromEnd: 0,
+                register: true,
+                children: [{
+                    type: NODE_TYPE_NET_PATTERN,
+                    begFromBeg: 0,
+                    endFromEnd: 0,
+                    register: true,
+                }],
+            }],
+        }],
+    },
+    // 127.0.0.1 example.com
+    netHosts1: {
+        type: NODE_TYPE_LINE_BODY,
+        begFromBeg: 0,
+        endFromEnd: 0,
+        children: [{
+            type: NODE_TYPE_NET_RAW,
+            begFromBeg: 0,
+            endFromEnd: 0,
+            children: [{
+                type: NODE_TYPE_NET_PATTERN_RAW,
+                begFromBeg: 0,
+                endFromEnd: 0,
+                register: true,
+                children: [{
+                    type: NODE_TYPE_IGNORE,
+                    begFromBeg: 0,
+                    endFromBeg: 10,
+                }, {
+                    type: NODE_TYPE_NET_PATTERN,
+                    begFromBeg: 10,
+                    endFromEnd: 0,
+                    register: true,
+                }],
+            }],
+        }],
+    },
+    // 0.0.0.0 example.com
+    netHosts2: {
+        type: NODE_TYPE_LINE_BODY,
+        begFromBeg: 0,
+        endFromEnd: 0,
+        children: [{
+            type: NODE_TYPE_NET_RAW,
+            begFromBeg: 0,
+            endFromEnd: 0,
+            children: [{
+                type: NODE_TYPE_NET_PATTERN_RAW,
+                begFromBeg: 0,
+                endFromEnd: 0,
+                register: true,
+                children: [{
+                    type: NODE_TYPE_IGNORE,
+                    begFromBeg: 0,
+                    endFromBeg: 8,
+                }, {
+                    type: NODE_TYPE_NET_PATTERN,
+                    begFromBeg: 8,
+                    endFromEnd: 0,
+                    register: true,
+                }],
+            }],
+        }],
+    },
+    // ##.ads-container
+    extPlainGenericSelector: {
+        type: NODE_TYPE_LINE_BODY,
+        begFromBeg: 0,
+        endFromEnd: 0,
+        children: [{
+            type: NODE_TYPE_EXT_RAW,
+            begFromBeg: 0,
+            endFromEnd: 0,
+            children: [{
+                type: NODE_TYPE_EXT_OPTIONS_ANCHOR,
+                begFromBeg: 0,
+                endFromBeg: 2,
+                register: true,
+            }, {
+                type: NODE_TYPE_EXT_PATTERN_RAW,
+                begFromBeg: 2,
+                endFromEnd: 0,
+                register: true,
+                children: [{
+                    type: NODE_TYPE_EXT_PATTERN_COSMETIC,
+                    begFromBeg: 0,
+                    endFromEnd: 0,
+                }],
+            }],
+        }],
+    },
+};
+
+/******************************************************************************/
 
 export const removableHTTPHeaders = new Set([
     'location',
@@ -467,6 +693,9 @@ export class AstFilterParser {
         this.punycoder = new URL('https://ublock0.invalid/');
         this.domainListIteratorJunkyard = [];
         this.walkerJunkyard = [];
+        this.hasWhitespace = false;
+        this.hasUnicode = false;
+        this.hasUppercase = false;
         // Options
         this.interactive = options.interactive || false;
         this.expertMode = options.expertMode || false;
@@ -483,9 +712,15 @@ export class AstFilterParser {
         this.reInlineComment = /(?:\s+#).*?$/;
         this.reNetException = /^@@/;
         this.reNetAnchor = /(?:)\$[^,\w~]/;
-        this.rePlainHostname = /^(?:[\da-z][\da-z_-]*\.)*[\da-z-]*[\da-z]$/;
-        this.rePlainAdblockHostnameAscii = /^\|\|(?:[\da-z][\da-z_-]*\.)*[\da-z_-]*[\da-z]\^$/;
-        this.rePlainAdblockHostnameUnicode = /^\|\|(?:[\p{L}\p{N}][\p{L}\p{N}\u{2d}]*\.)*[\p{L}\p{N}\u{2d}]*[\p{L}\p{N}]\^$/u;
+        this.reHnAnchoredPlainAscii = /^\|\|[0-9a-z%&,\-.\/:;=?_]+$/;
+        this.reHnAnchoredHostnameAscii = /^\|\|(?:[\da-z][\da-z_-]*\.)*[\da-z_-]*[\da-z]\^$/;
+        this.reHnAnchoredHostnameUnicode = /^\|\|(?:[\p{L}\p{N}][\p{L}\p{N}\u{2d}]*\.)*[\p{L}\p{N}\u{2d}]*[\p{L}\p{N}]\^$/u;
+        this.reHn3pAnchoredHostnameAscii = /^\|\|(?:[\da-z][\da-z_-]*\.)*[\da-z_-]*[\da-z]\^\$third-party$/;
+        this.rePlainAscii = /^[0-9a-z%&\-.\/:;=?_]{2,}$/;
+        this.reNetHosts1 = /^127\.0\.0\.1 (?:[\da-z][\da-z_-]*\.)+[\da-z-]*[a-z]$/;
+        this.reNetHosts2 = /^0\.0\.0\.0 (?:[\da-z][\da-z_-]*\.)+[\da-z-]*[a-z]$/;
+        this.rePlainGenericCosmetic = /^##[.#][A-Za-z_][\w-]*$/;
+        this.reHostnameAscii = /^(?:[\da-z][\da-z_-]*\.)*[\da-z-]*[\da-z]$/;
         this.rePlainEntity = /^(?:[\da-z][\da-z_-]*\.)+\*$/;
         this.reHostsSink = /^[\w%.:\[\]-]+\s+/;
         this.reHostsRedirect = /(?:0\.0\.0\.0|broadcasthost|local|localhost(?:\.localdomain)?|ip6-\w+)(?:[^\w.-]|$)/;
@@ -526,12 +761,138 @@ export class AstFilterParser {
         this.astType = AST_TYPE_NONE;
         this.astTypeFlavor = AST_TYPE_NONE;
         this.astFlags = 0;
-        this.rootNode = this.allocTypedNode(NODE_TYPE_LINE_RAW, 0, raw.length);
-        if ( raw.length === 0 ) { return; }
-        if ( this.reHasWhitespaceChar.test(raw) ) {
-            this.addFlags(AST_FLAG_HAS_WHITESPACE);
+        this.rootNode = this.allocTypedNode(NODE_TYPE_LINE_RAW, 0, this.rawEnd);
+        if ( this.rawEnd === 0 ) { return; }
+
+        // Fast-track very common simple filters using pre-computed AST layouts
+        // to skip parsing and validation.
+        const c1st = this.raw.charCodeAt(0);
+        const clast = exCharCodeAt(this.raw, -1);
+        if ( c1st === 0x7C /* | */ ) {
+            if (
+                clast === 0x5E /* ^ */ &&
+                this.reHnAnchoredHostnameAscii.test(this.raw)
+            ) {
+                // ||example.com^
+                this.astType = AST_TYPE_NETWORK;
+                this.astTypeFlavor = AST_TYPE_NETWORK_PATTERN_HOSTNAME;
+                const node = this.astFromTemplate(this.rootNode,
+                    astTemplates.netHnAnchoredHostnameAscii
+                );
+                this.linkDown(this.rootNode, node);
+                return;
+            }
+            if (
+                this.raw.endsWith('$third-party') &&
+                this.reHn3pAnchoredHostnameAscii.test(this.raw)
+            ) {
+                // ||example.com^$third-party
+                this.astType = AST_TYPE_NETWORK;
+                this.astTypeFlavor = AST_TYPE_NETWORK_PATTERN_HOSTNAME;
+                const node = this.astFromTemplate(this.rootNode,
+                    astTemplates.net3pHnAnchoredHostnameAscii
+                );
+                this.linkDown(this.rootNode, node);
+                return;
+            }
+            if ( this.reHnAnchoredPlainAscii.test(this.raw) ) {
+                // ||example.com/path/to/resource
+                this.astType = AST_TYPE_NETWORK;
+                this.astTypeFlavor = AST_TYPE_NETWORK_PATTERN_PLAIN;
+                const node = this.astFromTemplate(this.rootNode,
+                    astTemplates.netHnAnchoredPlainAscii
+                );
+                this.linkDown(this.rootNode, node);
+                return;
+            }
+        } else if ( c1st === 0x23 /* # */ ) {
+            if ( this.rePlainGenericCosmetic.test(this.raw) ) {
+                // ##.ads-container
+                this.astType = AST_TYPE_EXTENDED;
+                this.astTypeFlavor = AST_TYPE_EXTENDED_COSMETIC;
+                const node = this.astFromTemplate(this.rootNode,
+                    astTemplates.extPlainGenericSelector
+                );
+                this.linkDown(this.rootNode, node);
+                this.result.exception = false;
+                this.result.raw = this.raw.slice(2);
+                this.result.compiled = this.raw.slice(2);
+                return;
+            }
+        } else if ( c1st === 0x31 /* 1 */ ) {
+            if ( this.reNetHosts1.test(this.raw) ) {
+                // 127.0.0.1 example.com
+                this.astType = AST_TYPE_NETWORK;
+                this.astTypeFlavor = AST_TYPE_NETWORK_PATTERN_HOSTNAME;
+                const node = this.astFromTemplate(this.rootNode,
+                    astTemplates.netHosts1
+                );
+                this.linkDown(this.rootNode, node);
+                return;
+            }
+        } else if ( c1st === 0x30 /* 0 */ ) {
+            if ( this.reNetHosts2.test(this.raw) ) {
+                // 0.0.0.0 example.com
+                this.astType = AST_TYPE_NETWORK;
+                this.astTypeFlavor = AST_TYPE_NETWORK_PATTERN_HOSTNAME;
+                const node = this.astFromTemplate(this.rootNode,
+                    astTemplates.netHosts2
+                );
+                this.linkDown(this.rootNode, node);
+                return;
+            }
+        } else if (
+            (c1st !== 0x2F /* / */ || clast !== 0x2F /* / */) &&
+            (this.rePlainAscii.test(this.raw))
+        ) {
+            // example.com
+            // -resource.
+            this.astType = AST_TYPE_NETWORK;
+            this.astTypeFlavor = this.reHostnameAscii.test(this.raw)
+                ? AST_TYPE_NETWORK_PATTERN_HOSTNAME
+                : AST_TYPE_NETWORK_PATTERN_PLAIN;
+            const node = this.astFromTemplate(this.rootNode,
+                astTemplates.netPlainAscii
+            );
+            this.linkDown(this.rootNode, node);
+            return;
         }
+
+        // All else: full parsing and validation.
+        this.hasWhitespace = this.reHasWhitespaceChar.test(raw);
         this.linkDown(this.rootNode, this.parseRaw(this.rootNode));
+    }
+
+    astFromTemplate(parent, template) {
+        const parentBeg = this.nodes[parent+NODE_BEG_INDEX];
+        const parentEnd = this.nodes[parent+NODE_END_INDEX];
+        const beg = template.begFromBeg !== undefined
+            ? parentBeg + template.begFromBeg
+            : parentEnd + template.begFromEnd;
+        const end = template.endFromEnd !== undefined
+            ? parentEnd + template.endFromEnd
+            : parentBeg + template.endFromBeg;
+        const node = this.allocTypedNode(template.type, beg, end);
+        if ( template.register ) {
+            this.addNodeToRegister(template.type, node);
+        }
+        if ( template.flags ) {
+            this.addFlags(template.flags);
+        }
+        if ( template.nodeFlags ) {
+            this.addNodeFlags(node, template.nodeFlags);
+        }
+        const children = template.children;
+        if ( children === undefined ) { return node; }
+        const head = this.astFromTemplate(node, children[0]);
+        this.linkDown(node, head);
+        const n = children.length;
+        if ( n === 1 ) { return node; }
+        let prev = head;
+        for ( let i = 1; i < n; i++ ) {
+            prev = this.linkRight(prev, this.astFromTemplate(node, children[i]));
+        }
+        return node;
     }
 
     getType() {
@@ -587,7 +948,7 @@ export class AstFilterParser {
         let prev = head, next = 0;
         const parentBeg = this.nodes[parent+NODE_BEG_INDEX];
         const parentEnd = this.nodes[parent+NODE_END_INDEX];
-        const l1 = this.hasWhitespace()
+        const l1 = this.hasWhitespace
             ? this.leftWhitespaceCount(this.getNodeString(parent))
             : 0;
         if ( l1 !== 0 ) {
@@ -599,7 +960,7 @@ export class AstFilterParser {
             prev = this.linkRight(prev, next);
             if ( l1 === parentEnd ) { return this.throwHeadNode(head); }
         }
-        const r0 = this.hasWhitespace()
+        const r0 = this.hasWhitespace
             ? parentEnd - this.rightWhitespaceCount(this.getNodeString(parent))
             : parentEnd;
         if ( r0 !== l1 ) {
@@ -637,14 +998,6 @@ export class AstFilterParser {
             return head;
         }
 
-        // Good to know in advance to avoid costly tests later on
-        if ( this.reHasUppercaseChar.test(parentStr) ) {
-            this.addFlags(AST_FLAG_HAS_UPPERCASE);
-        }
-        if ( this.reHasUnicodeChar.test(parentStr) ) {
-            this.addFlags(AST_FLAG_HAS_UNICODE);
-        }
-
         // An extended filter? (or rarely, a comment)
         if ( this.reExtAnchor.test(parentStr) ) {
             const match = this.reExtAnchor.exec(parentStr);
@@ -658,12 +1011,16 @@ export class AstFilterParser {
             return head;
         }
 
+        // Good to know in advance to avoid costly tests later on
+        this.hasUppercase = this.reHasUppercaseChar.test(parentStr);
+        this.hasUnicode = this.reHasUnicodeChar.test(parentStr);
+
         // A network filter (probably)
         this.astType = AST_TYPE_NETWORK;
 
         // Parse inline comment if any
         let tail = 0, tailStart = parentEnd;
-        if ( this.hasWhitespace() && this.reInlineComment.test(parentStr) ) {
+        if ( this.hasWhitespace && this.reInlineComment.test(parentStr) ) {
             const match = this.reInlineComment.exec(parentStr);
             tailStart = parentBeg + match.index;
             tail = this.allocTypedNode(NODE_TYPE_COMMENT, tailStart, parentEnd);
@@ -877,6 +1234,7 @@ export class AstFilterParser {
                     realBad = hasValue;
                     if ( realBad ) { break; }
                     modifierType = type;
+                    unredirectableTypeCount += 1;
                     break;
                 case NODE_TYPE_NET_OPTION_NAME_MATCHCASE:
                     realBad = this.isRegexPattern() === false;
@@ -915,8 +1273,7 @@ export class AstFilterParser {
                     realBad = true;
                     break;
                 case NODE_TYPE_NET_OPTION_NAME_WEBRTC:
-                    bad = true;
-                    realBad = isNegated || hasValue;
+                    realBad = true;
                     break;
                 case NODE_TYPE_NET_PATTERN:
                     realBad = this.hasOptions() === false &&
@@ -941,7 +1298,7 @@ export class AstFilterParser {
                 break;
             case NODE_TYPE_NET_OPTION_NAME_INLINEFONT:
             case NODE_TYPE_NET_OPTION_NAME_INLINESCRIPT:
-                realBad = abstractTypeCount || behaviorTypeCount || requestTypeCount;
+                realBad = behaviorTypeCount;
                 break;
             case NODE_TYPE_NET_OPTION_NAME_EMPTY:
                 realBad = abstractTypeCount || behaviorTypeCount;
@@ -991,12 +1348,12 @@ export class AstFilterParser {
 
         // Empty pattern
         if ( parentEnd === parentBeg ) {
+            this.astTypeFlavor = AST_TYPE_NETWORK_PATTERN_ANY;
             const node = this.allocTypedNode(
                 NODE_TYPE_NET_PATTERN,
                 parentBeg,
                 parentEnd
             );
-            this.addNodeFlags(node, NODE_FLAG_PATTERN_ANY);
             this.addNodeToRegister(NODE_TYPE_NET_PATTERN, node);
             this.setNodeTransform(node, '*');
             return node;
@@ -1017,10 +1374,7 @@ export class AstFilterParser {
             clast === 0x5E /* ^ */ &&
             this.isAdblockHostnamePattern(pattern)
         ) {
-            pattern = pattern.slice(2, -1);
-            const normal = this.hasUnicode()
-                ? this.normalizeHostnameValue(pattern)
-                : pattern;
+            this.astTypeFlavor = AST_TYPE_NETWORK_PATTERN_HOSTNAME;
             this.addFlags(
                 AST_FLAG_NET_PATTERN_LEFT_HNANCHOR |
                 AST_FLAG_NET_PATTERN_RIGHT_PATHANCHOR
@@ -1036,11 +1390,14 @@ export class AstFilterParser {
                 parentBeg + 2,
                 parentEnd - 1
             );
-            this.addNodeFlags(next, NODE_FLAG_PATTERN_HOSTNAME);
-            this.addNodeToRegister(NODE_TYPE_NET_PATTERN, next);
-            if ( normal !== pattern ) {
+            pattern = pattern.slice(2, -1);
+            const normal = this.hasUnicode
+                ? this.normalizeHostnameValue(pattern)
+                : pattern;
+            if ( normal !== undefined && normal !== pattern ) {
                 this.setNodeTransform(next, normal);
             }
+            this.addNodeToRegister(NODE_TYPE_NET_PATTERN, next);
             prev = this.linkRight(prev, next);
             next = this.allocTypedNode(
                 NODE_TYPE_NET_PATTERN_PART_SPECIAL,
@@ -1056,7 +1413,7 @@ export class AstFilterParser {
 
         // Hosts file entry?
         if (
-            this.hasWhitespace() &&
+            this.hasWhitespace &&
             this.isException() === false &&
             this.hasOptions() === false &&
             this.reHostsSink.test(pattern)
@@ -1068,7 +1425,7 @@ export class AstFilterParser {
             prev = this.linkRight(prev, next);
             if (
                 this.reHostsRedirect.test(pattern) ||
-                this.rePlainHostname.test(pattern) === false
+                this.reHostnameAscii.test(pattern) === false
             ) {
                 this.astType = AST_TYPE_NONE;
                 this.addFlags(AST_FLAG_IGNORE);
@@ -1076,6 +1433,7 @@ export class AstFilterParser {
                 prev = this.linkRight(prev, next);
                 return this.throwHeadNode(head);
             }
+            this.astTypeFlavor = AST_TYPE_NETWORK_PATTERN_HOSTNAME;
             this.addFlags(
                 AST_FLAG_NET_PATTERN_LEFT_HNANCHOR |
                 AST_FLAG_NET_PATTERN_RIGHT_PATHANCHOR
@@ -1085,7 +1443,6 @@ export class AstFilterParser {
                 patternBeg,
                 parentEnd
             );
-            this.addNodeFlags(next, NODE_FLAG_PATTERN_HOSTNAME);
             this.addNodeToRegister(NODE_TYPE_NET_PATTERN, next);
             this.linkRight(prev, next);
             return this.throwHeadNode(head);
@@ -1096,13 +1453,13 @@ export class AstFilterParser {
             c1st === 0x2F /* / */ && clast === 0x2F /* / */ &&
             pattern.length > 2
         ) {
+            this.astTypeFlavor = AST_TYPE_NETWORK_PATTERN_REGEX;
             const normal = this.normalizeRegexPattern(pattern);
             next = this.allocTypedNode(
                 NODE_TYPE_NET_PATTERN,
                 patternBeg,
                 patternEnd
             );
-            this.addNodeFlags(next, NODE_FLAG_PATTERN_REGEX);
             this.addNodeToRegister(NODE_TYPE_NET_PATTERN, next);
             if ( normal !== '' ) {
                 if ( normal !== pattern ) {
@@ -1115,8 +1472,9 @@ export class AstFilterParser {
                     }
                 }
             } else {
-                this.addNodeFlags(next, NODE_FLAG_PATTERN_BAD | NODE_FLAG_ERROR);
+                this.astTypeFlavor = AST_TYPE_NETWORK_PATTERN_BAD;
                 this.addFlags(AST_FLAG_HAS_ERROR);
+                this.addNodeFlags(next, NODE_FLAG_ERROR);
             }
             this.linkRight(prev, next);
             return this.throwHeadNode(head);
@@ -1227,20 +1585,19 @@ export class AstFilterParser {
             ? this.normalizePattern(pattern)
             : pattern;
         next = this.allocTypedNode(NODE_TYPE_NET_PATTERN, patternBeg, patternEnd);
-        let nodeFlags = 0;
         if ( normal === '' || pattern === '*' ) {
-            nodeFlags = NODE_FLAG_PATTERN_ANY;
-        } else if ( this.rePlainHostname.test(normal) ) {
-            nodeFlags = NODE_FLAG_PATTERN_HOSTNAME;
+            this.astTypeFlavor = AST_TYPE_NETWORK_PATTERN_ANY;
+        } else if ( this.reHostnameAscii.test(normal) ) {
+            this.astTypeFlavor = AST_TYPE_NETWORK_PATTERN_HOSTNAME;
         } else if ( this.reHasPatternSpecialChars.test(normal) ) {
-            nodeFlags = NODE_FLAG_PATTERN_GENERIC;
+            this.astTypeFlavor = AST_TYPE_NETWORK_PATTERN_GENERIC;
         } else if ( normal !== undefined ) {
-            nodeFlags = NODE_FLAG_PATTERN_PLAIN;
+            this.astTypeFlavor = AST_TYPE_NETWORK_PATTERN_PLAIN;
         } else {
-            nodeFlags = NODE_FLAG_PATTERN_BAD | NODE_FLAG_ERROR;
+            this.astTypeFlavor = AST_TYPE_NETWORK_PATTERN_BAD;
             this.addFlags(AST_FLAG_HAS_ERROR);
+            this.addNodeFlags(next, NODE_FLAG_ERROR);
         }
-        this.addNodeFlags(next, nodeFlags);
         this.addNodeToRegister(NODE_TYPE_NET_PATTERN, next);
         if ( needNormalization && normal !== undefined ) {
             this.setNodeTransform(next, normal);
@@ -1257,10 +1614,10 @@ export class AstFilterParser {
     }
 
     isAdblockHostnamePattern(pattern) {
-        if ( this.hasUnicode() ) {
-            return this.rePlainAdblockHostnameUnicode.test(pattern);
+        if ( this.hasUnicode ) {
+            return this.reHnAnchoredHostnameUnicode.test(pattern);
         }
-        return this.rePlainAdblockHostnameAscii.test(pattern);
+        return this.reHnAnchoredHostnameAscii.test(pattern);
     }
 
     parsePatternParts(parent, pattern) {
@@ -1308,13 +1665,13 @@ export class AstFilterParser {
     // Prepend with '*' character to prevent the browser API from refusing to
     // punycode -- this occurs when the extracted label starts with a dash.
     needPatternNormalization() {
-        return this.hasUppercase() || this.hasUnicode();
+        return this.hasUppercase || this.hasUnicode;
     }
 
     normalizePattern(pattern) {
         if ( this.reHasInvalidChar.test(pattern) ) { return; }
         let normal = pattern.toLowerCase();
-        if ( this.hasUnicode() === false ) { return normal; }
+        if ( this.hasUnicode === false ) { return normal; }
         // Punycode hostname part of the pattern.
         if ( this.reHostnamePatternPart.test(normal) ) {
             const match = this.reHostnamePatternPart.exec(normal);
@@ -1344,33 +1701,27 @@ export class AstFilterParser {
     }
 
     isAnyPattern() {
-        const node = this.nodeTypeLookupTable[NODE_TYPE_NET_PATTERN];
-        return (this.nodes[node+NODE_FLAGS_INDEX] & NODE_FLAG_PATTERN_ANY) !== 0;
+        return this.astTypeFlavor === AST_TYPE_NETWORK_PATTERN_ANY;
     }
 
     isHostnamePattern() {
-        const node = this.nodeTypeLookupTable[NODE_TYPE_NET_PATTERN];
-        return (this.nodes[node+NODE_FLAGS_INDEX] & NODE_FLAG_PATTERN_HOSTNAME) !== 0;
+        return this.astTypeFlavor === AST_TYPE_NETWORK_PATTERN_HOSTNAME;
     }
 
     isRegexPattern() {
-        const node = this.nodeTypeLookupTable[NODE_TYPE_NET_PATTERN];
-        return (this.nodes[node+NODE_FLAGS_INDEX] & NODE_FLAG_PATTERN_REGEX) !== 0;
+        return this.astTypeFlavor === AST_TYPE_NETWORK_PATTERN_REGEX;
     }
 
     isPlainPattern() {
-        const node = this.nodeTypeLookupTable[NODE_TYPE_NET_PATTERN];
-        return (this.nodes[node+NODE_FLAGS_INDEX] & NODE_FLAG_PATTERN_PLAIN) !== 0;
+        return this.astTypeFlavor === AST_TYPE_NETWORK_PATTERN_PLAIN;
     }
 
     isGenericPattern() {
-        const node = this.nodeTypeLookupTable[NODE_TYPE_NET_PATTERN];
-        return (this.nodes[node+NODE_FLAGS_INDEX] & NODE_FLAG_PATTERN_GENERIC) !== 0;
+        return this.astTypeFlavor === AST_TYPE_NETWORK_PATTERN_GENERIC;
     }
 
     isBadPattern() {
-        const node = this.nodeTypeLookupTable[NODE_TYPE_NET_PATTERN];
-        return (this.nodes[node+NODE_FLAGS_INDEX] & NODE_FLAG_PATTERN_BAD) !== 0;
+        return this.astTypeFlavor === AST_TYPE_NETWORK_PATTERN_BAD;
     }
 
     parseNetOptions(parent) {
@@ -1475,11 +1826,11 @@ export class AstFilterParser {
         );
         switch ( nodeOptionType ) {
             case NODE_TYPE_NET_OPTION_NAME_DENYALLOW:
-                this.linkDown(next, this.parseDomainList(next, '|'), 0b0000);
+                this.linkDown(next, this.parseDomainList(next, '|'), 0b00000);
                 break;
             case NODE_TYPE_NET_OPTION_NAME_FROM:
             case NODE_TYPE_NET_OPTION_NAME_TO:
-                this.linkDown(next, this.parseDomainList(next, '|', 0b1010));
+                this.linkDown(next, this.parseDomainList(next, '|', 0b11010));
                 break;
             default:
                 break;
@@ -1489,6 +1840,7 @@ export class AstFilterParser {
     }
 
     getNetOptionValue(type) {
+        if ( this.nodeTypeRegister.includes(type) === false ) { return ''; }
         const optionNode = this.nodeTypeLookupTable[type];
         if ( optionNode === 0 ) { return ''; }
         const valueNode = this.findDescendantByType(optionNode, NODE_TYPE_NET_OPTION_VALUE);
@@ -1496,7 +1848,7 @@ export class AstFilterParser {
         return this.getNodeTransform(valueNode);
     }
 
-    parseDomainList(parent, separator, mode = 0b0000) {
+    parseDomainList(parent, separator, mode = 0b00000) {
         const parentBeg = this.nodes[parent+NODE_BEG_INDEX];
         const parentEnd = this.nodes[parent+NODE_END_INDEX];
         const containerNode = this.allocTypedNode(
@@ -1522,9 +1874,7 @@ export class AstFilterParser {
                 end = s.indexOf(separator, beg);
             } else {
                 end = s.indexOf('/', beg+1);
-                end = end !== -1
-                    ? s.indexOf(separator, end+1)
-                    : s.indexOf(separator, beg);
+                end = s.indexOf(separator, end !== -1 ? end+1 : beg);
             }
             if ( end === -1 ) { end = listEnd; }
             if ( end !== beg ) {
@@ -1537,8 +1887,9 @@ export class AstFilterParser {
                 prev = this.linkRight(prev, domainNode);
             } else {
                 domainNode = 0;
-                if ( this.interactive && separatorNode !== 0 ) {
+                if ( separatorNode !== 0 ) {
                     this.addNodeFlags(separatorNode, NODE_FLAG_ERROR);
+                    this.addFlags(AST_FLAG_HAS_ERROR);
                 }
             }
             if ( s.charCodeAt(end) === separatorCode ) {
@@ -1550,13 +1901,19 @@ export class AstFilterParser {
                     parentBeg + end
                 );
                 prev = this.linkRight(prev, separatorNode);
-                if ( this.interactive && domainNode === 0 ) {
+                if ( domainNode === 0 ) {
                     this.addNodeFlags(separatorNode, NODE_FLAG_ERROR);
+                    this.addFlags(AST_FLAG_HAS_ERROR);
                 }
             } else {
                 separatorNode = 0;
             }
             beg = end;
+        }
+        // Dangling separator node
+        if ( separatorNode !== 0 ) {
+            this.addNodeFlags(separatorNode, NODE_FLAG_ERROR);
+            this.addFlags(AST_FLAG_HAS_ERROR);
         }
         this.linkDown(containerNode, this.throwHeadNode(listNode));
         return containerNode;
@@ -1578,12 +1935,13 @@ export class AstFilterParser {
         }
         if ( beg !== parentEnd ) {
             next = this.allocTypedNode(NODE_TYPE_OPTION_VALUE_DOMAIN, beg, parentEnd);
-            const hn = this.normalizeHostnameValue(this.getNodeString(next), mode);
+            const hn = this.normalizeDomainValue(this.getNodeString(next), mode);
             if ( hn !== undefined ) {
                 if ( hn !== '' ) {
                     this.setNodeTransform(next, hn);
                 } else {
                     this.addNodeFlags(parent, NODE_FLAG_ERROR);
+                    this.addFlags(AST_FLAG_HAS_ERROR);
                 }
             }
             if ( head === 0 ) {
@@ -1591,8 +1949,30 @@ export class AstFilterParser {
             } else {
                 this.linkRight(head, next);
             }
+        } else {
+            this.addNodeFlags(parent, NODE_FLAG_ERROR);
+            this.addFlags(AST_FLAG_HAS_ERROR);
         }
         return head;
+    }
+
+    // mode bits:
+    //   0b00001: can use wildcard at any position
+    //   0b00010: can use entity-based hostnames
+    //   0b00100: can use single wildcard
+    //   0b01000: can be negated
+    //   0b10000: can be a regex
+    normalizeDomainValue(s, modeBits) {
+        if ( (modeBits & 0b10000) === 0 ||
+            s.length <= 2 ||
+            s.charCodeAt(0) !== 0x2F /* / */ ||
+            exCharCodeAt(s, -1) !== 0x2F /* / */
+        ) {
+            return this.normalizeHostnameValue(s, modeBits);
+        }
+        const source = this.normalizeRegexPattern(s);
+        if ( source === '' ) { return ''; }
+        return `/${source}/`;
     }
 
     parseExt(parent, anchorBeg, anchorLen) {
@@ -1610,7 +1990,7 @@ export class AstFilterParser {
             );
             this.addFlags(AST_FLAG_HAS_OPTIONS);
             this.addNodeToRegister(NODE_TYPE_EXT_OPTIONS, next);
-            this.linkDown(next, this.parseDomainList(next, ',', 0b1110));
+            this.linkDown(next, this.parseDomainList(next, ',', 0b11110));
             prev = this.linkRight(prev, next);
         }
         next = this.allocTypedNode(
@@ -1717,9 +2097,7 @@ export class AstFilterParser {
         }
         next = this.allocTypedNode(NODE_TYPE_EXT_PATTERN_SCRIPTLET, trimmedArg0, trimmedArg1);
         this.addNodeToRegister(NODE_TYPE_EXT_PATTERN_SCRIPTLET, next);
-        if ( this.interactive ) {
-            this.linkDown(next, this.parseExtPatternScriptletArgs(next));
-        }
+        this.linkDown(next, this.parseExtPatternScriptletArgs(next));
         prev = this.linkRight(prev, next);
         if ( trimmedArg1 !== rawArg1 ) {
             next = this.allocTypedNode(NODE_TYPE_WHITESPACE, trimmedArg1, rawArg1);
@@ -1925,18 +2303,6 @@ export class AstFilterParser {
         return (this.astFlags & AST_FLAG_NET_PATTERN_RIGHT_ANCHOR) !== 0;
     }
 
-    hasWhitespace() {
-        return (this.astFlags & AST_FLAG_HAS_WHITESPACE) !== 0;
-    }
-
-    hasUppercase() {
-        return (this.astFlags & AST_FLAG_HAS_UPPERCASE) !== 0;
-    }
-
-    hasUnicode() {
-        return (this.astFlags & AST_FLAG_HAS_UNICODE) !== 0;
-    }
-
     linkRight(prev, next) {
         return (this.nodes[prev+NODE_RIGHT_INDEX] = next);
     }
@@ -2140,12 +2506,17 @@ export class AstFilterParser {
     // making some other trivial checks.
     //
     // mode bits:
-    //   0b0001: can use wildcard at any position
-    //   0b0010: can use entity-based hostnames
-    //   0b0100: can use single wildcard
-    //   0b1000: can be negated
-    normalizeHostnameValue(s, modeBits = 0b0000) {
-        if ( this.rePlainHostname.test(s) ) { return; }
+    //   0b00001: can use wildcard at any position
+    //   0b00010: can use entity-based hostnames
+    //   0b00100: can use single wildcard
+    //   0b01000: can be negated
+    //
+    // returns:
+    //   undefined: no normalization needed, use original hostname
+    //   empty string: hostname is invalid
+    //   non-empty string: normalized hostname
+    normalizeHostnameValue(s, modeBits = 0b00000) {
+        if ( this.reHostnameAscii.test(s) ) { return; }
         if ( this.reBadHostnameChars.test(s) ) { return ''; }
         let hn = s;
         const hasWildcard = hn.includes('*');
@@ -2818,7 +3189,7 @@ class ExtSelectorCompiler {
             if ( hasArgs ) {
                 const arg = this.astSerialize(part.args);
                 if ( typeof arg !== 'string' ) { return; }
-                out.push(`(${arg})`);
+                out.push(`(${arg.trim()})`);
             }
             break;
         }
@@ -2937,7 +3308,7 @@ class ExtSelectorCompiler {
         }
         if ( tasks.length === 0 && out.action === undefined ) {
             if ( prelude.length === 0 ) { return; }
-            return prelude.join('');
+            return prelude.join('').trim();
         }
         if ( prelude.length !== 0 ) {
             tasks.push(this.createSpathTask(prelude.join('')));

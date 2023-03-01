@@ -135,6 +135,7 @@ const fromNetFilter = async function(rawFilter) {
 
     const writer = new CompiledListWriter();
     const parser = new sfp.AstFilterParser({
+        expertMode: true,
         nativeCssHas: vAPI.webextFlavor.env.includes('native_css_has'),
         maxTokenLength: staticNetFilteringEngine.MAX_TOKEN_LENGTH,
     });
@@ -148,9 +149,9 @@ const fromNetFilter = async function(rawFilter) {
     const id = messageId++;
     worker.postMessage({
         what: 'fromNetFilter',
-        id: id,
+        id,
         compiledFilter: writer.last(),
-        rawFilter: rawFilter
+        rawFilter,
     });
 
     return new Promise(resolve => {
@@ -173,9 +174,9 @@ const fromExtendedFilter = async function(details) {
 
     worker.postMessage({
         what: 'fromExtendedFilter',
-        id: id,
+        id,
         domain: domainFromHostname(hostname),
-        hostname: hostname,
+        hostname,
         ignoreGeneric:
             staticNetFilteringEngine.matchRequestReverse(
                 'generichide',

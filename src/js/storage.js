@@ -942,9 +942,6 @@ self.addEventListener('hiddenSettingsChanged', ( ) => {
 
 /******************************************************************************/
 
-// https://github.com/gorhill/uBlock/issues/3406
-//   Lower minimum update period to 1 day.
-
 µb.extractFilterListMetadata = function(assetKey, raw) {
     const listEntry = this.availableFilterLists[assetKey];
     if ( listEntry === undefined ) { return; }
@@ -972,7 +969,7 @@ self.addEventListener('hiddenSettingsChanged', ( ) => {
         let updateAfter = parseInt(matches[1], 10);
         if ( isNaN(updateAfter) === false ) {
             if ( matches[2] !== undefined ) {
-                updateAfter = Math.ceil(updateAfter / 24);
+                updateAfter = Math.ceil(updateAfter / 12) / 2;
             }
             updateAfter = Math.max(updateAfter, 0.5);
             if ( updateAfter !== listEntry.updateAfter ) {
@@ -1030,7 +1027,14 @@ self.addEventListener('hiddenSettingsChanged', ( ) => {
         parser.parse(line);
 
         if ( parser.isFilter() === false ) { continue; }
-        if ( parser.hasError() ) { continue; }
+        if ( parser.hasError() ) {
+            logger.writeOne({
+                realm: 'message',
+                type: 'error',
+                text: `Invalid filter: ${parser.raw}`
+            });
+            continue;
+        }
 
         if ( parser.isExtendedFilter() ) {
             staticExtFilteringEngine.compile(parser, writer);

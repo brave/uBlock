@@ -1,30 +1,30 @@
 uBO Lite (uBOL) es un bloqueador de contenido experimental con *menos permisos* basado en MV3.
 
-The default ruleset corresponds to uBlock Origin's default filterset:
+Por defecto ya trae configuradas las siguientes listas de filtros:
 
-- uBlock Origin's built-in filter lists
+- Listas de filtros de uBlock Origin
 - EasyList
 - EasyPrivacy
 - Peter Lowe’s Ad and tracking server list
 
-You can add more rulesets by visiting the options page -- click the _Cogs_ icon in the popup panel.
+Puedes añadir más conjuntos de reglas visitando la página de opciones, haz clic en el icono _Cogs_ del panel emergente.
 
-uBOL es completamente declarativo, lo que significa que no hay necesidad de un proceso uBOL permanente para que se produzca el filtrado, y el filtrado de contenido basado en la inyección de CSS/JS es realizado de forma confiable por el propio navegador y no por la extensión. Esto significa que uBOL en sí mismo no consume recursos de CPU/memoria mientras el bloqueo de contenido está en curso, el proceso service worker de uBOL se requiere _solo_ cuando se interactúa con el panel emergente o las páginas de opciones.
+uBOL es completamente declarativo, lo que significa que no hay necesidad de un proceso uBOL permanente para que se produzca el filtrado, y el filtrado de contenido basado en la inyección de CSS/JS se realiza de forma confiable por el propio navegador en lugar de la extensión. Esto significa que uBOL en sí mismo no consume recursos de CPU/memoria mientras el bloqueo de contenido está en curso, el proceso service worker de uBOL se requiere _solo_ cuando se interactúa con el panel emergente o las páginas de opciones.
 
-uBOL does not require broad "read and modify data" permission at install time, hence its limited capabilities out of the box compared to uBlock Origin or other content blockers requiring broad "read and modify data" permissions at install time.
+uBOL no requiere amplios permisos para "leer y modificar datos" en el momento de la instalación, de ahí sus capacidades limitadas en comparación con uBlock Origin u otros bloqueadores de contenido que requieren amplios permisos para "leer y modificar datos" en el momento de la instalación.
 
-However, uBOL allows you to *explicitly* grant extended permissions on specific sites of your choice so that it can better filter on those sites using cosmetic filtering and scriptlet injections.
+Sin embargo, uBOL te permite otorgar *explícitamente* permisos extendidos en sitios específicos de tu elección para que pueda filtrar mejor en esos sitios usando filtrado cosmético e inyecciones de scriptlet.
 
-To grant extended permissions on a given site, open the popup panel and pick a higher filtering mode such as Optimal or Complete.
+Para otorgar permisos extendidos en un sitio determinado, abre el panel emergente y elige un modo de filtrado superior, como óptimo o completo.
 
-The browser will then warn you about the effects of granting the additional permissions requested by the extension on the current site, and you will have to tell the browser whether you accept or decline the request.
+Después el navegador te advertirá sobre los efectos de otorgar los permisos adicionales solicitados por la extensión en el sitio actual, y deberás indicar al navegador si aceptas o rechazas la solicitud.
 
-If you accept uBOL's request for additional permissions on the current site, it will be able to better filter content for the current site.
+Si aceptas la solicitud de uBOL para permisos adicionales en el sitio actual, será capaz de filtrar mejor el contenido para el sitio actual.
 
-You can set the default filtering mode from uBOL's options page. If you pick the Optimal or Complete mode as the default one, you will need to grant uBOL the permission to read and modify data on all websites.
+Puedes establecer el modo de filtrado predeterminado desde la página de opciones de uBOL. Si eliges como predeterminado el modo óptimo o completo, tendrás que otorgar a uBOL el permiso para leer y modificar datos en todos los sitios web.
 
-Keep in mind this is still a work in progress, with these end goals:
+Téngase en cuenta que esto todavía es un trabajo en progreso, con estos objetivos finales:
 
-- No broad host permissions at install time -- extended permissions are granted explicitly by the user on a per-site basis.
+- Sin amplios permisos de host en el momento de la instalación, los permisos ampliados son otorgados explícitamente por el usuario en cada sitio.
 
 - Completamente declarativo para confiabilidad y eficiencia de la CPU/memoria.
