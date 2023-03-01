@@ -9,7 +9,7 @@ jobs:
   check-for-changes:
     runs-on: ubuntu-latest
     env:
-      FILES_TO_CHECK: "assets/resources/scriptlets.js|web_accessible_resources/|js/redirect-resources.js"
+      FILES_TO_CHECK: "assets/assets.json|assets/resources/scriptlets.js|web_accessible_resources/|js/redirect-resources.js"
       UPSTREAM_URL: "https://github.com/gorhill/ublock.git"
     outputs:
       changes: ${{ steps.git-check.outputs.changes-present }}
