@@ -1135,6 +1135,7 @@ const webRequest = {
             vAPI.net.addListener(
                 'onResponseStarted',
                 details => {
+                    if ( details.tabId === -1 ) { return; }
                     const pageStore = µb.pageStoreFromTabId(details.tabId);
                     if ( pageStore === null ) { return; }
                     if ( pageStore.getNetFilteringSwitch() === false ) { return; }
@@ -1146,6 +1147,7 @@ const webRequest = {
                 }
             );
             vAPI.net.unsuspend({ all: true });
+            µb.supportStats.unprocessedRequestCount = `${vAPI.net.unprocessedRequestCount}`;
         };
     })(),
 

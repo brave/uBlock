@@ -808,6 +808,16 @@ if ( webext.browserAction instanceof Object ) {
             vAPI.contextMenu.onMustUpdate(tabId);
         }
     };
+
+    vAPI.setDefaultIcon = function(flavor) {
+        if ( browserAction.setIcon === undefined ) { return; }
+        browserAction.setIcon({
+            path: {
+                '16': `img/icon_16${flavor}.png`,
+                '32': `img/icon_32${flavor}.png`,
+            }
+        });
+    };
 }
 
 browser.browserAction.onClicked.addListener(function(tab) {
@@ -1165,6 +1175,7 @@ vAPI.Net = class {
         this.suspendableListener = undefined;
         this.listenerMap = new WeakMap();
         this.suspendDepth = 0;
+        this.unprocessedRequestCount = 0;
 
         browser.webRequest.onBeforeRequest.addListener(
             details => {
@@ -1217,8 +1228,10 @@ vAPI.Net = class {
         );
     }
     onBeforeSuspendableRequest(details) {
-        if ( this.suspendableListener === undefined ) { return; }
-        return this.suspendableListener(details);
+        if ( this.suspendableListener !== undefined ) {
+            return this.suspendableListener(details);
+        }
+        this.unprocessedRequestCount += 1;
     }
     setSuspendableListener(listener) {
         this.suspendableListener = listener;
