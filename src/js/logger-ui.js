@@ -52,7 +52,6 @@ let filteredLoggerEntryVoidedCount = 0;
 let popupLoggerBox;
 let popupLoggerTooltips;
 let activeTabId = 0;
-let filterAuthorMode = false;
 let selectedTabId = 0;
 let netInspectorPaused = false;
 let cnameOfEnabled = false;
@@ -1112,8 +1111,6 @@ const onLogBufferRead = function(response) {
         allTabIdsToken = response.tabIdsToken;
     }
 
-    filterAuthorMode = response.filterAuthorMode === true;
-
     if ( activeTabIdChanged ) {
         pageSelectorFromURLHash();
     }
@@ -2069,6 +2066,23 @@ dom.on(document, 'keydown', ev => {
         'click',
         '.canDetails > span:not(:nth-of-type(4)):not(:nth-of-type(8))',
         ev => { toggleOn(ev); }
+    );
+
+    dom.on(
+        '#netInspector',
+        'click',
+        '.logEntry > div > span:nth-of-type(8) a',
+        ev => {
+            vAPI.messaging.send('codeViewer', {
+                what: 'gotoURL',
+                details: {
+                    url: ev.target.getAttribute('href'),
+                    select: true,
+                },
+            });
+            ev.preventDefault();
+            ev.stopPropagation();
+        }
     );
 })();
 
