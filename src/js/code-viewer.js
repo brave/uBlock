@@ -30,9 +30,9 @@ import { getActualTheme } from './theme.js';
 
 /******************************************************************************/
 
-const urlToTextMap = new Map();
+const urlToDocMap = new Map();
 const params = new URLSearchParams(document.location.search);
-let fromURL = '';
+let currentURL = '';
 
 const cmEditor = new CodeMirror(qs$('#content'), {
     autofocus: true,
@@ -88,49 +88,66 @@ cmEditor.addOverlay({
     },
 });
 
+urlToDocMap.set('', cmEditor.getDoc());
+
 /******************************************************************************/
 
 async function fetchResource(url) {
-    if ( urlToTextMap.has(url) ) {
-        return urlToTextMap.get(url);
-    }
     let response, text;
+    const fetchOptions = {
+        method: 'GET',
+        referrer: '',
+    };
+    if ( urlToDocMap.has(url) ) {
+        fetchOptions.cache = 'reload';
+    }
     try {
-        response = await fetch(url);
+        response = await fetch(url, fetchOptions);
         text = await response.text();
     } catch(reason) {
-        return;
+        text = String(reason);
     }
-    let mime = response.headers.get('Content-Type') || '';
+    let mime = response && response.headers.get('Content-Type') || '';
     mime = mime.replace(/\s*;.*$/, '').trim();
+    const beautifierOptions = {
+        'end_with_newline': true,
+        'indent_size': 2,
+        'html': {
+            'js': {
+                'indent_size': 4,
+            },
+        },
+        'js': {
+            'indent_size': 4,
+        },
+    };
     switch ( mime ) {
         case 'text/css':
-            text = beautifier.css(text, { indent_size: 2 });
+            text = beautifier.css(text, beautifierOptions);
             break;
         case 'text/html':
         case 'application/xhtml+xml':
         case 'application/xml':
         case 'image/svg+xml':
-            text = beautifier.html(text, { indent_size: 2 });
+            text = beautifier.html(text, beautifierOptions);
             break;
         case 'text/javascript':
         case 'application/javascript':
         case 'application/x-javascript':
-            text = beautifier.js(text, { indent_size: 4 });
+            text = beautifier.js(text, beautifierOptions);
             break;
         case 'application/json':
-            text = beautifier.js(text, { indent_size: 2 });
+            text = beautifier.js(text, beautifierOptions);
             break;
         default:
             break;
     }
-    urlToTextMap.set(url, { mime, text });
     return { mime, text };
 }
 
 /******************************************************************************/
 
-function updatePastURLs(url) {
+function addPastURLs(url) {
     const list = qs$('#pastURLs');
     let current;
     for ( let i = 0; i < list.children.length; i++ ) {
@@ -139,6 +156,7 @@ function updatePastURLs(url) {
         if ( span.textContent !== url ) { continue; }
         current = span;
     }
+    if ( url === '' ) { return; }
     if ( current === undefined ) {
         current = document.createElement('span');
         current.textContent = url;
@@ -149,51 +167,118 @@ function updatePastURLs(url) {
 
 /******************************************************************************/
 
+function setInputURL(url) {
+    const input = qs$('#header input[type="url"]');
+    if ( url === input.value ) { return; }
+    dom.attr(input, 'value', url);
+    input.value = url;
+}
+
+/******************************************************************************/
+
 async function setURL(resourceURL) {
     // For convenience, remove potentially existing quotes around the URL
     if ( /^(["']).+\1$/.test(resourceURL) ) {
         resourceURL = resourceURL.slice(1, -1);
     }
-    const input = qs$('#header input[type="url"]');
-    let to;
-    try {
-        to = new URL(resourceURL, fromURL || undefined);
-    } catch(ex) {
+    let afterURL;
+    if ( resourceURL !== '' ) {
+        try {
+            const url = new URL(resourceURL, currentURL || undefined);
+            url.hash = '';
+            afterURL = url.href;
+        } catch(ex) {
+        }
+        if ( afterURL === undefined ) { return; }
+    } else {
+        afterURL = '';
     }
-    if ( to === undefined ) { return; }
-    if ( /^https?:\/\/./.test(to.href) === false ) { return; }
-    if ( to.href === fromURL ) { return; }
-    let r;
-    try {
-        r = await fetchResource(to.href);
-    } catch(reason) {
+    if ( afterURL !== '' && /^https?:\/\/./.test(afterURL) === false ) {
+        return;
     }
-    if ( r === undefined ) { return; }
-    fromURL = to.href;
-    dom.attr(input, 'value', to.href);
-    input.value = to;
+    if ( afterURL === currentURL ) {
+        if ( afterURL !== resourceURL ) {
+            setInputURL(afterURL);
+        }
+        return;
+    }
+    let afterDoc = urlToDocMap.get(afterURL);
+    if ( afterDoc === undefined ) {
+        const r = await fetchResource(afterURL) || { mime: '', text: '' };
+        afterDoc = new CodeMirror.Doc(r.text, r.mime || '');
+        urlToDocMap.set(afterURL, afterDoc);
+    }
+    cmEditor.swapDoc(afterDoc);
+    currentURL = afterURL;
+    setInputURL(afterURL);
     const a = qs$('.cm-search-widget .sourceURL');
-    dom.attr(a, 'href', to);
-    dom.attr(a, 'title', to);
-    cmEditor.setOption('mode', r.mime || '');
-    cmEditor.setValue(r.text);
-    updatePastURLs(to.href);
+    dom.attr(a, 'href', afterURL);
+    dom.attr(a, 'title', afterURL);
+    addPastURLs(afterURL);
     // For unknown reasons, calling focus() synchronously does not work...
     vAPI.setTimeout(( ) => { cmEditor.focus(); }, 1);
 }
 
 /******************************************************************************/
 
-setURL(params.get('url'));
+function removeURL(url) {
+    if ( url === '' ) { return; }
+    const list = qs$('#pastURLs');
+    let foundAt = -1;
+    for ( let i = 0; i < list.children.length; i++ ) {
+        const span = list.children[i];
+        if ( span.textContent !== url ) { continue; }
+        foundAt = i;
+    }
+    if ( foundAt === -1 ) { return; }
+    list.children[foundAt].remove();
+    if ( foundAt >= list.children.length ) {
+        foundAt = list.children.length - 1;
+    }
+    const afterURL = foundAt !== -1
+        ? list.children[foundAt].textContent
+        : '';
+    setURL(afterURL);
+    urlToDocMap.delete(url);
+}
 
-dom.on('#header input[type="url"]', 'change', ev => {
-    setURL(ev.target.value);
-});
+/******************************************************************************/
 
-dom.on('#pastURLs', 'mousedown', 'span', ev => {
-    setURL(ev.target.textContent);
-});
+async function start() {
+    await setURL(params.get('url'));
 
-dom.on('#content', 'click', '.cm-href', ev => {
-    setURL(ev.target.textContent);
-});
+    dom.on('#header input[type="url"]', 'change', ev => {
+        setURL(ev.target.value);
+    });
+
+    dom.on('#reloadURL', 'click', ( ) => {
+        const input = qs$('#header input[type="url"]');
+        const url = input.value;
+        const beforeDoc = cmEditor.swapDoc(new CodeMirror.Doc('', ''));
+        fetchResource(url).then(r => {
+            if ( urlToDocMap.has(url) === false ) { return; }
+            const afterDoc = r !== undefined
+                ? new CodeMirror.Doc(r.text, r.mime || '')
+                : beforeDoc;
+            urlToDocMap.set(url, afterDoc);
+            if ( currentURL !== url ) { return; }
+            cmEditor.swapDoc(afterDoc);
+        });
+    });
+
+    dom.on('#removeURL', 'click', ( ) => {
+        removeURL(qs$('#header input[type="url"]').value);
+    });
+
+    dom.on('#pastURLs', 'mousedown', 'span', ev => {
+        setURL(ev.target.textContent);
+    });
+
+    dom.on('#content', 'click', '.cm-href', ev => {
+        setURL(ev.target.textContent);
+    });
+}
+
+start();
+
+/******************************************************************************/
