@@ -772,7 +772,10 @@ if ( webext.browserAction instanceof Object ) {
         const tab = await vAPI.tabs.get(tabId);
         if ( tab === null ) { return; }
 
-        const { parts, state, badge, color } = details;
+        const { parts, state } = details;
+        const { badge, color } = vAPI.net && vAPI.net.hasUnprocessedRequest(tabId)
+                ? { badge: '!', color: '#FC0' }
+                : details;
 
         if ( browserAction.setIcon !== undefined ) {
             if ( parts === undefined || (parts & 0b0001) !== 0 ) {
@@ -809,13 +812,17 @@ if ( webext.browserAction instanceof Object ) {
         }
     };
 
-    vAPI.setDefaultIcon = function(flavor) {
+    vAPI.setDefaultIcon = function(flavor, text) {
         if ( browserAction.setIcon === undefined ) { return; }
         browserAction.setIcon({
             path: {
                 '16': `img/icon_16${flavor}.png`,
                 '32': `img/icon_32${flavor}.png`,
             }
+        });
+        browserAction.setBadgeText({ text });
+        browserAction.setBadgeBackgroundColor({
+            color: text === '!' ? '#FFCC00' : '#666'
         });
     };
 }
@@ -1173,9 +1180,10 @@ vAPI.Net = class {
             }
         }
         this.suspendableListener = undefined;
+        this.deferredSuspendableListener = undefined;
         this.listenerMap = new WeakMap();
         this.suspendDepth = 0;
-        this.unprocessedRequestCount = 0;
+        this.unprocessedTabs = new Set();
 
         browser.webRequest.onBeforeRequest.addListener(
             details => {
@@ -1188,6 +1196,8 @@ vAPI.Net = class {
             this.denormalizeFilters({ urls: [ 'http://*/*', 'https://*/*' ] }),
             [ 'blocking' ]
         );
+
+        vAPI.setDefaultIcon('-loading', '');
     }
     setOptions(/* options */) {
     }
@@ -1231,10 +1241,26 @@ vAPI.Net = class {
         if ( this.suspendableListener !== undefined ) {
             return this.suspendableListener(details);
         }
-        this.unprocessedRequestCount += 1;
+        this.onUnprocessedRequest(details);
     }
     setSuspendableListener(listener) {
+        if ( this.unprocessedTabs.size !== 0 ) {
+            this.deferredSuspendableListener = listener;
+            listener = details => {
+                const { tabId, type  } = details;
+                if ( type === 'main_frame' && this.unprocessedTabs.has(tabId) ) {
+                    this.unprocessedTabs.delete(tabId);
+                    if ( this.unprocessedTabs.size === 0 ) {
+                        this.suspendableListener = this.deferredSuspendableListener;
+                        this.deferredSuspendableListener = undefined;
+                        return this.suspendableListener(details);
+                    }
+                }
+                return this.deferredSuspendableListener(details);
+            };
+        }
         this.suspendableListener = listener;
+        vAPI.setDefaultIcon('', '');
     }
     removeListener(which, clientListener) {
         const actualListener = this.listenerMap.get(clientListener);
@@ -1249,6 +1275,17 @@ vAPI.Net = class {
         };
         this.listenerMap.set(clientListener, actualListener);
         return actualListener;
+    }
+    onUnprocessedRequest(details) {
+        if ( details.tabId === -1 ) { return; }
+        if ( this.unprocessedTabs.size === 0 ) {
+            vAPI.setDefaultIcon('-loading', '!');
+        }
+        this.unprocessedTabs.add(details.tabId);
+    }
+    hasUnprocessedRequest(tabId) {
+        return this.unprocessedTabs.size !== 0 &&
+               this.unprocessedTabs.has(tabId);
     }
     suspendOneRequest() {
     }
@@ -1333,6 +1370,11 @@ vAPI.commands = browser.commands;
 // https://github.com/gorhill/uBlock/issues/900
 // Also, UC Browser: http://www.upsieutoc.com/image/WXuH
 
+// https://github.com/uBlockOrigin/uAssets/discussions/16939
+//   Use a cached version of admin settings, such that there is no blocking
+//   call on `storage.managed`. The side effect is that any changes to admin
+//   settings will require an extra extension restart to take effect.
+
 vAPI.adminStorage = (( ) => {
     if ( webext.storage.managed instanceof Object === false ) {
         return {
@@ -1341,17 +1383,47 @@ vAPI.adminStorage = (( ) => {
             },
         };
     }
+    const cacheManagedStorage = async ( ) => {
+        let store;
+        try {
+            store = await webext.storage.managed.get();
+        } catch(ex) {
+        }
+        webext.storage.local.set({ cachedManagedStorage: store || {} });
+    };
+
     return {
         get: async function(key) {
             let bin;
             try {
-                bin = await webext.storage.managed.get(key);
+                bin = await webext.storage.local.get('cachedManagedStorage') || {};
+                if ( Object.keys(bin).length === 0 ) {
+                    bin = await webext.storage.managed.get() || {};
+                } else {
+                    bin = bin.cachedManagedStorage;
+                }
             } catch(ex) {
+                bin = {};
+            }
+            cacheManagedStorage();
+            if ( key === undefined || key === null ) {
+                return bin;
             }
             if ( typeof key === 'string' && bin instanceof Object ) {
                 return bin[key];
             }
-            return bin;
+            const out = {};
+            if ( Array.isArray(key) ) {
+                for ( const k of key ) {
+                    if ( bin[k] === undefined ) { continue; }
+                    out[k] = bin[k];
+                }
+                return out;
+            }
+            for ( const [ k, v ] of Object.entries(key) ) {
+                out[k] = bin[k] !== undefined ? bin[k] : v;
+            }
+            return out;
         }
     };
 })();

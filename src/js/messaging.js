@@ -312,6 +312,10 @@ const onMessage = function(request, sender, callback) {
         µb.openNewTab(request.details);
         break;
 
+    case 'readyToFilter':
+        response = µb.readyToFilter;
+        break;
+
     // https://github.com/uBlockOrigin/uBlock-issues/issues/1954
     //   In case of document-blocked page, navigate to blocked URL instead
     //   of forcing a reload.
@@ -622,9 +626,12 @@ const onMessage = function(request, sender, callback) {
     case 'launchReporter': {
         const pageStore = µb.pageStoreFromTabId(request.tabId);
         if ( pageStore === null ) { break; }
+        if ( vAPI.net.hasUnprocessedRequest(request.tabId) ) {
+            request.popupPanel.hasUnprocessedRequest = true;
+        }
         const supportURL = new URL(vAPI.getURL('support.html'));
         supportURL.searchParams.set('pageURL', request.pageURL);
-        supportURL.searchParams.set('popupPanel', request.popupPanel);
+        supportURL.searchParams.set('popupPanel', JSON.stringify(request.popupPanel));
         µb.openNewTab({ url: supportURL.href, select: true, index: -1 });
         break;
     }
