@@ -202,6 +202,7 @@ assets.fetchText = async function(url) {
         const text = details.content.trim();
         if ( text.startsWith('<') && text.endsWith('>') ) {
             details.content = '';
+            details.error = 'assets.fetchText(): Not a text file';
         }
 
         // Important: Non empty text resource must always end with a newline
@@ -786,6 +787,7 @@ assets.get = async function(assetKey, options = {}) {
         contentURLs.push(...assetDetails.cdnURLs);
     }
 
+    let error = 'ENOTFOUND';
     for ( const contentURL of contentURLs ) {
         if ( reIsExternalPath.test(contentURL) && assetDetails.hasLocalURL ) {
             continue;
@@ -793,6 +795,9 @@ assets.get = async function(assetKey, options = {}) {
         const details = assetDetails.content === 'filters'
             ? await assets.fetchFilterList(contentURL)
             : await assets.fetchText(contentURL);
+        if ( details.error !== undefined ) {
+            error = details.error;
+        }
         if ( details.content === '' ) { continue; }
         if ( reIsExternalPath.test(contentURL) && options.dontCache !== true ) {
             assetCacheWrite(assetKey, {
@@ -800,10 +805,16 @@ assets.get = async function(assetKey, options = {}) {
                 url: contentURL,
                 silent: options.silent === true,
             });
+            registerAssetSource(assetKey, { error: undefined });
         }
         return reportBack(details.content, contentURL);
     }
-    return reportBack('', '', 'ENOTFOUND');
+    if ( assetRegistry[assetKey] !== undefined ) {
+        registerAssetSource(assetKey, {
+            error: { time: Date.now(), error }
+        });
+    }
+    return reportBack('', '', error);
 };
 
 /******************************************************************************/
