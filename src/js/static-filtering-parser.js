@@ -91,6 +91,14 @@ export const AST_FLAG_NET_PATTERN_RIGHT_ANCHOR      = 1 << iota++;
 export const AST_FLAG_HAS_OPTIONS                   = 1 << iota++;
 
 iota = 0;
+export const AST_ERROR_NONE                         = 1 << iota++;
+export const AST_ERROR_REGEX                        = 1 << iota++;
+export const AST_ERROR_PATTERN                      = 1 << iota++;
+export const AST_ERROR_DOMAIN_NAME                  = 1 << iota++;
+export const AST_ERROR_OPTION_DUPLICATE             = 1 << iota++;
+export const AST_ERROR_OPTION_UNKNOWN               = 1 << iota++;
+
+iota = 0;
 const NODE_RIGHT_INDEX                              = iota++;
 const NOOP_NODE_SIZE                                = iota;
 const NODE_TYPE_INDEX                               = iota++;
@@ -705,7 +713,7 @@ export class AstFilterParser {
         this.badTypes = new Set(options.badTypes || []);
         this.maxTokenLength = options.maxTokenLength || 7;
         // TODO: rethink this
-        this.result = { exception: false, raw: '', compiled: '' };
+        this.result = { exception: false, raw: '', compiled: '', error: undefined };
         this.selectorCompiler = new ExtSelectorCompiler(options);
         // Regexes
         this.reWhitespaceStart = /^\s+/;
@@ -736,7 +744,7 @@ export class AstFilterParser {
         this.reHasWhitespaceChar = /\s/;
         this.reHasUppercaseChar = /[A-Z]/;
         this.reHasUnicodeChar = /[^\x00-\x7F]/;
-        this.reUnicodeChars = /[^\x00-\x7F]/g;
+        this.reUnicodeChars = /\P{ASCII}/gu;
         this.reBadHostnameChars = /[\x00-\x24\x26-\x29\x2b\x2c\x2f\x3b-\x40\x5c\x5e\x60\x7b-\x7f]/;
         this.reIsEntity = /^[^*]+\.\*$/;
         this.rePreparseDirectiveIf = /^!#if /;
@@ -765,6 +773,7 @@ export class AstFilterParser {
         this.astType = AST_TYPE_NONE;
         this.astTypeFlavor = AST_TYPE_NONE;
         this.astFlags = 0;
+        this.astError = 0;
         this.rootNode = this.allocTypedNode(NODE_TYPE_LINE_RAW, 0, this.rawEnd);
         if ( this.rawEnd === 0 ) { return; }
 
@@ -1126,7 +1135,9 @@ export class AstFilterParser {
         if ( tail !== 0 ) {
             this.linkRight(prev, tail);
         }
-        this.validateNet();
+        if ( this.astType === AST_TYPE_NETWORK ) {
+            this.validateNet();
+        }
         return this.throwHeadNode(head);
     }
 
@@ -1270,6 +1281,7 @@ export class AstFilterParser {
                     realBad = isNegated || hasValue;
                     break;
                 case NODE_TYPE_NET_OPTION_NAME_UNKNOWN:
+                    this.astError = AST_ERROR_OPTION_UNKNOWN;
                     realBad = true;
                     break;
                 case NODE_TYPE_NET_OPTION_NAME_WEBRTC:
@@ -1473,6 +1485,7 @@ export class AstFilterParser {
                 }
             } else {
                 this.astTypeFlavor = AST_TYPE_NETWORK_PATTERN_BAD;
+                this.astError = AST_ERROR_REGEX;
                 this.addFlags(AST_FLAG_HAS_ERROR);
                 this.addNodeFlags(next, NODE_FLAG_ERROR);
             }
@@ -1590,18 +1603,19 @@ export class AstFilterParser {
             ? this.normalizePattern(pattern)
             : pattern;
         next = this.allocTypedNode(NODE_TYPE_NET_PATTERN, patternBeg, patternEnd);
-        if ( normal === '' || pattern === '*' ) {
+        if ( normal === undefined ) {
+            this.astTypeFlavor = AST_TYPE_NETWORK_PATTERN_BAD;
+            this.addFlags(AST_FLAG_HAS_ERROR);
+            this.astError = AST_ERROR_PATTERN;
+            this.addNodeFlags(next, NODE_FLAG_ERROR);
+        } else if ( normal === '' || pattern === '*' ) {
             this.astTypeFlavor = AST_TYPE_NETWORK_PATTERN_ANY;
         } else if ( this.reHostnameAscii.test(normal) ) {
             this.astTypeFlavor = AST_TYPE_NETWORK_PATTERN_HOSTNAME;
         } else if ( this.reHasPatternSpecialChars.test(normal) ) {
             this.astTypeFlavor = AST_TYPE_NETWORK_PATTERN_GENERIC;
-        } else if ( normal !== undefined ) {
-            this.astTypeFlavor = AST_TYPE_NETWORK_PATTERN_PLAIN;
         } else {
-            this.astTypeFlavor = AST_TYPE_NETWORK_PATTERN_BAD;
-            this.addFlags(AST_FLAG_HAS_ERROR);
-            this.addNodeFlags(next, NODE_FLAG_ERROR);
+            this.astTypeFlavor = AST_TYPE_NETWORK_PATTERN_PLAIN;
         }
         this.addNodeToRegister(NODE_TYPE_NET_PATTERN, next);
         if ( needNormalization && normal !== undefined ) {
@@ -1690,9 +1704,8 @@ export class AstFilterParser {
         if ( this.reHasUnicodeChar.test(normal) === false ) { return normal; }
         // Percent-encode remaining Unicode characters.
         try {
-            normal = normal.replace(
-                this.reUnicodeChars,
-                s => encodeURIComponent(s).toLowerCase()
+            normal = normal.replace(this.reUnicodeChars, s =>
+                encodeURIComponent(s).toLowerCase()
             );
         } catch (ex) {
             return;
@@ -1804,6 +1817,7 @@ export class AstFilterParser {
         if ( this.getBranchFromType(nodeOptionType) !== 0 ) {
             this.addNodeFlags(parent, NODE_FLAG_ERROR);
             this.addFlags(AST_FLAG_HAS_ERROR);
+            this.astError = AST_ERROR_OPTION_DUPLICATE;
         } else {
             this.addNodeToRegister(nodeOptionType, parent);
         }
@@ -1947,6 +1961,7 @@ export class AstFilterParser {
                 } else {
                     this.addNodeFlags(parent, NODE_FLAG_ERROR);
                     this.addFlags(AST_FLAG_HAS_ERROR);
+                    this.astError = AST_ERROR_DOMAIN_NAME;
                 }
             }
             if ( head === 0 ) {
@@ -2965,6 +2980,7 @@ class ExtSelectorCompiler {
         this.nativeCssHas = instanceOptions.nativeCssHas === true;
         // https://www.w3.org/TR/css-syntax-3/#typedef-ident-token
         this.reInvalidIdentifier = /^\d/;
+        this.error = undefined;
     }
 
     compile(raw, out, compileOptions = {}) {
@@ -3014,7 +3030,10 @@ class ExtSelectorCompiler {
         }
 
         out.compiled = this.compileSelector(raw);
-        if ( out.compiled === undefined ) { return false; }
+        if ( out.compiled === undefined ) {
+            out.error = this.error || undefined;
+            return false;
+        }
 
         if ( out.compiled instanceof Object ) {
             out.compiled.raw = raw;
@@ -3058,6 +3077,7 @@ class ExtSelectorCompiler {
                 parseValue: false,
             });
         } catch(reason) {
+            this.error = reason && reason.message || undefined;
             return;
         }
         const parts = [];

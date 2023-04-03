@@ -26,6 +26,12 @@
     font-size: large;
     text-shadow: none;
     }
+.CodeMirror-foldgutter-folded::after {
+    content: '\25B6';
+    }
+.CodeMirror-foldgutter-open::after {
+    content: '\25BC';
+    }
 .CodeMirror-gutters {
     background-color: var(--cm-gutter-surface);
     border-color: var(--cm-gutter-border);
@@ -84,8 +90,7 @@
 .cm-theme-override .cm-s-default .cm-error,
 .CodeMirror-linebackground.error {
     background-color: var(--sf-error-surface);
-    text-decoration: underline var(--sf-error-ink);
-    text-underline-position: under;
+    text-decoration: var(--sf-error-ink) dashed underline;
     }
 .cm-theme-override .cm-s-default .cm-link {
     text-decoration: none;
@@ -164,6 +169,13 @@
       -webkit-user-select: none;
     z-index: 1000;
     }
+.cm-search-widget > * {
+    flex-grow: 1;
+    }
+.cm-search-widget > :last-child {
+    justify-content: flex-end;
+    }
+
 .cm-search-widget-input {
     display: inline-flex;
     flex-grow: 1;
@@ -185,7 +197,7 @@
     align-items: center;
     display: inline-flex;
     flex-grow: 0;
-    font-size: 95%;
+    font-size: var(--font-size-smaller);
     min-width: 6em;
     visibility: hidden;
     }
@@ -196,12 +208,27 @@
     color: #000;
     }
 .cm-search-widget .sourceURL[href=""] {
-    display: none;
+    visibility: hidden;
     }
+
+.cm-linter-widget {
+    align-items: center;
+    display: none;
+    flex-grow: 1;
+    }
+.cm-linter-widget.hasErrors {
+    display: inline-flex;
+    }
+.cm-linter-widget .cm-linter-widget-count {
+    color: var(--accent-surface-1);
+        fill: var(--accent-surface-1);
+    font-size: var(--font-size-smaller);
+    }
+
 .cm-searching.cm-overlay {
     background-color: var(--cm-searching-surface);
     border: 0;
-    color: var(--cm-searching-ink);
+    color: var(--cm-searching-ink) !important;
     }
 
 .CodeMirror-merge {
@@ -246,4 +273,28 @@
  * */
 .CodeMirror-activeline-background {
     background-color: var(--cm-active-line);
+    }
+
+.CodeMirror-lintmarker {
+    background-color: var(--sf-error-ink);
+    height: calc(var(--font-size) - 2px);
+    margin-top: 1px;
+    position: relative;
+    }
+.CodeMirror-lintmarker > span {
+    display: none;
+    }
+.CodeMirror-lintmarker > span {
+    background-color: var(--surface-0);
+    border: 1px solid var(--sf-error-ink);
+    color: var(--ink-1);
+    left: 100%;
+    padding: var(--default-gap-xsmall);
+    position: absolute;
+    top: -2px;
+    white-space: pre;
+    }
+.CodeMirror-lintmarker:hover > span,
+.CodeMirror-lintmarker > span:hover {
+    display: initial;
     }

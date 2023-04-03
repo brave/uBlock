@@ -39,7 +39,6 @@ let hintHelperRegistered = false;
 /******************************************************************************/
 
 CodeMirror.defineMode('ubo-static-filtering', function() {
-    if ( sfp.AstFilterParser instanceof Object === false ) { return; }
     const astParser = new sfp.AstFilterParser({
         interactive: true,
         nativeCssHas: vAPI.webextFlavor.env.includes('native_css_has'),
@@ -300,8 +299,6 @@ CodeMirror.defineMode('ubo-static-filtering', function() {
 //   https://codemirror.net/demo/complete.html
 
 const initHints = function() {
-    if ( sfp.AstFilterParser instanceof Object === false ) { return; }
-
     const astParser = new sfp.AstFilterParser({
         interactive: true,
         nativeCssHas: vAPI.webextFlavor.env.includes('native_css_has'),
@@ -663,6 +660,166 @@ CodeMirror.registerHelper('fold', 'ubo-static-filtering', (( ) => {
         }
     };
 })());
+
+/******************************************************************************/
+
+// Linter
+
+{
+    const astParser = new sfp.AstFilterParser({
+        interactive: true,
+        nativeCssHas: vAPI.webextFlavor.env.includes('native_css_has'),
+    });
+
+    let errorCount = 0;
+    let markedsetStart = 0;
+    let markedsetTimer;
+
+    const processMarkedsetAsync = doc => {
+        if ( markedsetTimer !== undefined ) { return; }
+        markedsetTimer = self.requestIdleCallback(deadline => {
+            markedsetTimer = undefined;
+            processMarkedset(doc, deadline);
+        });
+    };
+
+    const processMarkedset = (doc, deadline) => {
+        const lineCount = doc.lineCount();
+        doc.eachLine(markedsetStart, lineCount, lineHandle => {
+            const line = markedsetStart++;
+            const markers = lineHandle.gutterMarkers || null;
+            if ( markers && markers['CodeMirror-lintgutter'] ) {
+                errorCount += 1;
+            }
+            if ( (line & 0x0F) === 0 && deadline.timeRemaining() === 0 ) {
+                processMarkedsetAsync(doc);
+                return true;
+            }
+            if ( markedsetStart === lineCount ) {
+                CodeMirror.signal(doc.getEditor(), 'linterDone', { errorCount });
+            }
+        });
+    };
+
+    const changeset = [];
+    let changesetTimer;
+
+    const addChange = (doc, change) => {
+        changeset.push(change);
+        processChangesetAsync(doc);
+    };
+
+    const processChangesetAsync = doc => {
+        if ( changesetTimer !== undefined ) { return; }
+        if ( markedsetTimer ) {
+            self.cancelIdleCallback(markedsetTimer);
+            markedsetTimer = undefined;
+        }
+        changesetTimer = self.requestIdleCallback(deadline => {
+            changesetTimer = undefined;
+            processChangeset(doc, deadline);
+        });
+    };
+
+    const extractError = ( ) => {
+        if ( astParser.isComment() ) { return; }
+        if ( astParser.isFilter() === false ) { return; }
+        if ( astParser.hasError() === false ) { return; }
+        let error = 'Invalid filter';
+        if ( astParser.isCosmeticFilter() && astParser.result.error ) {
+            return `${error}: ${astParser.result.error}`;
+        }
+        if ( astParser.astError === sfp.AST_ERROR_REGEX ) {
+            return `${error}: Bad regular expression`;
+        }
+        if ( astParser.astError === sfp.AST_ERROR_PATTERN ) {
+            return `${error}: Bad pattern`;
+        }
+        if ( astParser.astError === sfp.AST_ERROR_DOMAIN_NAME ) {
+            return `${error}: Bad domain name`;
+        }
+        if ( astParser.astError === sfp.AST_ERROR_OPTION_DUPLICATE ) {
+            return `${error}: Duplicate filter option`;
+        }
+        if ( astParser.astError === sfp.AST_ERROR_OPTION_UNKNOWN ) {
+            return `${error}: Unsupported filter option`;
+        }
+        return error;
+    };
+
+    const extractMarker = lineHandle => {
+        const markers = lineHandle.gutterMarkers || null;
+        if ( markers === null ) { return; }
+        return markers['CodeMirror-lintgutter'] || undefined;
+    };
+
+    const markerTemplate = (( ) => {
+        const marker = document.createElement('div');
+        marker.classList.add('CodeMirror-lintmarker');
+        marker.textContent = '\xA0';
+        const info = document.createElement('span');
+        marker.append(info);
+        return marker;
+    })();
+
+    const makeMarker = (doc, lineHandle, marker, error) => {
+        if ( marker === undefined ) {
+            marker = markerTemplate.cloneNode(true);
+            doc.setGutterMarker(lineHandle, 'CodeMirror-lintgutter', marker);
+        }
+        marker.children[0].textContent = error;
+    };
+
+    const processChange = (doc, deadline, change) => {
+        let { from, to } = change;
+        doc.eachLine(from, to, lineHandle => {
+            astParser.parse(lineHandle.text);
+            const error = extractError();
+            const marker = extractMarker(lineHandle);
+            if ( error === undefined && marker ) {
+                doc.setGutterMarker(lineHandle, 'CodeMirror-lintgutter', null);
+            } else if ( error !== undefined ) {
+                makeMarker(doc, lineHandle, marker, error);
+            }
+            from += 1;
+            if ( (from & 0x0F) !== 0 ) { return; }
+            if ( deadline.timeRemaining() !== 0 ) { return; }
+            return true;
+        });
+        if ( from !== to ) {
+            return { from, to };
+        }
+    };
+
+    const processChangeset = (doc, deadline) => {
+        const cm = doc.getEditor();
+        cm.startOperation();
+        while ( changeset.length !== 0 ) {
+            const change = processChange(doc, deadline, changeset.shift());
+            if ( change === undefined ) { continue; }
+            changeset.unshift(change);
+            break;
+        }
+        cm.endOperation();
+        if ( changeset.length !== 0 ) {
+            return processChangesetAsync(doc);
+        }
+        errorCount = 0;
+        markedsetStart = 0;
+        processMarkedsetAsync(doc);
+    };
+
+    CodeMirror.defineInitHook(cm => {
+        cm.on('changes', function(cm, changes) {
+            const doc = cm.getDoc();
+            for ( const change of changes ) {
+                const from = change.from.line;
+                const to = from + change.text.length;
+                addChange(doc, { from, to });
+            }
+        });
+    });
+}
 
 /******************************************************************************/
 
