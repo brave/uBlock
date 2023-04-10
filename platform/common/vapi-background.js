@@ -95,6 +95,61 @@ vAPI.storage = webext.storage.local;
 /******************************************************************************/
 /******************************************************************************/
 
+vAPI.alarms = {
+    create(callback) {
+        this.uniqueIdGenerator += 1;
+        const name = this.uniqueIdGenerator.toString(36);
+        const client = new this.Client(name, callback);
+        this.clientMap.set(name, client);
+        return client;
+    },
+    Client: class {
+        constructor(name, callback) {
+            this.name = name;
+            this.callback = callback;
+        }
+        on(delay) {
+            const delayInMinutes = this.normalizeDelay(delay);
+            browser.alarms.get(this.name, alarm => {
+                if ( alarm ) { return; }
+                return browser.alarms.create(this.name, { delayInMinutes });
+            });
+        }
+        offon(delay) {
+            const delayInMinutes = this.normalizeDelay(delay);
+            return browser.alarms.create(this.name, { delayInMinutes });
+        }
+        off() {
+            return browser.alarms.clear(this.name);
+        }
+        normalizeDelay(delay) {
+            let delayInMinutes = 0;
+            if ( typeof delay === 'number' ) {
+                delayInMinutes = delay;
+            } else if ( typeof delay === 'object' ) {
+                if ( delay.sec !== undefined ) {
+                    delayInMinutes = delay.sec / 60;
+                } else if ( delay.ms !== undefined ) {
+                    delayInMinutes = delay.ms / 60000;
+                }
+            }
+            return Math.max(delayInMinutes, 1);
+        }
+    },
+    onAlarm(alarm) {
+        const client = this.clientMap.get(alarm.name);
+        if ( client === undefined ) { return; }
+        client.callback(alarm);
+    },
+    clientMap: new Map(),
+    uniqueIdGenerator: 1000000,
+};
+
+browser.alarms.onAlarm.addListener(alarm => vAPI.alarms.onAlarm(alarm));
+
+/******************************************************************************/
+/******************************************************************************/
+
 // https://github.com/gorhill/uMatrix/issues/234
 // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/privacy/network
 
@@ -676,9 +731,8 @@ if ( webext.browserAction instanceof Object ) {
 
 {
     const browserAction = vAPI.browserAction;
-    const  titleTemplate =
-        browser.runtime.getManifest().browser_action.default_title +
-        ' ({badge})';
+    const titleTemplate = `${browser.runtime.getManifest().browser_action.default_title} ({badge})`;
+    const browserLaunchIssue = browser.i18n.getMessage('unprocessedRequestTooltip');
     const icons = [
         { path: {
             '16': 'img/icon_16-off.png',
@@ -785,8 +839,9 @@ if ( webext.browserAction instanceof Object ) {
         const tab = await vAPI.tabs.get(tabId);
         if ( tab === null ) { return; }
 
+        const hasUnprocessedRequest = vAPI.net && vAPI.net.hasUnprocessedRequest(tabId);
         const { parts, state } = details;
-        const { badge, color } = vAPI.net && vAPI.net.hasUnprocessedRequest(tabId)
+        const { badge, color } = hasUnprocessedRequest
                 ? { badge: '!', color: '#FC0' }
                 : details;
 
@@ -811,13 +866,11 @@ if ( webext.browserAction instanceof Object ) {
         // - the platform does not support browserAction.setIcon(); OR
         // - the rendering of the badge is disabled
         if ( browserAction.setTitle !== undefined ) {
-            browserAction.setTitle({
-                tabId: tab.id,
-                title: titleTemplate.replace(
-                    '{badge}',
+            const title = hasUnprocessedRequest && browserLaunchIssue ||
+                titleTemplate.replace('{badge}',
                     state === 1 ? (badge !== '' ? badge : '0') : 'off'
-                )
-            });
+                );
+            browserAction.setTitle({ tabId: tab.id, title });
         }
 
         if ( vAPI.contextMenu instanceof Object ) {

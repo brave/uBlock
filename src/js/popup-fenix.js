@@ -907,7 +907,7 @@ const gotoReport = function() {
         popupPanel[name] = !expected;
     }
     if ( hostnameToSortableTokenMap.size !== 0 ) {
-        const blockedDetails = {};
+        const network = {};
         const hostnames =
             Array.from(hostnameToSortableTokenMap.keys()).sort(hostnameCompare);
         for ( const hostname of hostnames ) {
@@ -915,13 +915,13 @@ const gotoReport = function() {
             const count = entry.counts.blocked.any;
             if ( count === 0 ) { continue; }
             const domain = entry.domain;
-            if ( blockedDetails[domain] === undefined ) {
-                blockedDetails[domain] = 0;
+            if ( network[domain] === undefined ) {
+                network[domain] = 0;
             }
-            blockedDetails[domain] += count;
+            network[domain] += count;
         }
-        if ( Object.keys(blockedDetails).length !== 0 ) {
-            popupPanel.blockedDetails = blockedDetails;
+        if ( Object.keys(network).length !== 0 ) {
+            popupPanel.network = network;
         }
     }
     messaging.send('popupPanel', {
@@ -1376,29 +1376,23 @@ const toggleHostnameSwitch = async function(ev) {
 // it and thus having to push it all the time unconditionally.
 
 const pollForContentChange = (( ) => {
-    let pollTimer;
-
     const pollCallback = async function() {
-        pollTimer = undefined;
         const response = await messaging.send('popupPanel', {
             what: 'hasPopupContentChanged',
             tabId: popupData.tabId,
             contentLastModified: popupData.contentLastModified,
         });
-        queryCallback(response);
-    };
-
-    const queryCallback = function(response) {
         if ( response ) {
-            getPopupData(popupData.tabId);
+            await getPopupData(popupData.tabId);
             return;
         }
         poll();
     };
 
+    const pollTimer = vAPI.defer.create(pollCallback);
+
     const poll = function() {
-        if ( pollTimer !== undefined ) { return; }
-        pollTimer = vAPI.setTimeout(pollCallback, 1500);
+        pollTimer.on(1500);
     };
 
     return poll;

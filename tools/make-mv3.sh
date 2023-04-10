@@ -6,11 +6,35 @@ set -e
 
 echo "*** uBOLite.mv3: Creating extension"
 
-DES="dist/build/uBOLite.mv3"
+PLATFORM="chromium"
 
-if [ "$1" != "quick" ]; then
+for i in "$@"; do
+  case $i in
+    quick)
+      QUICK="yes"
+      shift # past argument=value
+      ;;
+    full)
+      FULL="yes"
+      shift # past argument=value
+      ;;
+    firefox)
+      PLATFORM="firefox"
+      shift # past argument=value
+      ;;
+    chromium)
+      PLATFORM="chromium"
+      shift # past argument=value
+      ;;
+  esac
+done
+
+DES="dist/build/uBOLite.$PLATFORM"
+
+if [ "$QUICK" != "yes" ]; then
     rm -rf $DES
 fi
+
 
 mkdir -p $DES
 cd $DES
@@ -35,17 +59,24 @@ cp src/js/i18n.js $DES/js/
 cp LICENSE.txt $DES/
 
 echo "*** uBOLite.mv3: Copying mv3-specific files"
+if [ "$PLATFORM" = "firefox" ]; then
+    cp platform/mv3/firefox/background.html $DES/
+fi
 cp platform/mv3/extension/*.html $DES/
 cp platform/mv3/extension/css/* $DES/css/
 cp -R platform/mv3/extension/js/* $DES/js/
 cp platform/mv3/extension/img/* $DES/img/
 cp -R platform/mv3/extension/_locales $DES/
 
-if [ "$1" != "quick" ]; then
+if [ "$QUICK" != "yes" ]; then
     echo "*** uBOLite.mv3: Generating rulesets"
     TMPDIR=$(mktemp -d)
     mkdir -p $TMPDIR
-    cp platform/mv3/extension/manifest.json $DES/
+    if [ "$PLATFORM" = "chromium" ]; then
+        cp platform/mv3/chromium/manifest.json $DES/
+    elif [ "$PLATFORM" = "firefox" ]; then
+        cp platform/mv3/firefox/manifest.json $DES/
+    fi
     ./tools/make-nodejs.sh $TMPDIR
     cp platform/mv3/package.json $TMPDIR/
     cp platform/mv3/*.js $TMPDIR/
@@ -55,7 +86,7 @@ if [ "$1" != "quick" ]; then
     mkdir -p $TMPDIR/web_accessible_resources
     cp src/web_accessible_resources/* $TMPDIR/web_accessible_resources/
     cd $TMPDIR
-    node --no-warnings make-rulesets.js output=$DES
+    node --no-warnings make-rulesets.js output=$DES platform="$PLATFORM"
     cd - > /dev/null
     rm -rf $TMPDIR
 fi
@@ -63,9 +94,13 @@ fi
 echo "*** uBOLite.mv3: extension ready"
 echo "Extension location: $DES/"
 
-if [ "$1" = "full" ]; then
-    echo "*** uBOLite.mv3: Creating webstore package..."
-    PACKAGENAME=uBOLite_$(jq -r .version $DES/manifest.json).mv3.zip
+if [ "$FULL" = "yes" ]; then
+    EXTENSION="zip"
+    if [ "$PLATFORM" = "firefox" ]; then
+        EXTENSION="xpi"
+    fi
+    echo "*** uBOLite.mv3: Creating publishable package..."
+    PACKAGENAME="uBOLite_$(jq -r .version $DES/manifest.json).$PLATFORM.mv3.$EXTENSION"
     TMPDIR=$(mktemp -d)
     mkdir -p $TMPDIR
     cp -R $DES/* $TMPDIR/

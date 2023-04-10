@@ -168,7 +168,7 @@
     "description": "Tooltip for the no-cosmetic-filtering per-site switch"
   },
   "popupTipNoRemoteFonts": {
-    "message": "Externe Schriftarten für diese Website erlauben/blockieren",
+    "message": "Externe Schriftarten für diese Website zulassen/blockieren",
     "description": "Tooltip for the no-remote-fonts per-site switch"
   },
   "popupTipNoRemoteFonts1": {
@@ -404,7 +404,7 @@
     "description": "Section for controlling advanced-user settings"
   },
   "settingsAdvancedSynopsis": {
-    "message": "Funktionen, die nur für technisch versierte Benutzer geeignet sind",
+    "message": "Funktionen, die nur für technisch Versierte bestimmt sind",
     "description": "Description of section controlling advanced-user settings"
   },
   "settingsAdvancedUserSettings": {
@@ -712,7 +712,7 @@
     "description": "A keyword in the built-in row filtering expression"
   },
   "loggerRowFiltererBuiltinAllowed": {
-    "message": "erlaubt",
+    "message": "zugelassen",
     "description": "A keyword in the built-in row filtering expression"
   },
   "loggerRowFiltererBuiltinModified": {
@@ -788,7 +788,7 @@
     "description": "Used in the static filtering wizard"
   },
   "loggerStaticFilteringSentencePartAllow": {
-    "message": "erlauben",
+    "message": "zulassen",
     "description": "Used in the static filtering wizard"
   },
   "loggerStaticFilteringSentencePartType": {
@@ -1212,7 +1212,7 @@
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuTemporarilyAllowLargeMediaElements": {
-    "message": "Große Medienelemente temporär erlauben",
+    "message": "Große Medienelemente temporär zulassen",
     "description": "A context menu entry, present when large media elements have been blocked on the current site"
   },
   "contextMenuViewSource": {
@@ -1266,6 +1266,10 @@
   "linterMainReport": {
     "message": "Fehler: {{count}}",
     "description": "Summary of number of errors as reported by the linter "
+  },
+  "unprocessedRequestTooltip": {
+    "message": "Beim Start des Browsers konnte nicht richtig gefiltert werden.\nBitte die Seite neu laden, um ein korrektes Filtern zu gewährleisten.",
+    "description": "Tooltip for the toolbar icon. Use newline character(s) where appropriate to prevent tooltip from being too long horizontally"
   },
   "dummy": {
     "message": "Dieser Eintrag muss der letzte sein",

@@ -27,7 +27,7 @@
 
 'use strict';
 
-import { dom } from '../dom.js';
+import { dom, qs$ } from '../dom.js';
 import { i18n$ } from '../i18n.js';
 
 {
@@ -86,16 +86,7 @@ import { i18n$ } from '../i18n.js';
             return;
         }
         if ( queryTextFromSearchWidget(cm) === state.queryText ) { return; }
-        if ( state.queryTimer !== null ) {
-            clearTimeout(state.queryTimer);
-        }
-        state.queryTimer = setTimeout(
-            () => {
-                state.queryTimer = null;
-                findCommit(cm, 0);
-            },
-            350
-        );
+        state.queryTimer.offon(350);
     };
 
     const searchWidgetClickHandler = function(cm, ev) {
@@ -141,7 +132,6 @@ import { i18n$ } from '../i18n.js';
             this.panel = cm.addPanel(this.widget);
         }
         this.queryText = '';
-        this.queryTimer = null;
         this.dirty = true;
         this.lines = [];
         cm.on('changes', (cm, changes) => {
@@ -154,6 +144,9 @@ import { i18n$ } from '../i18n.js';
         });
         cm.on('cursorActivity', cm => {
             updateCount(cm);
+        });
+        this.queryTimer = vAPI.defer.create(( ) => {
+            findCommit(cm, 0);
         });
     };
 
@@ -382,7 +375,9 @@ import { i18n$ } from '../i18n.js';
         doc.eachLine(start, end, lineHandle => {
             const markers = lineHandle.gutterMarkers || null;
             if ( markers === null ) { return; }
-            if ( markers['CodeMirror-lintgutter'] === undefined ) { return; }
+            const marker = markers['CodeMirror-lintgutter'];
+            if ( marker === undefined ) { return; }
+            if ( marker.dataset.lint !== 'error' )  { return; }
             const line = lineHandle.lineNo();
             if ( dir < 0 ) {
                 found = line;
@@ -424,10 +419,7 @@ import { i18n$ } from '../i18n.js';
 
     const findCommit = function(cm, dir) {
         const state = getSearchState(cm);
-        if ( state.queryTimer !== null ) {
-            clearTimeout(state.queryTimer);
-            state.queryTimer = null;
-        }
+        state.queryTimer.off();
         const queryText = queryTextFromSearchWidget(cm);
         if ( queryText === state.queryText ) { return; }
         state.queryText = queryText;
@@ -476,7 +468,7 @@ import { i18n$ } from '../i18n.js';
                   '<span class="cm-search-widget-down cm-search-widget-button fa-icon fa-icon-vflipped">angle-up</span>&emsp;' +
                   '<span class="cm-search-widget-count"></span>' +
                 '</span>' +
-                '<span class="cm-linter-widget">' +
+                '<span class="cm-linter-widget" data-lint="0">' +
                   '<span class="cm-linter-widget-count"></span>&emsp;' +
                   '<span class="cm-linter-widget-up cm-search-widget-button fa-icon">angle-up</span>&nbsp;' +
                   '<span class="cm-linter-widget-down cm-search-widget-button fa-icon fa-icon-vflipped">angle-up</span>&emsp;' +
@@ -497,10 +489,12 @@ import { i18n$ } from '../i18n.js';
     CodeMirror.defineInitHook(function(cm) {
         getSearchState(cm);
         cm.on('linterDone', details => {
+            const linterWidget = qs$('.cm-linter-widget');
             const count = details.errorCount;
-            dom.cl.toggle('.cm-linter-widget', 'hasErrors', count !== 0);
+            if ( linterWidget.dataset.lint === `${count}` ) { return; }
+            linterWidget.dataset.lint = `${count}`;
             dom.text(
-                '.cm-linter-widget .cm-linter-widget-count',
+                qs$(linterWidget, '.cm-linter-widget-count'),
                 i18n$('linterMainReport').replace('{{count}}', count.toLocaleString())
             );
         });
