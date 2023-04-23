@@ -63,14 +63,26 @@ const storageLocal = webext.storage.local;
 
 const cacheStorage = {
     name: 'browser.storage.local',
-    get: storageLocal.get.bind(storageLocal),
-    set: storageLocal.set.bind(storageLocal),
-    remove: storageLocal.remove.bind(storageLocal),
-    clear: storageLocal.clear.bind(storageLocal),
-    // Not all platforms support getBytesInUse
-    getBytesInUse: storageLocal.getBytesInUse
-        ? storageLocal.getBytesInUse.bind(storageLocal)
-        : undefined,
+    get(...args) {
+        return storageLocal.get(...args).catch(reason => {
+            console.log(reason);
+        });
+    },
+    set(...args) {
+        return storageLocal.set(...args).catch(reason => {
+            console.log(reason);
+        });
+    },
+    remove(...args) {
+        return storageLocal.remove(...args).catch(reason => {
+            console.log(reason);
+        });
+    },
+    clear(...args) {
+        return storageLocal.clear(...args).catch(reason => {
+            console.log(reason);
+        });
+    },
     select: function(selectedBackend) {
         let actualBackend = selectedBackend;
         if ( actualBackend === undefined || actualBackend === 'unset' ) {
@@ -96,6 +108,15 @@ const cacheStorage = {
     },
     error: undefined
 };
+
+// Not all platforms support getBytesInUse
+if ( storageLocal.getBytesInUse instanceof Function ) {
+    cacheStorage.getBytesInUse = function(...args) {
+        return storageLocal.getBytesInUse(...args).catch(reason => {
+            console.log(reason);
+        });
+    };
+}
 
 // Reassign API entries to that of indexedDB-based ones
 const selectIDB = async function() {
