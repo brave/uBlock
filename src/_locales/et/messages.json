@@ -951,6 +951,14 @@
     "message": "Vabatahtlike koormuse vähendamiseks veendu, et probleemi pole juba teatatud.",
     "description": "A paragraph in the filter issue reporter section"
   },
+  "supportS6P2S1": {
+    "message": "Filtriloendeid uuendatakse iga päev. Kindlasti veenduge, kas probleem on juba lahendatud uusimates filtriloendites.",
+    "description": "A paragraph in the filter issue reporter section"
+  },
+  "supportS6P2S2": {
+    "message": "Kontrollige probleemi olemasolu veel kord, laadides muret tekitav veebileht uuesti.",
+    "description": "A paragraph in the filter issue reporter section"
+  },
   "supportS6URL": {
     "message": "Veebilehe aadress:",
     "description": "Label for the URL of the page"

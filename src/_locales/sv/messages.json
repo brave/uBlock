@@ -951,6 +951,14 @@
     "message": "För att undvika att belasta volontärer med dubbletter av rapporter, kontrollera att problemet inte redan har rapporterats.",
     "description": "A paragraph in the filter issue reporter section"
   },
+  "supportS6P2S1": {
+    "message": "Filter lists are updated daily. Be sure your issue has not already been addressed in the most recent filter lists.",
+    "description": "A paragraph in the filter issue reporter section"
+  },
+  "supportS6P2S2": {
+    "message": "Verify that the issue still exists after reloading the problematic webpage.",
+    "description": "A paragraph in the filter issue reporter section"
+  },
   "supportS6URL": {
     "message": "Hemsidans adress:",
     "description": "Label for the URL of the page"
@@ -1268,7 +1276,7 @@
     "description": "Summary of number of errors as reported by the linter "
   },
   "unprocessedRequestTooltip": {
-    "message": "Det gick inte att filtrera ordentligt vid webbläsarstart.\nLadda om sidan för att säkerställa korrekt filtrering.\n",
+    "message": "Det gick inte att filtrera ordentligt vid webbläsarstart.\nLadda om sidan för att säkerställa korrekt filtrering\n",
     "description": "Tooltip for the toolbar icon. Use newline character(s) where appropriate to prevent tooltip from being too long horizontally"
   },
   "dummy": {

@@ -951,6 +951,14 @@
     "message": "Verifikoni a është raportuar më parë problemi që të mos i lodhni vullnetarët e tjerë me të njëjtat gjëra.",
     "description": "A paragraph in the filter issue reporter section"
   },
+  "supportS6P2S1": {
+    "message": "Listat e filtrave përditësohen rregullisht. Sigurohuni që problemi qëndron edhe me listat e reja.",
+    "description": "A paragraph in the filter issue reporter section"
+  },
+  "supportS6P2S2": {
+    "message": "Verifikoni a qëndron problemi nëse e freskoni sërish faqen në fjalë.",
+    "description": "A paragraph in the filter issue reporter section"
+  },
   "supportS6URL": {
     "message": "Adresa e faqes:",
     "description": "Label for the URL of the page"

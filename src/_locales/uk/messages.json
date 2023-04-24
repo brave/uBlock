@@ -951,6 +951,14 @@
     "message": "Щоб не обтяжувати волонтерів повторюваними звітами, переконайтеся, що про проблему ще не повідомлялося.",
     "description": "A paragraph in the filter issue reporter section"
   },
+  "supportS6P2S1": {
+    "message": "Списки фільтрів оновлюються щоденно. Переконайтесь, що ваша проблема все ще не поремонтована в найсвіжішому списку фільтрів",
+    "description": "A paragraph in the filter issue reporter section"
+  },
+  "supportS6P2S2": {
+    "message": "Переконайтесь, що проблема все ще присутня після перезавантаження проблемної сторінки",
+    "description": "A paragraph in the filter issue reporter section"
+  },
   "supportS6URL": {
     "message": "Адреса вебсторінки:",
     "description": "Label for the URL of the page"

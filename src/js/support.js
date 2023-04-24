@@ -27,8 +27,6 @@ import { dom, qs$ } from './dom.js';
 
 /******************************************************************************/
 
-let supportData;
-
 const uselessKeys = [
     'modifiedHiddenSettings.benchmarkDatasetURL',
     'modifiedHiddenSettings.blockingProfiles',
@@ -138,7 +136,10 @@ function addDetailsToReportURL(id, collapse = false) {
     dom.attr(elem, 'data-url', url);
 }
 
-function showData() {
+async function showSupportData() {
+    const supportData = await vAPI.messaging.send('dashboard', {
+        what: 'getSupportData',
+    });
     const shownData = JSON.parse(JSON.stringify(supportData));
     uselessKeys.forEach(prop => { removeKey(shownData, prop); });
     const redacted = true;
@@ -196,6 +197,9 @@ const reportedPage = (( ) => {
             dom.text(option, parsedURL.href);
             select.append(option);
         }
+        if ( url.searchParams.get('shouldUpdate') !== null ) {
+            dom.cl.add(dom.body, 'shouldUpdate');
+        }
         dom.cl.add(dom.body, 'filterIssue');
         return {
             hostname: parsedURL.hostname.replace(/^(m|mobile|www)\./, ''),
@@ -210,8 +214,10 @@ function reportSpecificFilterType() {
     return qs$('select[name="type"]').value;
 }
 
-function reportSpecificFilterIssue(ev) {
-    const githubURL = new URL('https://github.com/uBlockOrigin/uAssets/issues/new?template=specific_report_from_ubo.yml');
+function reportSpecificFilterIssue() {
+    const githubURL = new URL(
+        'https://github.com/uBlockOrigin/uAssets/issues/new?template=specific_report_from_ubo.yml'
+    );
     const issueType = reportSpecificFilterType();
     let title = `${reportedPage.hostname}: ${issueType}`;
     if ( qs$('#isNSFW').checked ) {
@@ -228,7 +234,11 @@ function reportSpecificFilterIssue(ev) {
         what: 'gotoURL',
         details: { url: githubURL.href, select: true, index: -1 },
     });
-    ev.preventDefault();
+}
+
+async function updateFilterLists() {
+    dom.cl.add(dom.body, 'updating');
+    vAPI.messaging.send('dashboard', { what: 'forceUpdateAssets' });
 }
 
 /******************************************************************************/
@@ -244,11 +254,7 @@ uBlockDashboard.patchCodeMirrorEditor(cmEditor);
 /******************************************************************************/
 
 (async ( ) => {
-    supportData = await vAPI.messaging.send('dashboard', {
-        what: 'getSupportData',
-    });
-
-    showData();
+    await showSupportData();
 
     dom.on('[data-url]', 'click', ev => {
         const elem = ev.target.closest('[data-url]');
@@ -262,8 +268,16 @@ uBlockDashboard.patchCodeMirrorEditor(cmEditor);
     });
 
     if ( reportedPage !== null ) {
+        if ( dom.cl.has(dom.body, 'shouldUpdate') ) {
+            dom.on('.shouldUpdate button', 'click', ev => {
+                updateFilterLists();
+                ev.preventDefault();
+            });
+        }
+
         dom.on('[data-i18n="supportReportSpecificButton"]', 'click', ev => {
-            reportSpecificFilterIssue(ev);
+            reportSpecificFilterIssue();
+            ev.preventDefault();
         });
 
         dom.on('[data-i18n="supportFindSpecificButton"]', 'click', ev => {
@@ -283,6 +297,13 @@ uBlockDashboard.patchCodeMirrorEditor(cmEditor);
             cmEditor.refresh();
         });
     }
+
+    vAPI.broadcastListener.add(msg => {
+        if ( msg.what !== 'staticFilteringDataChanged' ) { return; }
+        showSupportData();
+        dom.cl.remove(dom.body, 'updating');
+        dom.cl.add(dom.body, 'updated');
+    });
 
     dom.on('#selectAllButton', 'click', ( ) => {
         cmEditor.focus();

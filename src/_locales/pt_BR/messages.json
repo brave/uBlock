@@ -951,6 +951,14 @@
     "message": "Para evitar sobrecarregar os voluntários com relatórios duplicados, certifique-se que o problema já não foi relatado.",
     "description": "A paragraph in the filter issue reporter section"
   },
+  "supportS6P2S1": {
+    "message": "As listas de filtros são atualizadas diariamente. Certifique-se de que seu problema ainda não foi resolvido nas listas de filtros mais recentes.",
+    "description": "A paragraph in the filter issue reporter section"
+  },
+  "supportS6P2S2": {
+    "message": "Verifique se o problema ainda existe após recarregar a página da Web problemática.",
+    "description": "A paragraph in the filter issue reporter section"
+  },
   "supportS6URL": {
     "message": "Endereço da página da web:",
     "description": "Label for the URL of the page"

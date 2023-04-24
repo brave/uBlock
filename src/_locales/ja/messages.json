@@ -951,6 +951,14 @@
     "message": "重複した報告によってボランティアに負担をかけないように、問題がすでに報告されていないか確認してください。",
     "description": "A paragraph in the filter issue reporter section"
   },
+  "supportS6P2S1": {
+    "message": "フィルターリストは毎日更新されます。まず最新のフィルターリストで問題が修正されていないか確認してください。",
+    "description": "A paragraph in the filter issue reporter section"
+  },
+  "supportS6P2S2": {
+    "message": "問題のあるページを再読み込みしても問題がまだ残っているか確認してください。",
+    "description": "A paragraph in the filter issue reporter section"
+  },
   "supportS6URL": {
     "message": "ウェブページのアドレス:",
     "description": "Label for the URL of the page"

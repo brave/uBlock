@@ -951,6 +951,14 @@
     "message": "Aby uniknąć obciążania wolontariuszy zduplikowanymi zgłoszeniami, sprawdź, czy problem nie został już zgłoszony.",
     "description": "A paragraph in the filter issue reporter section"
   },
+  "supportS6P2S1": {
+    "message": "Listy filtrów są aktualizowane codziennie. Sprawdź, czy twój problem nie został już rozwiązany w najnowszych listach filtrów.",
+    "description": "A paragraph in the filter issue reporter section"
+  },
+  "supportS6P2S2": {
+    "message": "Sprawdź, czy problem nadal występuje po odświeżeniu problematycznej strony internetowej.",
+    "description": "A paragraph in the filter issue reporter section"
+  },
   "supportS6URL": {
     "message": "Adres strony internetowej:",
     "description": "Label for the URL of the page"

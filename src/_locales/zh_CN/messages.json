@@ -951,6 +951,14 @@
     "message": "请确认该问题未有其他人上报过，避免重复提交报告给维护者带来额外负担。",
     "description": "A paragraph in the filter issue reporter section"
   },
+  "supportS6P2S1": {
+    "message": "过滤规则列表每天都会更新。请确认用最新列表无法解决您的问题。",
+    "description": "A paragraph in the filter issue reporter section"
+  },
+  "supportS6P2S2": {
+    "message": "请验证刷新页面后问题依然存在。",
+    "description": "A paragraph in the filter issue reporter section"
+  },
   "supportS6URL": {
     "message": "网址：",
     "description": "Label for the URL of the page"
@@ -1268,7 +1276,7 @@
     "description": "Summary of number of errors as reported by the linter "
   },
   "unprocessedRequestTooltip": {
-    "message": "无法在浏览器启动时正常过滤。\n重新加载此页面以确保正常过滤。",
+    "message": "无法在浏览器启动时正常过滤。\n请刷新页面以确保正常过滤。",
     "description": "Tooltip for the toolbar icon. Use newline character(s) where appropriate to prevent tooltip from being too long horizontally"
   },
   "dummy": {
