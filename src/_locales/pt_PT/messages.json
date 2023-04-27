@@ -1044,7 +1044,7 @@
     "description": "Shown in the About pane"
   },
   "aboutCDNsInfo": {
-    "message": "Uma CDN escolhida aleatoriamente é utilizada quando uma lista de filtros precisar de ser atualizada",
+    "message": "Uma CDN escolhida aleatoriamente é utilizada quando uma lista de filtros precisar de ser atualizada.",
     "description": "Shown in the About pane"
   },
   "aboutBackupDataButton": {
@@ -1276,8 +1276,8 @@
     "description": "Summary of number of errors as reported by the linter "
   },
   "unprocessedRequestTooltip": {
-    "message": "Não foi possível filtrar adequadamente no arranque do navegador.\nRecarregue a página para assegurar uma filtragem adequada.",
-    "description": "Tooltip for the toolbar icon. Use newline character(s) where appropriate to prevent tooltip from being too long horizontally"
+    "message": "Não foi possível filtrar adequadamente no arranque do navegador. Recarregue a página para assegurar uma filtragem adequada.",
+    "description": "A warning which will appear in the popup panel if needed"
   },
   "dummy": {
     "message": "Esta entrada deve ser a última",

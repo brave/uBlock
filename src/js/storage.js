@@ -679,7 +679,9 @@ self.addEventListener('hiddenSettingsChanged', ( ) => {
     // Load previously saved available lists -- these contains data
     // computed at run-time, we will reuse this data if possible
     const [ bin, registeredAssets, badlists ] = await Promise.all([
-        vAPI.storage.get('availableFilterLists'),
+        Object.keys(this.availableFilterLists).length !== 0
+            ? { availableFilterLists: this.availableFilterLists }
+            : vAPI.storage.get('availableFilterLists'),
         io.metadata(),
         this.badLists.size === 0 ? io.get('ublock-badlists') : false,
     ]);
@@ -1211,6 +1213,7 @@ self.addEventListener('hiddenSettingsChanged', ( ) => {
 
     const create = async function() {
         if ( µb.inMemoryFilters.length !== 0 ) { return; }
+        if ( Object.keys(µb.availableFilterLists).length === 0 ) { return; }
         await Promise.all([
             io.put(
                 'selfie/main',
@@ -1245,12 +1248,10 @@ self.addEventListener('hiddenSettingsChanged', ( ) => {
             selfie = JSON.parse(details.content);
         } catch(ex) {
         }
-        if (
-            selfie instanceof Object === false ||
-            selfie.magic !== µb.systemSettings.selfieMagic
-        ) {
-            return false;
-        }
+        if ( selfie instanceof Object === false ) { return false; }
+        if ( selfie.magic !== µb.systemSettings.selfieMagic ) { return false; }
+        if ( selfie.availableFilterLists instanceof Object === false ) { return false; }
+        if ( Object.keys(selfie.availableFilterLists).length === 0 ) { return false; }
         µb.availableFilterLists = selfie.availableFilterLists;
         return true;
     };
@@ -1284,10 +1285,10 @@ self.addEventListener('hiddenSettingsChanged', ( ) => {
             io.remove(/^selfie\//);
             µb.selfieIsInvalid = true;
         }
-        createAlarm.offon(µb.hiddenSettings.selfieAfter);
+        createTimer.offon({ min: µb.hiddenSettings.selfieAfter });
     };
 
-    const createAlarm = vAPI.alarms.create(create);
+    const createTimer = vAPI.defer.create(create);
 
     µb.selfieManager = { load, destroy };
 }

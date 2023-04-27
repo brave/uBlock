@@ -1044,7 +1044,7 @@
     "description": "Shown in the About pane"
   },
   "aboutCDNsInfo": {
-    "message": "Losowo wybrana sieć CDN zostanie użyta, gdy lista filtrów będzie wymagała aktualizacji",
+    "message": "Losowo wybrana sieć CDN zostanie użyta, gdy lista filtrów będzie wymagała aktualizacji.",
     "description": "Shown in the About pane"
   },
   "aboutBackupDataButton": {
@@ -1277,7 +1277,7 @@
   },
   "unprocessedRequestTooltip": {
     "message": "Podczas uruchamiania przeglądarki nie można prawidłowo filtrować.\nAby zapewnić prawidłowe filtrowanie, wczytaj ponownie stronę.",
-    "description": "Tooltip for the toolbar icon. Use newline character(s) where appropriate to prevent tooltip from being too long horizontally"
+    "description": "A warning which will appear in the popup panel if needed"
   },
   "dummy": {
     "message": "Ten wpis musi być ostatni",
