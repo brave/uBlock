@@ -469,35 +469,35 @@
   },
   "3pGroupDefault": {
     "message": "Inbyggd",
-    "description": "Header for the uBlock filters section in 'Filter lists pane'"
+    "description": "Filter lists section name"
   },
   "3pGroupAds": {
     "message": "Annonser",
-    "description": "English: Ads"
+    "description": "Filter lists section name"
   },
   "3pGroupPrivacy": {
     "message": "Integritet",
-    "description": "English: Privacy"
+    "description": "Filter lists section name"
   },
   "3pGroupMalware": {
-    "message": "Domäner med skadlig kod (malware)",
-    "description": "English: Malware domains"
+    "message": "Domäner med skadlig kod",
+    "description": "Filter lists section name"
   },
   "3pGroupAnnoyances": {
     "message": "Störande",
-    "description": "The header identifying the filter lists in the category 'annoyances'"
+    "description": "Filter lists section name"
   },
   "3pGroupMultipurpose": {
     "message": "Mångsidiga",
-    "description": "English: Multipurpose"
+    "description": "Filter lists section name"
   },
   "3pGroupRegions": {
     "message": "Regioner, språk",
-    "description": "English: Regions, languages"
+    "description": "Filter lists section name"
   },
   "3pGroupCustom": {
     "message": "Anpassad",
-    "description": "English: Custom"
+    "description": "Filter lists section name"
   },
   "3pImport": {
     "message": "Importera…",
@@ -896,7 +896,7 @@
     "description": "Header of 'Documentation' section in Support pane"
   },
   "supportS1P1": {
-    "message": "Läs dokumentationen på <code>uBlock/wiki</code> för att lära dig allt om uBlock Origin's funktioner.",
+    "message": "Läs dokumentationen på <code>uBlock/wiki</code> för att lära dig allt om uBlock Origins funktioner.",
     "description": "First paragraph of 'Documentation' section in Support pane"
   },
   "supportS2H": {
@@ -904,7 +904,7 @@
     "description": "Header of 'Questions and support' section in Support pane"
   },
   "supportS2P1": {
-    "message": "Svar på frågor och andra typer av hjälp finns på subreddit <code>/r/uBlockOrigin</code>.",
+    "message": "Svar på frågor och andra typer av hjälp finns på subredditen <code>/r/uBlockOrigin</code>.",
     "description": "First paragraph of 'Questions and support' section in Support pane"
   },
   "supportS3H": {

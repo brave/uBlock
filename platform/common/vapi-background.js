@@ -1391,7 +1391,7 @@ vAPI.Net = class {
 // To be defined by platform-specific code.
 
 vAPI.scriptletsInjector = (( ) => {
-    self.uBO_scriptletsInjected = true;
+    self.uBO_scriptletsInjected = '';
 }).toString();
 
 /******************************************************************************/
@@ -1627,7 +1627,7 @@ vAPI.cloud = (( ) => {
         try {
             bin = await webext.storage.sync.get(keys);
         } catch (reason) {
-            return reason;
+            return String(reason);
         }
         let chunkCount = 0;
         for ( let i = 0; i < maxChunkCountPerItem; i += 16 ) {

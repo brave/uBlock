@@ -360,11 +360,11 @@ const getAssetSourceRegistry = function() {
                 return assetSourceRegistry;
             }
             return assets.fetchText(
-                µb.assetsBootstrapLocation || 'assets/assets.json'
+                µb.assetsBootstrapLocation || µb.assetsJsonPath
             ).then(details => {
                 return details.content !== ''
                     ? details
-                    : assets.fetchText('assets/assets.json');
+                    : assets.fetchText(µb.assetsJsonPath);
             }).then(details => {
                 updateAssetSourceRegistry(details.content, true);
                 return assetSourceRegistry;
@@ -403,7 +403,7 @@ const registerAssetSource = function(assetKey, newDict) {
         currentDict.contentURL = [];
     }
     if ( typeof currentDict.updateAfter !== 'number' ) {
-        currentDict.updateAfter = 5;
+        currentDict.updateAfter = 7;
     }
     if ( currentDict.submitter ) {
         currentDict.submitTime = Date.now(); // To detect stale entries
@@ -815,7 +815,7 @@ const getRemote = async function(assetKey) {
     const assetDetails = assetRegistry[assetKey] || {};
 
     const reportBack = function(content, err) {
-        const details = { assetKey: assetKey, content: content };
+        const details = { assetKey, content };
         if ( err ) {
             details.error = assetDetails.lastError = err;
         } else {
@@ -851,8 +851,18 @@ const getRemote = async function(assetKey) {
         }
     }
 
-    for ( const contentURL of contentURLs ) {
+    for ( let contentURL of contentURLs ) {
         if ( reIsExternalPath.test(contentURL) === false ) { continue; }
+
+        // This will force uBO to fetch the proper version according to whether
+        // the dev build is being used. This can be removed when execution of
+        // this code path is widespread for dev build revisions of uBO.
+        if ( assetKey === 'assets.json' ) {
+            contentURL = contentURL.replace(
+                /\/assets\/assets\.json$/,
+                µb.assetsJsonPath
+            );
+        }
 
         const result = assetDetails.content === 'filters'
             ? await assets.fetchFilterList(contentURL)
@@ -1041,7 +1051,7 @@ const updateNext = async function() {
     ) {
         result = await getRemote(toUpdate[0]);
     } else {
-        result = await assets.fetchText('/assets/assets.json');
+        result = await assets.fetchText(µb.assetsJsonPath);
         result.assetKey = 'assets.json';
     }
 
