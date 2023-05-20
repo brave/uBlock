@@ -33,6 +33,7 @@ import {
 import {
     hostnamesFromMatches,
     isDescendantHostnameOfIter,
+    toBroaderHostname,
 } from './utils.js';
 
 import {
@@ -49,6 +50,17 @@ const pruneDescendantHostnamesFromSet = (hostname, hnSet) => {
         if ( hn === hostname ) { continue; }
         if ( hn.at(-hostname.length-1) !== '.' ) { continue; }
         hnSet.delete(hn);
+    }
+};
+
+/******************************************************************************/
+
+const pruneHostnameFromSet = (hostname, hnSet) => {
+    let hn = hostname;
+    for (;;) {
+        hnSet.delete(hn);
+        hn = toBroaderHostname(hn);
+        if ( hn === '*' ) { break; }
     }
 };
 
@@ -202,10 +214,28 @@ async function setFilteringModeDetails(afterDetails) {
 
 async function getFilteringMode(hostname) {
     const filteringModes = await getFilteringModeDetails();
-    if ( filteringModes.none.has(hostname) ) { return 0; }
-    if ( filteringModes.network.has(hostname) ) { return 1; }
-    if ( filteringModes.extendedSpecific.has(hostname) ) { return 2; }
-    if ( filteringModes.extendedGeneric.has(hostname) ) { return 3; }
+    const {
+        none,
+        network,
+        extendedSpecific,
+        extendedGeneric,
+    } = filteringModes;
+    if ( none.has(hostname) ) { return 0; }
+    if ( none.has('all-urls')  === false ) {
+        if ( isDescendantHostnameOfIter(hostname, none) ) { return 0; }
+    }
+    if ( network.has(hostname) ) { return 1; }
+    if ( network.has('all-urls')  === false ) {
+        if ( isDescendantHostnameOfIter(hostname, network) ) { return 1; }
+    }
+    if ( extendedSpecific.has(hostname) ) { return 2; }
+    if ( extendedSpecific.has('all-urls')  === false ) {
+        if ( isDescendantHostnameOfIter(hostname, extendedSpecific) ) { return 2; }
+    }
+    if ( extendedGeneric.has(hostname) ) { return 3; }
+    if ( extendedGeneric.has('all-urls')  === false ) {
+        if ( isDescendantHostnameOfIter(hostname, extendedGeneric) ) { return 3; }
+    }
     return getDefaultFilteringMode();
 }
 
@@ -233,16 +263,16 @@ async function setFilteringMode(hostname, afterLevel) {
     } = filteringModes;
     switch ( beforeLevel ) {
     case 0:
-        none.delete(hostname);
+        pruneHostnameFromSet(hostname, none);
         break;
     case 1:
-        network.delete(hostname);
+        pruneHostnameFromSet(hostname, network);
         break;
     case 2:
-        extendedSpecific.delete(hostname);
+        pruneHostnameFromSet(hostname, extendedSpecific);
         break;
     case 3:
-        extendedGeneric.delete(hostname);
+        pruneHostnameFromSet(hostname, extendedGeneric);
         break;
     }
     if ( afterLevel !== defaultLevel ) {
