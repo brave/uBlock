@@ -160,9 +160,177 @@ function runAt(fn, when) {
 /******************************************************************************/
 
 builtinScriptlets.push({
+    name: 'run-at-html-element.fn',
+    fn: runAtHtmlElement,
+});
+function runAtHtmlElement(fn) {
+    if ( document.documentElement ) {
+        fn();
+        return;
+    }
+    const observer = new MutationObserver(( ) => {
+        fn();
+        observer.disconnect();
+    });
+    observer.observe(document, { childList: true });
+}
+
+/******************************************************************************/
+
+builtinScriptlets.push({
+    name: 'get-extra-args-entries.fn',
+    fn: getExtraArgsEntries,
+});
+function getExtraArgsEntries(args, offset) {
+    return args.slice(offset).reduce((out, v, i, a) => {
+        if ( (i & 1) === 0 ) {
+            const rawValue = a[i+1];
+            const value = /^\d+$/.test(rawValue)
+                ? parseInt(rawValue, 10)
+                : rawValue;
+            out.push([ a[i], value ]);
+        }
+        return out;
+    }, []);
+}
+
+builtinScriptlets.push({
+    name: 'get-extra-args-map.fn',
+    fn: getExtraArgsMap,
+    dependencies: [
+        'get-extra-args-entries.fn',
+    ],
+});
+function getExtraArgsMap(args, offset = 0) {
+    return new Map(getExtraArgsEntries(args, offset));
+}
+
+builtinScriptlets.push({
+    name: 'get-extra-args.fn',
+    fn: getExtraArgs,
+    dependencies: [
+        'get-extra-args-entries.fn',
+    ],
+});
+function getExtraArgs(args, offset = 0) {
+    return Object.fromEntries(getExtraArgsEntries(args, offset));
+}
+
+/******************************************************************************/
+
+builtinScriptlets.push({
+    name: 'abort-current-script-core.fn',
+    fn: abortCurrentScriptCore,
+    dependencies: [
+        'pattern-to-regex.fn',
+        'get-exception-token.fn',
+        'safe-self.fn',
+        'should-debug.fn',
+        'should-log.fn',
+    ],
+});
+// Issues to mind before changing anything:
+//  https://github.com/uBlockOrigin/uBlock-issues/issues/2154
+function abortCurrentScriptCore(
+    arg1 = '',
+    arg2 = '',
+    arg3 = ''
+) {
+    const details = typeof arg1 !== 'object'
+        ? { target: arg1, needle: arg2, context: arg3 }
+        : arg1;
+    const { target = '', needle = '', context = '' } = details;
+    if ( typeof target !== 'string' ) { return; }
+    if ( target === '' ) { return; }
+    const safe = safeSelf();
+    const reNeedle = patternToRegex(needle);
+    const reContext = patternToRegex(context);
+    const thisScript = document.currentScript;
+    const chain = target.split('.');
+    let owner = window;
+    let prop;
+    for (;;) {
+        prop = chain.shift();
+        if ( chain.length === 0 ) { break; }
+        owner = owner[prop];
+        if ( owner instanceof Object === false ) { return; }
+    }
+    let value;
+    let desc = Object.getOwnPropertyDescriptor(owner, prop);
+    if (
+        desc instanceof Object === false ||
+        desc.get instanceof Function === false
+    ) {
+        value = owner[prop];
+        desc = undefined;
+    }
+    const log = shouldLog(details);
+    const debug = shouldDebug(details);
+    const exceptionToken = getExceptionToken();
+    const scriptTexts = new WeakMap();
+    const getScriptText = elem => {
+        let text = elem.textContent;
+        if ( text.trim() !== '' ) { return text; }
+        if ( scriptTexts.has(elem) ) { return scriptTexts.get(elem); }
+        const [ , mime, content ] =
+            /^data:([^,]*),(.+)$/.exec(elem.src.trim()) ||
+            [ '', '', '' ];
+        try {
+            switch ( true ) {
+            case mime.endsWith(';base64'):
+                text = self.atob(content);
+                break;
+            default:
+                text = self.decodeURIComponent(content);
+                break;
+            }
+        } catch(ex) {
+        }
+        scriptTexts.set(elem, text);
+        return text;
+    };
+    const validate = ( ) => {
+        if ( debug ) { debugger; }  // jshint ignore: line
+        const e = document.currentScript;
+        if ( e instanceof HTMLScriptElement === false ) { return; }
+        if ( e === thisScript ) { return; }
+        if ( reContext.test(e.src) === false ) { return; }
+        if ( log && e.src !== '' ) { safe.uboLog(`matched src: ${e.src}`); }
+        const scriptText = getScriptText(e);
+        if ( reNeedle.test(scriptText) === false ) { return; }
+        if ( log ) { safe.uboLog(`matched script text: ${scriptText}`); }
+        throw new ReferenceError(exceptionToken);
+    };
+    if ( debug ) { debugger; }  // jshint ignore: line
+    try {
+        Object.defineProperty(owner, prop, {
+            get: function() {
+                validate();
+                return desc instanceof Object
+                    ? desc.get.call(owner)
+                    : value;
+            },
+            set: function(a) {
+                validate();
+                if ( desc instanceof Object ) {
+                    desc.set.call(owner, a);
+                } else {
+                    value = a;
+                }
+            }
+        });
+    } catch(ex) {
+        if ( log ) { safe.uboLog(ex); }
+    }
+}
+
+/******************************************************************************/
+
+builtinScriptlets.push({
     name: 'set-constant-core.fn',
     fn: setConstantCore,
     dependencies: [
+        'run-at.fn',
         'safe-self.fn',
     ],
 });
@@ -372,106 +540,20 @@ builtinScriptlets.push({
     aliases: [ 'acs.js', 'abort-current-inline-script.js', 'acis.js' ],
     fn: abortCurrentScript,
     dependencies: [
-        'pattern-to-regex.fn',
-        'get-exception-token.fn',
-        'safe-self.fn',
-        'should-debug.fn',
-        'should-log.fn',
+        'abort-current-script-core.fn',
+        'run-at-html-element.fn',
     ],
 });
 // Issues to mind before changing anything:
 //  https://github.com/uBlockOrigin/uBlock-issues/issues/2154
 function abortCurrentScript(
-    arg1 = '',
-    arg2 = '',
-    arg3 = ''
+    arg1,
+    arg2,
+    arg3
 ) {
-    const details = typeof arg1 !== 'object'
-        ? { target: arg1, needle: arg2, context: arg3 }
-        : arg1;
-    const { target = '', needle = '', context = '' } = details;
-    if ( typeof target !== 'string' ) { return; }
-    if ( target === '' ) { return; }
-    const safe = safeSelf();
-    const reNeedle = patternToRegex(needle);
-    const reContext = patternToRegex(context);
-    const thisScript = document.currentScript;
-    const chain = target.split('.');
-    let owner = window;
-    let prop;
-    for (;;) {
-        prop = chain.shift();
-        if ( chain.length === 0 ) { break; }
-        owner = owner[prop];
-        if ( owner instanceof Object === false ) { return; }
-    }
-    let value;
-    let desc = Object.getOwnPropertyDescriptor(owner, prop);
-    if (
-        desc instanceof Object === false ||
-        desc.get instanceof Function === false
-    ) {
-        value = owner[prop];
-        desc = undefined;
-    }
-    const log = shouldLog(details);
-    const debug = shouldDebug(details);
-    const exceptionToken = getExceptionToken();
-    const scriptTexts = new WeakMap();
-    const getScriptText = elem => {
-        let text = elem.textContent;
-        if ( text.trim() !== '' ) { return text; }
-        if ( scriptTexts.has(elem) ) { return scriptTexts.get(elem); }
-        const [ , mime, content ] =
-            /^data:([^,]*),(.+)$/.exec(elem.src.trim()) ||
-            [ '', '', '' ];
-        try {
-            switch ( true ) {
-            case mime.endsWith(';base64'):
-                text = self.atob(content);
-                break;
-            default:
-                text = self.decodeURIComponent(content);
-                break;
-            }
-        } catch(ex) {
-        }
-        scriptTexts.set(elem, text);
-        return text;
-    };
-    const validate = ( ) => {
-        if ( debug ) { debugger; }  // jshint ignore: line
-        const e = document.currentScript;
-        if ( e instanceof HTMLScriptElement === false ) { return; }
-        if ( e === thisScript ) { return; }
-        if ( reContext.test(e.src) === false ) { return; }
-        if ( log && e.src !== '' ) { safe.uboLog(`matched src: ${e.src}`); }
-        const scriptText = getScriptText(e);
-        if ( reNeedle.test(scriptText) === false ) { return; }
-        if ( log ) { safe.uboLog(`matched script text: ${scriptText}`); }
-        throw new ReferenceError(exceptionToken);
-    };
-    if ( debug ) { debugger; }  // jshint ignore: line
-    try {
-        Object.defineProperty(owner, prop, {
-            get: function() {
-                validate();
-                return desc instanceof Object
-                    ? desc.get.call(owner)
-                    : value;
-            },
-            set: function(a) {
-                validate();
-                if ( desc instanceof Object ) {
-                    desc.set.call(owner, a);
-                } else {
-                    value = a;
-                }
-            }
-        });
-    } catch(ex) {
-        if ( log ) { safe.uboLog(ex); }
-    }
+    runAtHtmlElement(( ) => {
+        abortCurrentScriptCore(arg1, arg2, arg3);
+    });
 }
 
 /******************************************************************************/
@@ -673,6 +755,7 @@ builtinScriptlets.push({
     aliases: [ 'aeld.js' ],
     fn: addEventListenerDefuser,
     dependencies: [
+        'get-extra-args.fn',
         'pattern-to-regex.fn',
         'run-at.fn',
         'safe-self.fn',
@@ -682,20 +765,15 @@ builtinScriptlets.push({
 });
 // https://github.com/uBlockOrigin/uAssets/issues/9123#issuecomment-848255120
 function addEventListenerDefuser(
-    arg1 = '',
-    arg2 = ''
+    type = '',
+    pattern = ''
 ) {
-    const details = typeof arg1 !== 'object'
-        ? { type: arg1, pattern: arg2 }
-        : arg1;
-    const { type = '', pattern = '' } = details;
-    if ( typeof type !== 'string' ) { return; }
-    if ( typeof pattern !== 'string' ) { return; }
+    const extraArgs = getExtraArgs(Array.from(arguments), 2);
     const safe = safeSelf();
     const reType = patternToRegex(type);
     const rePattern = patternToRegex(pattern);
-    const log = shouldLog(details);
-    const debug = shouldDebug(details);
+    const log = shouldLog(extraArgs);
+    const debug = shouldDebug(extraArgs);
     const trapEddEventListeners = ( ) => {
         const eventListenerHandler = {
             apply: function(target, thisArg, args) {
@@ -726,7 +804,7 @@ function addEventListenerDefuser(
     };
     runAt(( ) => {
         trapEddEventListeners();
-    }, details.runAt);
+    }, extraArgs.runAt);
 }
 
 /******************************************************************************/
@@ -2276,6 +2354,7 @@ builtinScriptlets.push({
     fn: sed,
     world: 'ISOLATED',
     dependencies: [
+        'get-extra-args.fn',
         'pattern-to-regex.fn',
         'run-at.fn',
         'safe-self.fn',
@@ -2288,14 +2367,9 @@ function sed(
 ) {
     const reNodeName = patternToRegex(nodeName, 'i');
     const rePattern = patternToRegex(pattern, 'gms');
-    const extraArgs = new Map(
-        Array.from(arguments).slice(3).reduce((out, v, i, a) => {
-            if ( (i & 1) === 0 ) { out.push([ a[i], a[i+1] || undefined ]); }
-            return out;
-        }, [])
-    );
-    const shouldLog = scriptletGlobals.has('canDebug') && extraArgs.get('log') || 0;
-    const reCondition = patternToRegex(extraArgs.get('condition') || '', 'gms');
+    const extraArgs = getExtraArgs(Array.from(arguments), 3);
+    const shouldLog = scriptletGlobals.has('canDebug') && extraArgs.log || 0;
+    const reCondition = patternToRegex(extraArgs.condition || '', 'gms');
     const safe = safeSelf();
     const stop = (takeRecord = true) => {
         if ( takeRecord ) {
@@ -2306,7 +2380,7 @@ function sed(
             safe.uboLog(`sed.js: quitting "${pattern}" => "${replacement}"`);
         }
     };
-    let sedCount = extraArgs.has('sedCount') ? parseInt(extraArgs.get('sedCount')) : 0;
+    let sedCount = extraArgs.sedCount || 0;
     const handleNode = node => {
         const before = node.textContent;
         if ( safe.RegExp_test.call(rePattern, before) === false ) { return true; }
@@ -2348,9 +2422,9 @@ function sed(
             safe.uboLog(`sed.js ${count} nodes present before installing mutation observer`);
         }
     }
-    if ( extraArgs.has('stay') ) { return; }
+    if ( extraArgs.stay ) { return; }
     runAt(( ) => {
-        const quitAfter = parseInt(extraArgs.get('quitAfter')) || 0;
+        const quitAfter = extraArgs.quitAfter || 0;
         if ( quitAfter !== 0 ) {
             setTimeout(( ) => { stop(); }, quitAfter);
         } else {
@@ -2364,7 +2438,7 @@ function sed(
 builtinScriptlets.push({
     name: 'trusted-set-constant.js',
     requiresTrust: true,
-    aliases: [ 'trusted-set' ],
+    aliases: [ 'trusted-set.js' ],
     fn: trustedSetConstant,
     dependencies: [
         'set-constant-core.fn'
