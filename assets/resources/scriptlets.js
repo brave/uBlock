@@ -169,8 +169,8 @@ function runAtHtmlElement(fn) {
         return;
     }
     const observer = new MutationObserver(( ) => {
-        fn();
         observer.disconnect();
+        fn();
     });
     observer.observe(document, { childList: true });
 }
@@ -2243,7 +2243,6 @@ function spoofCSS(
     const canDebug = scriptletGlobals.has('canDebug');
     const shouldDebug = canDebug && propToValueMap.get('debug') || 0;
     const shouldLog = canDebug && propToValueMap.has('log') || 0;
-    const proxiedStyles = new WeakSet();
     const spoofStyle = (prop, real) => {
         const normalProp = toCamelCase(prop);
         const shouldSpoof = propToValueMap.has(normalProp);
@@ -2259,27 +2258,20 @@ function spoofCSS(
             const style = Reflect.apply(target, thisArg, args);
             const targetElements = new WeakSet(document.querySelectorAll(selector));
             if ( targetElements.has(args[0]) === false ) { return style; }
-            proxiedStyles.add(target);
             const proxiedStyle = new Proxy(style, {
                 get(target, prop, receiver) {
+                    if ( typeof target[prop] === 'function' ) {
+                        if ( prop === 'getPropertyValue' ) {
+                            return (function(prop) {
+                                return spoofStyle(prop, target[prop]);
+                            }).bind(target);
+                        }
+                        return target[prop].bind(target);
+                    }
                     return spoofStyle(prop, Reflect.get(target, prop, receiver));
                 },
             });
             return proxiedStyle;
-        },
-        get(target, prop, receiver) {
-            if ( prop === 'toString' ) {
-                return target.toString.bind(target);
-            }
-            return Reflect.get(target, prop, receiver);
-        },
-    });
-    CSSStyleDeclaration.prototype.getPropertyValue = new Proxy(CSSStyleDeclaration.prototype.getPropertyValue, {
-        apply: function(target, thisArg, args) {
-            if ( shouldDebug !== 0 ) { debugger; }    // jshint ignore: line
-            const value = Reflect.apply(target, thisArg, args);
-            if ( proxiedStyles.has(thisArg) === false ) { return value; }
-            return spoofStyle(args[0], value);
         },
         get(target, prop, receiver) {
             if ( prop === 'toString' ) {
@@ -2336,7 +2328,7 @@ function spoofCSS(
 
 /*******************************************************************************
  * 
- * sed.js
+ * replace-node-text.js
  * 
  * Replace text instance(s) with another text instance inside specific
  * DOM nodes. By default, the scriplet stops and quits at the interactive
@@ -2349,9 +2341,10 @@ function spoofCSS(
  **/
 
 builtinScriptlets.push({
-    name: 'sed.js',
+    name: 'replace-node-text.js',
     requiresTrust: true,
-    fn: sed,
+    aliases: [ 'rnt.js', 'sed.js' /* to be removed */ ],
+    fn: replaceNodeText,
     world: 'ISOLATED',
     dependencies: [
         'get-extra-args.fn',
@@ -2360,7 +2353,7 @@ builtinScriptlets.push({
         'safe-self.fn',
     ],
 });
-function sed(
+function replaceNodeText(
     nodeName = '',
     pattern = '',
     replacement = ''
@@ -2433,7 +2426,14 @@ function sed(
     }, 'interactive');
 }
 
-/******************************************************************************/
+/*******************************************************************************
+ * 
+ * trusted-set-constant.js
+ * 
+ * Set specified property to any value. This is essentially the same as
+ * set-constant.js, but with no restriction as to which values can be used.
+ * 
+ **/
 
 builtinScriptlets.push({
     name: 'trusted-set-constant.js',
