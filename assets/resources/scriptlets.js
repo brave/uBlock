@@ -556,7 +556,7 @@ function replaceNodeTextCore(
         }
         observer.disconnect();
         if ( shouldLog !== 0 ) {
-            safe.uboLog(`sed.js: quitting "${pattern}" => "${replacement}"`);
+            safe.uboLog(`replace-node-text-core.fn: quitting "${pattern}" => "${replacement}"`);
         }
     };
     let sedCount = extraArgs.sedCount || 0;
@@ -569,8 +569,8 @@ function replaceNodeTextCore(
             : replacement;
         node.textContent = after;
         if ( shouldLog !== 0 ) {
-            safe.uboLog('sed.js before:\n', before);
-            safe.uboLog('sed.js after:\n', after);
+            safe.uboLog('replace-node-text-core.fn before:\n', before);
+            safe.uboLog('replace-node-text-core.fn after:\n', after);
         }
         return sedCount === 0 || (sedCount -= 1) !== 0;
     };
@@ -600,7 +600,7 @@ function replaceNodeTextCore(
             stop(); break;
         }
         if ( shouldLog !== 0 ) {
-            safe.uboLog(`sed.js ${count} nodes present before installing mutation observer`);
+            safe.uboLog(`replace-node-text-core.fn ${count} nodes present before installing mutation observer`);
         }
     }
     if ( extraArgs.stay ) { return; }
@@ -882,7 +882,13 @@ function addEventListenerDefuser(
                 }
                 if ( matchesBoth ) { return; }
                 return Reflect.apply(target, thisArg, args);
-            }
+            },
+            get(target, prop, receiver) {
+                if ( prop === 'toString' ) {
+                    return target.toString.bind(target);
+                }
+                return Reflect.get(target, prop, receiver);
+            },
         };
         self.EventTarget.prototype.addEventListener = new Proxy(
             self.EventTarget.prototype.addEventListener,
@@ -1998,7 +2004,10 @@ builtinScriptlets.push({
     name: 'xml-prune.js',
     fn: xmlPrune,
     dependencies: [
+        'get-extra-args.fn',
         'pattern-to-regex.fn',
+        'safe-self.fn',
+        'should-log.fn',
     ],
 });
 function xmlPrune(
@@ -2009,24 +2018,56 @@ function xmlPrune(
     if ( typeof selector !== 'string' ) { return; }
     if ( selector === '' ) { return; }
     const reUrl = patternToRegex(urlPattern);
-    const pruner = text => {
+    const extraArgs = getExtraArgs(Array.from(arguments), 3);
+    const log = shouldLog(extraArgs);
+    const queryAll = (xmlDoc, selector) => {
+        const isXpath = /^xpath\(.+\)$/.test(selector);
+        if ( isXpath === false ) {
+            return Array.from(xmlDoc.querySelectorAll(selector));
+        }
+        const xpr = xmlDoc.evaluate(
+            selector.slice(6, -1),
+            xmlDoc,
+            null,
+            XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE,
+            null
+        );
+        const out = [];
+        for ( let i = 0; i < xpr.snapshotLength; i++ ) {
+            const node = xpr.snapshotItem(i);
+            if ( node.nodeType !== 1 ) { continue; }
+            out.push(node);
+        }
+        return out;
+    };
+    const pruneFromDoc = xmlDoc => {
+        try {
+            if ( selectorCheck !== '' && xmlDoc.querySelector(selectorCheck) === null ) {
+                return xmlDoc;
+            }
+            const elems = queryAll(xmlDoc, selector);
+            if ( elems.length !== 0 ) {
+                if ( log ) { safeSelf().uboLog(`xmlPrune: removing ${elems.length} nodes`); }
+                for ( const elem of elems ) {
+                    elem.remove();
+                    if ( log ) { safeSelf().uboLog(`xmlPrune: ${elem.nodeName} removed`); }
+                }
+            }
+        } catch(ex) {
+            if ( log ) { safeSelf().uboLog(ex); }
+        }
+        return xmlDoc;
+    };
+    const pruneFromText = text => {
         if ( (/^\s*</.test(text) && />\s*$/.test(text)) === false ) {
             return text;
         }
         try {
             const xmlParser = new DOMParser();
             const xmlDoc = xmlParser.parseFromString(text, 'text/xml');
-            if ( selectorCheck !== '' && xmlDoc.querySelector(selectorCheck) === null ) {
-                return text;
-            }
-            const elems = xmlDoc.querySelectorAll(selector);
-            if ( elems.length !== 0 ) {
-                for ( const elem of elems ) {
-                    elem.remove();
-                }
-                const serializer = new XMLSerializer();
-                text = serializer.serializeToString(xmlDoc);
-            }
+            pruneFromDoc(xmlDoc);
+            const serializer = new XMLSerializer();
+            text = serializer.serializeToString(xmlDoc);
         } catch(ex) {
         }
         return text;
@@ -2044,13 +2085,37 @@ function xmlPrune(
             }
             return realFetch(...args).then(realResponse =>
                 realResponse.text().then(text =>
-                    new Response(pruner(text), {
+                    new Response(pruneFromText(text), {
                         status: realResponse.status,
                         statusText: realResponse.statusText,
                         headers: realResponse.headers,
                     })
                 )
             );
+        }
+    });
+    self.XMLHttpRequest.prototype.open = new Proxy(self.XMLHttpRequest.prototype.open, {
+        apply: async (target, thisArg, args) => {
+            if ( reUrl.test(urlFromArg(args[1])) === false ) {
+                return Reflect.apply(target, thisArg, args);
+            }
+            thisArg.addEventListener('readystatechange', function() {
+                if ( thisArg.readyState !== 4 ) { return; }
+                const type = thisArg.responseType;
+                if ( type === 'text' ) {
+                    const textin = thisArg.responseText;
+                    const textout = pruneFromText(textin);
+                    if ( textout === textin ) { return; }
+                    Object.defineProperty(thisArg, 'response', { value: textout });
+                    Object.defineProperty(thisArg, 'responseText', { value: textout });
+                    return;
+                }
+                if ( type === 'document' ) {
+                    pruneFromDoc(thisArg.response);
+                    return;
+                }
+            });
+            return Reflect.apply(target, thisArg, args);
         }
     });
 }
