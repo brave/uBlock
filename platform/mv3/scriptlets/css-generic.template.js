@@ -25,24 +25,34 @@
 
 /******************************************************************************/
 
-/// name css-procedural
-
-/******************************************************************************/
-
 // Important!
 // Isolate from global scope
-(function uBOL_cssProceduralImport() {
+(function uBOL_cssGenericImport() {
 
 /******************************************************************************/
 
 // $rulesetId$
 
-const argsList = self.$argsList$;
+const toImport = self.$genericSelectorMap$;
 
-const hostnamesMap = new Map(self.$hostnamesMap$);
+const genericSelectorMap = self.genericSelectorMap || new Map();
 
-self.proceduralImports = self.proceduralImports || [];
-self.proceduralImports.push({ argsList, hostnamesMap });
+if ( genericSelectorMap.size === 0 ) {
+    self.genericSelectorMap = new Map(toImport);
+    return;
+}
+
+for ( const toImportEntry of toImport ) {
+    const existing = genericSelectorMap.get(toImportEntry[0]);
+    genericSelectorMap.set(
+        toImportEntry[0],
+        existing === undefined
+            ? toImportEntry[1]
+            : `${existing},${toImportEntry[1]}`
+    );
+}
+
+self.genericSelectorMap = genericSelectorMap;
 
 /******************************************************************************/
 

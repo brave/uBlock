@@ -1,7 +1,7 @@
 /*******************************************************************************
 
     uBlock Origin - a browser extension to block requests.
-    Copyright (C) 2022-present Raymond Hill
+    Copyright (C) 2014-present Raymond Hill
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -23,22 +23,29 @@
 
 'use strict';
 
+// ruleset: $rulesetId$
+
 /******************************************************************************/
 
-export class simpleStorage {
-    static getItem(k) {
-        try {
-            return Promise.resolve(JSON.parse(self.localStorage.getItem(k)));
-        }
-        catch(ex) {
-        }
-        return Promise.resolve(null);
-    }
-    static setItem(k, v) {
-        try {
-            self.localStorage.setItem(k, JSON.stringify(v));
-        }
-        catch(ex) {
-        }
-    }
-}
+// Important!
+// Isolate from global scope
+(function uBOL_cssProceduralImport() {
+
+/******************************************************************************/
+
+const argsList = self.$argsList$;
+
+const hostnamesMap = new Map(self.$hostnamesMap$);
+
+const entitiesMap = new Map(self.$entitiesMap$);
+
+const exceptionsMap = new Map(self.$exceptionsMap$);
+
+self.proceduralImports = self.proceduralImports || [];
+self.proceduralImports.push({ argsList, hostnamesMap, entitiesMap, exceptionsMap });
+
+/******************************************************************************/
+
+})();
+
+/******************************************************************************/

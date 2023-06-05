@@ -25,6 +25,10 @@
 
 /******************************************************************************/
 
+import { browser } from './ext.js';
+
+/******************************************************************************/
+
 function parsedURLromOrigin(origin) {
     try {
         return new URL(origin);
@@ -119,11 +123,11 @@ const hostnamesFromMatches = origins => {
 
 /******************************************************************************/
 
-const fnameFromFileId = fid =>
-    fid.toString(32).padStart(7, '0');
-
-const fidFromFileName = fname =>
-    parseInt(fname, 32);
+const ubolLog = (...args) => {
+    // Do not pollute dev console in stable release.
+    if ( browser.runtime.id === 'ddkjiahejlhfcafbddmgiahcphecmpfh' ) { return; }
+    console.info(...args);
+};
 
 /******************************************************************************/
 
@@ -136,6 +140,5 @@ export {
     subtractHostnameIters,
     matchesFromHostnames,
     hostnamesFromMatches,
-    fnameFromFileId,
-    fidFromFileName,
+    ubolLog,
 };
