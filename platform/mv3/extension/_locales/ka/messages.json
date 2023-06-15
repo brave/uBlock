@@ -51,9 +51,9 @@
     "message": "პირადულობის დებულება",
     "description": "Link to privacy policy on GitHub (English)"
   },
-  "popupPowerSwitchInfo": {
-    "message": "გამოირთოს/ჩაირთოს uBO Lite ამ საიტზე",
-    "description": "Tooltip for the main power button in the popup panel"
+  "popupFilteringModeLabel": {
+    "message": "გაფილტვრის რეჟიმი",
+    "description": "Label in the popup panel for the current filtering mode"
   },
   "popupTipDashboard": {
     "message": "სამართავის გახსნა",
@@ -232,7 +232,7 @@
     "description": "Descriptive text shown at first install time only "
   },
   "defaultFilteringModeSectionLabel": {
-    "message": "ფილტრაციის ნაგულისხმევი რეჟიმი",
+    "message": "გაფილტვრის ნაგულისხმევი რეჟიმი",
     "description": "The header text for the default filtering mode section"
   },
   "defaultFilteringModeDescription": {

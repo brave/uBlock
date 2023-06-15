@@ -4,7 +4,7 @@
     "description": "extension name."
   },
   "extShortDesc": {
-    "message": "En experimentell blockerare.  Blockerar annonser, spårare, miners och mer omedelbart efter installationen.",
+    "message": "En behörighetslös innehållsblockerare.  Blockerar annonser, spårare, miners och mer omedelbart efter installationen.",
     "description": "this will be in the Chrome web store: must be 132 characters or less"
   },
   "perRulesetStats": {
@@ -51,9 +51,9 @@
     "message": "Integritetspolicy",
     "description": "Link to privacy policy on GitHub (English)"
   },
-  "popupPowerSwitchInfo": {
-    "message": "Inaktivera/aktivera uBO Lite för den här sidan",
-    "description": "Tooltip for the main power button in the popup panel"
+  "popupFilteringModeLabel": {
+    "message": "filtreringsläge",
+    "description": "Label in the popup panel for the current filtering mode"
   },
   "popupTipDashboard": {
     "message": "Öppna kontrollpanelen",

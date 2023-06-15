@@ -4,7 +4,7 @@
     "description": "extension name."
   },
   "extShortDesc": {
-    "message": "Экспериментальный облегчённый блокировщик контента, не требующий разрешений. Блокирует рекламу, трекеры, майнеры и многое другое.",
+    "message": "Блокировщик контента, не требующий разрешений. Сразу после инсталляции блокирует рекламу, трекеры, майнеры и многое другое.",
     "description": "this will be in the Chrome web store: must be 132 characters or less"
   },
   "perRulesetStats": {
@@ -51,9 +51,9 @@
     "message": "Политика конфиденциальности",
     "description": "Link to privacy policy on GitHub (English)"
   },
-  "popupPowerSwitchInfo": {
-    "message": "Отключить/включить uBO Lite для этого сайта",
-    "description": "Tooltip for the main power button in the popup panel"
+  "popupFilteringModeLabel": {
+    "message": "режим фильтрации",
+    "description": "Label in the popup panel for the current filtering mode"
   },
   "popupTipDashboard": {
     "message": "Открыть панель управления",

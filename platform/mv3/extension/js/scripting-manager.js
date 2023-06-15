@@ -110,20 +110,20 @@ function registerGeneric(context, genericDetails) {
 
     js.push('/js/scripting/css-generic.js');
 
-    const { none, network, extendedSpecific, extendedGeneric } = filteringModeDetails;
+    const { none, basic, optimal, complete } = filteringModeDetails;
     const matches = [];
     const excludeMatches = [];
-    if ( extendedGeneric.has('all-urls') ) {
+    if ( complete.has('all-urls') ) {
         excludeMatches.push(...ut.matchesFromHostnames(none));
-        excludeMatches.push(...ut.matchesFromHostnames(network));
-        excludeMatches.push(...ut.matchesFromHostnames(extendedSpecific));
+        excludeMatches.push(...ut.matchesFromHostnames(basic));
+        excludeMatches.push(...ut.matchesFromHostnames(optimal));
         excludeMatches.push(...ut.matchesFromHostnames(excludeHostnames));
         matches.push('<all_urls>');
     } else {
         matches.push(
             ...ut.matchesFromHostnames(
                 ut.subtractHostnameIters(
-                    Array.from(extendedGeneric),
+                    Array.from(complete),
                     excludeHostnames
                 )
             )
@@ -173,10 +173,10 @@ function registerProcedural(context) {
     }
     if ( js.length === 0 ) { return; }
 
-    const { none, network, extendedSpecific, extendedGeneric } = filteringModeDetails;
+    const { none, basic, optimal, complete } = filteringModeDetails;
     const matches = [
-        ...ut.matchesFromHostnames(extendedSpecific),
-        ...ut.matchesFromHostnames(extendedGeneric),
+        ...ut.matchesFromHostnames(optimal),
+        ...ut.matchesFromHostnames(complete),
     ];
     if ( matches.length === 0 ) { return; }
 
@@ -186,8 +186,8 @@ function registerProcedural(context) {
     if ( none.has('all-urls') === false ) {
         excludeMatches.push(...ut.matchesFromHostnames(none));
     }
-    if ( network.has('all-urls') === false ) {
-        excludeMatches.push(...ut.matchesFromHostnames(network));
+    if ( basic.has('all-urls') === false ) {
+        excludeMatches.push(...ut.matchesFromHostnames(basic));
     }
 
     const registered = before.get('css-procedural');
@@ -232,10 +232,10 @@ function registerDeclarative(context) {
     }
     if ( js.length === 0 ) { return; }
 
-    const { none, network, extendedSpecific, extendedGeneric } = filteringModeDetails;
+    const { none, basic, optimal, complete } = filteringModeDetails;
     const matches = [
-        ...ut.matchesFromHostnames(extendedSpecific),
-        ...ut.matchesFromHostnames(extendedGeneric),
+        ...ut.matchesFromHostnames(optimal),
+        ...ut.matchesFromHostnames(complete),
     ];
     if ( matches.length === 0 ) { return; }
 
@@ -245,8 +245,8 @@ function registerDeclarative(context) {
     if ( none.has('all-urls') === false ) {
         excludeMatches.push(...ut.matchesFromHostnames(none));
     }
-    if ( network.has('all-urls') === false ) {
-        excludeMatches.push(...ut.matchesFromHostnames(network));
+    if ( basic.has('all-urls') === false ) {
+        excludeMatches.push(...ut.matchesFromHostnames(basic));
     }
 
     const registered = before.get('css-declarative');
@@ -291,10 +291,10 @@ function registerSpecific(context) {
     }
     if ( js.length === 0 ) { return; }
 
-    const { none, network, extendedSpecific, extendedGeneric } = filteringModeDetails;
+    const { none, basic, optimal, complete } = filteringModeDetails;
     const matches = [
-        ...ut.matchesFromHostnames(extendedSpecific),
-        ...ut.matchesFromHostnames(extendedGeneric),
+        ...ut.matchesFromHostnames(optimal),
+        ...ut.matchesFromHostnames(complete),
     ];
     if ( matches.length === 0 ) { return; }
 
@@ -304,8 +304,8 @@ function registerSpecific(context) {
     if ( none.has('all-urls') === false ) {
         excludeMatches.push(...ut.matchesFromHostnames(none));
     }
-    if ( network.has('all-urls') === false ) {
-        excludeMatches.push(...ut.matchesFromHostnames(network));
+    if ( basic.has('all-urls') === false ) {
+        excludeMatches.push(...ut.matchesFromHostnames(basic));
     }
 
     const registered = before.get('css-specific');
@@ -347,16 +347,16 @@ function registerScriptlet(context, scriptletDetails) {
     const { before, filteringModeDetails, rulesetsDetails } = context;
 
     const hasBroadHostPermission =
-        filteringModeDetails.extendedSpecific.has('all-urls') ||
-        filteringModeDetails.extendedGeneric.has('all-urls');
+        filteringModeDetails.optimal.has('all-urls') ||
+        filteringModeDetails.complete.has('all-urls');
 
     const permissionRevokedMatches = [
         ...ut.matchesFromHostnames(filteringModeDetails.none),
-        ...ut.matchesFromHostnames(filteringModeDetails.network),
+        ...ut.matchesFromHostnames(filteringModeDetails.basic),
     ];
     const permissionGrantedHostnames = [
-        ...filteringModeDetails.extendedSpecific,
-        ...filteringModeDetails.extendedGeneric,
+        ...filteringModeDetails.optimal,
+        ...filteringModeDetails.complete,
     ];
 
     for ( const rulesetId of rulesetsDetails.map(v => v.id) ) {
@@ -369,20 +369,26 @@ function registerScriptlet(context, scriptletDetails) {
 
             const matches = [];
             const excludeMatches = [];
+            let targetHostnames = [];
             if ( hasBroadHostPermission ) {
                 excludeMatches.push(...permissionRevokedMatches);
-                matches.push(...ut.matchesFromHostnames(scriptletHostnames));
+                if ( scriptletHostnames.length > 100 ) {
+                    targetHostnames = [ '*' ];
+                } else {
+                    targetHostnames = scriptletHostnames;
+                }
             } else if ( permissionGrantedHostnames.length !== 0 ) {
-                matches.push(
-                    ...ut.matchesFromHostnames(
-                        ut.intersectHostnameIters(
-                            permissionGrantedHostnames,
-                            scriptletHostnames
-                        )
-                    )
-                );
+                if ( scriptletHostnames.includes('*') ) {
+                    targetHostnames = permissionGrantedHostnames;
+                } else {
+                    targetHostnames = ut.intersectHostnameIters(
+                        permissionGrantedHostnames,
+                        scriptletHostnames
+                    );
+                }
             }
-            if ( matches.length === 0 ) { continue; }
+            if ( targetHostnames.length === 0 ) { continue; }
+            matches.push(...ut.matchesFromHostnames(targetHostnames));
 
             before.delete(id); // Important!
 

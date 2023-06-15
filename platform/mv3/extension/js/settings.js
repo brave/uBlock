@@ -22,7 +22,7 @@
 'use strict';
 
 import { browser, sendMessage, localRead, localWrite } from './ext.js';
-import { i18n$ } from './i18n.js';
+import { i18n$, i18n } from './i18n.js';
 import { dom, qs$, qsa$ } from './dom.js';
 
 /******************************************************************************/
@@ -70,7 +70,7 @@ function renderFilterLists(soft = false) {
         if ( dom.attr(li, 'data-listkey') !== ruleset.id ) {
             dom.attr(li, 'data-listkey', ruleset.id);
             qs$(li, 'input[type="checkbox"]').checked = on;
-            dom.text(qs$(li, '.listname'), ruleset.name || ruleset.id);
+            qs$(li, '.listname').append(i18n.patchUnicodeFlags(ruleset.name));
             dom.cl.remove(li, 'toRemove');
             if ( ruleset.homeURL ) {
                 dom.cl.add(li, 'support');
@@ -241,31 +241,31 @@ const renderWidgets = function() {
 async function onFilteringModeChange(ev) {
     const input = ev.target;
     const newLevel = parseInt(input.value, 10);
-    let granted = false;
 
     switch ( newLevel ) {
     case 1: { // Revoke broad permissions
-        granted = await browser.permissions.remove({
+        await browser.permissions.remove({
             origins: [ '<all_urls>' ]
         });
+        cachedRulesetData.defaultFilteringMode = 1;
         break;
     }
     case 2:
     case 3: { // Request broad permissions
-        granted = await browser.permissions.request({
+        const granted = await browser.permissions.request({
             origins: [ '<all_urls>' ]
         });
+        if ( granted ) {
+            const actualLevel = await sendMessage({
+                what: 'setDefaultFilteringMode',
+                level: newLevel,
+            });
+            cachedRulesetData.defaultFilteringMode = actualLevel;
+        }
         break;
     }
     default:
         break;
-    }
-    if ( granted ) {
-        const actualLevel = await sendMessage({
-            what: 'setDefaultFilteringMode',
-            level: newLevel,
-        });
-        cachedRulesetData.defaultFilteringMode = actualLevel;
     }
     renderFilterLists(true);
     renderWidgets();

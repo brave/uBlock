@@ -1,4 +1,4 @@
-uBO Lite (uBOL) on kokeellinen *käyttöoikeudeton* MV3-pohjainen sisällönestotyökalu.
+uBO Lite (uBOL) on *käyttöoikeudeton* MV3-pohjainen sisällönestotyökalu.
 
 Oletusarvoiset sääntömääritykset vastaavat uBlock Origin -laajennuksen oletuksia:
 

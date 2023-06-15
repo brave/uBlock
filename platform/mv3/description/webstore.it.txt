@@ -1,4 +1,4 @@
-uBO Lite (uBOL) *non richiede autorizzazioni* per bloccare i contenuti. È basato su un sistema sperimentale di tipo MV3.
+uBO Lite (uBOL) è un sistema per bloccare contenuti che *non richiede autorizzazioni* basato su MV3.
 
 L'insieme di regole predefinite corrisponde a quello di uBlock Origin:
 

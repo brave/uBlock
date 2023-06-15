@@ -4,7 +4,7 @@
     "description": "extension name."
   },
   "extShortDesc": {
-    "message": "Un bloqueur allégé, expérimental et sans permission requise. Bloque les publicités, pisteurs, mineurs et plus dès l'installation.",
+    "message": "Un bloqueur de contenu sans permission requise. Bloque les publicités, pisteurs, mineurs et plus dès l'installation.",
     "description": "this will be in the Chrome web store: must be 132 characters or less"
   },
   "perRulesetStats": {
@@ -51,9 +51,9 @@
     "message": "Politique de confidentialité",
     "description": "Link to privacy policy on GitHub (English)"
   },
-  "popupPowerSwitchInfo": {
-    "message": "Désactiver/activer uBO Lite pour ce site",
-    "description": "Tooltip for the main power button in the popup panel"
+  "popupFilteringModeLabel": {
+    "message": "Mode de filtrage",
+    "description": "Label in the popup panel for the current filtering mode"
   },
   "popupTipDashboard": {
     "message": "Ouvrir le Tableau de bord",

@@ -4,7 +4,7 @@
     "description": "extension name."
   },
   "extShortDesc": {
-    "message": "Eksperimentalni bloker sadržaja bez dopuštenja. Blokira oglase, oglasne pratitelje, kripto \"rudare\" i ostalo nakon instalacije.",
+    "message": "Bloker sadržaja bez dopuštenja. Blokira oglase, oglasne pratitelje, kripto \"rudare\" i ostalo odmah nakon instalacije.",
     "description": "this will be in the Chrome web store: must be 132 characters or less"
   },
   "perRulesetStats": {
@@ -51,9 +51,9 @@
     "message": "Pravila privatnosti",
     "description": "Link to privacy policy on GitHub (English)"
   },
-  "popupPowerSwitchInfo": {
-    "message": "Omogući/onemogući uBO Lite za ovu stranicu",
-    "description": "Tooltip for the main power button in the popup panel"
+  "popupFilteringModeLabel": {
+    "message": "Način filtriranja",
+    "description": "Label in the popup panel for the current filtering mode"
   },
   "popupTipDashboard": {
     "message": "Otvori nadzornu ploču",
