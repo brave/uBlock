@@ -739,7 +739,11 @@ function setCookieHelper(
     if ( expires !== '' ) {
         cookieParts.push('; expires=', expires);
     }
-    if ( path !== '' ) {
+
+    if ( path === '' ) { path = '/'; }
+    else if ( path === 'none' ) { path = ''; }
+    if ( path !== '' && path !== '/' ) { return; }
+    if ( path === '/' ) {
         cookieParts.push('; path=/');
     }
     document.cookie = cookieParts.join('');
@@ -2311,6 +2315,11 @@ function xmlPrune(
 builtinScriptlets.push({
     name: 'm3u-prune.js',
     fn: m3uPrune,
+    dependencies: [
+        'get-extra-args.fn',
+        'safe-self.fn',
+        'should-log.fn',
+    ],
 });
 // https://en.wikipedia.org/wiki/M3U
 function m3uPrune(
@@ -2318,6 +2327,9 @@ function m3uPrune(
     urlPattern = ''
 ) {
     if ( typeof m3uPattern !== 'string' ) { return; }
+    const options = getExtraArgs(Array.from(arguments), 2);
+    const logLevel = shouldLog(options);
+    const safe = safeSelf();
     const regexFromArg = arg => {
         if ( arg === '' ) { return /^/; }
         const match = /^\/(.+)\/([gms]*)$/.exec(arg);
@@ -2367,16 +2379,39 @@ function m3uPrune(
             for (;;) {
                 const match = reM3u.exec(text);
                 if ( match === null ) { break; }
-                const before = text.slice(0, match.index);
-                if ( before.length === 0 || /[\n\r]+\s*$/.test(before) ) {
-                    const after = text.slice(match.index + match[0].length);
-                    if ( after.length === 0 || /^\s*[\n\r]+/.test(after) ) {
-                        text = before.trim() + '\n' + after.trim();
-                        reM3u.lastIndex = before.length + 1;
+                let discard = match[0];
+                let before = text.slice(0, match.index);
+                if (
+                    /^[\n\r]+/.test(discard) === false &&
+                    /[\n\r]+$/.test(before) === false
+                ) {
+                    const startOfLine = /[^\n\r]+$/.exec(before);
+                    if ( startOfLine !== null ) {
+                        before = before.slice(0, startOfLine.index);
+                        discard = startOfLine[0] + discard;
                     }
+                }
+                let after = text.slice(match.index + match[0].length);
+                if (
+                    /[\n\r]+$/.test(discard) === false &&
+                    /^[\n\r]+/.test(after) === false
+                ) {
+                    const endOfLine = /^[^\n\r]+/.exec(after);
+                    if ( endOfLine !== null ) {
+                        after = after.slice(endOfLine.index);
+                        discard += discard + endOfLine[0];
+                    }
+                }
+                text = before.trim() + '\n' + after.trim();
+                reM3u.lastIndex = before.length + 1;
+                if ( logLevel ) {
+                    safe.uboLog('m3u-prune: discarding\n',
+                        discard.split(/\n+/).map(s => `\t${s}`).join('\n')
+                    );
                 }
                 if ( reM3u.global === false ) { break; }
             }
+            return text;
         }
         const lines = text.split(/\n\r|\n|\r/);
         for ( let i = 0; i < lines.length; i++ ) {
@@ -2721,10 +2756,6 @@ function setCookie(
     }
     value = encodeURIComponent(value);
 
-    const validPaths = [ '', '/', 'none' ];
-    if ( validPaths.includes(path) === false ) { return; }
-    if ( path === 'none' ) { path = ''; }
-
     setCookieHelper(
         name,
         value,
@@ -2732,6 +2763,61 @@ function setCookie(
         path,
         getExtraArgs(Array.from(arguments), 3)
     );
+}
+
+/*******************************************************************************
+ * 
+ * set-local-storage-item.js
+ * 
+ * Set a local storage entry to a specific, allowed value.
+ * 
+ * Reference:
+ * https://github.com/AdguardTeam/Scriptlets/blob/master/src/scriptlets/set-local-storage-item.js
+ * 
+ **/
+
+builtinScriptlets.push({
+    name: 'set-local-storage-item.js',
+    fn: setLocalStorageItem,
+    world: 'ISOLATED',
+});
+function setLocalStorageItem(
+    key = '',
+    value = ''
+) {
+    if ( key === '' ) { return; }
+    if ( value === '' ) { return; }
+
+    let actualValue;
+    if ( value === 'undefined' ) {
+        actualValue = undefined;
+    } else if ( value === 'false' ) {
+        actualValue = false;
+    } else if ( value === 'true' ) {
+        actualValue = true;
+    } else if ( value === 'null' ) {
+        actualValue = null;
+    } else if ( value === '{}' ) {
+        actualValue = '{}';
+    } else if ( value === '[]' ) {
+        actualValue = '[]';
+    } else if ( value === "''" ) {
+        actualValue = '';
+    } else if ( value === 'yes' ) {
+        actualValue = 'yes';
+    } else if ( value === 'no' ) {
+        actualValue = 'no';
+    } else if ( /^\d+$/.test(value) ) {
+        actualValue = parseInt(value, 10);
+        if ( actualValue > 32767 ) { return; }
+    } else {
+        return;
+    }
+
+    try {
+        self.localStorage.setItem(key, `${actualValue}`);
+    } catch(ex) {
+    }
 }
 
 /*******************************************************************************
@@ -2863,10 +2949,6 @@ function trustedSetCookie(
         expires = time.toUTCString();
     }
 
-    const validPaths = [ '', '/', 'none' ];
-    if ( validPaths.includes(path) === false ) { return; }
-    if ( path === 'none' ) { path = ''; }
-
     setCookieHelper(
         name,
         value,
@@ -2874,6 +2956,43 @@ function trustedSetCookie(
         path,
         getExtraArgs(Array.from(arguments), 4)
     );
+}
+
+/*******************************************************************************
+ * 
+ * trusted-set-local-storage-item.js
+ * 
+ * Set a local storage entry to an arbitrary value.
+ * 
+ * Reference:
+ * https://github.com/AdguardTeam/Scriptlets/blob/master/src/scriptlets/trusted-set-local-storage-item.js
+ * 
+ **/
+
+builtinScriptlets.push({
+    name: 'trusted-set-local-storage-item.js',
+    requiresTrust: true,
+    fn: trustedSetLocalStorageItem,
+    world: 'ISOLATED',
+});
+function trustedSetLocalStorageItem(
+    key = '',
+    value = ''
+) {
+    if ( key === '' ) { return; }
+    if ( value === '' ) { return; }
+
+    let actualValue = value;
+    if ( value === '$now$' ) {
+        actualValue = Date.now();
+    } else if ( value === '$currentDate$' ) {
+        actualValue = `${Date()}`;
+    }
+
+    try {
+        self.localStorage.setItem(key, `${actualValue}`);
+    } catch(ex) {
+    }
 }
 
 /******************************************************************************/
