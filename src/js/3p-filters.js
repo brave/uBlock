@@ -400,9 +400,10 @@ const toggleFilterList = (elem, on, ui = false) => {
 const updateListNode = listNode => {
     if ( listNode === null ) { return; }
     if ( listNode.dataset.role !== 'node' ) { return; }
-    const listLeaves = qsa$(listNode, '.listEntry[data-role="leaf"].checked');
+    const checkedListLeaves = qsa$(listNode, '.listEntry[data-role="leaf"].checked');
+    const allListLeaves = qsa$(listNode, '.listEntry[data-role="leaf"]');
     dom.text(qs$(listNode, '.nodestats'),
-        renderNodeStats(listLeaves.length, qsa$(listNode, '.listEntry[data-role="leaf"]').length)
+        renderNodeStats(checkedListLeaves.length, allListLeaves.length)
     );
     dom.cl.toggle(listNode, 'searchMatch',
         qs$(listNode, ':scope > .listEntries > .listEntry.searchMatch') !== null
@@ -413,7 +414,7 @@ const updateListNode = listNode => {
     let isCached = false;
     let isObsolete = false;
     let writeTime = 0;
-    for ( const listLeaf of listLeaves ) {
+    for ( const listLeaf of checkedListLeaves ) {
         const listkey = listLeaf.dataset.key;
         const listDetails = listsetDetails.available[listkey];
         usedFilterCount += listDetails.off ? 0 : listDetails.entryUsedCount || 0;
@@ -423,8 +424,15 @@ const updateListNode = listNode => {
         isObsolete = isObsolete || dom.cl.has(listLeaf, 'obsolete');
         writeTime = Math.max(writeTime, assetCache.writeTime || 0);
     }
-    dom.cl.toggle(listNode, 'checked', listLeaves.length !== 0);
-    dom.prop(qs$(listNode, ':scope > .detailbar input'), 'checked', listLeaves.length !== 0);
+    dom.cl.toggle(listNode, 'checked', checkedListLeaves.length !== 0);
+    dom.cl.toggle(qs$(listNode, ':scope > .detailbar .checkbox'),
+        'partial',
+        checkedListLeaves.length !== allListLeaves.length
+    );
+    dom.prop(qs$(listNode, ':scope > .detailbar input'),
+        'checked',
+        checkedListLeaves.length !== 0
+    );
     dom.text(qs$(listNode, '.leafstats'),
         renderLeafStats(usedFilterCount, totalFilterCount)
     );
@@ -828,14 +836,14 @@ self.cloud.onPull = function fromCloudData(data, append) {
         selectedSet.delete(listkey);
     }
     if ( selectedSet.size !== 0 ) {
-        const textarea = qs$('#lists .liEntry[data-role="import"] textarea');
+        const textarea = qs$('#lists .listEntry[data-role="import"] textarea');
         const lines = append
             ? textarea.value.split(/[\n\r]+/)
             : [];
         lines.push(...selectedSet);
         if ( lines.length !== 0 ) { lines.push(''); }
         textarea.value = lines.join('\n');
-        dom.cl.toggle('#lists .liEntry[data-role="import"]', 'expanded', textarea.value !== '');
+        dom.cl.toggle('#lists .listEntry[data-role="import"]', 'expanded', textarea.value !== '');
     }
 
     renderWidgets();
