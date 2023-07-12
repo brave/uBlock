@@ -125,7 +125,7 @@ export default new Map([
         alias: 'd3pkae9owd2lcf.cloudfront.net/mb105.js',
     } ],
     [ 'nobab.js', {
-        alias: 'bab-defuser.js',
+        alias: [ 'bab-defuser.js', 'prevent-bab.js' ],
         data: 'text',
     } ],
     [ 'nobab2.js', {
@@ -174,7 +174,7 @@ export default new Map([
         alias: 'widgets.outbrain.com/outbrain.js',
     } ],
     [ 'popads.js', {
-        alias: 'popads.net.js',
+        alias: [ 'popads.net.js', 'prevent-popads-net.js' ],
         data: 'text',
     } ],
     [ 'popads-dummy.js', {
