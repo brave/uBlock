@@ -225,6 +225,7 @@ builtinScriptlets.push({
     dependencies: [
         'pattern-to-regex.fn',
         'get-exception-token.fn',
+        'get-extra-args.fn',
         'safe-self.fn',
         'should-debug.fn',
         'should-log.fn',
@@ -233,19 +234,16 @@ builtinScriptlets.push({
 // Issues to mind before changing anything:
 //  https://github.com/uBlockOrigin/uBlock-issues/issues/2154
 function abortCurrentScriptCore(
-    arg1 = '',
-    arg2 = '',
-    arg3 = ''
+    target = '',
+    needle = '',
+    context = ''
 ) {
-    const details = typeof arg1 !== 'object'
-        ? { target: arg1, needle: arg2, context: arg3 }
-        : arg1;
-    const { target = '', needle = '', context = '' } = details;
     if ( typeof target !== 'string' ) { return; }
     if ( target === '' ) { return; }
     const safe = safeSelf();
     const reNeedle = patternToRegex(needle);
     const reContext = patternToRegex(context);
+    const extraArgs = getExtraArgs(Array.from(arguments), 3);
     const thisScript = document.currentScript;
     const chain = target.split('.');
     let owner = window;
@@ -266,8 +264,8 @@ function abortCurrentScriptCore(
         value = owner[prop];
         desc = undefined;
     }
-    const log = shouldLog(details);
-    const debug = shouldDebug(details);
+    const log = shouldLog(extraArgs);
+    const debug = shouldDebug(extraArgs);
     const exceptionToken = getExceptionToken();
     const scriptTexts = new WeakMap();
     const getScriptText = elem => {
@@ -827,13 +825,9 @@ builtinScriptlets.push({
 });
 // Issues to mind before changing anything:
 //  https://github.com/uBlockOrigin/uBlock-issues/issues/2154
-function abortCurrentScript(
-    arg1,
-    arg2,
-    arg3
-) {
+function abortCurrentScript(...args) {
     runAtHtmlElement(( ) => {
-        abortCurrentScriptCore(arg1, arg2, arg3);
+        abortCurrentScriptCore(...args);
     });
 }
 
@@ -1476,6 +1470,7 @@ builtinScriptlets.push({
         'rc.js',
     ],
     fn: removeClass,
+    world: 'ISOLATED',
     dependencies: [
         'run-at.fn',
     ],
@@ -1487,20 +1482,24 @@ function removeClass(
 ) {
     if ( typeof token !== 'string' ) { return; }
     if ( token === '' ) { return; }
-    const tokens = token.split(/\s*\|\s*/);
+    const classTokens = token.split(/\s*\|\s*/);
     if ( selector === '' ) {
-        selector = '.' + tokens.map(a => CSS.escape(a)).join(',.');
+        selector = '.' + classTokens.map(a => CSS.escape(a)).join(',.');
     }
+    const mustStay = /\bstay\b/.test(behavior);
     let timer;
     const rmclass = function() {
         timer = undefined;
         try {
             const nodes = document.querySelectorAll(selector);
             for ( const node of nodes ) {
-                node.classList.remove(...tokens);
+                node.classList.remove(...classTokens);
             }
         } catch(ex) {
         }
+        if ( mustStay ) { return; }
+        if ( document.readyState !== 'complete' ) { return; }
+        observer.disconnect();
     };
     const mutationHandler = mutations => {
         if ( timer !== undefined ) { return; }
@@ -1518,10 +1517,9 @@ function removeClass(
         if ( skip ) { return; }
         timer = self.requestIdleCallback(rmclass, { timeout: 67 });
     };
+    const observer = new MutationObserver(mutationHandler);
     const start = ( ) => {
         rmclass();
-        if ( /\bstay\b/.test(behavior) === false ) { return; }
-        const observer = new MutationObserver(mutationHandler);
         observer.observe(document, {
             attributes: true,
             attributeFilter: [ 'class' ],
@@ -1531,7 +1529,7 @@ function removeClass(
     };
     runAt(( ) => {
         start();
-    }, /\bcomplete\b/.test(behavior) ? 'idle' : 'interactive');
+    }, /\bcomplete\b/.test(behavior) ? 'idle' : 'loading');
 }
 
 /******************************************************************************/
@@ -2393,16 +2391,16 @@ function xmlPrune(
             thisArg.addEventListener('readystatechange', function() {
                 if ( thisArg.readyState !== 4 ) { return; }
                 const type = thisArg.responseType;
-                if ( type === 'text' ) {
+                if ( type === 'document' || thisArg.responseXML instanceof XMLDocument ) {
+                    pruneFromDoc(thisArg.responseXML);
+                    return;
+                }
+                if ( type === 'text' || typeof thisArg.responseText === 'string' ) {
                     const textin = thisArg.responseText;
                     const textout = pruneFromText(textin);
                     if ( textout === textin ) { return; }
                     Object.defineProperty(thisArg, 'response', { value: textout });
                     Object.defineProperty(thisArg, 'responseText', { value: textout });
-                    return;
-                }
-                if ( type === 'document' ) {
-                    pruneFromDoc(thisArg.response);
                     return;
                 }
             });
@@ -2585,7 +2583,7 @@ function m3uPrune(
  * ```
  * 
  * - `selector`: required, CSS selector, specifies `a` elements for which the
- *   `href` attribute must be overriden.
+ *   `href` attribute must be overridden.
  * - `source`: optional, default to `text`, specifies from where to get the
  *   value which will override the `href` attribute.
  *     - `text`: the value will be the first valid URL found in the text
