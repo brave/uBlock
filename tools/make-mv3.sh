@@ -35,7 +35,6 @@ if [ "$QUICK" != "yes" ]; then
     rm -rf $DES
 fi
 
-
 mkdir -p $DES
 cd $DES
 DES=$(pwd)
@@ -45,19 +44,29 @@ mkdir -p $DES/css/fonts
 mkdir -p $DES/js
 mkdir -p $DES/img
 
+if [ "$UBO_VERSION" != "local" ]; then
+    UBO_VERSION=$(cat platform/mv3/ubo-version)
+    UBO_REPO="https://github.com/gorhill/uBlock.git"
+    UBO_DIR=$(mktemp -d)
+    echo "*** uBOLite.mv3: Fetching uBO $UBO_VERSION from $UBO_REPO into $UBO_DIR"
+    git clone -q --depth 1 --branch "$UBO_VERSION" "$UBO_REPO" "$UBO_DIR"
+else
+    UBO_DIR=.
+fi
+
 echo "*** uBOLite.mv3: Copying common files"
-cp -R src/css/fonts/* $DES/css/fonts/
-cp src/css/themes/default.css $DES/css/
-cp src/css/common.css $DES/css/
-cp src/css/dashboard-common.css $DES/css/
-cp src/css/fa-icons.css $DES/css/
+cp -R $UBO_DIR/src/css/fonts/* $DES/css/fonts/
+cp $UBO_DIR/src/css/themes/default.css $DES/css/
+cp $UBO_DIR/src/css/common.css $DES/css/
+cp $UBO_DIR/src/css/dashboard-common.css $DES/css/
+cp $UBO_DIR/src/css/fa-icons.css $DES/css/
 
-cp src/js/dom.js $DES/js/
-cp src/js/fa-icons.js $DES/js/
-cp src/js/i18n.js $DES/js/
-cp src/lib/punycode.js $DES/js/
+cp $UBO_DIR/src/js/dom.js $DES/js/
+cp $UBO_DIR/src/js/fa-icons.js $DES/js/
+cp $UBO_DIR/src/js/i18n.js $DES/js/
+cp $UBO_DIR/src/lib/punycode.js $DES/js/
 
-cp -R src/img/flags-of-the-world $DES/img
+cp -R $UBO_DIR/src/img/flags-of-the-world $DES/img
 
 cp LICENSE.txt $DES/
 
@@ -71,6 +80,7 @@ cp platform/mv3/extension/css/* $DES/css/
 cp -R platform/mv3/extension/js/* $DES/js/
 cp platform/mv3/extension/img/* $DES/img/
 cp -R platform/mv3/extension/_locales $DES/
+cp platform/mv3/README.md $DES/
 
 if [ "$QUICK" != "yes" ]; then
     echo "*** uBOLite.mv3: Generating rulesets"
@@ -85,11 +95,11 @@ if [ "$QUICK" != "yes" ]; then
     cp platform/mv3/package.json $TMPDIR/
     cp platform/mv3/*.js $TMPDIR/
     cp platform/mv3/extension/js/utils.js $TMPDIR/js/
-    cp assets/assets.json $TMPDIR/
-    cp assets/resources/scriptlets.js $TMPDIR/
+    cp $UBO_DIR/assets/assets.json $TMPDIR/
+    cp $UBO_DIR/assets/resources/scriptlets.js $TMPDIR/
     cp -R platform/mv3/scriptlets $TMPDIR/
     mkdir -p $TMPDIR/web_accessible_resources
-    cp src/web_accessible_resources/* $TMPDIR/web_accessible_resources/
+    cp $UBO_DIR/src/web_accessible_resources/* $TMPDIR/web_accessible_resources/
     cd $TMPDIR
     node --no-warnings make-rulesets.js output=$DES platform="$PLATFORM"
     cd - > /dev/null
@@ -110,7 +120,6 @@ if [ "$FULL" = "yes" ]; then
     mkdir -p $TMPDIR
     cp -R $DES/* $TMPDIR/
     cd $TMPDIR > /dev/null
-    rm log.txt
     zip $PACKAGENAME -qr ./*
     cd - > /dev/null
     cp $TMPDIR/$PACKAGENAME dist/build/

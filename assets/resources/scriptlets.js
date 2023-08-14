@@ -1929,70 +1929,129 @@ builtinScriptlets.push({
     ],
     fn: noXhrIf,
     dependencies: [
-        'safe-self.fn',
+        'match-object-properties.fn',
+        'parse-properties-to-match.fn',
     ],
 });
 function noXhrIf(
-    arg1 = ''
+    propsToMatch = '',
+    directive = ''
 ) {
-    if ( typeof arg1 !== 'string' ) { return; }
-    const safe = safeSelf();
+    if ( typeof propsToMatch !== 'string' ) { return; }
     const xhrInstances = new WeakMap();
-    const needles = [];
-    for ( const condition of arg1.split(/\s+/) ) {
-        if ( condition === '' ) { continue; }
-        const pos = condition.indexOf(':');
-        let key, value;
-        if ( pos !== -1 ) {
-            key = condition.slice(0, pos);
-            value = condition.slice(pos + 1);
-        } else {
-            key = 'url';
-            value = condition;
+    const propNeedles = parsePropertiesToMatch(propsToMatch, 'url');
+    const log = propNeedles.size === 0 ? console.log.bind(console) : undefined;
+    const warOrigin = scriptletGlobals.get('warOrigin');
+    const generateRandomString = len => {
+            let s = '';
+            do { s += Math.random().toString(36).slice(2); }
+            while ( s.length < 10 );
+            return s.slice(0, len);
+    };
+    const generateContent = async directive => {
+        if ( directive === 'true' ) {
+            return generateRandomString(10);
         }
-        needles.push({ key, re: safe.patternToRegex(value) });
-    }
-    const log = needles.length === 0 ? console.log.bind(console) : undefined;
-    self.XMLHttpRequest = class extends self.XMLHttpRequest {
-        open(...args) {
-            if ( log !== undefined ) {
-                log(`uBO: xhr.open(${args.join(', ')})`);
-            } else {
-                const argNames = [ 'method', 'url' ];
-                const haystack = new Map();
-                for ( let i = 0; i < args.length && i < argNames.length; i++  ) {
-                    haystack.set(argNames[i], args[i]);
-                }
-                if ( haystack.size !== 0 ) {
-                    let matches = true;
-                    for ( const { key, re } of needles ) {
-                        matches = re.test(haystack.get(key) || '');
-                        if ( matches === false ) { break; }
-                    }
-                    if ( matches ) {
-                        xhrInstances.set(this, haystack);
-                    }
-                }
+        if ( directive.startsWith('war:') ) {
+            if ( warOrigin === undefined ) { return ''; }
+            const warName = directive.slice(4);
+            const fullpath = [ warOrigin, '/', warName ];
+            const warSecret = scriptletGlobals.get('warSecret') || '';
+            if ( warSecret !== '' ) {
+                fullpath.push('?secret=', warSecret);
             }
-            return super.open(...args);
+            return new Promise(resolve => {
+                const warXHR = new XMLHttpRequest();
+                warXHR.responseType = 'text';
+                warXHR.onloadend = ev => {
+                    resolve(ev.target.responseText || '');
+                };
+                warXHR.open('GET', fullpath.join(''));
+                warXHR.send();
+            });
+        }
+        return '';
+    };
+    self.XMLHttpRequest = class extends self.XMLHttpRequest {
+        open(method, url, ...args) {
+            if ( log !== undefined ) {
+                log(`uBO: xhr.open(${method}, ${url}, ${args.join(', ')})`);
+                return super.open(method, url, ...args);
+            }
+            if ( warOrigin !== undefined && url.startsWith(warOrigin) ) {
+                return super.open(method, url, ...args);
+            }
+            const haystack = { method, url };
+            if ( matchObjectProperties(propNeedles, haystack) ) {
+                xhrInstances.set(this, haystack);
+            }
+            return super.open(method, url, ...args);
         }
         send(...args) {
             const haystack = xhrInstances.get(this);
             if ( haystack === undefined ) {
                 return super.send(...args);
             }
-            Object.defineProperties(this, {
-                readyState: { value: 4, writable: false },
-                response: { value: '', writable: false },
-                responseText: { value: '', writable: false },
-                responseURL: { value: haystack.get('url'), writable: false },
-                responseXML: { value: '', writable: false },
-                status: { value: 200, writable: false },
-                statusText: { value: 'OK', writable: false },
+            let promise = Promise.resolve({
+                xhr: this,
+                directive,
+                props: {
+                    readyState: { value: 4 },
+                    response: { value: '' },
+                    responseText: { value: '' },
+                    responseXML: { value: null },
+                    responseURL: { value: haystack.url },
+                    status: { value: 200 },
+                    statusText: { value: 'OK' },
+                },
             });
-            this.dispatchEvent(new Event('readystatechange'));
-            this.dispatchEvent(new Event('load'));
-            this.dispatchEvent(new Event('loadend'));
+            switch ( this.responseType ) {
+                case 'arraybuffer':
+                    promise = promise.then(details => {
+                        details.props.response.value = new ArrayBuffer(0);
+                        return details;
+                    });
+                    break;
+                case 'blob':
+                    promise = promise.then(details => {
+                        details.props.response.value = new Blob([]);
+                        return details;
+                    });
+                    break;
+                case 'document': {
+                    promise = promise.then(details => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString('', 'text/html');
+                        details.props.response.value = doc;
+                        details.props.responseXML.value = doc;
+                        return details;
+                    });
+                    break;
+                }
+                case 'json':
+                    promise = promise.then(details => {
+                        details.props.response.value = {};
+                        details.props.responseText.value = '{}';
+                        return details;
+                    });
+                    break;
+                default:
+                    if ( directive === '' ) { break; }
+                    promise = promise.then(details => {
+                        return generateContent(details.directive).then(text => {
+                            details.props.response.value = text;
+                            details.props.responseText.value = text;
+                            return details;
+                        });
+                    });
+                    break;
+            }
+            promise.then(details => {
+                Object.defineProperties(details.xhr, details.props);
+                details.xhr.dispatchEvent(new Event('readystatechange'));
+                details.xhr.dispatchEvent(new Event('load'));
+                details.xhr.dispatchEvent(new Event('loadend'));
+            });
         }
     };
 }

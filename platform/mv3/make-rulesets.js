@@ -53,18 +53,22 @@ const commandLineArgs = (( ) => {
     return args;
 })();
 
+const platform = commandLineArgs.get('platform') || 'chromium';
 const outputDir = commandLineArgs.get('output') || '.';
 const cacheDir = `${outputDir}/../mv3-data`;
 const rulesetDir = `${outputDir}/rulesets`;
 const scriptletDir = `${rulesetDir}/scripting`;
 const env = [
-    'chromium',
+    platform,
     'mv3',
-    'native_css_has',
     'ublock',
     'ubol',
     'user_stylesheet',
 ];
+
+if ( platform !== 'firefox' ) {
+    env.push('native_css_has');
+}
 
 /******************************************************************************/
 
@@ -245,6 +249,54 @@ const isGood = rule =>
 
 /******************************************************************************/
 
+// Two distinct hostnames:
+//   www.example.com
+//   example.com
+// Can be reduced to a single one:
+//   example.com
+// Since if example.com matches, then www.example.com (or any other subdomain
+// of example.com) will always match.
+
+function pruneHostnameArray(hostnames) {
+    const rootMap = new Map();
+    for ( const hostname of hostnames ) {
+        const labels = hostname.split('.');
+        let currentMap = rootMap;
+        let i = labels.length;
+        while ( i-- ) {
+            const label = labels[i];
+            let nextMap = currentMap.get(label);
+            if ( nextMap === null ) { break; }
+            if ( nextMap === undefined ) {
+                if ( i === 0 ) {
+                    currentMap.set(label, (nextMap = null));
+                } else {
+                    currentMap.set(label, (nextMap = new Map()));
+                }
+            } else if ( i === 0 ) {
+                currentMap.set(label, null);
+            }
+            currentMap = nextMap;
+        }
+    }
+    const assemble = (currentMap, currentHostname, out) => {
+        for ( const [ label, nextMap ] of currentMap ) {
+            const nextHostname = currentHostname === ''
+                ? label
+                : `${label}.${currentHostname}`;
+            if ( nextMap === null ) {
+                out.push(nextHostname);
+            } else {
+                assemble(nextMap, nextHostname, out);
+            }
+        }
+        return out;
+    };
+    return assemble(rootMap, '', []);
+}
+
+/******************************************************************************/
+
 async function processNetworkFilters(assetDetails, network) {
     const replacer = (k, v) => {
         if ( k.startsWith('_') ) { return; }
@@ -266,6 +318,37 @@ async function processNetworkFilters(assetDetails, network) {
     log(`\tAccepted filter count: ${network.acceptedFilterCount}`);
     log(`\tRejected filter count: ${network.rejectedFilterCount}`);
     log(`Output rule count: ${rules.length}`);
+
+    // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/declarativeNetRequest/RuleCondition#browser_compatibility
+    // isUrlFilterCaseSensitive is false by default in Firefox. It will be
+    // false by default in Chromium 118+.
+    if ( platform === 'firefox' ) {
+        for ( const rule of rules ) {
+            if ( rule.condition === undefined ) { continue; }
+            if ( rule.condition.urlFilter === undefined ) {
+                if ( rule.condition.regexFilter === undefined ) { continue; }
+            }
+            if ( rule.condition.isUrlFilterCaseSensitive === undefined ) {
+                rule.condition.isUrlFilterCaseSensitive = true;
+            } else if ( rule.condition.isUrlFilterCaseSensitive === false ) {
+                rule.condition.isUrlFilterCaseSensitive = undefined;
+            }
+        }
+    }
+
+    // Minimize requestDomains arrays
+    for ( const rule of rules ) {
+        const condition = rule.condition;
+        if ( condition === undefined ) { continue; }
+        const requestDomains = condition.requestDomains;
+        if ( requestDomains === undefined ) { continue; }
+        const beforeCount = requestDomains.length;
+        condition.requestDomains = pruneHostnameArray(requestDomains);
+        const afterCount = condition.requestDomains.length;
+        if ( afterCount !== beforeCount ) {
+            log(`\tPruning requestDomains: from ${beforeCount} to ${afterCount}`);
+        }
+    }
 
     const plainGood = rules.filter(rule => isGood(rule) && isRegex(rule) === false);
     log(`\tPlain good: ${plainGood.length}`);
@@ -310,9 +393,11 @@ async function processNetworkFilters(assetDetails, network) {
     log(`\tUnsupported: ${bad.length}`);
     log(bad.map(rule => rule._error.map(v => `\t\t${v}`)).join('\n'), true);
 
+    const jsonIndent = platform !== 'firefox' ? 1 : undefined;
+
     writeFile(
         `${rulesetDir}/main/${assetDetails.id}.json`,
-        `${JSON.stringify(plainGood, replacer, 1)}\n`
+        `${JSON.stringify(plainGood, replacer, jsonIndent)}\n`
     );
 
     if ( regexes.length !== 0 ) {
@@ -1222,7 +1307,7 @@ async function main() {
         resources: Array.from(requiredRedirectResources).map(path => `/${path}`),
         matches: [ '<all_urls>' ],
     };
-    if ( commandLineArgs.get('platform') === 'chromium' ) {
+    if ( platform === 'chromium' ) {
         web_accessible_resources.use_dynamic_url = true;
     }
     manifest.web_accessible_resources = [ web_accessible_resources ];
@@ -1242,7 +1327,6 @@ async function main() {
 
     // Log results
     const logContent = stdOutput.join('\n') + '\n';
-    await fs.writeFile(`${outputDir}/log.txt`, logContent);
     await fs.writeFile(`${cacheDir}/log.txt`, logContent);
 }
 
