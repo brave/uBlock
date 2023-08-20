@@ -3364,7 +3364,7 @@ class ExtSelectorCompiler {
             out.push(`.${data.name}`);
             break;
         case 'Combinator':
-            out.push(data.name === ' ' ? ' ' : ` ${data.name} `);
+            out.push(data.name);
             break;
         case 'Identifier':
             if ( this.reInvalidIdentifier.test(data.name) ) { return; }
@@ -3436,6 +3436,35 @@ class ExtSelectorCompiler {
         return out.join('');
     }
 
+    astAppendPart(part, out) {
+        const s = this.astSerializePart(part);
+        if ( s === undefined ) { return false; }
+        const { data } = part;
+        switch ( data.type ) {
+            case 'Combinator':
+                if ( out.length === 0 ) {
+                    if ( s !== ' ' ) {
+                        out.push(s, ' ');
+                    }
+                } else {
+                    out.push(' ');
+                    if ( s !== ' ' ) {
+                        out.push(s, ' ');
+                    }
+                }
+                break;
+            // csstree parses `.promoted*` as valid
+            case 'TypeSelector':
+                if ( s === '*' && out.length !== 0 ) {
+                    const before = out[out.length-1];
+                    if ( before.endsWith(' ') === false ) { return false; }
+                }
+                out.push('*');
+                break;
+        }
+        return true;
+    }
+
     astSerialize(parts, plainCSS = true) {
         const out = [];
         for ( const part of parts ) {
@@ -3443,18 +3472,20 @@ class ExtSelectorCompiler {
             switch ( data.type ) {
             case 'AttributeSelector':
             case 'ClassSelector':
-            case 'Combinator':
             case 'Identifier':
             case 'IdSelector':
             case 'Nth':
             case 'PseudoClassSelector':
-            case 'PseudoElementSelector':
-            case 'TypeSelector': {
+            case 'PseudoElementSelector': {
                 const s = this.astSerializePart(part);
-                if ( typeof s !== 'string' ) { return; }
+                if ( s === undefined ) { return; }
                 out.push(s);
                 break;
             }
+            case 'Combinator':
+            case 'TypeSelector':
+                if ( this.astAppendPart(part, out) === false ) { return; }
+                break;
             case 'Raw':
                 if ( plainCSS ) { return; }
                 out.push(this.astSerializePart(part));
@@ -3499,7 +3530,6 @@ class ExtSelectorCompiler {
             }
             case 'AttributeSelector':
             case 'ClassSelector':
-            case 'Combinator':
             case 'IdSelector':
             case 'PseudoClassSelector':
             case 'PseudoElementSelector':
@@ -3507,6 +3537,10 @@ class ExtSelectorCompiler {
                 const component = this.astSerializePart(part);
                 if ( component === undefined ) { return; }
                 prelude.push(component);
+                break;
+            }
+            case 'Combinator': {
+                if ( this.astAppendPart(part, prelude) === false ) { return; }
                 break;
             }
             case 'ProceduralSelector': {
