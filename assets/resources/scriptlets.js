@@ -68,7 +68,7 @@ function safeSelf() {
             if ( pattern === '' ) {
                 return { matchAll: true };
             }
-            const expect = (options.canNegate === true && pattern.startsWith('!') === false);
+            const expect = (options.canNegate !== true || pattern.startsWith('!') === false);
             if ( expect === false ) {
                 pattern = pattern.slice(1);
             }
@@ -1441,11 +1441,12 @@ function evaldataPrune(
 /******************************************************************************/
 
 builtinScriptlets.push({
-    name: 'nano-setInterval-booster.js',
+    name: 'adjust-setInterval.js',
     aliases: [
+        'nano-setInterval-booster.js',
         'nano-sib.js',
     ],
-    fn: nanoSetIntervalBooster,
+    fn: adjustSetInterval,
     dependencies: [
         'safe-self.fn',
     ],
@@ -1462,7 +1463,7 @@ builtinScriptlets.push({
 // boostRatio - The delay multiplier when there is a match, 0.5 speeds up by
 //      2 times and 2 slows down by 2 times, defaults to 0.05 or speed up
 //      20 times. Speed up and down both cap at 50 times.
-function nanoSetIntervalBooster(
+function adjustSetInterval(
     needleArg = '',
     delayArg = '',
     boostArg = ''
@@ -1493,11 +1494,12 @@ function nanoSetIntervalBooster(
 /******************************************************************************/
 
 builtinScriptlets.push({
-    name: 'nano-setTimeout-booster.js',
+    name: 'adjust-setTimeout.js',
     aliases: [
+        'nano-setTimeout-booster.js',
         'nano-stb.js',
     ],
-    fn: nanoSetTimeoutBooster,
+    fn: adjustSetTimeout,
     dependencies: [
         'safe-self.fn',
     ],
@@ -1515,7 +1517,7 @@ builtinScriptlets.push({
 // boostRatio - The delay multiplier when there is a match, 0.5 speeds up by
 //      2 times and 2 slows down by 2 times, defaults to 0.05 or speed up
 //      20 times. Speed up and down both cap at 50 times.
-function nanoSetTimeoutBooster(
+function adjustSetTimeout(
     needleArg = '',
     delayArg = '',
     boostArg = ''
@@ -1650,15 +1652,18 @@ function noFetchIf(
 /******************************************************************************/
 
 builtinScriptlets.push({
-    name: 'refresh-defuser.js',
-    fn: refreshDefuser,
+    name: 'prevent-refresh.js',
+    aliases: [
+        'refresh-defuser.js',
+    ],
+    fn: preventRefresh,
     world: 'ISOLATED',
     dependencies: [
         'run-at.fn',
     ],
 });
 // https://www.reddit.com/r/uBlockOrigin/comments/q0frv0/while_reading_a_sports_article_i_was_redirected/hf7wo9v/
-function refreshDefuser(
+function preventRefresh(
     arg1 = ''
 ) {
     if ( typeof arg1 !== 'string' ) { return; }
@@ -2294,8 +2299,12 @@ function noWindowOpenIf(
 /******************************************************************************/
 
 builtinScriptlets.push({
-    name: 'window-close-if.js',
-    fn: windowCloseIf,
+    name: 'close-window.js',
+    aliases: [
+        'window-close-if.js',
+    ],
+    fn: closeWindow,
+    world: 'ISOLATED',
     dependencies: [
         'safe-self.fn',
     ],
@@ -2303,7 +2312,7 @@ builtinScriptlets.push({
 // https://github.com/uBlockOrigin/uAssets/issues/10323#issuecomment-992312847
 // https://github.com/AdguardTeam/Scriptlets/issues/158
 // https://github.com/uBlockOrigin/uBlock-issues/discussions/2270
-function windowCloseIf(
+function closeWindow(
     arg1 = ''
 ) {
     if ( typeof arg1 !== 'string' ) { return; }
@@ -3377,6 +3386,70 @@ function setAttr(
         });
     };
     runAt(( ) => { start(); }, 'idle');
+}
+
+/*******************************************************************************
+ * 
+ * @scriptlet prevent-canvas
+ * 
+ * @description
+ * Prevent usage of specific or all (default) canvas APIs.
+ *
+ * ### Syntax
+ * 
+ * ```text
+ * example.com##+js(prevent-canvas [, contextType])
+ * ```
+ * 
+ * - `contextType`: A specific type of canvas API to prevent (default to all
+ *   APIs). Can be a string or regex which will be matched against the type
+ *   used in getContext() call. Prepend with `!` to test for no-match.
+ * 
+ * ### Examples
+ * 
+ * 1. Prevent `example.com` from accessing all canvas APIs
+ * 
+ * ```adblock
+ * example.com##+js(prevent-canvas)
+ * ```
+ * 
+ * 2. Prevent access to any flavor of WebGL API, everywhere
+ * 
+ * ```adblock
+ * *##+js(prevent-canvas, /webgl/)
+ * ```
+ * 
+ * 3. Prevent `example.com` from accessing any flavor of canvas API except `2d`
+ * 
+ * ```adblock
+ * example.com##+js(prevent-canvas, !2d)
+ * ```
+ * 
+ * ### References
+ * 
+ * https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
+ * 
+ * */
+
+builtinScriptlets.push({
+    name: 'prevent-canvas.js',
+    fn: preventCanvas,
+    dependencies: [
+        'safe-self.fn',
+    ],
+});
+function preventCanvas(
+    contextType = ''
+) {
+    const safe = safeSelf();
+    const pattern = safe.initPattern(contextType, { canNegate: true });
+    const proto = globalThis.HTMLCanvasElement.prototype;
+    proto.getContext = new Proxy(proto.getContext, {
+        apply(target, thisArg, args) {
+            if ( safe.testPattern(pattern, args[0]) ) { return null; }
+            return Reflect.apply(target, thisArg, args);
+        }
+    });
 }
 
 
