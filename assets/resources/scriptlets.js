@@ -47,6 +47,7 @@ function safeSelf() {
     }
     const self = globalThis;
     const safe = {
+        'Array_from': Array.from,
         'Error': self.Error,
         'Math_floor': Math.floor,
         'Math_random': Math.random,
@@ -63,6 +64,7 @@ function safeSelf() {
         'jsonStringify': self.JSON.stringify.bind(self.JSON),
         'log': console.log.bind(console),
         uboLog(...args) {
+            if ( scriptletGlobals.has('canDebug') === false ) { return; }
             if ( args.length === 0 ) { return; }
             if ( `${args[0]}` === '' ) { return; }
             this.log('[uBO]', ...args);
@@ -99,11 +101,15 @@ function safeSelf() {
             if ( details.matchAll ) { return true; }
             return this.RegExp_test.call(details.re, haystack) === details.expect;
         },
-        patternToRegex(pattern, flags = undefined) {
+        patternToRegex(pattern, flags = undefined, verbatim = false) {
             if ( pattern === '' ) { return /^/; }
             const match = /^\/(.+)\/([gimsu]*)$/.exec(pattern);
             if ( match === null ) {
-                return new RegExp(pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
+                const reStr = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                if ( verbatim ) {
+                    return new RegExp(`^${reStr}$`, flags);
+                }
+                return new RegExp(reStr, flags);
             }
             try {
                 return new RegExp(match[1], match[2] || flags);
@@ -551,7 +557,7 @@ function replaceNodeTextCore(
     replacement = ''
 ) {
     const safe = safeSelf();
-    const reNodeName = safe.patternToRegex(nodeName, 'i');
+    const reNodeName = safe.patternToRegex(nodeName, 'i', true);
     const rePattern = safe.patternToRegex(pattern, 'gms');
     const extraArgs = safe.getExtraArgs(Array.from(arguments), 3);
     const shouldLog = scriptletGlobals.has('canDebug') && extraArgs.log || 0;
@@ -925,7 +931,7 @@ function matchObjectProperties(propNeedles, ...objs) {
     }
     const safe = safeSelf();
     const haystack = {};
-    const props = Array.from(propNeedles.keys());
+    const props = safe.Array_from(propNeedles.keys());
     for ( const obj of objs ) {
         if ( obj instanceof Object === false ) { continue; }
         matchObjectProperties.extractProperties(obj, haystack, props);
@@ -977,7 +983,11 @@ function jsonPruneFetchResponseFn(
         if ( propNeedles.size !== 0 ) {
             const objs = [ args[0] instanceof Object ? args[0] : { url: args[0] } ];
             if ( extraArgs.version === 2 && objs[0] instanceof Request ) {
-                try { objs[0] = safe.Request_clone.call(objs[0]); } catch(ex) {}
+                try {
+                    objs[0] = safe.Request_clone.call(objs[0]);
+                } catch(ex) {
+                    safe.uboLog(ex);
+                }
             }
             if ( args[1] instanceof Object ) {
                 objs.push(args[1]);
@@ -989,7 +999,7 @@ function jsonPruneFetchResponseFn(
                 log(
                     `json-prune-fetch-response (${outcome})`,
                     `\n\tfetchPropsToMatch: ${JSON.stringify(Array.from(propNeedles)).slice(1,-1)}`,
-                    '\n\tprops:', ...args,
+                    '\n\tprops:', ...objs,
                 );
             }
         }
