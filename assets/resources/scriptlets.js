@@ -982,12 +982,9 @@ function jsonPruneFetchResponseFn(
         let outcome = 'match';
         if ( propNeedles.size !== 0 ) {
             const objs = [ args[0] instanceof Object ? args[0] : { url: args[0] } ];
-            if ( extraArgs.version === 2 && objs[0] instanceof Request ) {
-                try {
-                    objs[0] = safe.Request_clone.call(objs[0]);
-                } catch(ex) {
-                    safe.uboLog(ex);
-                }
+            if ( objs[0] instanceof Request ) {
+                try { objs[0] = safe.Request_clone.call(objs[0]); }
+                catch(ex) { log(ex); }
             }
             if ( args[1] instanceof Object ) {
                 objs.push(args[1]);
@@ -1080,8 +1077,9 @@ function replaceFetchResponseFn(
             let outcome = 'match';
             if ( propNeedles.size !== 0 ) {
                 const objs = [ args[0] instanceof Object ? args[0] : { url: args[0] } ];
-                if ( extraArgs.version === 2 && objs[0] instanceof Request ) {
-                    try { objs[0] = safe.Request_clone.call(objs[0]); } catch(ex) {}
+                if ( objs[0] instanceof Request ) {
+                    try { objs[0] = safe.Request_clone.call(objs[0]); }
+                    catch(ex) { log(ex); }
                 }
                 if ( args[1] instanceof Object ) {
                     objs.push(args[1]);
@@ -3898,6 +3896,7 @@ builtinScriptlets.push({
     world: 'ISOLATED',
     dependencies: [
         'run-at-html-element.fn',
+        'safe-self.fn',
     ],
 });
 function trustedClickElement(
@@ -3906,6 +3905,12 @@ function trustedClickElement(
     delay = ''
 ) {
     if ( extraMatch !== '' ) { return; }
+
+    const safe = safeSelf();
+    const extraArgs = safe.getExtraArgs(Array.from(arguments), 3);
+    const uboLog = extraArgs.log !== undefined
+        ? ((...args) => { safe.uboLog(...args); })
+        : (( ) => { });
 
     const selectorList = selectors.split(/\s*,\s*/)
         .filter(s => {
@@ -3930,15 +3935,22 @@ function trustedClickElement(
     };
 
     const next = notFound => {
-        if ( selectorList.length === 0 ) { return terminate(); }
+        if ( selectorList.length === 0 ) {
+            uboLog(`trusted-click-element: Completed`);
+            return terminate();
+        }
         const tnow = Date.now();
-        if ( tnow >= tbye ) { return terminate(); }
+        if ( tnow >= tbye ) {
+            uboLog(`trusted-click-element: Timed out`);
+            return terminate();
+        }
         if ( notFound ) { observe(); }
         const delay = Math.max(notFound ? tbye - tnow : tnext - tnow, 1);
         next.timer = setTimeout(( ) => {
             next.timer = undefined;
             process();
         }, delay);
+        uboLog(`trusted-click-element: Waiting for ${selectorList[0]}...`);
     };
     next.stop = ( ) => {
         if ( next.timer === undefined ) { return; }
@@ -3982,6 +3994,7 @@ function trustedClickElement(
             selectorList.unshift(selector);
             return next(true);
         }
+        uboLog(`trusted-click-element: Clicked ${selector}`);
         elem.click();
         tnext += clickDelay;
         next();
