@@ -134,14 +134,32 @@ import µb from './background.js';
 
 /******************************************************************************/
 
-µb.fireDOMEvent = function(name) {
+µb.fireEvent = function(name, details = undefined) {
     if (
-        window instanceof Object &&
-        window.dispatchEvent instanceof Function &&
-        window.CustomEvent instanceof Function
+        self instanceof Object &&
+        self.dispatchEvent instanceof Function &&
+        self.CustomEvent instanceof Function
     ) {
-        window.dispatchEvent(new CustomEvent(name));
+        self.dispatchEvent(new CustomEvent(name, { detail: details }));
     }
+};
+
+µb.onEvent = function(name, fn) {
+    if (
+        self instanceof Object &&
+        self.addEventListener instanceof Function
+    ) {
+        self.addEventListener(name, fn);
+    }
+};
+
+/******************************************************************************/
+
+µb.filteringBehaviorChanged = function(details = {}) {
+    if ( typeof details.direction !== 'number' || details.direction >= 0 ) {
+        vAPI.net.handlerBehaviorChanged();
+    }
+    this.fireEvent('filteringBehaviorChanged', details);
 };
 
 /******************************************************************************/

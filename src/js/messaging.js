@@ -293,6 +293,10 @@ const onMessage = function(request, sender, callback) {
         response = getDomainNames(request.targets);
         break;
 
+    case 'getTrustedScriptletTokens':
+        response = redirectEngine.getTrustedScriptletTokens();
+        break;
+
     case 'getWhitelist':
         response = {
             whitelist: µb.arrayFromWhitelist(µb.netWhitelist),
@@ -341,6 +345,7 @@ const onMessage = function(request, sender, callback) {
     case 'setWhitelist':
         µb.netWhitelist = µb.whitelistFromString(request.whitelist);
         µb.saveWhitelist();
+        µb.filteringBehaviorChanged();
         break;
 
     case 'toggleHostnameSwitch':
@@ -1570,6 +1575,7 @@ const onMessage = function(request, sender, callback) {
 
     case 'readUserFilters':
         return µb.loadUserFilters().then(result => {
+            result.trustedSource = µb.isTrustedList(µb.userFiltersPath);
             callback(result);
         });
 
@@ -1597,9 +1603,7 @@ const onMessage = function(request, sender, callback) {
         if ( (request.hintUpdateToken || 0) === 0 ) {
             response.redirectResources = redirectEngine.getResourceDetails();
             response.preparseDirectiveEnv = vAPI.webextFlavor.env.slice();
-            response.preparseDirectiveHints =
-                sfp.utils.preparser.getHints();
-            response.expertMode = µb.hiddenSettings.filterAuthorMode;
+            response.preparseDirectiveHints = sfp.utils.preparser.getHints();
         }
         if ( request.hintUpdateToken !== µb.pageStoresToken ) {
             response.originHints = getOriginHints();

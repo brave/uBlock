@@ -68,15 +68,18 @@ import './codemirror/ubo-static-filtering.js';
 
     uBlockDashboard.patchCodeMirrorEditor(cmEditor);
 
-    const hints = await vAPI.messaging.send('dashboard', {
+    vAPI.messaging.send('dashboard', {
         what: 'getAutoCompleteDetails'
+    }).then(hints => {
+        if ( hints instanceof Object === false ) { return; }
+        cmEditor.setOption('uboHints', hints);
     });
-    if ( hints instanceof Object ) {
-        const mode = cmEditor.getMode();
-        if ( mode.setHints instanceof Function ) {
-            mode.setHints(hints);
-        }
-    }
+
+    vAPI.messaging.send('dashboard', {
+        what: 'getTrustedScriptletTokens',
+    }).then(tokens => {
+        cmEditor.setOption('trustedScriptletTokens', tokens);
+    });
 
     const details = await vAPI.messaging.send('default', {
         what : 'getAssetContent',

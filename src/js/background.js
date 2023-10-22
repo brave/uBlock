@@ -82,11 +82,17 @@ const hiddenSettingsDefault = {
     selfieAfter: 2,
     strictBlockingBypassDuration: 120,
     toolbarWarningTimeout: 60,
+    trustedListPrefixes: 'ublock-',
     uiPopupConfig: 'unset',
     uiStyles: 'unset',
     updateAssetBypassBrowserCache: false,
     userResourcesLocation: 'unset',
 };
+
+if ( vAPI.webextFlavor.soup.has('devbuild') ) {
+    hiddenSettingsDefault.consoleLogLevel = 'info';
+    hiddenSettingsDefault.trustedListPrefixes += ' user-';
+}
 
 const userSettingsDefault = {
     advancedUserEnabled: false,
@@ -255,6 +261,7 @@ const µBlock = {  // jshint ignore:line
 
     liveBlockingProfiles: [],
     blockingProfileColorCache: new Map(),
+    parsedTrustedListPrefixes: [],
     uiAccentStylesheet: '',
 };
 
