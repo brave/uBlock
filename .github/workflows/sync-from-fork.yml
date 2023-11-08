@@ -21,7 +21,7 @@ jobs:
           git fetch upstream && git diff --name-only --diff-filter AM HEAD..remotes/upstream/master > updatedfiles.txt
       - name: Check for modified files
         id: git-check
-        run: echo ::set-output name=changes-present::$(if grep -qE "${FILES_TO_CHECK}" updatedfiles.txt; then echo 'true'; else echo 'false'; fi)
+        run: echo changes-present=$(if grep -qE "${FILES_TO_CHECK}" updatedfiles.txt; then echo 'true'; else echo 'false'; fi) >> $GITHUB_OUTPUT
       - name: Show files
         run: cat updatedfiles.txt
       - name: Have files changed
