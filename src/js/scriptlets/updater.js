@@ -55,6 +55,7 @@ function updateStockLists(target) {
         vAPI.messaging.send('scriptlets', {
             what: 'updateLists',
             listkeys,
+            manual: updateURL.searchParams.get('manual') && true || false,
         });
         return true;
     } catch (_) {

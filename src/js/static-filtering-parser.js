@@ -187,6 +187,7 @@ export const NODE_TYPE_NET_OPTION_NAME_POPUP        = iota++;
 export const NODE_TYPE_NET_OPTION_NAME_REDIRECT     = iota++;
 export const NODE_TYPE_NET_OPTION_NAME_REDIRECTRULE = iota++;
 export const NODE_TYPE_NET_OPTION_NAME_REMOVEPARAM  = iota++;
+export const NODE_TYPE_NET_OPTION_NAME_REPLACE      = iota++;
 export const NODE_TYPE_NET_OPTION_NAME_SCRIPT       = iota++;
 export const NODE_TYPE_NET_OPTION_NAME_SHIDE        = iota++;
 export const NODE_TYPE_NET_OPTION_NAME_TO           = iota++;
@@ -265,6 +266,7 @@ export const nodeTypeFromOptionName = new Map([
     /* synonym */ [ 'rewrite', NODE_TYPE_NET_OPTION_NAME_REDIRECT ],
     [ 'redirect-rule', NODE_TYPE_NET_OPTION_NAME_REDIRECTRULE ],
     [ 'removeparam', NODE_TYPE_NET_OPTION_NAME_REMOVEPARAM ],
+    [ 'replace', NODE_TYPE_NET_OPTION_NAME_REPLACE ],
     /* synonym */ [ 'queryprune', NODE_TYPE_NET_OPTION_NAME_REMOVEPARAM ],
     [ 'script', NODE_TYPE_NET_OPTION_NAME_SCRIPT ],
     [ 'shide', NODE_TYPE_NET_OPTION_NAME_SHIDE ],
@@ -599,7 +601,7 @@ const exCharCodeAt = (s, i) => {
 
 /******************************************************************************/
 
-class argListParser {
+class ArgListParser {
     constructor(separatorChar = ',', mustQuote = false) {
         this.separatorChar = this.actualSeparatorChar = separatorChar;
         this.separatorCode = this.actualSeparatorCode = separatorChar.charCodeAt(0);
@@ -612,11 +614,7 @@ class argListParser {
         this.reWhitespaceStart = /^\s+/;
         this.reWhitespaceEnd = /\s+$/;
         this.reOddTrailingEscape = /(?:^|[^\\])(?:\\\\)*\\$/;
-        this.reEscapedDoubleQuote = /((?:^|[^\\])(?:\\\\)*)\\"/g;
-        this.reEscapedSingleQuote = /((?:^|[^\\])(?:\\\\)*)\\'/g;
-        this.reEscapedBacktick = /((?:^|[^\\])(?:\\\\)*)\\`/g;
-        this.reEscapedSeparator = new RegExp(`((?:^|[^\\\\])(?:\\\\\\\\)*)\\\\${this.separatorChar}`, 'g');
-        this.unescapedSeparator = `$1${this.separatorChar}`;
+        this.reTrailingEscapeChars = /\\+$/;
     }
     nextArg(pattern, beg = 0) {
         const len = pattern.length;
@@ -648,22 +646,23 @@ class argListParser {
         }
         return this;
     }
-    normalizeArg(s) {
-        switch ( this.actualSeparatorCode ) {
-        case 0x22 /* " */:
-            if ( s.includes('"') === false ) { return; }
-            return s.replace(this.reEscapedDoubleQuote, '$1"');
-        case 0x27 /* ' */:
-            if ( s.includes("'") === false ) { return; }
-            return s.replace(this.reEscapedSingleQuote, "$1'");
-        case 0x60 /* ` */:
-            if ( s.includes('`') === false ) { return; }
-            return s.replace(this.reEscapedBacktick, '$1`');
-        default:
-            break;
+    normalizeArg(s, char = '') {
+        if ( char === '' ) { char = this.actualSeparatorChar; }
+        let out = '';
+        let pos = 0;
+        while ( (pos = s.lastIndexOf(char)) !== -1 ) {
+            out = s.slice(pos) + out;
+            s = s.slice(0, pos);
+            const match = this.reTrailingEscapeChars.exec(s);
+            if ( match === null ) { continue; }
+            const tail = (match[0].length & 1) !== 0
+                ? match[0].slice(0, -1)
+                : match[0];
+            out = tail + out;
+            s = s.slice(0, -match[0].length);
         }
-        if ( s.includes(this.separatorChar) === false ) { return; }
-        return s.replace(this.reEscapedSeparator, this.unescapedSeparator);
+        if ( out === '' ) { return s; }
+        return s + out;
     }
     leftWhitespaceCount(s) {
         const match = this.reWhitespaceStart.exec(s);
@@ -871,7 +870,7 @@ export class AstFilterParser {
         this.rePlainEntity = /^(?:[\da-z][\da-z_-]*\.)+\*$/;
         this.reHostsSink = /^[\w%.:\[\]-]+\s+/;
         this.reHostsRedirect = /(?:0\.0\.0\.0|broadcasthost|local|localhost(?:\.localdomain)?|ip6-\w+)(?:[^\w.-]|$)/;
-        this.reNetOptionComma = /,(?!\d*\})/g;
+        this.reNetOptionComma = /,(?:~?[13a-z-]+(?:=.*?)?|_+)(?:,|$)/;
         this.rePointlessLeftAnchor = /^\|\|?\*+/;
         this.reIsTokenChar = /^[%0-9A-Za-z]/;
         this.rePointlessLeadingWildcards = /^(\*+)[^%0-9A-Za-z\u{a0}-\u{10FFFF}]/u;
@@ -898,7 +897,11 @@ export class AstFilterParser {
         this.reGoodRegexToken = /[^\x01%0-9A-Za-z][%0-9A-Za-z]{7,}|[^\x01%0-9A-Za-z][%0-9A-Za-z]{1,6}[^\x01%0-9A-Za-z]/;
         this.reBadCSP = /(?:=|;)\s*report-(?:to|uri)\b/;
         this.reNoopOption = /^_+$/;
-        this.scriptletArgListParser = new argListParser(',');
+        this.scriptletArgListParser = new ArgListParser(',');
+    }
+
+    finish() {
+        this.selectorCompiler.finish();
     }
 
     parse(raw) {
@@ -1414,6 +1417,7 @@ export class AstFilterParser {
                     break;
                 case NODE_TYPE_NET_OPTION_NAME_REDIRECT:
                 case NODE_TYPE_NET_OPTION_NAME_REDIRECTRULE:
+                case NODE_TYPE_NET_OPTION_NAME_REPLACE:
                 case NODE_TYPE_NET_OPTION_NAME_URLTRANSFORM:
                     realBad = isNegated || (isException || hasValue) === false ||
                         modifierType !== 0;
@@ -1474,6 +1478,21 @@ export class AstFilterParser {
                 realBad = abstractTypeCount || behaviorTypeCount || unredirectableTypeCount;
                 break;
             }
+            case NODE_TYPE_NET_OPTION_NAME_REPLACE: {
+                realBad = abstractTypeCount || behaviorTypeCount || unredirectableTypeCount;
+                if ( realBad ) { break; }
+                if ( this.options.trustedSource !== true ) {
+                    this.astError = AST_ERROR_UNTRUSTED_SOURCE;
+                    realBad = true;
+                    break;
+                }
+                const value = this.getNetOptionValue(NODE_TYPE_NET_OPTION_NAME_REPLACE);
+                if ( parseReplaceValue(value) === undefined ) {
+                    this.astError = AST_ERROR_OPTION_BADVALUE;
+                    realBad = true;
+                }
+                break;
+            }
             case NODE_TYPE_NET_OPTION_NAME_URLTRANSFORM:
                 realBad = abstractTypeCount || behaviorTypeCount || unredirectableTypeCount;
                 if ( realBad ) { break; }
@@ -1482,8 +1501,8 @@ export class AstFilterParser {
                     realBad = true;
                     break;
                 }
-                const path = this.getNetOptionValue(NODE_TYPE_NET_OPTION_NAME_URLTRANSFORM);
-                if ( path.charCodeAt(0) !== 0x2F /* / */ ) {
+                const value = this.getNetOptionValue(NODE_TYPE_NET_OPTION_NAME_URLTRANSFORM);
+                if ( parseReplaceValue(value) === undefined ) {
                     this.astError = AST_ERROR_OPTION_BADVALUE;
                     realBad = true;
                 }
@@ -1959,9 +1978,8 @@ export class AstFilterParser {
     }
 
     endOfNetOption(s, beg) {
-        this.reNetOptionComma.lastIndex = beg;
-        const match = this.reNetOptionComma.exec(s);
-        return match !== null ? match.index : s.length;
+        const match = this.reNetOptionComma.exec(s.slice(beg));
+        return match !== null ? beg + match.index : s.length;
     }
 
     parseNetOption(parent) {
@@ -2975,6 +2993,35 @@ export function parseHeaderValue(arg) {
     return out;
 }
 
+
+// https://adguard.com/kb/general/ad-filtering/create-own-filters/#replace-modifier
+
+export function parseReplaceValue(s) {
+    if ( s.charCodeAt(0) !== 0x2F /* / */ ) { return; }
+    const parser = new ArgListParser('/');
+    parser.nextArg(s, 1);
+    let pattern = s.slice(parser.argBeg, parser.argEnd);
+    if ( parser.transform ) {
+        pattern = parser.normalizeArg(pattern);
+    }
+    if ( pattern === '' ) { return; }
+    pattern = parser.normalizeArg(pattern, '$');
+    pattern = parser.normalizeArg(pattern, ',');
+    parser.nextArg(s, parser.separatorEnd);
+    let replacement = s.slice(parser.argBeg, parser.argEnd);
+    if ( parser.separatorEnd === parser.separatorBeg ) { return; }
+    if ( parser.transform ) {
+        replacement = parser.normalizeArg(replacement);
+    }
+    replacement = parser.normalizeArg(replacement, '$');
+    replacement = parser.normalizeArg(replacement, ',');
+    const flags = s.slice(parser.separatorEnd);
+    try {
+        return { re: new RegExp(pattern, flags), replacement };
+    } catch(_) {
+    }
+}
+
 /******************************************************************************/
 
 export const netOptionTokenDescriptors = new Map([
@@ -3025,6 +3072,7 @@ export const netOptionTokenDescriptors = new Map([
     /* synonym */ [ 'rewrite', { mustAssign: true } ],
     [ 'redirect-rule', { mustAssign: true } ],
     [ 'removeparam', { } ],
+    [ 'replace', { mustAssign: true } ],
     /* synonym */ [ 'queryprune', { } ],
     [ 'script', { canNegate: true } ],
     [ 'shide', { } ],
@@ -3170,6 +3218,14 @@ class ExtSelectorCompiler {
         // https://www.w3.org/TR/css-syntax-3/#typedef-ident-token
         this.reInvalidIdentifier = /^\d/;
         this.error = undefined;
+    }
+
+    // CSSTree library holds onto last string parsed, and this is problematic
+    // when the string is a slice of a huge parent string (typically a whole
+    // filter list), it causes the huge parent string to stay in memory.
+    // Asking CSSTree to parse an empty string resolves this issue.
+    finish() {
+        cssTree.parse('');
     }
 
     compile(raw, out, compileOptions = {}) {

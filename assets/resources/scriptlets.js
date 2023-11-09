@@ -49,6 +49,8 @@ function safeSelf() {
     const safe = {
         'Array_from': Array.from,
         'Error': self.Error,
+        'Function_toStringFn': self.Function.prototype.toString,
+        'Function_toString': thisArg => safe.Function_toStringFn.call(thisArg),
         'Math_floor': Math.floor,
         'Math_random': Math.random,
         'Object_defineProperty': Object.defineProperty.bind(Object),
@@ -574,8 +576,11 @@ function replaceNodeTextFn(
     let sedCount = extraArgs.sedCount || 0;
     const handleNode = node => {
         const before = node.textContent;
-        if ( safe.RegExp_test.call(rePattern, before) === false ) { return true; }
+        reCondition.lastIndex = 0;
         if ( safe.RegExp_test.call(reCondition, before) === false ) { return true; }
+        rePattern.lastIndex = 0;
+        if ( safe.RegExp_test.call(rePattern, before) === false ) { return true; }
+        rePattern.lastIndex = 0;
         const after = pattern !== ''
             ? before.replace(rePattern, replacement)
             : replacement;
@@ -1391,7 +1396,9 @@ function addEventListenerDefuser(
                 let type, handler;
                 try {
                     type = String(args[0]);
-                    handler = String(args[1]);
+                    handler = args[1] instanceof Function
+                        ? String(safe.Function_toString(args[1]))
+                        : String(args[1]);
                 } catch(ex) {
                 }
                 const matchesType = safe.RegExp_test.call(reType, type);
@@ -2001,7 +2008,9 @@ function noRequestAnimationFrameIf(
     const reNeedle = safe.patternToRegex(needle);
     window.requestAnimationFrame = new Proxy(window.requestAnimationFrame, {
         apply: function(target, thisArg, args) {
-            const a = String(args[0]);
+            const a = args[0] instanceof Function
+                ? String(safe.Function_toString(args[0]))
+                : String(args[0]);
             let defuse = false;
             if ( log !== undefined ) {
                 log('uBO: requestAnimationFrame("%s")', a);
@@ -2069,7 +2078,9 @@ function noSetIntervalIf(
     const reNeedle = safe.patternToRegex(needle);
     self.setInterval = new Proxy(self.setInterval, {
         apply: function(target, thisArg, args) {
-            const a = String(args[0]);
+            const a = args[0] instanceof Function
+                ? String(safe.Function_toString(args[0]))
+                : String(args[0]);
             const b = args[1];
             if ( log !== undefined ) {
                 log('uBO: setInterval("%s", %s)', a, b);
@@ -2131,7 +2142,9 @@ function noSetTimeoutIf(
     const reNeedle = safe.patternToRegex(needle);
     self.setTimeout = new Proxy(self.setTimeout, {
         apply: function(target, thisArg, args) {
-            const a = String(args[0]);
+            const a = args[0] instanceof Function
+                ? String(safe.Function_toString(args[0]))
+                : String(args[0]);
             const b = args[1];
             if ( log !== undefined ) {
                 log('uBO: setTimeout("%s", %s)', a, b);
@@ -3384,7 +3397,7 @@ function setCookie(
         'enabled', 'disabled',
         'ok',
         'on', 'off',
-        'true', 'false',
+        'true', 't', 'false', 'f',
         'y', 'n',
         'yes', 'no',
     ];
