@@ -4,203 +4,203 @@
     "description": "extension name."
   },
   "extShortDesc": {
-    "message": "Pagaliau, efektyvus blokatorius, neapkraunantis nei procesoriaus, nei darbinės atminties.",
+    "message": "ਆਖਰਕਾਰ ਪ੍ਰਭਾਵੀ ਬਲੌਕਰ ਹੈ। CPU ਅਤੇ ਮੈਮੋਰੀ ਲਈ ਸੌਖਾ।",
     "description": "this will be in the Chrome web store: must be 132 characters or less"
   },
   "dashboardName": {
-    "message": "uBlock₀ — Prietaisų skydas",
+    "message": "uBlock₀ — ਡੈਸ਼ਬੋਰਡ",
     "description": "English: uBlock₀ — Dashboard"
   },
   "dashboardUnsavedWarning": {
-    "message": "Dėmesio! Turite neišsaugotų pakeitimų",
+    "message": "ਸਾਵਧਾਨ! ਤੁਹਾਡੇ ਕੋਲ ਨਾ-ਸੰਭਾਲੀਆਂ ਤਬਦੀਲੀਆਂ ਹਨ",
     "description": "A warning in the dashboard when navigating away from unsaved changes"
   },
   "dashboardUnsavedWarningStay": {
-    "message": "Pasilikti",
+    "message": "ਰਹੋ",
     "description": "Label for button to prevent navigating away from unsaved changes"
   },
   "dashboardUnsavedWarningIgnore": {
-    "message": "Ignoruoti",
+    "message": "ਅਣਡਿੱਠਾ",
     "description": "Label for button to ignore unsaved changes"
   },
   "settingsPageName": {
-    "message": "Nustatymai",
+    "message": "ਸੈਟਿੰਗਾਂ",
     "description": "appears as tab name in dashboard"
   },
   "3pPageName": {
-    "message": "Filtrų sąrašai",
+    "message": "ਫਿਲਟਰ ਸੂਚੀਆਂ",
     "description": "appears as tab name in dashboard"
   },
   "1pPageName": {
-    "message": "Mano filtrai",
+    "message": "ਮੇਰੇ ਫਿਲਟਰ",
     "description": "appears as tab name in dashboard"
   },
   "rulesPageName": {
-    "message": "Mano taisyklės",
+    "message": "ਮੇਰੇ ਨਿਯਮ",
     "description": "appears as tab name in dashboard"
   },
   "whitelistPageName": {
-    "message": "Išimtys",
+    "message": "ਭਰੋਸੇਯੋਗ ਸਾਈਟਾਂ",
     "description": "appears as tab name in dashboard"
   },
   "shortcutsPageName": {
-    "message": "Nuorodos",
+    "message": "ਸ਼ਾਰਟਕੱਟ",
     "description": "appears as tab name in dashboard"
   },
   "statsPageName": {
-    "message": "uBlock₀ — Žurnalas",
+    "message": "uBlock₀ — ਲੌਗਰ",
     "description": "Title for the logger window"
   },
   "aboutPageName": {
-    "message": "Apie",
+    "message": "ਇਸ ਬਾਰੇ",
     "description": "appears as tab name in dashboard"
   },
   "supportPageName": {
-    "message": "Pagalba",
+    "message": "ਸਹਿਯੋਗ",
     "description": "appears as tab name in dashboard"
   },
   "assetViewerPageName": {
-    "message": "uBlock₀ — resursų žiūryklė",
+    "message": "uBlock₀ — ਸੰਪੱਤੀ ਦਰਸ਼ਕ",
     "description": "Title for the asset viewer page"
   },
   "advancedSettingsPageName": {
-    "message": "Sudėtingesni nustatymai",
+    "message": "ਤਕਨੀਕੀ ਸੈਟਿੰਗਾਂ",
     "description": "Title for the advanced settings page"
   },
   "popupPowerSwitchInfo": {
-    "message": "Spustelėjimas: įjungti/išjungti uBlock₀ šiam puslapiui.\n\nVald+spustelėjimas: išjungti uBlock₀ tik šiam puslapiui.",
+    "message": "ਕਲਿੱਕ: ਇਸ ਸਾਈਟ ਲਈ uBlock₀ ਨੂੰ ਅਸਮਰੱਥ/ਸਮਰੱਥ ਕਰੋ।\n\nCtrl+ਕਲਿੱਕ: ਸਿਰਫ਼ ਇਸ ਸਫ਼ੇ ਲਈ uBlock₀ ਨੂੰ ਅਸਮਰੱਥ/ਸਮਰੱਥ ਕਰੋ।",
     "description": "English: Click: disable/enable uBlock₀ for this site.\n\nCtrl+click: disable uBlock₀ only on this page."
   },
   "popupPowerSwitchInfo1": {
-    "message": "Spustelėkite, kad išjungtumėte uBlock₀ šiai svetainei.\n\nVald+spustelėkite, kad išjungtumėte uBlock₀ tik šiam puslapiui.",
+    "message": "ਇਸ ਸਾਈਟ ਲਈ uBlock₀ ਨੂੰ ਅਸਮਰੱਥ/ਸਮਰੱਥ ਕਰਨ ਲਈ ਕਲਿੱਕ ਕਰੋ।\n\nਸਿਰਫ਼ ਇਸ ਸਫ਼ੇ ਲਈ uBlock₀ ਨੂੰ ਅਸਮਰੱਥ/ਸਮਰੱਥ ਕਰਨ ਲਈ Ctrl+ਕਲਿੱਕ ਕਰੋ।",
     "description": "Message to be read by screen readers"
   },
   "popupPowerSwitchInfo2": {
-    "message": "Spustelėkite, kad įjungtumėte uBlock₀ šiai svetainei.",
+    "message": "ਇਸ ਸਾਈਟ ਲਈ uBlock₀ ਸਮਰੱਥ ਕਰਨ ਲਈ ਕਲਿੱਕ ਕਰੋ।",
     "description": "Message to be read by screen readers"
   },
   "popupBlockedRequestPrompt": {
-    "message": "blokuotos užklausos",
+    "message": "ਪਾਬੰਦੀ ਲਾਈਆਂ ਬੇਨਤੀਆਂ",
     "description": "English: requests blocked"
   },
   "popupBlockedOnThisPagePrompt": {
-    "message": "šiame puslapyje",
+    "message": "ਇਸ ਸਫ਼ੇ ਉੱਤੇ",
     "description": "English: on this page"
   },
   "popupBlockedStats": {
-    "message": "{{count}} arba {{percent}} %",
+    "message": "{{count}} ({{percent}}%)",
     "description": "Example: 15 (13%)"
   },
   "popupBlockedSinceInstallPrompt": {
-    "message": "nuo įdiegimo",
+    "message": "ਇੰਸਟਾਲ ਕਰਨ ਤੋਂ ਬਾਅਦ",
     "description": "English: since install"
   },
   "popupOr": {
-    "message": "arba",
+    "message": "ਜਾਂ",
     "description": "English: or"
   },
   "popupBlockedOnThisPage_v2": {
-    "message": "Blokuojama šiame puslapyje",
+    "message": "ਇਸ ਸਫ਼ੇ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਏ",
     "description": "For the new mobile-friendly popup design"
   },
   "popupBlockedSinceInstall_v2": {
-    "message": "Užblokuota nuo įdiegimo",
+    "message": "ਇੰਸਟਾਲ ਹੋਣ ਤੋਂ ਬਾਅਦ ਪਾਬੰਦੀ ਲਾਏ",
     "description": "For the new mobile-friendly popup design"
   },
   "popupDomainsConnected_v2": {
-    "message": "Prijungti domenai",
+    "message": "ਕਨੈਕਟ ਹੋਈਆਂ ਡੋਮੇਨਾਂ",
     "description": "For the new mobile-friendly popup design"
   },
   "popupTipDashboard": {
-    "message": "Atverti prietaisų skydą",
+    "message": "ਡੈਸ਼ਬੋਰਡ ਨੂੰ ਖੋਲ੍ਹੋ",
     "description": "English: Click to open the dashboard"
   },
   "popupTipZapper": {
-    "message": "Atverti elementų trynimo veikseną",
+    "message": "Enter element zapper mode",
     "description": "Tooltip for the element-zapper icon in the popup panel"
   },
   "popupTipPicker": {
-    "message": "Atverti elementų parinkimo veikseną",
+    "message": "Enter element picker mode",
     "description": "English: Enter element picker mode"
   },
   "popupTipLog": {
-    "message": "Atverti žurnalą",
+    "message": "ਲੌਗਰ ਖੋਲ੍ਹੋ",
     "description": "Tooltip used for the logger icon in the panel"
   },
   "popupTipReport": {
-    "message": "Report an issue on this website",
+    "message": "ਇਸ ਵੈੱਬਸਾਈਟ ਉੱਤੇ ਮਸਲੇ ਬਾਰੇ ਰਿਪੋਰਟ ਕਰੋ",
     "description": "Tooltip used for the 'chat' icon in the panel"
   },
   "popupTipNoPopups": {
-    "message": "Perjungti visų iškylančiųjų langų blokavimą šiame puslapyje",
+    "message": "ਇਸ ਸਾਈਟ ਲਈ ਸਾਰੇ ਪੌਪ-ਅੱਪ ਉੱਤੇ ਪਾਬੰਦੀਆਂ ਨੂੰ ਬਦਲੋ",
     "description": "Tooltip for the no-popups per-site switch"
   },
   "popupTipNoPopups1": {
-    "message": "Spustelėkite visų iškylančių langų blokavimui šioje svetainėje",
+    "message": "ਇਸ ਸਾਈਟ ਲਈ ਸਾਰੇ ਪੌਪ-ਅੱਪ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਉਣ ਲਈ ਕਲਿੱਕ ਕਰੋ",
     "description": "Tooltip for the no-popups per-site switch"
   },
   "popupTipNoPopups2": {
-    "message": "Spustelėkite visų iškylančių langų neblokavimui šioje svetainėje",
+    "message": "ਇਸ ਸਾਈਟ ਲਈ ਸਾਰੇ ਪੌਪ-ਅੱਪ ਉੱਤੇ ਪਾਬੰਦੀ ਨਾ ਲਾਉਣ ਲਈ ਕਲਿੱਕ ਕਰੋ",
     "description": "Tooltip for the no-popups per-site switch"
   },
   "popupTipNoLargeMedia": {
-    "message": "Perjungti didelių medijos elementų blokavimą šiame puslapyje",
+    "message": "ਇਸ ਸਾਈਟ ਲਈ ਵੱਡੇ ਮੀਡਿਆ ਭਾਗਾਂ ਉੱਤੇ ਪਾਬੰਦੀਆਂ ਨੂੰ ਬਦਲੋ",
     "description": "Tooltip for the no-large-media per-site switch"
   },
   "popupTipNoLargeMedia1": {
-    "message": "Spustelėkite didelių medijos elementų blokavimui šioje svetainėje",
+    "message": "ਇਸ ਸਾਈਟ ਲਈ ਵੱਡੇ ਮੀਡੀਆ ਭਾਗਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਉਣ ਲਈ ਕਲਿੱਕ ਕਰੋ",
     "description": "Tooltip for the no-large-media per-site switch"
   },
   "popupTipNoLargeMedia2": {
-    "message": "Spustelėkite didelių medijos elementų neblokavimui šioje svetainėje",
+    "message": "ਇਸ ਸਾਈਟ ਲਈ ਵੱਡੇ ਮੀਡੀਆ ਭਾਗਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਹਟਾਉਣ ਲਈ ਕਲਿੱਕ ਕਰੋ",
     "description": "Tooltip for the no-large-media per-site switch"
   },
   "popupTipNoCosmeticFiltering": {
-    "message": "Perjungti kosmetinį filtravimą šiame puslapyje",
+    "message": "Toggle cosmetic filtering for this site",
     "description": "Tooltip for the no-cosmetic-filtering per-site switch"
   },
   "popupTipNoCosmeticFiltering1": {
-    "message": "Spustelėkite kosmetinių filtrų išjungimui šioje svetainėje",
+    "message": "Click to disable cosmetic filtering on this site",
     "description": "Tooltip for the no-cosmetic-filtering per-site switch"
   },
   "popupTipNoCosmeticFiltering2": {
-    "message": "Spustelėkite kosmetinių filtrų įjungimui šioje svetainėje",
+    "message": "Click to enable cosmetic filtering on this site",
     "description": "Tooltip for the no-cosmetic-filtering per-site switch"
   },
   "popupTipNoRemoteFonts": {
-    "message": "Perjungti nuotolinių šriftų blokavimą šiame puslapyje",
+    "message": "ਇਸ ਸਾਈਟ ਲਈ ਰਿਮੋਟ ਫ਼ੌਂਟਾਂ ਉੱਤੇ ਪਾਬੰਦੀਆਂ ਨੂੰ ਬਦਲੋ",
     "description": "Tooltip for the no-remote-fonts per-site switch"
   },
   "popupTipNoRemoteFonts1": {
-    "message": "Spustelėkite nutolusių šriftų blokavimui šioje svetainėje",
+    "message": "ਇਸ ਸਾਈਟ ਲਈ ਰਿਮੋਟ ਫ਼ੌਂਟਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਉਣ ਲਈ ਕਲਿੱਕ ਕਰੋ",
     "description": "Tooltip for the no-remote-fonts per-site switch"
   },
   "popupTipNoRemoteFonts2": {
-    "message": "Spustelėkite nutolusių šriftų neblokavimui šioje svetainėje",
+    "message": "ਇਸ ਸਾਈਟ ਲਈ ਰਿਮੋਟ ਫ਼ੌਂਟਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਹਟਾਉਣ ਲਈ ਕਲਿੱਕ ਕਰੋ",
     "description": "Tooltip for the no-remote-fonts per-site switch"
   },
   "popupTipNoScripting1": {
-    "message": "Spustelėkite JavaScript išjungimui šioje svetainėje",
+    "message": "ਇਸ ਸਾਈਟ ਉੱਤੇ JavaScript ਅਸਮਰੱਥ ਕਰਨ ਲਈ ਕਲਿੱਕ ਕਰੋ",
     "description": "Tooltip for the no-scripting per-site switch"
   },
   "popupTipNoScripting2": {
-    "message": "Spustelėkite JavaScript įjungimui šioje svetainėje",
+    "message": "ਇਸ ਸਾਈਟ ਉੱਤੇ JavaScript ਅਸਮਰੱਥ ਕਰਨ ਨੂੰ ਹਟਾਉਣ ਲਈ ਕਲਿੱਕ ਕਰੋ",
     "description": "Tooltip for the no-scripting per-site switch"
   },
   "popupNoPopups_v2": {
-    "message": "Iškylantysis langas",
+    "message": "ਪੌਪ-ਅੱਪ ਵਿੰਡੋ",
     "description": "Caption for the no-popups per-site switch"
   },
   "popupNoLargeMedia_v2": {
-    "message": "Dideli medijos elementai",
+    "message": "ਵੱਡੇ ਮੀਡੀਆ ਭਾਗ",
     "description": "Caption for the no-large-media per-site switch"
   },
   "popupNoCosmeticFiltering_v2": {
-    "message": "Kosmetinis filtravimas",
+    "message": "Cosmetic filtering",
     "description": "Caption for the no-cosmetic-filtering per-site switch"
   },
   "popupNoRemoteFonts_v2": {
-    "message": "Nuotoliniai šriftai",
+    "message": "ਰਿਮੋਟ ਫ਼ੌਂਟ",
     "description": "Caption for the no-remote-fonts per-site switch"
   },
   "popupNoScripting_v2": {
@@ -208,139 +208,139 @@
     "description": "Caption for the no-scripting per-site switch"
   },
   "popupMoreButton_v2": {
-    "message": "Daugiau",
+    "message": "ਹੋਰ",
     "description": "Label to be used to show popup panel sections"
   },
   "popupLessButton_v2": {
-    "message": "Mažiau",
+    "message": "ਘੱਟ",
     "description": "Label to be used to hide popup panel sections"
   },
   "popupTipGlobalRules": {
-    "message": "Globalios taisyklės: ši skiltis skirta visiems puslapiams taikomoms taisyklėms.",
+    "message": "ਗਲੋਬਲ ਨਿਯਮ: ਇਹ ਕਾਲਮ ਸਾਰੀਆਂ ਸਾਈਟਾਂ ਉੱਤੇ ਲਾਗੂ ਹੋਣ ਵਾਲੇ ਨਿਯਮਾਂ ਲਈ ਹੈ।",
     "description": "Tooltip when hovering the top-most cell of the global-rules column."
   },
   "popupTipLocalRules": {
-    "message": "Vietinės taisyklės: ši skiltis skirta dabartiniam puslapiui taikomoms taisyklėms.\nVietinės taisyklės nustelbia globalias.",
+    "message": "Local rules: this column is for rules which apply to the current site only.\nLocal rules override global rules.",
     "description": "Tooltip when hovering the top-most cell of the local-rules column."
   },
   "popupTipSaveRules": {
-    "message": "Spauskite pakeitimams padaryti pastoviais.",
+    "message": "ਆਪਣੀਆਂ ਤਬਦੀਲੀਆਂ ਨੂੰ ਪੱਕਾ ਬਣਾਉਣ ਲਈ ਕਲਿੱਕ ਕਰੋ।",
     "description": "Tooltip when hovering over the padlock in the dynamic filtering pane."
   },
   "popupTipRevertRules": {
-    "message": "Spauskite pakeitimams atstatyti.",
+    "message": "ਆਪਣੀਆਂ ਤਬਦੀਲੀਆਂ ਨੂੰ ਵਾਪਸ ਲੈਣ ਲਈ ਕਲਿੱਕ ਕਰੋ।",
     "description": "Tooltip when hovering over the eraser in the dynamic filtering pane."
   },
   "popupAnyRulePrompt": {
-    "message": "visi",
+    "message": "ਸਭ",
     "description": ""
   },
   "popupImageRulePrompt": {
-    "message": "vaizdai",
+    "message": "ਚਿੱਤਰ",
     "description": ""
   },
   "popup3pAnyRulePrompt": {
-    "message": "trečios šalies",
+    "message": "ਤੀਜੀ-ਧਿਰ",
     "description": ""
   },
   "popup3pPassiveRulePrompt": {
-    "message": "3-ios šalies CSS/paveikslai",
+    "message": "ਤੀਜੀ-ਧਿਰ CSS/ਚਿੱਤਰ",
     "description": ""
   },
   "popupInlineScriptRulePrompt": {
-    "message": "įterptieji scenarijai",
+    "message": "ਇਨ-ਲਾਈਨ ਸਕ੍ਰਿਪਟਾਂ",
     "description": ""
   },
   "popup1pScriptRulePrompt": {
-    "message": "1-os šalies scenarijai",
+    "message": "1ਲੀ-ਧਿਰ ਸਕ੍ਰਿਪਟਾਂ",
     "description": ""
   },
   "popup3pScriptRulePrompt": {
-    "message": "3-ios šalies scenarijai",
+    "message": "ਤੀਜੀ-ਧਿਰ ਸਕ੍ਰਿਪਟਾਂ",
     "description": ""
   },
   "popup3pFrameRulePrompt": {
-    "message": "3-ios šalies rėmeliai",
+    "message": "ਤੀਜੀ-ਧਿਰ ਫਰੇਮ",
     "description": ""
   },
   "popupHitDomainCountPrompt": {
-    "message": "jungtasi prie sričių",
+    "message": "ਕਨੈਕਟ ਹੋਈਆਂ ਡੋਮੇਨਾਂ",
     "description": "appears in popup"
   },
   "popupHitDomainCount": {
-    "message": "{{count}} iš {{total}}",
+    "message": "{{total}} ਵਿੱਚੋਂ {{count}}",
     "description": "appears in popup"
   },
   "popupVersion": {
-    "message": "Versija",
+    "message": "ਵਰਜ਼ਨ",
     "description": "Example of use: Version 1.26.4"
   },
   "popup3pScriptFilter": {
-    "message": "Skriptas",
+    "message": "ਸਕ੍ਰਿਪਟ",
     "description": "Appears as an option to filter out firewall rows"
   },
   "popup3pFrameFilter": {
-    "message": "frame",
+    "message": "ਫਰੇਮ",
     "description": "Appears as an option to filter out firewall rows"
   },
   "pickerCreate": {
-    "message": "Sukurti",
+    "message": "ਬਣਾਓ",
     "description": "English: Create"
   },
   "pickerPick": {
-    "message": "Parinkti",
+    "message": "ਚੁਣੋ",
     "description": "English: Pick"
   },
   "pickerQuit": {
-    "message": "Baigti",
+    "message": "ਬਾਹਰ",
     "description": "English: Quit"
   },
   "pickerPreview": {
-    "message": "Peržiūra",
+    "message": "ਝਲਕ",
     "description": "Element picker preview mode: will cause the elements matching the current filter to be removed from the page"
   },
   "pickerNetFilters": {
-    "message": "Tinklo filtrai",
+    "message": "ਨੈੱਟਵਰਕ ਫਿਲਟਰ",
     "description": "English: header for a type of filter in the element picker dialog"
   },
   "pickerCosmeticFilters": {
-    "message": "Kosmetiniai filtrai",
+    "message": "Cosmetic filters",
     "description": "English: Cosmetic filters"
   },
   "pickerCosmeticFiltersHint": {
-    "message": "Spustelėjimas, Vald-spustelėjimas",
+    "message": "ਕਲਿੱਕ, Ctrl-ਕਲਿੱਕ",
     "description": "English: Click, Ctrl-click"
   },
   "pickerContextMenuEntry": {
-    "message": "Blokuoti elementą",
+    "message": "ਭਾਗ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਓ…",
     "description": "An entry in the browser's contextual menu"
   },
   "settingsCollapseBlockedPrompt": {
-    "message": "Slėpti blokuotų elementų rezervuotą vietą",
+    "message": "Hide placeholders of blocked elements",
     "description": "English: Hide placeholders of blocked elements"
   },
   "settingsIconBadgePrompt": {
-    "message": "Rodyti blokuotų užklausų skaičių piktogramoje",
+    "message": "Show the number of blocked requests on the icon",
     "description": "English: Show the number of blocked requests on the icon"
   },
   "settingsTooltipsPrompt": {
-    "message": "Išjungti paaiškinimus",
+    "message": "ਟੂਲ-ਟਿੱਪ ਅਸਮਰੱਥ ਕਰੋ",
     "description": "A checkbox in the Settings pane"
   },
   "settingsContextMenuPrompt": {
-    "message": "Kur tinka, naudoti kontekstinį meniu",
+    "message": "Make use of context menu where appropriate",
     "description": "English: Make use of context menu where appropriate"
   },
   "settingsColorBlindPrompt": {
-    "message": "Draugiškas neskiriantiems spalvų",
+    "message": "ਰੰਗ-ਅੰਨ੍ਹੇਪਣ ਲਈ ਸਰਲ",
     "description": "English: Color-blind friendly"
   },
   "settingsAppearance": {
-    "message": "Išvaizda",
+    "message": "ਦਿੱਖ",
     "description": "Section for controlling user interface appearance"
   },
   "settingsThemeLabel": {
-    "message": "Tema",
+    "message": "ਥੀਮ",
     "description": "Label for checkbox to enable a custom dark theme"
   },
   "settingsThemeAccent0Label": {
@@ -348,51 +348,51 @@
     "description": "Label for checkbox to pick an accent color"
   },
   "settingsCloudStorageEnabledPrompt": {
-    "message": "Įjungti nuotolinės saugyklos palaikymą",
+    "message": "ਕਲਾਉਡ ਸਟੋਰੇਜ਼ ਸਹਾਇਤਾ ਸਮਰੱਥ ਕਰੋ",
     "description": ""
   },
   "settingsAdvancedUserPrompt": {
-    "message": "Aš esu patyręs naudotojas (<a href='https://github.com/gorhill/uBlock/wiki/Advanced-user-features'>privaloma perskaityti</a>)",
+    "message": "ਮੈਂ ਮਾਹਰ ਵਰਤੋਂਕਾਰ ਹਾਂ",
     "description": "Checkbox to let user access advanced, technical features"
   },
   "settingsPrefetchingDisabledPrompt": {
-    "message": "Išjungti išankstinį gavimą (visiems blokuotų tinklo užklausų prisijungimams išvengti)",
+    "message": "Disable pre-fetching (to prevent any connection for blocked network requests)",
     "description": "English: "
   },
   "settingsHyperlinkAuditingDisabledPrompt": {
-    "message": "Išjungti saitų auditą",
+    "message": "Disable hyperlink auditing",
     "description": "English: "
   },
   "settingsWebRTCIPAddressHiddenPrompt": {
-    "message": "Neleisti WebRTC atskleisti vietinio IP adreso",
+    "message": "WebRTC ਨੂੰ ਲੋਕਲ IP ਐਡਰੈਸ ਲੀਕ ਕਰਨ ਤੋਂ ਰੋਕੋ",
     "description": "English: "
   },
   "settingPerSiteSwitchGroup": {
-    "message": "Numatytoji elgsena",
+    "message": "ਮੂਲ ਰਵੱਈਆ",
     "description": ""
   },
   "settingPerSiteSwitchGroupSynopsis": {
-    "message": "Šios numatytosios elgsenos gali būti nustelbtos kiekvienam puslapiui atskirai",
+    "message": "These default behaviors can be overridden on a per-site basis",
     "description": ""
   },
   "settingsNoCosmeticFilteringPrompt": {
-    "message": "Išjungti kosmetinius filtrus",
+    "message": "Disable cosmetic filtering",
     "description": ""
   },
   "settingsNoLargeMediaPrompt": {
-    "message": "Blokuoti medijos elementus didesnius nei {{input}} kB",
+    "message": "{{input}} KB ਤੋਂ ਵੱਡੇ ਮੀਡੀਆ ਭਾਗਾਂ ਉੱਤੇ ਪਾਬੰਦੀ",
     "description": ""
   },
   "settingsNoRemoteFontsPrompt": {
-    "message": "Blokuoti nuotolinius šriftus",
+    "message": "ਰਿਮੋਟ ਫ਼ੌਂਟਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਓ",
     "description": ""
   },
   "settingsNoScriptingPrompt": {
-    "message": "Išjungti JavaScript",
+    "message": "JavaScript ਅਸਮਰੱਥ ਕਰੋ",
     "description": "The default state for the per-site no-scripting switch"
   },
   "settingsNoCSPReportsPrompt": {
-    "message": "Blokuoti CSP ataskaitas",
+    "message": "CSP ਰਿਪੋਰਟਾਂ ਉੱਤੇ ਪਾਬੰਦੀ",
     "description": "background information: https://github.com/gorhill/uBlock/issues/3150"
   },
   "settingsUncloakCnamePrompt": {
@@ -400,59 +400,59 @@
     "description": "background information: https://github.com/uBlockOrigin/uBlock-issues/issues/1513"
   },
   "settingsAdvanced": {
-    "message": "Papildomi nustatymai",
+    "message": "ਤਕਨੀਕੀ",
     "description": "Section for controlling advanced-user settings"
   },
   "settingsAdvancedSynopsis": {
-    "message": "Features suitable only for technical users",
+    "message": "ਫ਼ੀਚਰ ਸਿਰਫ਼ ਤਕਨੀਕੀ ਮਾਹਰ ਵਰਤੋਂਕਾਰਾਂ ਲਈ ਢੁੱਕਵੇਂ ਹਨ",
     "description": "Description of section controlling advanced-user settings"
   },
   "settingsAdvancedUserSettings": {
-    "message": "sudėtingesni nustatymai",
+    "message": "ਤਕਨੀਕੀ ਸੈਟਿੰਗਾਂ",
     "description": "For the tooltip of a link which gives access to advanced settings"
   },
   "settingsLastRestorePrompt": {
-    "message": "Paskutinis atkūrimas:",
+    "message": "ਪਿਛਲਾ ਰੀ-ਸਟੋਰ:",
     "description": "English: Last restore:"
   },
   "settingsLastBackupPrompt": {
-    "message": "Paskutinė atsarginė kopija:",
+    "message": "ਪਿਛਲਾ ਬੈਕਅੱਪ:",
     "description": "English: Last backup:"
   },
   "3pListsOfBlockedHostsPrompt": {
-    "message": "Tinklo filtrų ({{netFilterCount}})  ＋ kosmetinių filtrų ({{cosmeticFilterCount}}) iš:",
+    "message": "{{netFilterCount}} network filters ＋ {{cosmeticFilterCount}} cosmetic filters from:",
     "description": "Appears at the top of the _3rd-party filters_ pane"
   },
   "3pListsOfBlockedHostsPerListStats": {
-    "message": "naudojama {{used}} iš {{total}}",
+    "message": "{{total}} ਵਿੱਚੋਂ {{used}} ਵਰਤੇ",
     "description": "Appears aside each filter list in the _3rd-party filters_ pane"
   },
   "3pAutoUpdatePrompt1": {
-    "message": "Automatiškai atnaujinti filtrų sąrašus.",
+    "message": "ਫਿਲਟਰ ਸੂਚੀਆਂ ਆਪੇ ਅੱਪਡੇਟ ਕਰੋ",
     "description": "A checkbox in the _3rd-party filters_ pane"
   },
   "3pUpdateNow": {
-    "message": "Atnaujinti dabar",
+    "message": "ਹੁਣੇ ਅੱਪਡੇਟ ਕਰੋ",
     "description": "A button in the in the _3rd-party filters_ pane"
   },
   "3pPurgeAll": {
-    "message": "Valyti visus podėlius",
+    "message": "ਸਭ ਕੈਸ਼ ਮਿਟਾਓ",
     "description": "A button in the in the _3rd-party filters_ pane"
   },
   "3pParseAllABPHideFiltersPrompt1": {
-    "message": "Analizuoti ir taikyti kosmetinius filtrus.",
+    "message": "Parse and enforce cosmetic filters",
     "description": "English: Parse and enforce Adblock+ element hiding filters."
   },
   "3pParseAllABPHideFiltersInfo": {
-    "message": "<p>Ši nuostata įjungia <a href=\"https://adblockplus.org/en/faq_internal#elemhide\">Su Adblock Plus suderinamų „elementų slėpimo“ filtrų</a> analizę ir taikymą. Šie filtrai iš esmės yra kosmetiniai, jie naudojami tinklalapio elementams, kurie yra laikomi vaizdiniais nepatogumais ir kurių negalima užblokuoti tinklo užklausomis paremtais filtrais, paslėpti.</p><p>Šios nuostatos įjungimas padidina uBlock₀ atminties naudojimą.</p>",
+    "message": "Cosmetic filters serve to hide elements in a web page which are deemed to be a visual nuisance, and which can't be blocked by the network request-based filtering engines.",
     "description": "Describes the purpose of the 'Parse and enforce cosmetic filters' feature."
   },
   "3pIgnoreGenericCosmeticFilters": {
-    "message": "Ignoruoti daugybinius kosmetinius filtrus.",
+    "message": "Ignore generic cosmetic filters",
     "description": "This will cause uBO to ignore all generic cosmetic filters."
   },
   "3pIgnoreGenericCosmeticFiltersInfo": {
-    "message": "<p>Daugybiniai kosmetiniai filtrai yra tokie kosmetiniai filtrai, kurie taikomi visoms svetainėms.<p>Nors uBlock₀ juos apdoroja efektyviai, daugybiniai kosmetiniai filtrai vis tiek gali prisidėti prie pamatuojamo atminties ir procesoriaus panaudojimo kai kuriose svetainėse, ypač didelėse ir ilgai gyvuojančiose.<p>Šio nustatymo įjungimas sumažins atminties ir procesoriaus naudojimą, kurį sukelia svetainės dėl daugybinių kosmetinių filtrų apdorojimo, bei sumažins bendrą uBlock₀ atminties naudojimą.<p>Rekomenduojama įjungti šį nustatymą mažiau galinguose įrenginiuose.",
+    "message": "Generic cosmetic filters are those cosmetic filters which are meant to apply on all web sites. Enabling this option will eliminate the memory and CPU overhead added to web pages as a result of handling generic cosmetic filters.\n\nIt is recommended to enable this option on less powerful devices.",
     "description": "Describes the purpose of the 'Ignore generic cosmetic filters' feature."
   },
   "3pSuspendUntilListsAreLoaded": {
@@ -460,75 +460,75 @@
     "description": "A checkbox in the 'Filter lists' pane"
   },
   "3pListsOfBlockedHostsHeader": {
-    "message": "Blokuotų serverių sąrašas",
+    "message": "Lists of blocked hosts",
     "description": "English: Lists of blocked hosts"
   },
   "3pApplyChanges": {
-    "message": "Taikyti pakeitimus",
+    "message": "ਤਬਦੀਲੀਆਂ ਲਾਗੂ ਕਰੋ",
     "description": "English: Apply changes"
   },
   "3pGroupDefault": {
-    "message": "Įtaisyti",
+    "message": "ਬਿਲਟ-ਇਨ",
     "description": "Filter lists section name"
   },
   "3pGroupAds": {
-    "message": "Reklamos",
+    "message": "ਇਸ਼ਤਿਹਾਰ",
     "description": "Filter lists section name"
   },
   "3pGroupPrivacy": {
-    "message": "Privatumas",
+    "message": "ਪਰਦੇਦਾਰੀ",
     "description": "Filter lists section name"
   },
   "3pGroupMalware": {
-    "message": "Kenksmingos sritys",
+    "message": "ਮਾਲਵੇਅਰਾਂ ਤੋਂ ਬਚਾਅ, ਸੁਰੱਖਿਆ",
     "description": "Filter lists section name"
   },
   "3pGroupAnnoyances": {
-    "message": "Erzinimas",
+    "message": "Annoyances",
     "description": "Filter lists section name"
   },
   "3pGroupMultipurpose": {
-    "message": "Univarsalūs",
+    "message": "ਬਹੁ-ਮਕਸਦੀ",
     "description": "Filter lists section name"
   },
   "3pGroupRegions": {
-    "message": "Regionai, kalbos",
+    "message": "ਖੇਤਰ, ਭਾਸ਼ਾਵਾਂ",
     "description": "Filter lists section name"
   },
   "3pGroupCustom": {
-    "message": "Adaptuoti",
+    "message": "ਕਸਟਮ",
     "description": "Filter lists section name"
   },
   "3pImport": {
-    "message": "Importuoti...",
+    "message": "ਇੰਪੋਰਟ…",
     "description": "The label for the checkbox used to import external filter lists"
   },
   "3pExternalListsHint": {
-    "message": "Vienas URL eilutėje. Neteisingi URL bus tyliai ignoruoti.",
+    "message": "ਹਰ ਲਾਈਨ ਵਿੱਚ ਇੱਕ URL। ਗਲਤ URL ਨੂੰ ਬਿਨਾਂ ਰੁਕੇ ਅਣਡਿੱਠਾ ਕੀਤਾ ਜਾਵੇਗਾ।",
     "description": "Short information about how to use the textarea to import external filter lists by URL"
   },
   "3pExternalListObsolete": {
-    "message": "Pasenęs.",
+    "message": "ਪੁਰਾਣਾ।",
     "description": "used as a tooltip for the out-of-date icon beside a list"
   },
   "3pViewContent": {
-    "message": "peržiūrėti turinį",
+    "message": "ਸਮੱਗਰੀ ਵੇਖੋ",
     "description": "used as a tooltip for eye icon beside a list"
   },
   "3pLastUpdate": {
-    "message": "Paskutinis atnaujinimas: {{ago}}.\nIeškoti atnaujinimo.",
+    "message": "ਆਖਰੀ ਅੱਪਡੇਟ: {{ago}}।\nਅੱਪਡੇਟ ਲਈ ਮਜ਼ਬੂਰ ਕਰਨ ਵਾਸਤੇ ਕਲਿੱਕ ਕਰੋ।",
     "description": "used as a tooltip for the clock icon beside a list"
   },
   "3pUpdating": {
-    "message": "Atnaujinama...",
+    "message": "…ਅੱਪਡੇਟ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ",
     "description": "used as a tooltip for the spinner icon beside a list"
   },
   "3pNetworkError": {
-    "message": "Tinklo klaida sutrukdė atnaujinti resursą.",
+    "message": "ਨੈੱਟਵਰਕ ਗਲਤੀ ਸਰੋਤ ਨੂੰ ਅੱਪਡੇਟ ਹੋਣ ਤੋਂ ਰੋਕਦੀ ਹੈ।",
     "description": "used as a tooltip for error icon beside a list"
   },
   "1pFormatHint": {
-    "message": "Vienas filtras eilutėje. Filtras gali būti paprastas serverio adresas, arba su Adblock Plus suderinamas filtras. Eilutės pradėtos <code>!</code> bus ignoruotos.",
+    "message": "One filter per line. A filter can be a plain hostname, or an EasyList-compatible filter. Lines prefixed with <code>!</code> will be ignored.",
     "description": "Short information about how to create custom filters"
   },
   "1pTrustWarning": {
@@ -536,111 +536,111 @@
     "description": "Warning against copy-pasting filters from random sources"
   },
   "1pImport": {
-    "message": "Importuoti ir papildyti",
+    "message": "ਇੰਪੋਰਟ ਕਰੋ ਤੇ ਜੋੜੋ…",
     "description": "Button in the 'My filters' pane"
   },
   "1pExport": {
-    "message": "Eksportuoti",
+    "message": "ਐਕਸਪੋਰਟ…",
     "description": "Button in the 'My filters' pane"
   },
   "1pExportFilename": {
-    "message": "mano-ublock-statiniai-filtrai_{{datetime}}.txt",
+    "message": "my-ublock-static-filters_{{datetime}}.txt",
     "description": "English: my-ublock-static-filters_{{datetime}}.txt"
   },
   "1pApplyChanges": {
-    "message": "Taikyti pakeitimus",
+    "message": "ਤਬਦੀਲੀਆਂ ਲਾਗੂ ਕਰੋ",
     "description": "English: Apply changes"
   },
   "rulesPermanentHeader": {
-    "message": "Pastovios taisyklės",
+    "message": "ਪੱਕੇ ਨਿਯਮ",
     "description": "header"
   },
   "rulesTemporaryHeader": {
-    "message": "Laikinos taisyklės",
+    "message": "ਆਰਜ਼ੀ ਨਿਯਮ",
     "description": "header"
   },
   "rulesRevert": {
-    "message": "Atstatyti",
+    "message": "ਵਾਪਸ ਲਵੋ",
     "description": "This will remove all temporary rules"
   },
   "rulesCommit": {
-    "message": "Pritaikyti",
+    "message": "ਕਮਿਟ",
     "description": "This will persist temporary rules"
   },
   "rulesEdit": {
-    "message": "Redaguoti",
+    "message": "ਸੋਧੋ",
     "description": "Will enable manual-edit mode (textarea)"
   },
   "rulesEditSave": {
-    "message": "Įrašyti",
+    "message": "ਸੰਭਾਲੋ",
     "description": "Will save manually-edited content and exit manual-edit mode"
   },
   "rulesEditDiscard": {
-    "message": "Atmesti",
+    "message": "ਖ਼ਾਰਜ",
     "description": "Will discard manually-edited content and exit manual-edit mode"
   },
   "rulesImport": {
-    "message": "Importuoti iš failo...",
+    "message": "…ਫ਼ਾਈਲ ਤੋਂ ਇੰਪੋਰਟ ਕਰੋ",
     "description": ""
   },
   "rulesExport": {
-    "message": "Eksportuoti į failą",
+    "message": "…ਫ਼ਾਈਲ ਉੱਤੇ ਐਕਸਪੋਰਟ ਕਰੋ",
     "description": "Button in the 'My rules' pane"
   },
   "rulesDefaultFileName": {
-    "message": "mano-ublock-dinaminės-taisyklės_{{datetime}}.txt",
+    "message": "my-ublock-dynamic-rules_{{datetime}}.txt",
     "description": "default file name to use"
   },
   "rulesHint": {
-    "message": "Dinaminių filtravimo taisyklių sąrašas.",
+    "message": "ਤੁਹਾਡੇ ਚਾਲੂ ਫਿਲਟਰ ਕਰਨ ਦੇ ਨਿਯਮਾਂ ਦੀ ਸੂਚੀ ਹੈ।",
     "description": "English: List of your dynamic filtering rules."
   },
   "rulesFormatHint": {
-    "message": "Taisyklės sintaksė: <code>šaltinis paskirtis tipas veiksmas</code> (<a href='https://github.com/gorhill/uBlock/wiki/Dynamic-filtering:-rule-syntax'>dokumentacija</a>).",
+    "message": "Rule syntax: <code>source destination type action</code> (<a href='https://github.com/gorhill/uBlock/wiki/Dynamic-filtering:-rule-syntax'>full documentation</a>).",
     "description": "English: dynamic rule syntax and full documentation."
   },
   "rulesSort": {
-    "message": "Rikiuoti pagal:",
+    "message": "ਲੜੀਬੱਧ:",
     "description": "English: label for sort option."
   },
   "rulesSortByType": {
-    "message": "Taisyklės tipas",
+    "message": "ਨਿਯਮ ਦੀ ਕਿਸਮ",
     "description": "English: a sort option for list of rules."
   },
   "rulesSortBySource": {
-    "message": "Šaltinis",
+    "message": "ਸਰੋਤ",
     "description": "English: a sort option for list of rules."
   },
   "rulesSortByDestination": {
-    "message": "Tikslas",
+    "message": "ਟਿਕਾਣਾ",
     "description": "English: a sort option for list of rules."
   },
   "whitelistPrompt": {
-    "message": "Baltojo sąrašo direktyvos nurodo, kurioms svetainėms uBlock Origin turėtų būti išjungtas. Vienas įrašas eilutėje. Neteisingos direktyvos bus tyliai ignoruotos ir užkomentuotos.",
+    "message": "The trusted site directives dictate on which web pages uBlock Origin should be disabled. One entry per line.",
     "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
-    "message": "Importuoti ir papildyti",
+    "message": "ਇੰਪੋਰਟ ਕਰੋ ਤੇ ਜੋੜੋ…",
     "description": "Button in the 'Trusted sites' pane"
   },
   "whitelistExport": {
-    "message": "Eksportuoti",
+    "message": "ਐਕਸਪੋਰਟ…",
     "description": "Button in the 'Trusted sites' pane"
   },
   "whitelistExportFilename": {
-    "message": "mano-ublock-išimtys_{{datetime}}.txt",
+    "message": "my-ublock-trusted-sites_{{datetime}}.txt",
     "description": "The default filename to use for import/export purpose"
   },
   "whitelistApply": {
-    "message": "Taikyti pakeitimus",
+    "message": "ਤਬਦੀਲੀਆਂ ਲਾਗੂ ਕਰੋ",
     "description": "English: Apply changes"
   },
   "logRequestsHeaderType": {
-    "message": "Tipas",
+    "message": "ਕਿਸਮ",
     "description": "English: Type"
   },
   "logRequestsHeaderDomain": {
-    "message": "Sritis",
+    "message": "ਡੋਮੇਨ",
     "description": "English: Domain"
   },
   "logRequestsHeaderURL": {
@@ -648,63 +648,63 @@
     "description": "English: URL"
   },
   "logRequestsHeaderFilter": {
-    "message": "Filtras",
+    "message": "ਫਿਲਟਰ",
     "description": "English: Filter"
   },
   "logAll": {
-    "message": "Visos",
+    "message": "ਸਭ",
     "description": "Appears in the logger's tab selector"
   },
   "logBehindTheScene": {
-    "message": "Užkulisiai",
+    "message": "ਬਿਨ-ਟੈਬ",
     "description": "Pretty name for behind-the-scene network requests"
   },
   "loggerCurrentTab": {
-    "message": "Dabartinė kortelė",
+    "message": "ਮੌਜੂਦਾ ਟੈਬ",
     "description": "Appears in the logger's tab selector"
   },
   "loggerReloadTip": {
-    "message": "Įkelti kortelės turinį iš naujo",
+    "message": "ਟੈਬ ਸਮੱਗਰੀ ਮੁੜ-ਲੋਡ ਕਰੋ",
     "description": "Tooltip for the reload button in the logger page"
   },
   "loggerDomInspectorTip": {
-    "message": "Įjungti / išjungti DOM tyriklį",
+    "message": "DOM ਇੰਸਪੈਕਟਰ ਨੂੰ ਬਦਲੋ",
     "description": "Tooltip for the DOM inspector button in the logger page"
   },
   "loggerPopupPanelTip": {
-    "message": "Įjungti/išjungti iššokantį langą",
+    "message": "ਪੌਪ-ਅੱਪ ਪੈਨਲ ਬਦਲੋ",
     "description": "Tooltip for the popup panel button in the logger page"
   },
   "loggerInfoTip": {
-    "message": "„uBlock Origin“ viki: žurnalas",
+    "message": "uBlock Origin wiki: The logger",
     "description": "Tooltip for the top-right info label in the logger page"
   },
   "loggerClearTip": {
-    "message": "Valyti žurnalą",
+    "message": "ਲੌਗਰ ਮਿਟਾਓ",
     "description": "Tooltip for the eraser in the logger page; used to blank the content of the logger"
   },
   "loggerPauseTip": {
-    "message": "Pristabdyti žurnalą (atmesti visus gaunamus duomenis)",
+    "message": "Pause logger (discard all incoming data)",
     "description": "Tooltip for the pause button in the logger page"
   },
   "loggerUnpauseTip": {
-    "message": "Tęsti žurnalą",
+    "message": "Unpause logger",
     "description": "Tooltip for the play button in the logger page"
   },
   "loggerRowFiltererButtonTip": {
-    "message": "Įjungti / išjungti žurnalo filtravimą",
+    "message": "Toggle logger filtering",
     "description": "Tooltip for the row filterer button in the logger page"
   },
   "logFilterPrompt": {
-    "message": "filtruoti žurnalo įrašus",
+    "message": "filter logger content",
     "description": "Placeholder string for logger output filtering input field"
   },
   "loggerRowFiltererBuiltinTip": {
-    "message": "Žurnalo filtravimo nuostatos",
+    "message": "Logger filtering options",
     "description": "Tooltip for the button to bring up logger output filtering options"
   },
   "loggerRowFiltererBuiltinNot": {
-    "message": "Ne",
+    "message": "ਨਹੀਂ",
     "description": "A keyword in the built-in row filtering expression"
   },
   "loggerRowFiltererBuiltinEventful": {
@@ -712,55 +712,55 @@
     "description": "A keyword in the built-in row filtering expression: all items corresponding to uBO doing something (blocked, allowed, redirected, etc.)"
   },
   "loggerRowFiltererBuiltinBlocked": {
-    "message": "užblokuota",
+    "message": "ਪਾਬੰਦੀ ਲਾਏ",
     "description": "A keyword in the built-in row filtering expression"
   },
   "loggerRowFiltererBuiltinAllowed": {
-    "message": "leidžiama",
+    "message": "ਮਨਜ਼ੂਰ ਕੀਤੇ",
     "description": "A keyword in the built-in row filtering expression"
   },
   "loggerRowFiltererBuiltinModified": {
-    "message": "modifikuota",
+    "message": "ਸੋਧ ਕੀਤੇ",
     "description": "A keyword in the built-in row filtering expression"
   },
   "loggerRowFiltererBuiltin1p": {
-    "message": "1-oji šalis",
+    "message": "1ਲੀ-ਧਿਰ",
     "description": "A keyword in the built-in row filtering expression"
   },
   "loggerRowFiltererBuiltin3p": {
-    "message": "3-ioji šalis",
+    "message": "3ਜੀ-ਧਿਰ",
     "description": "A keyword in the built-in row filtering expression"
   },
   "loggerEntryDetailsHeader": {
-    "message": "Išsamiau",
+    "message": "ਵੇਰਵੇ",
     "description": "Small header to identify the 'Details' pane for a specific logger entry"
   },
   "loggerEntryDetailsFilter": {
-    "message": "Filtras",
+    "message": "ਫਿਲਟਰ",
     "description": "Label to identify a filter field"
   },
   "loggerEntryDetailsFilterList": {
-    "message": "Filtrų sąrašas",
+    "message": "ਫਿਲਟਰ ਸੂਚੀ",
     "description": "Label to identify a filter list field"
   },
   "loggerEntryDetailsRule": {
-    "message": "Taisyklė",
+    "message": "ਨਿਯਮ",
     "description": "Label to identify a rule field"
   },
   "loggerEntryDetailsContext": {
-    "message": "Kontekstas",
+    "message": "ਪਰਸੰਗ",
     "description": "Label to identify a context field (typically a hostname)"
   },
   "loggerEntryDetailsRootContext": {
-    "message": "Šakninis kontekstas",
+    "message": "ਰੂਟ ਪਰਸੰਗ",
     "description": "Label to identify a root context field (typically a hostname)"
   },
   "loggerEntryDetailsPartyness": {
-    "message": "Partyness",
+    "message": "ਬਿਨ-ਧਿਰ",
     "description": "Label to identify a field providing partyness information"
   },
   "loggerEntryDetailsType": {
-    "message": "Tipas",
+    "message": "ਕਿਸਮ",
     "description": "Label to identify the type of an entry"
   },
   "loggerEntryDetailsURL": {
@@ -768,71 +768,71 @@
     "description": "Label to identify the URL of an entry"
   },
   "loggerURLFilteringHeader": {
-    "message": "URL taisyklė",
+    "message": "URL ਨਿਯਮ",
     "description": "Small header to identify the dynamic URL filtering section"
   },
   "loggerURLFilteringContextLabel": {
-    "message": "Kontekstas:",
+    "message": "ਪਰਸੰਗ:",
     "description": "Label for the context selector"
   },
   "loggerURLFilteringTypeLabel": {
-    "message": "Tipas:",
+    "message": "ਕਿਸਮ:",
     "description": "Label for the type selector"
   },
   "loggerStaticFilteringHeader": {
-    "message": "Statinis filtravimas",
+    "message": "ਟਿਕਾਊ ਫਿਲਟਰ",
     "description": "Small header to identify the static filtering section"
   },
   "loggerStaticFilteringSentence": {
-    "message": "{{action}} {{type}} tinklo užklausas, {{br}}kur URL adresas atitinka {{url}} {{br}}ir kurios kyla {{origin}},{{br}}{{importance}} yra atitinkantis išimties filtras.",
+    "message": "{{action}} network requests of {{type}} {{br}}which URL address matches {{url}} {{br}}and which originates {{origin}},{{br}}{{importance}} there is a matching exception filter.",
     "description": "Used in the static filtering wizard"
   },
   "loggerStaticFilteringSentencePartBlock": {
-    "message": "Blokuoti",
+    "message": "ਪਾਬੰਦੀ",
     "description": "Used in the static filtering wizard"
   },
   "loggerStaticFilteringSentencePartAllow": {
-    "message": "Leisti",
+    "message": "ਮਨਜ਼ੂਰ",
     "description": "Used in the static filtering wizard"
   },
   "loggerStaticFilteringSentencePartType": {
-    "message": "„{{type}}“ tipo",
+    "message": "ਕਿਸਮ “{{type}}”",
     "description": "Used in the static filtering wizard"
   },
   "loggerStaticFilteringSentencePartAnyType": {
-    "message": "bet kokio tipo",
+    "message": "ਕੋਈ ਵੀ ਕਿਸਮ",
     "description": "Used in the static filtering wizard"
   },
   "loggerStaticFilteringSentencePartOrigin": {
-    "message": "iš „{{origin}}“",
+    "message": "“{{origin}}” ਤੋਂ",
     "description": "Used in the static filtering wizard"
   },
   "loggerStaticFilteringSentencePartAnyOrigin": {
-    "message": "bet kur",
+    "message": "ਕਿਸੇ ਵੀ ਥਾਂ ਤੋਂ",
     "description": "Used in the static filtering wizard"
   },
   "loggerStaticFilteringSentencePartNotImportant": {
-    "message": "išskyrus kai",
+    "message": "ਛੋਟ ਜਦੋਂ",
     "description": "Used in the static filtering wizard"
   },
   "loggerStaticFilteringSentencePartImportant": {
-    "message": "net jei",
+    "message": "ਭਾਵੇਂ ਜੇ",
     "description": "Used in the static filtering wizard"
   },
   "loggerStaticFilteringFinderSentence1": {
-    "message": "Statinis filtras <code>{{filter}}</code> rastas:",
+    "message": "Static filter <code>{{filter}}</code> found in:",
     "description": "Below this sentence, the filter list(s) in which the filter was found"
   },
   "loggerStaticFilteringFinderSentence2": {
-    "message": "Statinis filtras <code>{{filter}}</code> nerastas jokiame dabar įjungtame filtrų sąraše",
+    "message": "Static filter could not be found in any of the currently enabled filter lists",
     "description": "Message to show when a filter cannot be found in any filter lists"
   },
   "loggerSettingDiscardPrompt": {
-    "message": "Loggerio įrašai, kurie neatitinka visų trijų žemiau esančių sąlygų bus automatiškai panaikinami",
+    "message": "Logger entries which do not fulfill all three conditions below will be automatically discarded:",
     "description": "Logger setting: A sentence to describe the purpose of the settings below"
   },
   "loggerSettingPerEntryMaxAge": {
-    "message": "Išsaugoti įrašus ne senesnius kaip {{input}} min.",
+    "message": "Preserve entries from the last {{input}} minutes",
     "description": "A logger setting"
   },
   "loggerSettingPerTabMaxLoads": {
@@ -848,55 +848,55 @@
     "description": "A logger setting"
   },
   "loggerSettingHideColumnsPrompt": {
-    "message": "Hide columns:",
+    "message": "ਕਾਲਮ ਲੁਕਾਓ:",
     "description": "Logger settings: a sentence to describe the purpose of the checkboxes below"
   },
   "loggerSettingHideColumnTime": {
-    "message": "{{input}} Time",
+    "message": "{{input}} ਸਮਾਂ",
     "description": "A label for the time column"
   },
   "loggerSettingHideColumnFilter": {
-    "message": "{{input}} Filter/rule",
+    "message": "{{input}} ਫਿਲਟਰ/ਨਿਯਮ",
     "description": "A label for the filter or rule column"
   },
   "loggerSettingHideColumnContext": {
-    "message": "{{input}} Context",
+    "message": "{{input}} ਪਰਸੰਗ",
     "description": "A label for the context column"
   },
   "loggerSettingHideColumnPartyness": {
-    "message": "{{input}} Partyness",
+    "message": "{{input}} ਬਿਨ-ਧਿਰ",
     "description": "A label for the partyness column"
   },
   "loggerExportFormatList": {
-    "message": "Sąrašas",
+    "message": "ਸੂਚੀ",
     "description": "Label for radio-button to pick export format"
   },
   "loggerExportFormatTable": {
-    "message": "Lentelė",
+    "message": "ਸਾਰਣੀ",
     "description": "Label for radio-button to pick export format"
   },
   "loggerExportEncodePlain": {
-    "message": "Neformatuotas",
+    "message": "ਸਰਲ",
     "description": "Label for radio-button to pick export text format"
   },
   "loggerExportEncodeMarkdown": {
-    "message": "Markdown",
+    "message": "ਮਾਰਕਡਾਊਨ",
     "description": "Label for radio-button to pick export text format"
   },
   "supportOpenButton": {
-    "message": "Atidaryti",
+    "message": "ਖੋਲ੍ਹੋ",
     "description": "Text for button which open an external webpage in Support pane"
   },
   "supportReportSpecificButton": {
-    "message": "Create new report",
+    "message": "ਨਵੀਂ ਰਿਪੋਰਟ ਬਣਾਓ",
     "description": "Text for button which open an external webpage in Support pane"
   },
   "supportFindSpecificButton": {
-    "message": "Find similar reports",
+    "message": "ਰਲਦੀਆਂ ਰਿਪੋਰਟਾਂ ਲੱਭੋ",
     "description": "A clickable link in the filter issue reporter section"
   },
   "supportS1H": {
-    "message": "Dokumentacija",
+    "message": "ਦਸਤਾਵੇਜ਼",
     "description": "Header of 'Documentation' section in Support pane"
   },
   "supportS1P1": {
@@ -904,7 +904,7 @@
     "description": "First paragraph of 'Documentation' section in Support pane"
   },
   "supportS2H": {
-    "message": "Questions and support",
+    "message": "ਸਵਾਲ ਅਤੇ ਸਹਿਯੋਗ",
     "description": "Header of 'Questions and support' section in Support pane"
   },
   "supportS2P1": {
@@ -912,7 +912,7 @@
     "description": "First paragraph of 'Questions and support' section in Support pane"
   },
   "supportS3H": {
-    "message": "Filter issues/website is broken",
+    "message": "ਫਿਲਟਰ ਮਸਲੇ/ਵੈੱਬਸਾਈਟ ਖਰਾਬ ਹੈ",
     "description": "Header of 'Filter issues' section in Support pane"
   },
   "supportS3P1": {
@@ -928,7 +928,7 @@
     "description": "Third paragraph of 'Filter issues' section in Support pane"
   },
   "supportS4H": {
-    "message": "Bug report",
+    "message": "ਬੱਗ ਰਿਪੋਰਟ",
     "description": "Header of 'Bug report' section in Support pane"
   },
   "supportS4P1": {
@@ -936,7 +936,7 @@
     "description": "First paragraph of 'Bug report' section in Support pane"
   },
   "supportS5H": {
-    "message": "Troubleshooting Information",
+    "message": "ਸਮੱਸਿਆ ਹੱਲ ਕਰਨ ਸੰਬੰਧੀ ਜਾਣਕਾਰੀ",
     "description": "Header of 'Troubleshooting Information' section in Support pane"
   },
   "supportS5P1": {
@@ -948,7 +948,7 @@
     "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
   },
   "supportS6H": {
-    "message": "Report a filter issue",
+    "message": "ਫਿਲਟਰ ਮਸਲੇ ਬਾਰੇ ਰਿਪੋਰਟ ਕਰੋ",
     "description": "Header of 'Report a filter issue' section in Support pane"
   },
   "supportS6P1S1": {
@@ -964,19 +964,19 @@
     "description": "A paragraph in the filter issue reporter section"
   },
   "supportS6URL": {
-    "message": "Address of the web page:",
+    "message": "ਵੈੱਬ ਸਾਈਟ ਦਾ ਸਿਰਨਾਵਾਂ:",
     "description": "Label for the URL of the page"
   },
   "supportS6Select1": {
-    "message": "The web page…",
+    "message": "ਵੈੱਬ ਸਫ਼ਾ…",
     "description": "Label for widget to select type of issue"
   },
   "supportS6Select1Option0": {
-    "message": "-- Pick an entry --",
+    "message": "-- ਐਂਟਰੀ ਚੁਣੋ --",
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Select1Option1": {
-    "message": "Shows ads or ad leftovers",
+    "message": "ਇਸ਼ਤਿਹਾਰ ਜਾਂ ਇਸ਼ਤਿਹਾਰ ਦੀ ਰਹਿੰਦ-ਖੂੰਦ ਦਿਖਾਉਂਦਾ ਹੈ",
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Select1Option2": {
@@ -984,11 +984,11 @@
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Select1Option3": {
-    "message": "Detects uBlock Origin",
+    "message": "uBlock Origin ਖੋਜਦਾ ਹੈ",
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Select1Option4": {
-    "message": "Has privacy-related issues",
+    "message": "ਪਰਦੇਦਾਰੀ ਸੰਬੰਧੀ ਮਸਲੇ ਹਨ",
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Select1Option5": {
@@ -996,7 +996,7 @@
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Select1Option6": {
-    "message": "Opens unwanted tabs or windows",
+    "message": "ਬੇਲੋੜੀਆਂ ਟੈਬਾਂ ਜਾਂ ਵਿੰਡੋ ਖੋਲ੍ਹਦਾ ਹੈ",
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Checkbox1": {
@@ -1012,35 +1012,35 @@
     "description": "Text for 'Unredact' button"
   },
   "aboutPrivacyPolicy": {
-    "message": "Privatumo politika",
+    "message": "ਪਰਦੇਦਾਰੀ ਨੀਤੀ",
     "description": "Link to privacy policy on GitHub (English)"
   },
   "aboutChangelog": {
-    "message": "Pakeitimų žurnalas",
+    "message": "ਤਬਦੀਲੀ-ਸੂਚੀ",
     "description": ""
   },
   "aboutCode": {
-    "message": "Pirminis tekstas (GPLv3)",
+    "message": "ਸਰੋਤ ਕੋਡ (GPLv3)",
     "description": "English: Source code (GPLv3)"
   },
   "aboutContributors": {
-    "message": "Talkininkai",
+    "message": "ਯੋਗਦਾਨੀ",
     "description": "English: Contributors"
   },
   "aboutSourceCode": {
-    "message": "Programinis kodas",
+    "message": "ਸਰੋਤ ਕੋਡ",
     "description": "Link text to source code repo"
   },
   "aboutTranslations": {
-    "message": "Vertimai",
+    "message": "ਅਨੁਵਾਦ",
     "description": "Link text to translations repo"
   },
   "aboutFilterLists": {
-    "message": "Filtrų sąrašai",
+    "message": "ਫਿਲਟਰ ਸੂਚੀਆਂ",
     "description": "Link text to uBO's own filter lists repo"
   },
   "aboutDependencies": {
-    "message": "Išorinės priklausomybės (suderinamos su „GPLv3“):",
+    "message": "External dependencies (GPLv3-compatible):",
     "description": "Shown in the About pane"
   },
   "aboutCDNs": {
@@ -1052,139 +1052,139 @@
     "description": "Shown in the About pane"
   },
   "aboutBackupDataButton": {
-    "message": "Padaryti atsarginę kopiją į failą",
+    "message": "ਫ਼ਾਈਲ ਤੋਂ ਬੈਕਅੱਪ ਲਵੋ…",
     "description": "Text for button to create a backup of all settings"
   },
   "aboutBackupFilename": {
-    "message": "mano-ublock-atsarginė_kopija_{{datetime}}.txt",
+    "message": "my-ublock-backup_{{datetime}}.txt",
     "description": "English: my-ublock-backup_{{datetime}}.txt"
   },
   "aboutRestoreDataButton": {
-    "message": "Atkurti iš failo...",
+    "message": "…ਫ਼ਾਈਲ ਤੋਂ ਬਹਾਲ ਕਰੋ",
     "description": "English: Restore from file..."
   },
   "aboutResetDataButton": {
-    "message": "Atkurti numatytuosius nustatymus...",
+    "message": "…ਮੂਲ ਸੈਟਿੰਗਾਂ ਬਹਾਲ ਕਰੋ",
     "description": "English: Reset to default settings..."
   },
   "aboutRestoreDataConfirm": {
-    "message": "Visi jūsų nustatymai bus perrašyti naudojant duomenis iš {{time}} atsarginės kopijos, o uBlock₀ bus perleistas.\n\nPerrašyti visus nustatymus naudojant atsarginės kopijos duomenis?",
+    "message": "All your settings will be overwritten using data backed up on {{time}}, and uBlock₀ will restart.\n\nOverwrite all existing settings using backed up data?",
     "description": "Message asking user to confirm restore"
   },
   "aboutRestoreDataError": {
-    "message": "Nepavyko nuskaityti duomenų arba jie neteisingi",
+    "message": "The data could not be read or is invalid",
     "description": "Message to display when an error occurred during restore"
   },
   "aboutResetDataConfirm": {
-    "message": "Visi jūsų nustatymai bus pašalinti, o uBlock₀ bus perleistas.\n\nAtkurti uBlock₀ pradinius nustatymus?",
+    "message": "ਤੁਹਾਡੀਆਂ ਸਾਰੀਆਂ ਸੈਟਿੰਗਾਂ ਨੂੰ ਹਟਾਇਆ ਜਾਵੇਗਾ ਅਤੇ uBlock₀ ਮੁੜ-ਚਾਲੂ ਹੋਵੇਗਾ।\n\nਕੀ uBlock₀ ਨੂੰ ਫੈਕਟਰੀ ਸੈਟਿੰਗਾਂ ਲਈ ਮੁੜ-ਸੈੱਟ ਕਰਨਾ ਹੈ?",
     "description": "Message asking user to confirm reset"
   },
   "errorCantConnectTo": {
-    "message": "Tinklo klaida: {{msg}}",
+    "message": "ਨੈੱਟਵਰਕ ਗਲਤੀ: {{msg}}",
     "description": "English: Network error: {{msg}}"
   },
   "subscriberConfirm": {
-    "message": "uBlock₀: Pridėti šį URL į jūsų adaptuotų filtrų sąrašą?\n\nPavadinimas: „{{title}}“\nURL: {{url}}",
+    "message": "ਕੀ ਅੱਗੇ ਦਿੱਤੇ URL ਨੂੰ ਤੁਹਾਡੀਆਂ ਕਸਟਮ ਫਿਲਟਰ ਸੂਚੀਆਂ ਵਿੱਚ ਜੋੜਨਾ ਹੈ?\n\nਨਾਂ: \"{{title}}\"\nURL: {{url}}",
     "description": "No longer used"
   },
   "subscribeButton": {
-    "message": "Prenumeruoti",
+    "message": "ਮੈਂਬਰ ਬਣੋ",
     "description": "For the button used to subscribe to a filter list"
   },
   "elapsedOneMinuteAgo": {
-    "message": "prieš minutę",
+    "message": "ਮਿੰਟ ਪਹਿਲਾਂ",
     "description": "English: a minute ago"
   },
   "elapsedManyMinutesAgo": {
-    "message": "prieš {{value}} min.",
+    "message": "{{value}} ਮਿੰਟ ਪਹਿਲਾਂ",
     "description": "English: {{value}} minutes ago"
   },
   "elapsedOneHourAgo": {
-    "message": "prieš valandą",
+    "message": "ਘੰਟਾ ਪਹਿਲਾਂ",
     "description": "English: an hour ago"
   },
   "elapsedManyHoursAgo": {
-    "message": "prieš {{value}} val.",
+    "message": "{{value}} ਘੰਟੇ ਪਹਿਲਾਂ",
     "description": "English: {{value}} hours ago"
   },
   "elapsedOneDayAgo": {
-    "message": "prieš dieną",
+    "message": "ਇੱਕ ਦਿਨ ਪਹਿਲਾਂ",
     "description": "English: a day ago"
   },
   "elapsedManyDaysAgo": {
-    "message": "prieš {{value}} d.",
+    "message": "{{value}} ਦਿਨ ਪਹਿਲਾਂ",
     "description": "English: {{value}} days ago"
   },
   "showDashboardButton": {
-    "message": "Rodyti prietaisų skydą",
+    "message": "ਡੈਸ਼ਬੋਰਡ ਵੇਖਾਓ",
     "description": "Firefox/Fennec-specific: Show Dashboard"
   },
   "showNetworkLogButton": {
-    "message": "Rodyti žurnalą",
+    "message": "ਲੌਗਰ ਵੇਖਾਓ",
     "description": "Firefox/Fennec-specific: Show Logger"
   },
   "fennecMenuItemBlockingOff": {
-    "message": "išjungta",
+    "message": "ਬੰਦ",
     "description": "Firefox-specific: appears as 'uBlock₀ (off)'"
   },
   "docblockedTitle": {
-    "message": "Puslapis užblokuotas",
+    "message": "ਸਫ਼ੇ ਉੱਤੇ ਪਾਬੰਦੀ ਹੈ",
     "description": "Used as a title for the document-blocked page"
   },
   "docblockedPrompt1": {
-    "message": "uBlock Origin neleido įkelti šio puslapio:",
+    "message": "uBlock Origin ਨੇ ਅੱਗੇ ਦਿੱਤੇ ਸਫ਼ੇ ਨੂੰ ਲੋਡ ਹੋਣ ਤੋਂ ਰੋਕਿਆ ਹੈ:",
     "description": "Used in the strict-blocking page"
   },
   "docblockedPrompt2": {
-    "message": "Dėl šio filtro",
+    "message": "ਅੱਗੇ ਦਿੱਤੇ ਫਿਲਟਰ ਕਰਕੇ:",
     "description": "Used in the strict-blocking page"
   },
   "docblockedNoParamsPrompt": {
-    "message": "be parametrų",
+    "message": "ਬਿਨਾਂ ਪੈਰਾਮੀਟਰ",
     "description": "label to be used for the parameter-less URL: https://cloud.githubusercontent.com/assets/585534/9832014/bfb1b8f0-593b-11e5-8a27-fba472a5529a.png"
   },
   "docblockedFoundIn": {
-    "message": "Rasta:",
+    "message": "ਲੱਭੋ:",
     "description": "English: List of filter list names follows"
   },
   "docblockedBack": {
-    "message": "Grįžti",
+    "message": "ਪਿੱਛੇ ਜਾਓ",
     "description": "English: Go back"
   },
   "docblockedClose": {
-    "message": "Užverti langą",
+    "message": "ਇਹ ਵਿੰਡੋ ਬੰਦ ਕਰੋ",
     "description": "English: Close this window"
   },
   "docblockedDontWarn": {
-    "message": "Don't warn me again about this site",
+    "message": "ਇਸ ਸਾਈਟ ਬਾਰੇ ਮੈਨੂੰ ਮੁੜ ਚੇਤਾਵਨੀ ਨਾ ਦਿਓ",
     "description": "Label for checkbox in document-blocked page"
   },
   "docblockedProceed": {
-    "message": "Išjungti griežtą {{hostname}} blokavimą",
+    "message": "{{hostname}} ਲਈ ਸਖ਼ਤ ਪਾਬੰਦੀਆਂ ਲਾਉਣਾ ਅਸਮਰੱਥ ਕਰੋ",
     "description": "English: Disable strict blocking for {{hostname}} ..."
   },
   "docblockedDisableTemporary": {
-    "message": "Laikinai",
+    "message": "ਆਰਜ਼ੀ",
     "description": "English: Temporarily"
   },
   "docblockedDisablePermanent": {
-    "message": "Negrįžtamai",
+    "message": "ਪੱਕੇ ਤੌਰ ਉੱਤੇ",
     "description": "English: Permanently"
   },
   "docblockedDisable": {
-    "message": "Proceed",
+    "message": "ਜਾਰੀ ਰੱਖੋ",
     "description": "Button text to navigate to the blocked page"
   },
   "cloudPush": {
-    "message": "Eksportuoti į nuotolinę saugyklą",
+    "message": "ਕਲਾਉਡ ਸਟੋਰੇਜ਼ ਉੱਤੇ ਐਕਸਪੋਰਟ ਕਰੋ",
     "description": "tooltip"
   },
   "cloudPull": {
-    "message": "Importuoti iš nuotolinės saugyklos",
+    "message": "ਕਲਾਉਡ ਸਟੋਰੇਜ਼ ਤੋਂ ਇੰਪੋਰਟ ਕਰੋ",
     "description": "tooltip"
   },
   "cloudPullAndMerge": {
-    "message": "Importuoti iš nuotolinės saugyklos ir sulieti su dabartiniais nustatymais",
+    "message": "ਕਲਾਉਡ ਸਟੋਰੇਜ਼ ਤੋਂ ਇੰਪੋਰਟ ਕਰੋ ਅਤੇ ਮੌਜੂਦਾ ਸੈਟਿੰਗਾਂ ਨਾਲ ਮਿਲਾਓ",
     "description": "tooltip"
   },
   "cloudNoData": {
@@ -1192,47 +1192,47 @@
     "description": ""
   },
   "cloudDeviceNamePrompt": {
-    "message": "Šio įrenginio vardas:",
+    "message": "ਇਸ ਡਿਵਾਈਸ ਦਾ ਨਾਂ:",
     "description": "used as a prompt for the user to provide a custom device name"
   },
   "advancedSettingsWarning": {
-    "message": "Įspėjimas! Keiskite šiuos sudėtingesnius nustatymus savo rizika.",
+    "message": "ਸਾਵਧਾਨ! ਇਹ ਤਕਨੀਕੀ ਸੈਟਿੰਗਾਂ ਨੂੰ ਆਪਣੇ ਖ਼ਤਰੇ ਮੁਤਾਬਕ ਬਦਲੋ।",
     "description": "A warning to users at the top of 'Advanced settings' page"
   },
   "genericSubmit": {
-    "message": "Pateikti",
+    "message": "ਭੇਜੋ",
     "description": "for generic 'Submit' buttons"
   },
   "genericApplyChanges": {
-    "message": "Taikyti pakeitimus",
+    "message": "ਤਬਦੀਲੀਆਂ ਲਾਗੂ ਕਰੋ",
     "description": "for generic 'Apply changes' buttons"
   },
   "genericRevert": {
-    "message": "Atstatyti",
+    "message": "ਵਾਪਸ ਲਵੋ",
     "description": "for generic 'Revert' buttons"
   },
   "genericBytes": {
-    "message": "baitai",
+    "message": "ਬਾਈਟ",
     "description": ""
   },
   "contextMenuBlockElementInFrame": {
-    "message": "Block element in frame…",
+    "message": "ਫਰੇਮ ਵਿੱਚ ਭਾਗ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਈ…",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuSubscribeToList": {
-    "message": "Subscribe to filter list…",
+    "message": "ਫਿਲਟਰ ਸੂਚੀ ਲਈ ਮੈਂਬਰ ਬਣੋ…",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuTemporarilyAllowLargeMediaElements": {
-    "message": "Laikinai leisti didelius medijos elementus",
+    "message": "ਆਰਜ਼ੀ ਤੌਰ ਉੱਤੇ ਵੱਡੇ ਮੀਡੀਆ ਭਾਗਾਂ ਨੂੰ ਮਨਜ਼ੂਰੀ ਦਿਓ",
     "description": "A context menu entry, present when large media elements have been blocked on the current site"
   },
   "contextMenuViewSource": {
-    "message": "View source code…",
+    "message": "ਸਰੋਤ ਕੋਡ ਵੇਖੋ…",
     "description": "A context menu entry, to view the source code of the target resource"
   },
   "shortcutCapturePlaceholder": {
-    "message": "Įveskite nuorodą",
+    "message": "ਸ਼ਾਰਟਕੱਟ ਲਿਖੋ",
     "description": "Placeholder string for input field used to capture a keyboard shortcut"
   },
   "genericMergeViewScrollLock": {
@@ -1240,11 +1240,11 @@
     "description": "Tooltip for the button used to lock scrolling between the views in the 'My rules' pane"
   },
   "genericCopyToClipboard": {
-    "message": "Kopijuoti į iškarpinę",
+    "message": "ਕਲਿੱਪਬੋਰਡ ਵਿੱਚ ਕਾਪੀ ਕਰੋ",
     "description": "Label for buttons used to copy something to the clipboard"
   },
   "genericSelectAll": {
-    "message": "Select all",
+    "message": "ਸਭ ਚੁਣੋ",
     "description": "Label for buttons used to select all text in editor"
   },
   "toggleCosmeticFiltering": {
@@ -1256,7 +1256,7 @@
     "description": "Label for keyboard shortcut used to relax blocking mode"
   },
   "storageUsed": {
-    "message": "Storage used: {{value}} {{unit}}",
+    "message": "ਵਰਤੀ ਗਈ ਸਟੋਰੇਜ਼: {{value}} {{unit}}",
     "description": " In Setting pane, renders as (example): Storage used: 13.2 MB"
   },
   "KB": {
@@ -1272,11 +1272,11 @@
     "description": "short for 'gigabytes'"
   },
   "clickToLoad": {
-    "message": "Click to load",
+    "message": "ਲੋਡ ਕਰਨ ਲਈ ਕਲਿੱਕ ਕਰੋ",
     "description": "Message used in frame placeholders"
   },
   "linterMainReport": {
-    "message": "Errors: {{count}}",
+    "message": "ਗਲਤੀਆਂ: {{count}}",
     "description": "Summary of number of errors as reported by the linter "
   },
   "unprocessedRequestTooltip": {
