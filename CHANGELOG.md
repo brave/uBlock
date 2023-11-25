@@ -1,3 +1,12 @@
+## Fixes / changes
+
+- [Improve `prevent-fetch` scriptlet](https://github.com/gorhill/uBlock/commit/6aeab2adbc)
+- [Catch cases of `! Expires:` field with no value](https://github.com/gorhill/uBlock/commit/9ce958432d)
+
+----------
+
+# 1.54.0
+
 ## New
 
 Differential update of filter lists, as a result of discussions at <https://github.com/AdguardTeam/FiltersCompiler/issues/192>. Resulting spec is [here](https://github.com/ameshkov/diffupdates).
@@ -14,6 +23,7 @@ To benefit the much shorter update period enabled by differential updates, you m
 
 ## Fixes / changes
 
+- [Enable path for native `has()` selector in Firefox](https://github.com/gorhill/uBlock/commit/c5724c1cce)
 - [Allow scriptlets to be injected in `about:blank`](https://github.com/gorhill/uBlock/commit/3fd2588650)
 - [Fix faulty `as` vararg in `set-constant` scriptlet](https://github.com/gorhill/uBlock/commit/c292a90b90)
 - [Add support to redirect to `noop.json`](https://github.com/gorhill/uBlock/commit/bd8a91ed3a)
@@ -37,5 +47,3 @@ To benefit the much shorter update period enabled by differential updates, you m
 - [Add support for differential update of filter lists](https://github.com/gorhill/uBlock/commit/d05ff8ffeb)
 
 ----------
-
-Older release notes go here.
