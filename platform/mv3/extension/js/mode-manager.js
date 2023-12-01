@@ -34,6 +34,7 @@ import {
 } from './ext.js';
 
 import {
+    broadcastMessage,
     hostnamesFromMatches,
     isDescendantHostnameOfIter,
     toBroaderHostname,
@@ -271,6 +272,16 @@ async function writeFilteringModeDetails(afterDetails) {
     localWrite('filteringModeDetails', data);
     sessionWrite('filteringModeDetails', data);
     readFilteringModeDetails.cache = unserializeModeDetails(data);
+
+    Promise.all([
+        getDefaultFilteringMode(),
+        getTrustedSites(),
+    ]).then(results => {
+        broadcastMessage({
+            defaultFilteringMode: results[0],
+            trustedSites: Array.from(results[1]),
+        });
+    });
 }
 
 /******************************************************************************/
@@ -350,6 +361,35 @@ export function getDefaultFilteringMode() {
 
 export function setDefaultFilteringMode(afterLevel) {
     return setFilteringMode('all-urls', afterLevel);
+}
+
+/******************************************************************************/
+
+export async function getTrustedSites() {
+    const filteringModes = await getFilteringModeDetails();
+    return filteringModes.none;
+}
+
+export async function setTrustedSites(hostnames) {
+    const filteringModes = await getFilteringModeDetails();
+    const { none } = filteringModes;
+    const hnSet = new Set(hostnames);
+    let modified = false;
+    for ( const hn of none ) {
+        if ( hnSet.has(hn) ) {
+            hnSet.delete(hn);
+        } else {
+            none.delete(hn);
+            modified = true;
+        }
+    }
+    for ( const hn of hnSet ) {
+        const level = applyFilteringMode(filteringModes, hn, MODE_NONE);
+        if ( level !== MODE_NONE ) { continue; }
+        modified = true;
+    }
+    if ( modified === false ) { return; }
+    return writeFilteringModeDetails(filteringModes);
 }
 
 /******************************************************************************/

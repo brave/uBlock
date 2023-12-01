@@ -372,7 +372,7 @@
     "description": ""
   },
   "settingPerSiteSwitchGroupSynopsis": {
-    "message": "These default behaviors can be overridden on a per-site basis",
+    "message": "Gallout a reer erlec'hiañ an emzalc'hioù-se dre ziouer e lec'hiennoù resis",
     "description": ""
   },
   "settingsNoCosmeticFilteringPrompt": {
@@ -396,7 +396,7 @@
     "description": "background information: https://github.com/gorhill/uBlock/issues/3150"
   },
   "settingsUncloakCnamePrompt": {
-    "message": "Uncloak canonical names",
+    "message": "Diskouez an anvioù gwir (CNAME)",
     "description": "background information: https://github.com/uBlockOrigin/uBlock-issues/issues/1513"
   },
   "settingsAdvanced": {
@@ -444,7 +444,7 @@
     "description": "English: Parse and enforce Adblock+ element hiding filters."
   },
   "3pParseAllABPHideFiltersInfo": {
-    "message": "Cosmetic filters serve to hide elements in a web page which are deemed to be a visual nuisance, and which can't be blocked by the network request-based filtering engines.",
+    "message": "Ar siloù kenedel a servij da guzhat elfennoù ur bajenn web a c'hallfe bezañ noazadurioù d'ar gwelet ha ne c'hallont ket bezañ stanket gant silañ ar rouedad diazezet war ar rekedoù.",
     "description": "Describes the purpose of the 'Parse and enforce cosmetic filters' feature."
   },
   "3pIgnoreGenericCosmeticFilters": {
@@ -488,7 +488,7 @@
     "description": "Filter lists section name"
   },
   "3pGroupMultipurpose": {
-    "message": "Implijoù a bep seurt",
+    "message": "Siloù lies-implij",
     "description": "Filter lists section name"
   },
   "3pGroupRegions": {
@@ -504,7 +504,7 @@
     "description": "The label for the checkbox used to import external filter lists"
   },
   "3pExternalListsHint": {
-    "message": "Un URL dre linenn. Didrouz e reor fae ouzh an URLoù direizh.",
+    "message": "Un URL dre linenn. Graet e vo fae ouzh an URLoù direizh.",
     "description": "Short information about how to use the textarea to import external filter lists by URL"
   },
   "3pExternalListObsolete": {
@@ -512,7 +512,7 @@
     "description": "used as a tooltip for the out-of-date icon beside a list"
   },
   "3pViewContent": {
-    "message": "gwelet an danvezioù",
+    "message": "gwelet an endalc'had",
     "description": "used as a tooltip for eye icon beside a list"
   },
   "3pLastUpdate": {
@@ -696,7 +696,7 @@
     "description": "Tooltip for the row filterer button in the logger page"
   },
   "logFilterPrompt": {
-    "message": "Silañ danvez an deizlevr",
+    "message": "Silañ endalc'had an deizlevr",
     "description": "Placeholder string for logger output filtering input field"
   },
   "loggerRowFiltererBuiltinTip": {
@@ -908,7 +908,7 @@
     "description": "Header of 'Questions and support' section in Support pane"
   },
   "supportS2P1": {
-    "message": "Er subreddit <code>/r/uBlockOrigin</code> e c'hallit kavout respontoù d'ho koulennoù hag a bep seurt skoazell all.",
+    "message": "Er subreddit <code>/r/uBlockOrigin</code> e c'hallit kavout respontoù d'ho koulennoù hag a bep seurt skoazelloù all.",
     "description": "First paragraph of 'Questions and support' section in Support pane"
   },
   "supportS3H": {
