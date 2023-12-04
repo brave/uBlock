@@ -1,6 +1,6 @@
 /*******************************************************************************
 
-    uBlock Origin - a browser extension to block requests.
+    uBlock Origin - a comprehensive, efficient content blocker
     Copyright (C) 2020-present Raymond Hill
 
     This program is free software: you can redistribute it and/or modify
@@ -3066,6 +3066,7 @@ export const netOptionTokenDescriptors = new Map([
     [ 'object', { canNegate: true } ],
     /* synonym */ [ 'object-subrequest', { canNegate: true } ],
     [ 'other', { canNegate: true } ],
+    [ 'permissions', { mustAssign: true } ],
     [ 'ping', { canNegate: true } ],
     /* synonym */ [ 'beacon', { canNegate: true } ],
     [ 'popunder', { } ],
