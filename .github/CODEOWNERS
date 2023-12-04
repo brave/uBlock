@@ -1,3 +1,4 @@
-assets/resources/scriptlets.js @pes10k
-src/web_accessible_resources/* @pes10k
-src/js/redirect-engine.js @pes10k
+assets/assets.json @bcaller
+assets/resources/scriptlets.js @bcaller
+web_accessible_resources/* @bcaller
+js/redirect-resources.js @bcaller
