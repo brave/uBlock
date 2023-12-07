@@ -40,8 +40,6 @@ jobs:
           auto_approve: false
           ignore_fail: true
           token: ${{ secrets.GH_PAT }}
-        secrets:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}  
   update-pr-desc:
     needs: sync
     runs-on: ubuntu-latest
