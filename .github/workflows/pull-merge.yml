@@ -1,9 +1,7 @@
 name: puLL-Merge
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
-    branches: [master]
-
+  pull_request_target:
+    
 jobs:
   pull-merge:
     name: security
