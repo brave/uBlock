@@ -39,7 +39,7 @@ jobs:
           head: master
           auto_approve: false
           ignore_fail: true
-          token: ${{ secrets.GH_PAT }}
+          token: ${{ secrets.GH_PAT }} # trigger again
   update-pr-desc:
     needs: sync
     runs-on: ubuntu-latest
