@@ -4,7 +4,8 @@ on:
     # * is a special character in YAML so you have to quote this string
     - cron: "0 * * * *"
   workflow_dispatch:
-
+  pull_request:
+  
 jobs:
   check-for-changes:
     runs-on: ubuntu-latest
