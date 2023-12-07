@@ -34,9 +34,9 @@ jobs:
     steps:
       - uses: tgymnich/fork-sync@v1.6.3
         with:
-          owner: gorhill
+          owner: brave
           base: master
-          head: master
+          head: features/use-gh-pat-oops
           auto_approve: false
           ignore_fail: true
           token: ${{ secrets.GH_PAT }}
