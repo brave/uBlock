@@ -28,22 +28,33 @@ jobs:
         if: steps.check-for-changes.outputs.changes-present == 'false'
         run: echo "No changes needed to be synchronised"
   sync:
-    needs: check-for-changes
     if: ${{ needs.check-for-changes.outputs.changes == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: tgymnich/fork-sync@v1.6.3
-        with:
-          owner: gorhill
-          base: master
-          head: master
-          auto_approve: false
-          ignore_fail: true
-  update-pr-desc:
-    needs: sync
-    runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    needs: check-for-changes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create mirror branch
+        run: |
+          git clone "https://github.com/gorhill/${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}"
+          cd ${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}
+          git checkout -b mirror
+          git remote add github "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git"
+          git push -u github mirror
+  create-pr:
+    env:
+      GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+    needs: sync
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create PR
+        run: |
+          gh pr create --title "Fork Sync: Update from parent repository" --body "This PR was automatically created by a GitHub Action triggered by a cron schedule. Please review the changes and merge if appropriate." --base master --head mirror --repo ${GITHUB_REPOSITORY} || true
+  update-pr-desc:
+    needs: create-pr
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GH_PAT }}
       UPSTREAM_URL: "https://github.com/gorhill/ublock.git"
     steps:
       - uses: actions/checkout@v3
