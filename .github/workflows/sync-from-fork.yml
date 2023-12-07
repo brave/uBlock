@@ -44,7 +44,7 @@ jobs:
     needs: sync
     runs-on: ubuntu-latest
     env:
-      GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       UPSTREAM_URL: "https://github.com/gorhill/ublock.git"
     steps:
       - uses: actions/checkout@v3
