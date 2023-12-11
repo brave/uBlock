@@ -43,18 +43,18 @@ jobs:
           git push -u github mirror
   create-pr:
     env:
-      GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     needs: sync
     runs-on: ubuntu-latest
     steps:
       - name: Create PR
         run: |
           gh pr create --title "Fork Sync: Update from parent repository" --body "This PR was automatically created by a GitHub Action triggered by a cron schedule. Please review the changes and merge if appropriate." --base master --head mirror --repo ${GITHUB_REPOSITORY} || true
-  update-pr-desc:
+  update-pr:
     needs: create-pr
     runs-on: ubuntu-latest
     env:
-      GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       UPSTREAM_URL: "https://github.com/gorhill/ublock.git"
     steps:
       - uses: actions/checkout@v3
@@ -71,5 +71,16 @@ jobs:
           done;
 
           git remote remove upstream
+      - name: Set PR Number to env
+        run: echo "PR_NUMBER=`gh pr list | grep 'Fork Sync' | awk {'print $1'}`" >> $GITHUB_ENV
       - name: Update PR Description
-        run: gh pr edit `gh pr list | grep 'Fork Sync' | awk {'print $1'}` -b "`cat "changes.txt"`"
+        run: gh pr edit $PR_NUMBER -b "`cat "changes.txt"`"
+      - name: Run puLL-Merge
+        uses: brave/pull-merge@main
+        with:
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          prnum: ${{ env.PR_NUMBER }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          filterdiff_args: --include=**/assets/assets.json --include=**/assets/resources/scriptlets.js --include=**/web_accessible_resources/ --include=**/js/redirect-resources.js
