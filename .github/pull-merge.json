@@ -1,4 +1,0 @@
-{
-    "filterdiff_args":"--include=assets/assets.json --include=assets/resources/scriptlets.js --include=web_accessible_resources/ --include=js/redirect-resources.js",
-    "amplification": "2"
-}
