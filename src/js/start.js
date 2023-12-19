@@ -63,13 +63,6 @@ import {
 
 /******************************************************************************/
 
-// Load all: executed once.
-
-(async ( ) => {
-// >>>>> start of private scope
-
-/******************************************************************************/
-
 vAPI.app.onShutdown = ( ) => {
     staticFilteringReverseLookup.shutdown();
     io.updateStop();
@@ -312,10 +305,10 @@ const onHiddenSettingsReady = async ( ) => {
     }
 
     // Maybe override default cache storage
-    const cacheBackend = await cacheStorage.select(
+    µb.supportStats.cacheBackend = await cacheStorage.select(
         µb.hiddenSettings.cacheStorageAPI
     );
-    ubolog(`Backend storage for cache will be ${cacheBackend}`);
+    ubolog(`Backend storage for cache will be ${µb.supportStats.cacheBackend}`);
 };
 
 /******************************************************************************/
@@ -379,6 +372,9 @@ const createDefaultProps = ( ) => {
 
 /******************************************************************************/
 
+(async ( ) => {
+// >>>>> start of async/await scope
+    
 try {
     ubolog(`Start sequence of loading storage-based data ${Date.now()-vAPI.T0} ms after launch`);
 
@@ -478,11 +474,11 @@ lz4Codec.relinquish();
 // https://github.com/chrisaljoudi/uBlock/issues/184
 //   Check for updates not too far in the future.
 io.addObserver(µb.assetObserver.bind(µb));
-µb.scheduleAssetUpdater(
-    µb.userSettings.autoUpdate
+µb.scheduleAssetUpdater({
+    updateDelay: µb.userSettings.autoUpdate
         ? µb.hiddenSettings.autoUpdateDelayAfterLaunch * 1000
         : 0
-);
+});
 
 // Force an update of the context menu according to the currently
 // active tab.
@@ -506,5 +502,7 @@ if ( selfieIsValid ) {
 }
 ubolog(`All ready ${µb.supportStats.allReadyAfter} after launch`);
 
-// <<<<< end of private scope
+µb.isReadyResolve();
+
+// <<<<< end of async/await scope
 })();

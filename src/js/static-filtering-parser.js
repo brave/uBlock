@@ -273,7 +273,7 @@ export const nodeTypeFromOptionName = new Map([
     [ 'shide', NODE_TYPE_NET_OPTION_NAME_SHIDE ],
     /* synonym */ [ 'specifichide', NODE_TYPE_NET_OPTION_NAME_SHIDE ],
     [ 'to', NODE_TYPE_NET_OPTION_NAME_TO ],
-    [ 'urltransform', NODE_TYPE_NET_OPTION_NAME_URLTRANSFORM ],
+    [ 'uritransform', NODE_TYPE_NET_OPTION_NAME_URLTRANSFORM ],
     [ 'xhr', NODE_TYPE_NET_OPTION_NAME_XHR ],
     /* synonym */ [ 'xmlhttprequest', NODE_TYPE_NET_OPTION_NAME_XHR ],
     [ 'webrtc', NODE_TYPE_NET_OPTION_NAME_WEBRTC ],
@@ -1224,6 +1224,7 @@ export class AstFilterParser {
                 ? NODE_TYPE_PREPARSE_DIRECTIVE_IF_VALUE
                 : NODE_TYPE_PREPARSE_DIRECTIVE_VALUE;
             const next = this.allocTypedNode(type, directiveEnd, parentEnd);
+            this.addNodeToRegister(type, next);
             this.linkRight(head, next);
             if ( type === NODE_TYPE_PREPARSE_DIRECTIVE_IF_VALUE ) {
                 const rawToken = this.getNodeString(next).trim();
@@ -3081,7 +3082,7 @@ export const netOptionTokenDescriptors = new Map([
     [ 'shide', { } ],
     /* synonym */ [ 'specifichide', { } ],
     [ 'to', { mustAssign: true } ],
-    [ 'urltransform', { mustAssign: true } ],
+    [ 'uritransform', { mustAssign: true } ],
     [ 'xhr', { canNegate: true } ],
     /* synonym */ [ 'xmlhttprequest', { canNegate: true } ],
     [ 'webrtc', { } ],
