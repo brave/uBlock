@@ -271,10 +271,10 @@ body[dir="rtl"] #netInspector #filterExprPicker {
     color: white;
     }
 #vwRenderer .logEntry > div[data-type="error"] {
-    color: #800;
+    color: var(--sf-error-ink);
     }
 #vwRenderer .logEntry > div[data-type="info"] {
-    color: #008;
+    color: var(--sf-def-ink);
     }
 #vwRenderer .logEntry > div.voided {
     opacity: 0.5;
@@ -309,8 +309,11 @@ body[dir="rtl"] #vwRenderer .logEntry > div > span:first-child {
     }
 #vwRenderer .logEntry > div > span:nth-of-type(2) {
     }
-#vwRenderer #vwContent .logEntry > div > span:nth-of-type(2) {
+#vwRenderer .logEntry > div > span:nth-of-type(2) {
     text-overflow: ellipsis;
+    }
+#vwRenderer .logEntry > div.messageRealm > span:nth-of-type(2) ~ span {
+    display: none;
     }
 .vExpanded #vwRenderer #vwContent .logEntry > div > span:nth-of-type(2) {
     overflow-y: auto;

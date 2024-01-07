@@ -671,7 +671,7 @@ const viewPort = (( ) => {
             `  width: calc(calc(100% - ${reservedWidth}px) * ${cellWidths[COLUMN_FILTER]});`,
             '}',
             `#vwContent .logEntry > div.messageRealm > span:nth-of-type(${COLUMN_MESSAGE+1}) {`,
-            `  width: calc(100% - ${cellWidths[COLUMN_MESSAGE]}px);`,
+            `  width: calc(100% - ${cellWidths[COLUMN_TIMESTAMP]}px);`,
             '}',
             `#vwContent .logEntry > div > span:nth-of-type(${COLUMN_RESULT+1}) {`,
             `  width: ${cellWidths[COLUMN_RESULT]}px;`,
@@ -2250,6 +2250,23 @@ const rowFilterer = (( ) => {
     dom.on('#filterExprPicker', 'click', '[data-filtex]', ev => {
         dom.cl.toggle(ev.target, 'on');
         builtinFilterExpression();
+    });
+    dom.on('#filterInput > input', 'drop', ev => {
+        const dropItem = item => {
+            if ( item.kind !== 'string' ) { return false; }
+            if ( item.type !== 'text/plain' ) { return false; }
+            item.getAsString(s => {
+                qs$('#filterInput > input').value = s;
+                parseInput();
+                filterAll();
+            });
+            return true;
+        };
+        for ( const item of ev.dataTransfer.items ) {
+            if ( dropItem(item) === false ) { continue; }
+            ev.preventDefault();
+            break;
+        }
     });
 
     // https://github.com/gorhill/uBlock/issues/404

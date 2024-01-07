@@ -718,13 +718,7 @@ const retrieveContentScriptParameters = async function(sender, request) {
     if ( logger.enabled || request.needScriptlets ) {
         const scriptletDetails = scriptletFilteringEngine.injectNow(request);
         if ( scriptletDetails !== undefined ) {
-            if ( logger.enabled ) {
-                scriptletFilteringEngine.logFilters(
-                    tabId,
-                    request.url,
-                    scriptletDetails.filters
-                );
-            }
+            scriptletFilteringEngine.toLogger(request, scriptletDetails);
             if ( request.needScriptlets ) {
                 response.scriptletDetails = scriptletDetails;
             }
