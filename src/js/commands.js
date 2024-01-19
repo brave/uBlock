@@ -136,8 +136,11 @@ vAPI.commands.onCommand.addListener(async command => {
     // Tab-specific commands
     const tab = await vAPI.tabs.getCurrent();
     if ( tab instanceof Object === false ) { return; }
+
     switch ( command ) {
     case 'launch-element-picker':
+        if ( µb.userFiltersAreEnabled() === false ) { break; }
+        /* fall through */
     case 'launch-element-zapper': {
         µb.epickerArgs.mouse = false;
         µb.elementPickerExec(
@@ -167,6 +170,13 @@ vAPI.commands.onCommand.addListener(async command => {
             name: 'no-cosmetic-filtering',
             hostname: hostnameFromURI(µb.normalizeTabURL(tab.id, tab.url)),
         });
+        break;
+    case 'toggle-javascript':
+        µb.toggleHostnameSwitch({
+            name: 'no-scripting',
+            hostname: hostnameFromURI(µb.normalizeTabURL(tab.id, tab.url)),
+        });
+        vAPI.tabs.reload(tab.id);
         break;
     default:
         break;

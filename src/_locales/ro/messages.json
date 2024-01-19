@@ -56,7 +56,7 @@
     "description": "appears as tab name in dashboard"
   },
   "supportPageName": {
-    "message": "Ajută-ne",
+    "message": "Asistență",
     "description": "appears as tab name in dashboard"
   },
   "assetViewerPageName": {
@@ -1250,6 +1250,10 @@
   "toggleCosmeticFiltering": {
     "message": "Comută filtrele cosmetice",
     "description": "Label for keyboard shortcut used to toggle cosmetic filtering"
+  },
+  "toggleJavascript": {
+    "message": "Toggle JavaScript",
+    "description": "Label for keyboard shortcut used to toggle no-scripting switch"
   },
   "relaxBlockingMode": {
     "message": "Relaxați modul de blocare",

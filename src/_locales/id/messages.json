@@ -704,7 +704,7 @@
     "description": "Tooltip for the button to bring up logger output filtering options"
   },
   "loggerRowFiltererBuiltinNot": {
-    "message": "Bukan",
+    "message": "Tidak",
     "description": "A keyword in the built-in row filtering expression"
   },
   "loggerRowFiltererBuiltinEventful": {
@@ -1250,6 +1250,10 @@
   "toggleCosmeticFiltering": {
     "message": "Aktif/Nonaktifkan filter tampilan",
     "description": "Label for keyboard shortcut used to toggle cosmetic filtering"
+  },
+  "toggleJavascript": {
+    "message": "Aktif/Nonaktifkan JavaScript",
+    "description": "Label for keyboard shortcut used to toggle no-scripting switch"
   },
   "relaxBlockingMode": {
     "message": "Perlonggar mode pemblokiran",

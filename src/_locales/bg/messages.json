@@ -708,7 +708,7 @@
     "description": "A keyword in the built-in row filtering expression"
   },
   "loggerRowFiltererBuiltinEventful": {
-    "message": "eventful",
+    "message": "изпълнен със събития",
     "description": "A keyword in the built-in row filtering expression: all items corresponding to uBO doing something (blocked, allowed, redirected, etc.)"
   },
   "loggerRowFiltererBuiltinBlocked": {
@@ -1250,6 +1250,10 @@
   "toggleCosmeticFiltering": {
     "message": "Превключване на козметичното филтриране",
     "description": "Label for keyboard shortcut used to toggle cosmetic filtering"
+  },
+  "toggleJavascript": {
+    "message": "Превключване на JavaScript",
+    "description": "Label for keyboard shortcut used to toggle no-scripting switch"
   },
   "relaxBlockingMode": {
     "message": "Отпуснат режим на блокиране",

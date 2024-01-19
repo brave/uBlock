@@ -1,5 +1,16 @@
 ## Fixes / changes
 
+- [Allow `uritransform` to process the hash part of a URL](https://github.com/gorhill/uBlock/commit/b19094339f)
+- [Remember presentation state of "My rules" pane](https://github.com/gorhill/uBlock/commit/3d1b100646)
+- [Fix improperly assembled `!#include` sublists](https://github.com/gorhill/uBlock/commit/0e00010b91)
+- [Mark procedural filters with pseudo-elements selector as invalid](https://github.com/gorhill/uBlock/commit/757b8be9cd)
+- [Prevent access to picker when "My filters" is not enabled](https://github.com/gorhill/uBlock/commit/bc641fc024)
+- [Provide visual feedback when applying changes in "Filter lists" pane](https://github.com/gorhill/uBlock/commit/c4bb8a0f64)
+- [Empty query parameters must still use `=`](https://github.com/gorhill/uBlock/commit/1cac61a9a4)
+- [Add support to toggle no-scripting switch with keyboard shortcut](https://github.com/gorhill/uBlock/commit/936444883f)
+- [Do not exceed rate-limited calls to `handlerBehaviorChanged()`](https://github.com/gorhill/uBlock/commit/63fe18a761)
+- [Shield some code paths against potentially tampered global properties](https://github.com/gorhill/uBlock/commit/534d877e95) (in scriptlets)
+- [Do not prevent applying changes when lists are updating](https://github.com/gorhill/uBlock/commit/f6b726136c)
 - [Add `elements` vararg to `prevent-addEventListener` scriptlet](https://github.com/gorhill/uBlock/commit/060f9d68fc)
 - [Do not use tab character as field separator](https://github.com/gorhill/uBlock/commit/a9eb9630cf) (in logger)
 - [Prevent `:others()` from hiding `html` tag](https://github.com/gorhill/uBlock/commit/9a104bcbd2)

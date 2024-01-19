@@ -15,7 +15,8 @@ body {
 #buttonUpdate.active {
     pointer-events: none;
     }
-#buttonUpdate.active .fa-icon svg {
+#buttonUpdate.active .fa-icon svg,
+body.working #buttonUpdate:not(.disabled) .fa-icon svg {
     animation: spin 1s linear infinite;
     transform-origin: 50%;
     }
@@ -24,7 +25,7 @@ body.updating #actions,
 body.working #actions {
     cursor: progress;
     }
-body.updating #actions button,
+body.updating #actions #buttonUpdate,
 body.working #actions button {
     pointer-events: none;
     }
@@ -212,13 +213,14 @@ body.working #actions button {
     color: var(--info2-ink);
         fill: var(--info2-ink);
     }
-body:not(.updating) #lists .listEntry.checked.obsolete > .detailbar .iconbar .obsolete {
+body:not(.updating,.working) #lists .listEntry.checked.obsolete > .detailbar .iconbar .obsolete {
     display: inline-flex;
     }
 #lists .iconbar .updating {
     transform-origin: 50%;
     }
-body.updating #lists .listEntry.checked.obsolete > .detailbar .iconbar .updating {
+body.updating #lists .listEntry.checked.obsolete > .detailbar .iconbar .updating,
+body.working #lists .listEntry.checked.obsolete:not(.cached) > .detailbar .iconbar .updating {
     animation: spin 1s steps(8) infinite;
     display: inline-flex;
     }

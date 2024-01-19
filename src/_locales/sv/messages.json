@@ -1251,6 +1251,10 @@
     "message": "Växla kosmetisk filtrering",
     "description": "Label for keyboard shortcut used to toggle cosmetic filtering"
   },
+  "toggleJavascript": {
+    "message": "Växla JavaScript",
+    "description": "Label for keyboard shortcut used to toggle no-scripting switch"
+  },
   "relaxBlockingMode": {
     "message": "Lätta på blockeringsläge",
     "description": "Label for keyboard shortcut used to relax blocking mode"
