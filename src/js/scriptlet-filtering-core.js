@@ -98,10 +98,18 @@ const patchScriptlet = (content, arglist) => {
     );
 };
 
+const requote = s => {
+    if ( /^(["'`]).+\1$|,/.test(s) === false ) { return s; }
+    if ( s.includes("'") === false ) { return `'${s}'`; }
+    if ( s.includes('"') === false ) { return `"${s}"`; }
+    if ( s.includes('`') === false ) { return `\`${s}\``; }
+    return `'${s.replace(/'/g, "\\'")}'`;
+};
+
 const decompile = json => {
-    const args = JSON.parse(json).map(s => s.replace(/,/g, '\\,'));
+    const args = JSON.parse(json);
     if ( args.length === 0 ) { return '+js()'; }
-    return `+js(${args.join(', ')})`;
+    return `+js(${args.map(s => requote(s)).join(', ')})`;
 };
 
 /******************************************************************************/
@@ -251,16 +259,10 @@ export class ScriptletFilteringEngine {
         $mainWorldMap.clear();
         $isolatedWorldMap.clear();
 
-        if ( scriptletDetails.mainWorld === '' ) {
-            if ( scriptletDetails.isolatedWorld === '' ) {
-                return { filters: scriptletDetails.filters };
-            }
-        }
-    
-        const scriptletGlobals = options.scriptletGlobals || [];
+        const scriptletGlobals = options.scriptletGlobals || {};
 
         if ( options.debug ) {
-            scriptletGlobals.push([ 'canDebug', true ]);
+            scriptletGlobals.canDebug = true;
         }
 
         return {
@@ -271,7 +273,7 @@ export class ScriptletFilteringEngine {
                 options.debugScriptlets ? 'debugger;' : ';',
                 '',
                 // For use by scriptlets to share local data among themselves
-                `const scriptletGlobals = new Map(${JSON.stringify(scriptletGlobals, null, 2)});`,
+                `const scriptletGlobals = ${JSON.stringify(scriptletGlobals, null, 4)}`,
                 '',
                 scriptletDetails.mainWorld,
                 '',
@@ -285,7 +287,7 @@ export class ScriptletFilteringEngine {
                 options.debugScriptlets ? 'debugger;' : ';',
                 '',
                 // For use by scriptlets to share local data among themselves
-                `const scriptletGlobals = new Map(${JSON.stringify(scriptletGlobals, null, 2)});`,
+                `const scriptletGlobals = ${JSON.stringify(scriptletGlobals, null, 4)}`,
                 '',
                 scriptletDetails.isolatedWorld,
                 '',

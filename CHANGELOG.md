@@ -1,5 +1,10 @@
 ## Fixes / changes
 
+- [Output scriptlet logging information to the logger](https://github.com/gorhill/uBlock/commit/869a653fdf)
+- [Fix decompiling of scriptlet parameters](https://github.com/gorhill/uBlock/commit/49dd68ef3d)
+- [Add support for `extraMatch` in `trusted-click-element` scriptlet](https://github.com/gorhill/uBlock/commit/45e62c939f)
+- [Remove minimum height constraint from "My filters" pane](https://github.com/gorhill/uBlock/commit/f624c835c2)
+- [Unregister all scriptlets when disabling uBO on a specific site](https://github.com/gorhill/uBlock/commit/13dcd844a7)
 - [Allow `uritransform` to process the hash part of a URL](https://github.com/gorhill/uBlock/commit/b19094339f)
 - [Remember presentation state of "My rules" pane](https://github.com/gorhill/uBlock/commit/3d1b100646)
 - [Fix improperly assembled `!#include` sublists](https://github.com/gorhill/uBlock/commit/0e00010b91)
@@ -21,6 +26,7 @@
 
 ## Fixes / changes
 
+- [Discard repeating adjacent entries in the logger](https://github.com/gorhill/uBlock/commit/55e4cee6e8)
 - [Mind drop events in filter expression field of logger](https://github.com/gorhill/uBlock/commit/c8b7d1a526)
 - [Improve `xml-prune` scriptlet](https://github.com/gorhill/uBlock/commit/d7063a052f)
 - [Fix message entries overflowing in logger](https://github.com/gorhill/uBlock/commit/49c8310e22)

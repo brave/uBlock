@@ -21,6 +21,7 @@
 
 'use strict';
 
+import { broadcast } from './broadcast.js';
 import { hostnameFromURI } from './uri-utils.js';
 import { i18n, i18n$ } from './i18n.js';
 import { dom, qs$, qsa$ } from './dom.js';
@@ -33,8 +34,9 @@ import { dom, qs$, qsa$ } from './dom.js';
 const messaging = vAPI.messaging;
 const logger = self.logger = { ownerId: Date.now() };
 const logDate = new Date();
-const logDateTimezoneOffset = logDate.getTimezoneOffset() * 60000;
+const logDateTimezoneOffset = logDate.getTimezoneOffset() * 60;
 const loggerEntries = [];
+let loggerEntryIdGenerator = 1;
 
 const COLUMN_TIMESTAMP = 0;
 const COLUMN_FILTER = 1;
@@ -318,13 +320,11 @@ const LogEntry = function(details) {
     if ( details instanceof Object === false ) { return; }
     const receiver = LogEntry.prototype;
     for ( const prop in receiver ) {
-        if (
-            details.hasOwnProperty(prop) &&
-            details[prop] !== receiver[prop]
-        ) {
-            this[prop] = details[prop];
-        }
+        if ( details.hasOwnProperty(prop) === false ) { continue; }
+        if ( details[prop] === receiver[prop] ) { continue; }
+        this[prop] = details[prop];
     }
+    this.id = `${loggerEntryIdGenerator++}`;
     if ( details.aliasURL !== undefined ) {
         this.aliased = true;
     }
@@ -345,7 +345,6 @@ LogEntry.prototype = {
     docHostname: '',
     domain: '',
     filter: undefined,
-    id: '',
     method: '',
     realm: '',
     tabDomain: '',
@@ -368,7 +367,7 @@ const createLogSeparator = function(details, text) {
     separator.textContent = '';
 
     const textContent = [];
-    logDate.setTime(separator.tstamp - logDateTimezoneOffset);
+    logDate.setTime((separator.tstamp - logDateTimezoneOffset) * 1000);
     textContent.push(
         // cell 0
         padTo2(logDate.getUTCHours()) + ':' +
@@ -464,7 +463,7 @@ const parseLogEntry = function(details) {
     const textContent = [];
 
     // Cell 0
-    logDate.setTime(details.tstamp - logDateTimezoneOffset);
+    logDate.setTime((details.tstamp - logDateTimezoneOffset) * 1000);
     textContent.push(
         padTo2(logDate.getUTCHours()) + ':' +
         padTo2(logDate.getUTCMinutes()) + ':' +
@@ -474,7 +473,13 @@ const parseLogEntry = function(details) {
     // Cell 1
     if ( details.realm === 'message' ) {
         textContent.push(details.text);
-        entry.textContent = textContent.join('\x1F');
+        if ( details.type ) {
+            textContent.push(details.type);
+        }
+        if ( details.keywords ) {
+            textContent.push(...details.keywords);
+        }
+        entry.textContent = textContent.join('\x1F') + '\x1F';
         return entry;
     }
 
@@ -1620,9 +1625,10 @@ dom.on(document, 'keydown', ev => {
     const aliasURLFromID = function(id) {
         if ( id === '' ) { return ''; }
         for ( const entry of loggerEntries ) {
-            if ( entry.id !== id || entry.aliased ) { continue; }
-            const fields = entry.textContent.split('\x1F');
-            return fields[COLUMN_URL] || '';
+            if ( entry.id !== id ) { continue; }
+            const match = /\baliasURL=([^\x1F]+)/.exec(entry.textContent);
+            if ( match === null ) { return ''; }
+            return match[1];
         }
         return '';
     };
@@ -2052,12 +2058,30 @@ dom.on(document, 'keydown', ev => {
         }
     });
 
-    dom.on(
-        '#netInspector',
-        'click',
-        '.canDetails > span:not(:nth-of-type(4)):not(:nth-of-type(8))',
-        ev => { toggleOn(ev); }
-    );
+    // This is to detect text selection, in which case the click won't be
+    // interpreted as a request to open the details of the entry.
+    let selectionAtMouseDown;
+    let selectionAtTimer;
+    dom.on('#netInspector', 'mousedown', '.canDetails *', ev => {
+        if ( ev.button !== 0 ) { return; }
+        if ( selectionAtMouseDown !== undefined ) { return; }
+        selectionAtMouseDown =  document.getSelection().toString();
+    });
+
+    dom.on('#netInspector', 'click', '.canDetails *', ev => {
+        if ( ev.button !== 0 ) { return; }
+        if ( selectionAtTimer !== undefined ) {
+            clearTimeout(selectionAtTimer);
+        }
+        selectionAtTimer = setTimeout(( ) => {
+            selectionAtTimer = undefined;
+            const selectionAsOfNow = document.getSelection().toString();
+            const selectionHasChanged = selectionAsOfNow !== selectionAtMouseDown;
+            selectionAtMouseDown = undefined;
+            if ( selectionHasChanged && selectionAsOfNow !== '' ) { return; }
+            toggleOn(ev);
+        }, 333);
+    });
 
     dom.on(
         '#netInspector',
@@ -2149,16 +2173,12 @@ const rowFilterer = (( ) => {
         filters = builtinFilters.concat(userFilters);
     };
 
-    const filterOne = function(logEntry) {
-        if (
-            logEntry.dead ||
-            selectedTabId !== 0 &&
-            (
-                logEntry.tabId === undefined ||
-                logEntry.tabId > 0 && logEntry.tabId !== selectedTabId
-            )
-        ) {
-            return false;
+    const filterOne = logEntry => {
+        if ( logEntry.dead ) { return false; }
+        if ( selectedTabId !== 0 ) {
+            if ( logEntry.tabId !== undefined && logEntry.tabId > 0 ) {
+                if (logEntry.tabId !== selectedTabId ) { return false; }
+            }
         }
 
         if ( masterFilterSwitch === false || filters.length === 0 ) {
@@ -2303,7 +2323,7 @@ const rowJanitor = (( ) => {
             ? opts.maxEntryCount
             : 0;
         const obsolete = typeof opts.maxAge === 'number'
-            ? Date.now() - opts.maxAge * 60000
+            ? Date.now() / 1000 - opts.maxAge * 60
             : 0;
 
         let i = rowIndex;
@@ -2686,7 +2706,7 @@ const loggerStats = (( ) => {
             if ( beg === 0 ) { continue; }
             let timeField = text.slice(0, beg);
             if ( options.time === 'anonymous' ) {
-                timeField = '+' + Math.round((entry.tstamp - t0) / 1000).toString();
+                timeField = '+' + Math.round(entry.tstamp - t0).toString();
             }
             fields.push(timeField);
             beg += 1;
@@ -3020,11 +3040,16 @@ dom.on('#pageSelector', 'change', pageSelectorChanged);
 dom.on('#netInspector .vCompactToggler', 'click', toggleVCompactView);
 dom.on('#pause', 'click', pauseNetInspector);
 
-dom.on('#netInspector', 'copy', ev => {
+dom.on('#logLevel', 'click', ev => {
+    const level = dom.cl.toggle(ev.currentTarget, 'active') ? 2 : 1;
+    broadcast({ what: 'loggerLevelChanged', level });
+});
+
+dom.on('#netInspector #vwContent', 'copy', ev => {
     const selection = document.getSelection();
-    ev.clipboardData.setData('text/plain',
-        selection.toString().replace(/\x1F|\u200B/g, '\t')
-    );
+    const text = selection.toString();
+    if ( /\x1F|\u200B/.test(text) === false ) { return; }
+    ev.clipboardData.setData('text/plain', text.replace(/\x1F|\u200B/g, '\t'));
     ev.preventDefault();
 });
 
