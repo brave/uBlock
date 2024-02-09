@@ -2525,11 +2525,12 @@ function noXhrIf(
                 return super.open(method, url, ...args);
             }
             const haystack = { method, url };
-            if ( matchObjectProperties(propNeedles, haystack) ) {
-                xhrInstances.set(this, haystack);
-            }
             if ( propsToMatch === '' && directive === '' ) {
                 safe.uboLog(logPrefix, `Called: ${safe.JSON_stringify(haystack, null, 2)}`);
+                return super.open(method, url, ...args);
+            }
+            if ( matchObjectProperties(propNeedles, haystack) ) {
+                xhrInstances.set(this, haystack);
             }
             haystack.headers = Object.assign({}, headers);
             return super.open(method, url, ...args);
@@ -2678,9 +2679,12 @@ function noWindowOpenIf(
         apply: function(target, thisArg, args) {
             const haystack = args.join(' ');
             if ( rePattern.test(haystack) !== targetMatchResult ) {
+                if ( safe.logLevel > 1 ) {
+                    safe.uboLog(logPrefix, `Allowed (${args.join(', ')})`);
+                }
                 return Reflect.apply(target, thisArg, args);
             }
-            safe.uboLog(logPrefix, 'Prevented');
+            safe.uboLog(logPrefix, `Prevented (${args.join(', ')})`);
             if ( autoRemoveAfter < 0 ) { return null; }
             const decoyElem = decoy === 'obj'
                 ? createDecoy('object', 'data', ...args)
@@ -2887,31 +2891,6 @@ function noWebrtc() {
             };
         }.bind(null);
     }
-}
-
-/******************************************************************************/
-
-builtinScriptlets.push({
-    name: 'golem.de.js',
-    fn: golemDe,
-});
-// https://github.com/uBlockOrigin/uAssets/issues/88
-function golemDe() {
-    const rael = window.addEventListener;
-    window.addEventListener = function(a, b) {
-        rael(...arguments);
-        let haystack;
-        try {
-            haystack = b.toString();
-        } catch(ex) {
-        }
-        if (
-            typeof haystack === 'string' &&
-            /^\s*function\s*\(\)\s*\{\s*window\.clearTimeout\(r\)\s*\}\s*$/.test(haystack)
-        ) {
-            b();
-        }
-    }.bind(window);
 }
 
 /******************************************************************************/
@@ -4631,7 +4610,7 @@ function trustedReplaceArgument(
         ? safe.patternToRegex(extraArgs.condition)
         : /^/;
     const reflector = proxyApplyFn(propChain, function(...args) {
-        const arglist = args.length >= 2 && args[1];
+        const arglist = args[args.length-1];
         if ( Array.isArray(arglist) === false ) { return reflector(...args); }
         const argBefore = arglist[argpos];
         if ( reCondition.test(argBefore) === false ) { return reflector(...args); }
