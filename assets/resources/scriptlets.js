@@ -1997,10 +1997,6 @@ function noFetchIf(
             const details = args[0] instanceof self.Request
                 ? args[0]
                 : Object.assign({ url: args[0] }, args[1]);
-            if ( propsToMatch === '' && responseBody === '' ) {
-                safe.uboLog(logPrefix, `Called: ${safe.JSON_stringify(details, null, 2)}`);
-                return Reflect.apply(target, thisArg, args);
-            }
             let proceed = true;
             try {
                 const props = new Map();
@@ -2012,6 +2008,11 @@ function noFetchIf(
                     }
                     if ( typeof v !== 'string' ) { continue; }
                     props.set(prop, v);
+                }
+                if ( propsToMatch === '' && responseBody === '' ) {
+                    const out = Array.from(props).map(a => `${a[0]}:${a[1]}`);
+                    safe.uboLog(logPrefix, `Called: ${out.join('\n')}`);
+                    return Reflect.apply(target, thisArg, args);
                 }
                 proceed = needles.length === 0;
                 for ( const { key, re } of needles ) {
@@ -3769,6 +3770,7 @@ builtinScriptlets.push({
     world: 'ISOLATED',
     dependencies: [
         'run-at.fn',
+        'safe-self.fn',
     ],
 });
 function setAttr(
@@ -3776,9 +3778,11 @@ function setAttr(
     attr = '',
     value = ''
 ) {
-    if ( typeof selector !== 'string' ) { return; }
     if ( selector === '' ) { return; }
+    if ( attr === '' ) { return; }
 
+    const safe = safeSelf();
+    const logPrefix = safe.makeLogPrefix('set-attr', attr, value);
     const validValues = [ '', 'false', 'true' ];
     let copyFrom = '';
 
@@ -3813,7 +3817,9 @@ function setAttr(
             const before = elem.getAttribute(attr);
             const after = extractValue(elem);
             if ( after === before ) { continue; }
+            if ( attr.startsWith('on') && attr in elem && after !== '' ) { continue; }
             elem.setAttribute(attr, after);
+            safe.uboLog(logPrefix, `${attr}="${after}"`);
         }
         return true;
     };
