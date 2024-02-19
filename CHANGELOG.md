@@ -1,8 +1,21 @@
 ## Fixes / changes
 
+- [Escape special whitespace characters in attribute values](https://github.com/gorhill/uBlock/commit/be3e366019)
+
+----------
+
+# 1.56.0
+
+## Fixes / changes
+
+- [Mind that multiple `uritransform` may apply to a single request](https://github.com/gorhill/uBlock/commit/2a5a444482)
+- [Fix incorrect built-in filtering expression in logger](https://github.com/gorhill/uBlock/commit/9bff0c2f94)
+- [Fix improper invalidation of valid `uritransform` exception filters](https://github.com/gorhill/uBlock/commit/21ec5a277c)
+- [Improve `prevent-addEventListener` scriptlet](https://github.com/gorhill/uBlock/commit/b22b3d729b)
+- [Fix Chartbeat flicker control `div`'s](https://github.com/gorhill/uBlock/commit/397d6d47b9) (by @ryanbr)
 - [Fix potential exfiltration of browsing history by a rogue list author through `permissions=`](https://github.com/gorhill/uBlock/commit/7b138b58c6)
-- [Ignore event handler-related attributes in `set-attr` scriptlet](https://github.com/gorhill/uBlock/commit/3037ae5f04)
-- [Fix potential exfiltration of browsing history by a rogue list author through `csp=`](https://github.com/gorhill/uBlock/commit/db5656f607)
+- [Ignore event handler-related attributes in `set-attr` scriptlet](https://github.com/gorhill/uBlock/commit/3037ae5f04) (suggested by @distinctmondaylilac)
+- [Fix potential exfiltration of browsing history by a rogue list author through `csp=`](https://github.com/gorhill/uBlock/commit/db5656f607) (reported by @distinctmondaylilac)
 - [Output scriptlet logging information to the logger](https://github.com/gorhill/uBlock/commit/869a653fdf)
 - [Fix decompiling of scriptlet parameters](https://github.com/gorhill/uBlock/commit/49dd68ef3d)
 - [Add support for `extraMatch` in `trusted-click-element` scriptlet](https://github.com/gorhill/uBlock/commit/45e62c939f)

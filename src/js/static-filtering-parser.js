@@ -896,8 +896,8 @@ export class AstFilterParser {
         this.reResponseheaderPattern = /^\^responseheader\(.*\)$/;
         this.rePatternScriptletJsonArgs = /^\{.*\}$/;
         this.reGoodRegexToken = /[^\x01%0-9A-Za-z][%0-9A-Za-z]{7,}|[^\x01%0-9A-Za-z][%0-9A-Za-z]{1,6}[^\x01%0-9A-Za-z]/;
-        this.reBadCSP = /(?:^|;)\s*report-(?:to|uri)\b/i;
-        this.reBadPP = /(?:^|;)\s*report-to\b/i;
+        this.reBadCSP = /(?:^|[;,])\s*report-(?:to|uri)\b/i;
+        this.reBadPP = /(?:^|[;,])\s*report-to\b/i;
         this.reNoopOption = /^_+$/;
         this.scriptletArgListParser = new ArgListParser(',');
     }
@@ -1501,7 +1501,7 @@ export class AstFilterParser {
                 }
                 break;
             }
-            case NODE_TYPE_NET_OPTION_NAME_URLTRANSFORM:
+            case NODE_TYPE_NET_OPTION_NAME_URLTRANSFORM: {
                 realBad = abstractTypeCount || behaviorTypeCount || unredirectableTypeCount;
                 if ( realBad ) { break; }
                 if ( isException !== true && this.options.trustedSource !== true ) {
@@ -1510,11 +1510,12 @@ export class AstFilterParser {
                     break;
                 }
                 const value = this.getNetOptionValue(NODE_TYPE_NET_OPTION_NAME_URLTRANSFORM);
-                if ( parseReplaceValue(value) === undefined ) {
+                if ( value !== '' && parseReplaceValue(value) === undefined ) {
                     this.astError = AST_ERROR_OPTION_BADVALUE;
                     realBad = true;
                 }
                 break;
+            }
             case NODE_TYPE_NET_OPTION_NAME_REMOVEPARAM:
                 realBad = abstractTypeCount || behaviorTypeCount;
                 break;
@@ -3117,7 +3118,7 @@ class ExtSelectorCompiler {
         // context.
         const cssIdentifier = '[A-Za-z_][\\w-]*';
         const cssClassOrId = `[.#]${cssIdentifier}`;
-        const cssAttribute = `\\[${cssIdentifier}(?:[*^$]?="[^"\\]\\\\]+")?\\]`;
+        const cssAttribute = `\\[${cssIdentifier}(?:[*^$]?="[^"\\]\\\\\\x09-\\x0D]+")?\\]`;
         const cssSimple =
             '(?:' +
             `${cssIdentifier}(?:${cssClassOrId})*(?:${cssAttribute})*` + '|' +
@@ -3457,6 +3458,8 @@ class ExtSelectorCompiler {
 
     // https://github.com/uBlockOrigin/uBlock-issues/issues/2300
     //   Unquoted attribute values are parsed as Identifier instead of String.
+    // https://github.com/uBlockOrigin/uBlock-issues/issues/3127
+    //   Escape [\t\n\v\f\r]
     astSerializePart(part) {
         const out = [];
         const { data } = part;
@@ -3472,7 +3475,14 @@ class ExtSelectorCompiler {
             if ( typeof value !== 'string' ) {
                 value = data.value.name;
             }
-            value = value.replace(/["\\]/g, '\\$&');
+            if ( /["\\]/.test(value) ) {
+                value = value.replace(/["\\]/g, '\\$&');
+            }
+            if ( /[\x09-\x0D]/.test(value) ) {
+                value = value.replace(/[\x09-\x0D]/g, s =>
+                    `\\${s.charCodeAt(0).toString(16).toUpperCase()} `
+                );
+            }
             let flags = '';
             if ( typeof data.flags === 'string' ) {
                 if ( /^(is?|si?)$/.test(data.flags) === false ) { return; }
