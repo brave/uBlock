@@ -28,7 +28,6 @@
 import { queueTask, dropTask } from './tasks.js';
 import BidiTrieContainer from './biditrie.js';
 import HNTrieContainer from './hntrie.js';
-import { sparseBase64 } from './base64-custom.js';
 import { CompiledListReader } from './static-filtering-io.js';
 import * as sfp from './static-filtering-parser.js';
 
@@ -493,17 +492,13 @@ const filterDataReset = ( ) => {
     filterData.fill(0);
     filterDataWritePtr = 2;
 };
-const filterDataToSelfie = ( ) => {
-    return JSON.stringify(Array.from(filterData.subarray(0, filterDataWritePtr)));
-};
+const filterDataToSelfie = ( ) =>
+    filterData.subarray(0, filterDataWritePtr);
+
 const filterDataFromSelfie = selfie => {
-    if ( typeof selfie !== 'string' || selfie === '' ) { return false; }
-    const data = JSON.parse(selfie);
-    if ( Array.isArray(data) === false ) { return false; }
-    filterDataGrow(data.length);
-    filterDataWritePtr = data.length;
-    filterData.set(data);
-    filterDataShrink();
+    if ( selfie instanceof Int32Array === false ) { return false; }
+    filterData = selfie;
+    filterDataWritePtr = selfie.length;
     return true;
 };
 
@@ -519,53 +514,15 @@ const filterRefsReset = ( ) => {
     filterRefs.fill(null);
     filterRefsWritePtr = 1;
 };
-const filterRefsToSelfie = ( ) => {
-    const refs = [];
-    for ( let i = 0; i < filterRefsWritePtr; i++ ) {
-        const v = filterRefs[i];
-        if ( v instanceof RegExp ) {
-            refs.push({ t: 1, s: v.source, f: v.flags });
-            continue;
-        }
-        if ( Array.isArray(v) ) {
-            refs.push({ t: 2, v });
-            continue;
-        }
-        if ( typeof v !== 'object' || v === null ) {
-            refs.push({ t: 0, v });
-            continue;
-        }
-        const out = Object.create(null);
-        for ( const prop of Object.keys(v) ) {
-            const value = v[prop];
-            out[prop] = prop.startsWith('$')
-                ? (typeof value === 'string' ? '' : null)
-                : value;
-        }
-        refs.push({ t: 3, v: out });
-    }
-    return JSON.stringify(refs);
-};
+const filterRefsToSelfie = ( ) =>
+    filterRefs.slice(0, filterRefsWritePtr);
+
 const filterRefsFromSelfie = selfie => {
-    if ( typeof selfie !== 'string' || selfie === '' ) { return false; }
-    const refs = JSON.parse(selfie);
-    if ( Array.isArray(refs) === false ) { return false; }
-    for ( let i = 0; i < refs.length; i++ ) {
-        const v = refs[i];
-        switch ( v.t ) {
-        case 0:
-        case 2:
-        case 3:
-            filterRefs[i] = v.v;
-            break;
-        case 1:
-            filterRefs[i] = new RegExp(v.s, v.f);
-            break;
-        default:
-            throw new Error('Unknown filter reference!');
-        }
+    if ( Array.isArray(selfie) === false ) { return false; }
+    for ( let i = 0, n = selfie.length; i < n; i++ ) {
+        filterRefs[i] = selfie[i];
     }
-    filterRefsWritePtr = refs.length;
+    filterRefsWritePtr = selfie.length;
     return true;
 };
 
@@ -3121,14 +3078,11 @@ const urlTokenizer = new (class {
     }
 
     toSelfie() {
-        return sparseBase64.encode(
-            this.knownTokens.buffer,
-            this.knownTokens.byteLength
-        );
+        return this.knownTokens;
     }
 
     fromSelfie(selfie) {
-        return sparseBase64.decode(selfie, this.knownTokens.buffer);
+        this.knownTokens = selfie;
     }
 
     // https://github.com/chrisaljoudi/uBlock/issues/1118
@@ -4095,7 +4049,7 @@ FilterCompiler.prototype.FILTER_UNSUPPORTED = 2;
 /******************************************************************************/
 /******************************************************************************/
 
-const FilterContainer = function() {
+const StaticNetFilteringEngine = function() {
     this.compilerVersion = '10';
     this.selfieVersion = '10';
 
@@ -4113,7 +4067,7 @@ const FilterContainer = function() {
 
 /******************************************************************************/
 
-FilterContainer.prototype.prime = function() {
+StaticNetFilteringEngine.prototype.prime = function() {
     origHNTrieContainer.reset(
         keyvalStore.getItem('SNFE.origHNTrieContainer.trieDetails')
     );
@@ -4125,7 +4079,7 @@ FilterContainer.prototype.prime = function() {
 
 /******************************************************************************/
 
-FilterContainer.prototype.reset = function() {
+StaticNetFilteringEngine.prototype.reset = function() {
     this.processedFilterCount = 0;
     this.acceptedCount = 0;
     this.discardedCount = 0;
@@ -4159,7 +4113,7 @@ FilterContainer.prototype.reset = function() {
 
 /******************************************************************************/
 
-FilterContainer.prototype.freeze = function() {
+StaticNetFilteringEngine.prototype.freeze = function() {
     const unserialize = CompiledListReader.unserialize;
 
     for ( const line of this.goodFilters ) {
@@ -4256,7 +4210,7 @@ FilterContainer.prototype.freeze = function() {
 
 /******************************************************************************/
 
-FilterContainer.prototype.dnrFromCompiled = function(op, context, ...args) {
+StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...args) {
     if ( op === 'begin' ) {
         Object.assign(context, {
             good: new Set(),
@@ -4591,7 +4545,7 @@ FilterContainer.prototype.dnrFromCompiled = function(op, context, ...args) {
 
 /******************************************************************************/
 
-FilterContainer.prototype.addFilterUnit = function(
+StaticNetFilteringEngine.prototype.addFilterUnit = function(
     bits,
     tokenHash,
     inewunit
@@ -4618,7 +4572,7 @@ FilterContainer.prototype.addFilterUnit = function(
 
 /******************************************************************************/
 
-FilterContainer.prototype.optimize = function(throttle = 0) {
+StaticNetFilteringEngine.prototype.optimize = function(throttle = 0) {
     if ( this.optimizeTaskId !== undefined ) {
         dropTask(this.optimizeTaskId);
         this.optimizeTaskId = undefined;
@@ -4674,55 +4628,28 @@ FilterContainer.prototype.optimize = function(throttle = 0) {
 
 /******************************************************************************/
 
-FilterContainer.prototype.toSelfie = async function(storage, path) {
-    if ( typeof storage !== 'object' || storage === null ) { return; }
-    if ( typeof storage.put !== 'function' ) { return; }
-
+StaticNetFilteringEngine.prototype.toSelfie = function() {
+    this.optimize(0);
     bidiTrieOptimize(true);
-    keyvalStore.setItem(
-        'SNFE.origHNTrieContainer.trieDetails',
+    keyvalStore.setItem('SNFE.origHNTrieContainer.trieDetails',
         origHNTrieContainer.optimize()
     );
-
-    return Promise.all([
-        storage.put(
-            `${path}/destHNTrieContainer`,
-            destHNTrieContainer.serialize(sparseBase64)
-        ),
-        storage.put(
-            `${path}/origHNTrieContainer`,
-            origHNTrieContainer.serialize(sparseBase64)
-        ),
-        storage.put(
-            `${path}/bidiTrie`,
-            bidiTrie.serialize(sparseBase64)
-        ),
-        storage.put(
-            `${path}/filterData`,
-            filterDataToSelfie()
-        ),
-        storage.put(
-            `${path}/filterRefs`,
-            filterRefsToSelfie()
-        ),
-        storage.put(
-            `${path}/main`,
-            JSON.stringify({
-                version: this.selfieVersion,
-                processedFilterCount: this.processedFilterCount,
-                acceptedCount: this.acceptedCount,
-                discardedCount: this.discardedCount,
-                bitsToBucket: Array.from(this.bitsToBucket).map(kv => {
-                    kv[1] = Array.from(kv[1]);
-                    return kv;
-                }),
-                urlTokenizer: urlTokenizer.toSelfie(),
-            })
-        )
-    ]);
+    return {
+        version: this.selfieVersion,
+        processedFilterCount: this.processedFilterCount,
+        acceptedCount: this.acceptedCount,
+        discardedCount: this.discardedCount,
+        bitsToBucket: this.bitsToBucket,
+        urlTokenizer: urlTokenizer.toSelfie(),
+        destHNTrieContainer: destHNTrieContainer.toSelfie(),
+        origHNTrieContainer: origHNTrieContainer.toSelfie(),
+        bidiTrie: bidiTrie.toSelfie(),
+        filterData: filterDataToSelfie(),
+        filterRefs: filterRefsToSelfie(),
+    };
 };
 
-FilterContainer.prototype.serialize = async function() {
+StaticNetFilteringEngine.prototype.serialize = async function() {
     const selfie = [];
     const storage = {
         put(name, data) {
@@ -4735,53 +4662,27 @@ FilterContainer.prototype.serialize = async function() {
 
 /******************************************************************************/
 
-FilterContainer.prototype.fromSelfie = async function(storage, path) {
-    if ( typeof storage !== 'object' || storage === null ) { return; }
-    if ( typeof storage.get !== 'function' ) { return; }
+StaticNetFilteringEngine.prototype.fromSelfie = async function(selfie) {
+    if ( typeof selfie !== 'object' || selfie === null ) { return; }
 
     this.reset();
 
     this.notReady = true;
 
-    const results = await Promise.all([
-        storage.get(`${path}/main`),
-        storage.get(`${path}/destHNTrieContainer`).then(details =>
-            destHNTrieContainer.unserialize(details.content, sparseBase64)
-        ),
-        storage.get(`${path}/origHNTrieContainer`).then(details =>
-            origHNTrieContainer.unserialize(details.content, sparseBase64)
-        ),
-        storage.get(`${path}/bidiTrie`).then(details =>
-            bidiTrie.unserialize(details.content, sparseBase64)
-        ),
-        storage.get(`${path}/filterData`).then(details =>
-            filterDataFromSelfie(details.content)
-        ),
-        storage.get(`${path}/filterRefs`).then(details =>
-            filterRefsFromSelfie(details.content)
-        ),
-    ]);
-
+    const results = [
+        destHNTrieContainer.fromSelfie(selfie.destHNTrieContainer),
+        origHNTrieContainer.fromSelfie(selfie.origHNTrieContainer),
+        bidiTrie.fromSelfie(selfie.bidiTrie),
+        filterDataFromSelfie(selfie.filterData),
+        filterRefsFromSelfie(selfie.filterRefs),
+    ];
     if ( results.slice(1).every(v => v === true) === false ) { return false; }
 
-    const details = results[0];
-    if ( typeof details !== 'object' || details === null ) { return false; }
-    if ( typeof details.content !== 'string' ) { return false; }
-    if ( details.content === '' ) { return false; }
-    let selfie;
-    try {
-        selfie = JSON.parse(details.content);
-    } catch (ex) {
-    }
-    if ( typeof selfie !== 'object' || selfie === null ) { return false; }
     if ( selfie.version !== this.selfieVersion ) { return false; }
     this.processedFilterCount = selfie.processedFilterCount;
     this.acceptedCount = selfie.acceptedCount;
     this.discardedCount = selfie.discardedCount;
-    this.bitsToBucket = new Map(selfie.bitsToBucket.map(kv => {
-        kv[1] = new Map(kv[1]);
-        return kv;
-    }));
+    this.bitsToBucket = selfie.bitsToBucket;
     urlTokenizer.fromSelfie(selfie.urlTokenizer);
 
     // If this point is never reached, it means the internal state is
@@ -4794,7 +4695,7 @@ FilterContainer.prototype.fromSelfie = async function(storage, path) {
     return true;
 };
 
-FilterContainer.prototype.unserialize = async function(s) {
+StaticNetFilteringEngine.prototype.unserialize = async function(s) {
     const selfie = new Map(JSON.parse(s));
     const storage = {
         async get(name) {
@@ -4806,13 +4707,13 @@ FilterContainer.prototype.unserialize = async function(s) {
 
 /******************************************************************************/
 
-FilterContainer.prototype.createCompiler = function() {
+StaticNetFilteringEngine.prototype.createCompiler = function() {
     return new FilterCompiler();
 };
 
 /******************************************************************************/
 
-FilterContainer.prototype.fromCompiled = function(reader) {
+StaticNetFilteringEngine.prototype.fromCompiled = function(reader) {
     reader.select('NETWORK_FILTERS:GOOD');
     while ( reader.next() ) {
         this.acceptedCount += 1;
@@ -4831,7 +4732,7 @@ FilterContainer.prototype.fromCompiled = function(reader) {
 
 /******************************************************************************/
 
-FilterContainer.prototype.matchAndFetchModifiers = function(
+StaticNetFilteringEngine.prototype.matchAndFetchModifiers = function(
     fctxt,
     modifierName
 ) {
@@ -5008,7 +4909,7 @@ FilterContainer.prototype.matchAndFetchModifiers = function(
 
 /******************************************************************************/
 
-FilterContainer.prototype.realmMatchString = function(
+StaticNetFilteringEngine.prototype.realmMatchString = function(
     realmBits,
     typeBits,
     partyBits
@@ -5135,7 +5036,7 @@ FilterContainer.prototype.realmMatchString = function(
 // https://www.reddit.com/r/uBlockOrigin/comments/d6vxzj/
 //   Add support for `specifichide`.
 
-FilterContainer.prototype.matchRequestReverse = function(type, url) {
+StaticNetFilteringEngine.prototype.matchRequestReverse = function(type, url) {
     const typeBits = typeNameToTypeValue[type] | 0x80000000;
 
     // Prime tokenizer: we get a normalized URL in return.
@@ -5184,7 +5085,7 @@ FilterContainer.prototype.matchRequestReverse = function(type, url) {
  *
  * @returns {integer} 0=no match, 1=block, 2=allow (exception)
  */
-FilterContainer.prototype.matchRequest = function(fctxt, modifiers = 0) {
+StaticNetFilteringEngine.prototype.matchRequest = function(fctxt, modifiers = 0) {
     let typeBits = typeNameToTypeValue[fctxt.type];
     if ( modifiers === 0 ) {
         if ( typeBits === undefined ) {
@@ -5231,7 +5132,7 @@ FilterContainer.prototype.matchRequest = function(fctxt, modifiers = 0) {
 
 /******************************************************************************/
 
-FilterContainer.prototype.matchHeaders = function(fctxt, headers) {
+StaticNetFilteringEngine.prototype.matchHeaders = function(fctxt, headers) {
     const typeBits = typeNameToTypeValue[fctxt.type] || otherTypeBitValue;
     const partyBits = fctxt.is3rdPartyToDoc() ? THIRDPARTY_REALM : FIRSTPARTY_REALM;
 
@@ -5268,7 +5169,7 @@ FilterContainer.prototype.matchHeaders = function(fctxt, headers) {
 
 /******************************************************************************/
 
-FilterContainer.prototype.redirectRequest = function(redirectEngine, fctxt) {
+StaticNetFilteringEngine.prototype.redirectRequest = function(redirectEngine, fctxt) {
     const directives = this.matchAndFetchModifiers(fctxt, 'redirect-rule');
     // No directive is the most common occurrence.
     if ( directives === undefined ) { return; }
@@ -5286,7 +5187,7 @@ FilterContainer.prototype.redirectRequest = function(redirectEngine, fctxt) {
     return directives;
 };
 
-FilterContainer.prototype.transformRequest = function(fctxt) {
+StaticNetFilteringEngine.prototype.transformRequest = function(fctxt) {
     const directives = this.matchAndFetchModifiers(fctxt, 'uritransform');
     if ( directives === undefined ) { return; }
     const redirectURL = new URL(fctxt.url);
@@ -5350,7 +5251,7 @@ function compareRedirectRequests(redirectEngine, a, b) {
 // https://github.com/uBlockOrigin/uBlock-issues/issues/1626
 //   Do not redirect when the number of query parameters does not change.
 
-FilterContainer.prototype.filterQuery = function(fctxt) {
+StaticNetFilteringEngine.prototype.filterQuery = function(fctxt) {
     const directives = this.matchAndFetchModifiers(fctxt, 'removeparam');
     if ( directives === undefined ) { return; }
     const url = fctxt.url;
@@ -5444,14 +5345,14 @@ function parseQueryPruneValue(directive) {
 
 /******************************************************************************/
 
-FilterContainer.prototype.hasQuery = function(fctxt) {
+StaticNetFilteringEngine.prototype.hasQuery = function(fctxt) {
     urlTokenizer.setURL(fctxt.url);
     return urlTokenizer.hasQuery();
 };
 
 /******************************************************************************/
 
-FilterContainer.prototype.toLogData = function() {
+StaticNetFilteringEngine.prototype.toLogData = function() {
     if ( this.$filterUnit !== 0 ) {
         return new LogData(this.$catBits, this.$tokenHash, this.$filterUnit);
     }
@@ -5459,19 +5360,19 @@ FilterContainer.prototype.toLogData = function() {
 
 /******************************************************************************/
 
-FilterContainer.prototype.isBlockImportant = function() {
+StaticNetFilteringEngine.prototype.isBlockImportant = function() {
     return this.$filterUnit !== 0 && $isBlockImportant;
 };
 
 /******************************************************************************/
 
-FilterContainer.prototype.getFilterCount = function() {
+StaticNetFilteringEngine.prototype.getFilterCount = function() {
     return this.acceptedCount - this.discardedCount;
 };
 
 /******************************************************************************/
 
-FilterContainer.prototype.enableWASM = function(wasmModuleFetcher, path) {
+StaticNetFilteringEngine.prototype.enableWASM = function(wasmModuleFetcher, path) {
     return Promise.all([
         bidiTrie.enableWASM(wasmModuleFetcher, path),
         origHNTrieContainer.enableWASM(wasmModuleFetcher, path),
@@ -5483,7 +5384,7 @@ FilterContainer.prototype.enableWASM = function(wasmModuleFetcher, path) {
 
 /******************************************************************************/
 
-FilterContainer.prototype.test = async function(docURL, type, url) {
+StaticNetFilteringEngine.prototype.test = async function(docURL, type, url) {
     const fctxt = new FilteringContext();
     fctxt.setDocOriginFromURL(docURL);
     fctxt.setType(type);
@@ -5497,7 +5398,7 @@ FilterContainer.prototype.test = async function(docURL, type, url) {
 
 /******************************************************************************/
 
-FilterContainer.prototype.bucketHistogram = function() {
+StaticNetFilteringEngine.prototype.bucketHistogram = function() {
     const results = [];
     for ( const [ bits, bucket ] of this.bitsToBucket ) {
         for ( const [ th, iunit ] of bucket ) {
@@ -5518,7 +5419,7 @@ FilterContainer.prototype.bucketHistogram = function() {
 // Dump the internal state of the filtering engine to the console.
 // Useful to make development decisions and investigate issues.
 
-FilterContainer.prototype.dump = function() {
+StaticNetFilteringEngine.prototype.dump = function() {
     const thConstants = new Map([
         [ NO_TOKEN_HASH, 'NO_TOKEN_HASH' ],
         [ DOT_TOKEN_HASH, 'DOT_TOKEN_HASH' ],
@@ -5648,6 +5549,6 @@ FilterContainer.prototype.dump = function() {
 
 /******************************************************************************/
 
-const staticNetFilteringEngine = new FilterContainer();
+const staticNetFilteringEngine = new StaticNetFilteringEngine();
 
 export default staticNetFilteringEngine;

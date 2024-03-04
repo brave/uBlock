@@ -38,7 +38,6 @@ import µb from './background.js';
 import { hostnameFromURI } from './uri-utils.js';
 import { i18n, i18n$ } from './i18n.js';
 import { redirectEngine } from './redirect-engine.js';
-import { sparseBase64 } from './base64-custom.js';
 import { ubolog, ubologSet } from './console.js';
 import * as sfp from './static-filtering-parser.js';
 
@@ -98,24 +97,80 @@ import {
 /******************************************************************************/
 
 {
-    let localSettingsLastSaved = Date.now();
+    const requestStats = µb.requestStats;
+    let requestStatsDisabled = false;
 
-    const shouldSave = ( ) => {
-        if ( µb.localSettingsLastModified > localSettingsLastSaved ) {
-            µb.saveLocalSettings();
+    µb.loadLocalSettings = async ( ) => {
+        requestStatsDisabled = µb.hiddenSettings.requestStatsDisabled;
+        if ( requestStatsDisabled ) { return; }
+        return Promise.all([
+            vAPI.sessionStorage.get('requestStats'),
+            vAPI.storage.get('requestStats'),
+            vAPI.storage.get([ 'blockedRequestCount', 'allowedRequestCount' ]),
+        ]).then(([ a, b, c ]) => {
+            if ( a instanceof Object && a.requestStats ) { return a.requestStats; }
+            if ( b instanceof Object && b.requestStats ) { return b.requestStats; }
+            if ( c instanceof Object && Object.keys(c).length === 2 ) {
+                return {
+                    blockedCount: c.blockedRequestCount,
+                    allowedCount: c.allowedRequestCount,
+                };
+            }
+            return { blockedCount: 0, allowedCount: 0 };
+        }).then(({ blockedCount, allowedCount }) => {
+            requestStats.blockedCount += blockedCount;
+            requestStats.allowedCount += allowedCount;
+        });
+    };
+
+    const SAVE_DELAY_IN_MINUTES = 3.6;
+    const QUICK_SAVE_DELAY_IN_SECONDS = 23;
+
+    const stopTimers = ( ) => {
+        vAPI.alarms.clear('saveLocalSettings');
+        quickSaveTimer.off();
+        saveTimer.off();
+    };
+
+    const saveTimer = vAPI.defer.create(( ) => {
+        µb.saveLocalSettings();
+    });
+
+    const quickSaveTimer = vAPI.defer.create(( ) => {
+        if ( vAPI.sessionStorage.unavailable !== true ) {
+            vAPI.sessionStorage.set({ requestStats: requestStats });
         }
-        saveTimer.on(saveDelay);
+        if ( requestStatsDisabled ) { return; }
+        saveTimer.on({ min: SAVE_DELAY_IN_MINUTES });
+        vAPI.alarms.createIfNotPresent('saveLocalSettings', {
+            delayInMinutes: SAVE_DELAY_IN_MINUTES + 0.5
+        });
+    });
+
+    µb.incrementRequestStats = (blocked, allowed) => {
+        requestStats.blockedCount += blocked;
+        requestStats.allowedCount += allowed;
+        quickSaveTimer.on({ sec: QUICK_SAVE_DELAY_IN_SECONDS });
     };
 
-    const saveTimer = vAPI.defer.create(shouldSave);
-    const saveDelay = { sec: 23 };
-
-    saveTimer.onidle(saveDelay);
-
-    µb.saveLocalSettings = function() {
-        localSettingsLastSaved = Date.now();
-        return vAPI.storage.set(this.localSettings);
+    µb.saveLocalSettings = ( ) => {
+        stopTimers();
+        if ( requestStatsDisabled ) { return; }
+        return vAPI.storage.set({ requestStats: µb.requestStats });
     };
+
+    onBroadcast(msg => {
+        if ( msg.what !== 'hiddenSettingsChanged' ) { return; }
+        const newState = µb.hiddenSettings.requestStatsDisabled;
+        if ( requestStatsDisabled === newState ) { return; }
+        requestStatsDisabled = newState;
+        if ( newState ) {
+            stopTimers();
+            µb.requestStats.blockedCount = µb.requestStats.allowedCount = 0;
+        } else {
+            µb.loadLocalSettings();
+        }
+    });
 }
 
 /******************************************************************************/
@@ -626,6 +681,7 @@ onBroadcast(msg => {
     cosmeticFilteringEngine.removeFromSelectorCache(
         hostnameFromURI(details.docURL)
     );
+    staticFilteringReverseLookup.resetLists();
 };
 
 µb.userFiltersAreEnabled = function() {
@@ -974,7 +1030,7 @@ onBroadcast(msg => {
 /******************************************************************************/
 
 µb.getCompiledFilterList = async function(assetKey) {
-    const compiledPath = 'compiled/' + assetKey;
+    const compiledPath = `compiled/${assetKey}`;
 
     // https://github.com/uBlockOrigin/uBlock-issues/issues/1365
     //   Verify that the list version matches that of the current compiled
@@ -983,11 +1039,10 @@ onBroadcast(msg => {
         this.compiledFormatChanged === false &&
         this.badLists.has(assetKey) === false
     ) {
-        const compiledDetails = await io.get(compiledPath);
+        const content = await io.fromCache(compiledPath);
         const compilerVersion = `${this.systemSettings.compiledMagic}\n`;
-        if ( compiledDetails.content.startsWith(compilerVersion) ) {
-            compiledDetails.assetKey = assetKey;
-            return compiledDetails;
+        if ( content.startsWith(compilerVersion) ) {
+            return { assetKey, content };
         }
     }
 
@@ -1017,7 +1072,7 @@ onBroadcast(msg => {
         assetKey,
         trustedSource: this.isTrustedList(assetKey),
     });
-    io.put(compiledPath, compiledContent);
+    io.toCache(compiledPath, compiledContent);
 
     return { assetKey, content: compiledContent };
 };
@@ -1046,7 +1101,7 @@ onBroadcast(msg => {
 /******************************************************************************/
 
 µb.removeCompiledFilterList = function(assetKey) {
-    io.remove('compiled/' + assetKey);
+    io.remove(`compiled/${assetKey}`);
 };
 
 µb.removeFilterList = function(assetKey) {
@@ -1149,7 +1204,10 @@ onBroadcast(msg => {
 µb.loadRedirectResources = async function() {
     try {
         const success = await redirectEngine.resourcesFromSelfie(io);
-        if ( success === true ) { return true; }
+        if ( success === true ) {
+            ubolog('Loaded redirect/scriptlets resources from selfie');
+            return true;
+        }
 
         const fetcher = (path, options = undefined) => {
             if ( path.startsWith('/web_accessible_resources/') ) {
@@ -1173,20 +1231,17 @@ onBroadcast(msg => {
         const results = await Promise.all(fetchPromises);
         if ( Array.isArray(results) === false ) { return results; }
 
-        let content = '';
+        const content = [];
         for ( let i = 1; i < results.length; i++ ) {
             const result = results[i];
-            if (
-                result instanceof Object === false ||
-                typeof result.content !== 'string' ||
-                result.content === ''
-            ) {
-                continue;
-            }
-            content += '\n\n' + result.content;
+            if ( result instanceof Object === false ) { continue; }
+            if ( typeof result.content !== 'string' ) { continue; }
+            if ( result.content === '' ) { continue; }
+            content.push(result.content);
         }
-
-        redirectEngine.resourcesFromString(content);
+        if ( content.length !== 0 ) {
+            redirectEngine.resourcesFromString(content.join('\n\n'));
+        }
         redirectEngine.selfieFromResources(io);
     } catch(ex) {
         ubolog(ex);
@@ -1225,8 +1280,11 @@ onBroadcast(msg => {
     }
 
     try {
-        const result = await io.get(`compiled/${this.pslAssetKey}`);
-        if ( psl.fromSelfie(result.content, sparseBase64) ) { return; }
+        const selfie = await io.fromCache(`selfie/${this.pslAssetKey}`);
+        if ( psl.fromSelfie(selfie) ) {
+            ubolog('Loaded PSL from selfie');
+            return;
+        }
     } catch (reason) {
         ubolog(reason);
     }
@@ -1240,7 +1298,8 @@ onBroadcast(msg => {
 µb.compilePublicSuffixList = function(content) {
     const psl = publicSuffixList;
     psl.parse(content, punycode.toASCII);
-    io.put(`compiled/${this.pslAssetKey}`, psl.toSelfie(sparseBase64));
+    ubolog(`Loaded PSL from ${this.pslAssetKey}`);
+    return io.toCache(`selfie/${this.pslAssetKey}`, psl.toSelfie());
 };
 
 /******************************************************************************/
@@ -1260,39 +1319,24 @@ onBroadcast(msg => {
         if ( µb.inMemoryFilters.length !== 0 ) { return; }
         if ( Object.keys(µb.availableFilterLists).length === 0 ) { return; }
         await Promise.all([
-            io.put(
-                'selfie/main',
-                JSON.stringify({
-                    magic: µb.systemSettings.selfieMagic,
-                    availableFilterLists: µb.availableFilterLists,
-                })
+            io.toCache('selfie/staticMain', {
+                magic: µb.systemSettings.selfieMagic,
+                availableFilterLists: µb.availableFilterLists,
+            }),
+            io.toCache('selfie/staticExtFilteringEngine',
+                staticExtFilteringEngine.toSelfie()
             ),
-            redirectEngine.toSelfie('selfie/redirectEngine'),
-            staticExtFilteringEngine.toSelfie(
-                'selfie/staticExtFilteringEngine'
-            ),
-            staticNetFilteringEngine.toSelfie(io,
-                'selfie/staticNetFilteringEngine'
+            io.toCache('selfie/staticNetFilteringEngine',
+                staticNetFilteringEngine.toSelfie()
             ),
         ]);
         lz4Codec.relinquish();
         µb.selfieIsInvalid = false;
+        ubolog('Filtering engine selfie created');
     };
 
     const loadMain = async function() {
-        const details = await io.get('selfie/main');
-        if (
-            details instanceof Object === false ||
-            typeof details.content !== 'string' ||
-            details.content === ''
-        ) {
-            return false;
-        }
-        let selfie;
-        try {
-            selfie = JSON.parse(details.content);
-        } catch(ex) {
-        }
+        const selfie = await io.fromCache('selfie/staticMain');
         if ( selfie instanceof Object === false ) { return false; }
         if ( selfie.magic !== µb.systemSettings.selfieMagic ) { return false; }
         if ( selfie.availableFilterLists instanceof Object === false ) { return false; }
@@ -1306,12 +1350,11 @@ onBroadcast(msg => {
         try {
             const results = await Promise.all([
                 loadMain(),
-                redirectEngine.fromSelfie('selfie/redirectEngine'),
-                staticExtFilteringEngine.fromSelfie(
-                    'selfie/staticExtFilteringEngine'
+                io.fromCache('selfie/staticExtFilteringEngine').then(selfie =>
+                    staticExtFilteringEngine.fromSelfie(selfie)
                 ),
-                staticNetFilteringEngine.fromSelfie(io,
-                    'selfie/staticNetFilteringEngine'
+                io.fromCache('selfie/staticNetFilteringEngine').then(selfie =>
+                    staticNetFilteringEngine.fromSelfie(selfie)
                 ),
             ]);
             if ( results.every(v => v) ) {
@@ -1321,33 +1364,26 @@ onBroadcast(msg => {
         catch (reason) {
             ubolog(reason);
         }
+        ubolog('Filtering engine selfie not available');
         destroy();
         return false;
     };
 
-    const destroy = function() {
+    const destroy = function(options = {}) {
         if ( µb.selfieIsInvalid === false ) {
-            io.remove(/^selfie\//);
+            io.remove(/^selfie\/static/, options);
             µb.selfieIsInvalid = true;
-        }
-        if ( µb.wakeupReason === 'createSelfie' ) {
-            µb.wakeupReason = '';
-            return createTimer.offon({ sec: 27 });
+            ubolog('Filtering engine selfie marked for invalidation');
         }
         vAPI.alarms.create('createSelfie', {
-            delayInMinutes: µb.hiddenSettings.selfieAfter
+            delayInMinutes: (µb.hiddenSettings.selfieDelayInSeconds + 17) / 60,
         });
-        createTimer.offon({ min: µb.hiddenSettings.selfieAfter });
+        createTimer.offon({ sec: µb.hiddenSettings.selfieDelayInSeconds });
     };
 
     const createTimer = vAPI.defer.create(create);
 
-    vAPI.alarms.onAlarm.addListener(alarm => {
-        if ( alarm.name !== 'createSelfie') { return; }
-        µb.wakeupReason = 'createSelfie';
-    });
-
-    µb.selfieManager = { load, destroy };
+    µb.selfieManager = { load, create, destroy };
 }
 
 /******************************************************************************/
@@ -1507,7 +1543,6 @@ onBroadcast(msg => {
 
 {
     let next = 0;
-    let lastEmergencyUpdate = 0;
 
     const launchTimer = vAPI.defer.create(fetchDelay => {
         next = 0;
@@ -1516,6 +1551,7 @@ onBroadcast(msg => {
 
     µb.scheduleAssetUpdater = async function(details = {}) {
         launchTimer.off();
+        vAPI.alarms.clear('assetUpdater');
 
         if ( details.now ) {
             next = 0;
@@ -1534,40 +1570,23 @@ onBroadcast(msg => {
             this.hiddenSettings.autoUpdatePeriod * 3600000;
 
         const now = Date.now();
-        let needEmergencyUpdate = false;
-
-        // Respect cooldown period before launching an emergency update.
-        const timeSinceLastEmergencyUpdate = (now - lastEmergencyUpdate) / 3600000;
-        if ( timeSinceLastEmergencyUpdate > 1 ) {
-            const entries = await io.getUpdateAges({
-                filters: µb.selectedFilterLists,
-                internal: [ '*' ],
-            });
-            for ( const entry of entries ) {
-                if ( entry.ageNormalized < 2 ) { continue; }
-                needEmergencyUpdate = true;
-                lastEmergencyUpdate = now;
-                break;
-            }
-        }
 
         // Use the new schedule if and only if it is earlier than the previous
         // one.
         if ( next !== 0 ) {
-            updateDelay = Math.min(updateDelay, Math.max(next - now, 0));
-        }
-
-        if ( needEmergencyUpdate ) {
-            updateDelay = Math.min(updateDelay, 15000);
+            updateDelay = Math.min(updateDelay, Math.max(next - now, 1));
         }
 
         next = now + updateDelay;
 
-        const fetchDelay = needEmergencyUpdate
-            ? 2000
-            : this.hiddenSettings.autoUpdateAssetFetchPeriod * 1000 || 60000;
+        const fetchDelay = details.fetchDelay ||
+            this.hiddenSettings.autoUpdateAssetFetchPeriod * 1000 ||
+            60000;
 
         launchTimer.on(updateDelay, fetchDelay);
+        vAPI.alarms.create('assetUpdater', {
+            delayInMinutes: Math.ceil(updateDelay / 60000) + 0.25
+        });
     };
 }
 
@@ -1594,8 +1613,7 @@ onBroadcast(msg => {
     if ( topic === 'after-asset-updated' ) {
         // Skip selfie-related content.
         if ( details.assetKey.startsWith('selfie/') ) { return; }
-        const cached = typeof details.content === 'string' &&
-                       details.content !== '';
+        const cached = typeof details.content === 'string' && details.content !== '';
         if ( this.availableFilterLists.hasOwnProperty(details.assetKey) ) {
             if ( cached ) {
                 if ( this.selectedFilterLists.indexOf(details.assetKey) !== -1 ) {
@@ -1604,8 +1622,7 @@ onBroadcast(msg => {
                         details.content
                     );
                     if ( this.badLists.has(details.assetKey) === false ) {
-                        io.put(
-                            'compiled/' + details.assetKey,
+                        io.toCache(`compiled/${details.assetKey}`,
                             this.compileFilters(details.content, {
                                 assetKey: details.assetKey,
                                 trustedSource: this.isTrustedList(details.assetKey),

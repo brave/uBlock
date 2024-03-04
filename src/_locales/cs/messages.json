@@ -483,6 +483,14 @@
     "message": "Ochrana před malwarem, bezpečnost",
     "description": "Filter lists section name"
   },
+  "3pGroupSocial": {
+    "message": "Widgety sociálních sítí",
+    "description": "Filter lists section name"
+  },
+  "3pGroupCookies": {
+    "message": "Oznámení o používání souborů cookie",
+    "description": "Filter lists section name"
+  },
   "3pGroupAnnoyances": {
     "message": "Dotěrnosti",
     "description": "Filter lists section name"

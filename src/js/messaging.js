@@ -45,6 +45,7 @@ import { dnrRulesetFromRawLists } from './static-dnr-filtering.js';
 import { i18n$ } from './i18n.js';
 import { redirectEngine } from './redirect-engine.js';
 import * as sfp from './static-filtering-parser.js';
+import * as scuo from './scuo-serializer.js';
 
 import {
     permanentFirewall,
@@ -62,8 +63,6 @@ import {
     hostnameFromURI,
     isNetworkURI,
 } from './uri-utils.js';
-
-import './benchmarks.js';
 
 /******************************************************************************/
 
@@ -364,8 +363,8 @@ const popupDataFromTabId = function(tabId, tabTitle) {
         colorBlindFriendly: µbus.colorBlindFriendly,
         cosmeticFilteringSwitch: false,
         firewallPaneMinimized: µbus.firewallPaneMinimized,
-        globalAllowedRequestCount: µb.localSettings.allowedRequestCount,
-        globalBlockedRequestCount: µb.localSettings.blockedRequestCount,
+        globalAllowedRequestCount: µb.requestStats.allowedCount,
+        globalBlockedRequestCount: µb.requestStats.blockedCount,
         fontSize: µbhs.popupFontSize,
         godMode: µbhs.filterAuthorMode,
         netFilteringSwitch: false,
@@ -925,21 +924,6 @@ const fromBase64 = function(encoded) {
     return Promise.resolve(u8array !== undefined ? u8array : encoded);
 };
 
-const toBase64 = function(data) {
-    const value = data instanceof Uint8Array
-        ? denseBase64.encode(data)
-        : data;
-    return Promise.resolve(value);
-};
-
-const compress = function(json) {
-    return lz4Codec.encode(json, toBase64);
-};
-
-const decompress = function(encoded) {
-    return lz4Codec.decode(encoded, fromBase64);
-};
-
 const onMessage = function(request, sender, callback) {
     // Cloud storage support is optional.
     if ( µb.cloudStorageSupported !== true ) {
@@ -961,15 +945,25 @@ const onMessage = function(request, sender, callback) {
         return;
 
     case 'cloudPull':
-        request.decode = decompress;
+        request.decode = encoded => {
+            if ( scuo.isSerialized(encoded) ) {
+                return scuo.deserializeAsync(encoded, { thread: true });
+            }
+            // Legacy decoding: needs to be kept around for the foreseeable future.
+            return lz4Codec.decode(encoded, fromBase64);
+        };
         return vAPI.cloud.pull(request).then(result => {
             callback(result);
         });
 
     case 'cloudPush':
-        if ( µb.hiddenSettings.cloudStorageCompression ) {
-            request.encode = compress;
-        }
+        request.encode = data => {
+            const options = {
+                compress: µb.hiddenSettings.cloudStorageCompression,
+                thread: true,
+            };
+            return scuo.serializeAsync(data, options);
+        };
         return vAPI.cloud.push(request).then(result => {
             callback(result);
         });
@@ -1851,8 +1845,26 @@ const onMessage = function(request, sender, callback) {
         return;
 
     case 'snfeBenchmark':
-        µb.benchmarkStaticNetFiltering({ redirectEngine }).then(result => {
-            callback(result);
+        import('/js/benchmarks.js').then(module => {
+            module.benchmarkStaticNetFiltering({ redirectEngine }).then(result => {
+                callback(result);
+            });
+        });
+        return;
+
+    case 'cfeBenchmark':
+        import('/js/benchmarks.js').then(module => {
+            module.benchmarkCosmeticFiltering().then(result => {
+                callback(result);
+            });
+        });
+        return;
+
+    case 'sfeBenchmark':
+        import('/js/benchmarks.js').then(module => {
+            module.benchmarkScriptletFiltering().then(result => {
+                callback(result);
+            });
         });
         return;
 

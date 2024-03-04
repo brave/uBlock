@@ -13,45 +13,47 @@ html#ublock0-epicker,
 #ublock0-epicker aside {
     background-color: var(--surface-1);
     border: 1px solid var(--border-2);
-    bottom: 2px;
     box-sizing: border-box;
     cursor: default;
     display: none;
-    max-height: calc(100vh - 4px);
-    max-width: 36rem;
-    min-width: 24rem;
-    overflow-y: auto;
-    padding: 4px;
-    position: fixed;
-    right: 2px;
-    width: calc(40% - 2px);
-}
-/* https://github.com/uBlockOrigin/uBlock-issues/discussions/2114 */
-#ublock0-epicker aside {
+    flex-direction: column;
+    max-width: min(32rem, 100vw - 4px);
     min-width: min(24rem, 100vw - 4px);
+    overflow-y: auto;
+    position: fixed;
+    width: min(32rem, 100vw - 4px);
+    z-index: 100;
 }
-#ublock0-epicker.paused:not(.zap) aside {
-    display: block;
-}
-#ublock0-epicker #toolbar {
+#ublock0-epicker:not(.zap) aside {
     display: flex;
 }
+#ublock0-epicker:not(.paused) aside,
+#ublock0-epicker.minimized aside {
+    min-width: min(16rem, 100vw - 4px);
+    overflow: hidden;
+    width: min(16rem, 100vw - 4px);
+}
+#ublock0-epicker:not(.paused) aside > *:not(#windowbar),
+#ublock0-epicker.minimized aside > *:not(#windowbar) {
+    display: none;
+}
+#ublock0-epicker aside > *:not(:first-child) {
+    padding: 0 2px;
+}
+
+#ublock0-epicker #toolbar {
+    display: flex;
+    justify-content: space-between;
+}
+#ublock0-epicker #toolbar button {
+    min-width: 5em;
+    }
 #ublock0-epicker ul {
     margin: 0.25em 0 0 0;
 }
 #ublock0-epicker.preview #preview {
     background-color: var(--button-preferred-surface);
     color: var(--button-preferred-ink);
-}
-#ublock0-epicker #move {
-    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAECAYAAACtBE5DAAAAFElEQVQI12NgwAfKy8v/M5ANYLoBshgEyQo6H9UAAAAASUVORK5CYII=');
-    cursor: grab;
-    flex-grow: 1;
-    margin: 2px 4px;
-    opacity: 0.8;
-    }
-#ublock0-epicker aside.moving #move {
-    cursor: grabbing;
 }
 #ublock0-epicker section {
     border: 0;
@@ -70,8 +72,8 @@ html#ublock0-epicker,
 #ublock0-epicker section .codeMirrorContainer {
     border: none;
     box-sizing: border-box;
-    height: 8em;
-    max-height: 50vh;
+    height: 6em;
+    max-height: min(6em, 10vh);
     min-height: 1em;
     padding: 2px;
     width: 100%;
@@ -129,8 +131,8 @@ html#ublock0-epicker,
     );
     display: inline-block;
     flex-shrink: 0;
-    height: 16px;
-    width: 16px;
+    height: 20px;
+    width: 20px;
     }
 .resultsetModifier  > span > span:nth-of-type(3) {
     background-color: var(--surface-3);
@@ -174,11 +176,8 @@ html#ublock0-epicker,
     overflow: hidden;
 }
 #ublock0-epicker #candidateFilters {
-    max-height: 14em;
+    max-height: min(12em, 18vh);
     overflow-y: auto;
-}
-#ublock0-epicker #candidateFilters > li:first-of-type {
-    margin-bottom: 0.5em;
 }
 #ublock0-epicker .changeFilter > li > span:nth-of-type(1) {
     font-weight: bold;
@@ -186,6 +185,9 @@ html#ublock0-epicker,
 #ublock0-epicker .changeFilter > li > span:nth-of-type(2) {
     font-size: smaller;
     color: gray;
+}
+#ublock0-epicker #candidateFilters [data-i18n] {
+    font-size: 90%;
 }
 #ublock0-epicker #candidateFilters .changeFilter {
     list-style-type: none;
@@ -207,36 +209,7 @@ html#ublock0-epicker,
     background-color: var(--surface-2);
 }
 
-/**
-    https://github.com/gorhill/uBlock/issues/3449
-    https://github.com/uBlockOrigin/uBlock-issues/issues/55
-**/
-@keyframes startDialog {
-  0% { opacity: 1.0; }
-  60% { opacity: 1.0; }
-  100% { opacity: 0.1; }
-}
-#ublock0-epicker.paused aside {
-    opacity: 0.1;
-    visibility: visible;
-    z-index: 100;
-}
-#ublock0-epicker.paused:not(.show):not(.hide) aside:not(:hover) {
-    animation-duration: 1.6s;
-    animation-name: startDialog;
-    animation-timing-function: linear;
-}
-#ublock0-epicker.paused aside:hover {
-    opacity: 1;
-}
-#ublock0-epicker.paused.show aside {
-    opacity: 1;
-}
-#ublock0-epicker.paused.hide aside {
-    opacity: 0.1;
-}
-
-#ublock0-epicker svg {
+#ublock0-epicker svg#sea {
     cursor: crosshair;
     box-sizing: border-box;
     height: 100%;
@@ -245,26 +218,62 @@ html#ublock0-epicker,
     top: 0;
     width: 100%;
 }
-#ublock0-epicker.paused svg {
+#ublock0-epicker.paused svg#sea {
     cursor: not-allowed;
 }
-#ublock0-epicker svg > path:first-child {
+#ublock0-epicker svg#sea > path:first-child {
     fill: rgba(0,0,0,0.5);
     fill-rule: evenodd;
 }
-#ublock0-epicker svg > path + path {
+#ublock0-epicker svg#sea > path + path {
     stroke: #F00;
     stroke-width: 0.5px;
     fill: rgba(255,63,63,0.20);
 }
-#ublock0-epicker.zap svg > path + path {
+#ublock0-epicker.zap svg#sea > path + path {
     stroke: #FF0;
     stroke-width: 0.5px;
     fill: rgba(255,255,63,0.20);
 }
-#ublock0-epicker.preview svg > path {
+#ublock0-epicker.preview svg#sea > path {
     fill: rgba(0,0,0,0.10);
 }
-#ublock0-epicker.preview svg > path + path {
+#ublock0-epicker.preview svg#sea > path + path {
     stroke: none;
+}
+
+
+#ublock0-epicker #windowbar {
+    display: flex;
+}
+#ublock0-epicker #windowbar svg {
+    fill: none;
+    pointer-events: none;
+    stroke: var(--ink-1);
+    stroke-width: 3px;
+}
+#ublock0-epicker #windowbar #move {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAECAYAAACtBE5DAAAAFElEQVQI12NgwAfKy8v/M5ANYLoBshgEyQo6H9UAAAAASUVORK5CYII=');
+    cursor: grab;
+    flex-grow: 1;
+    opacity: 0.8;
+}
+#ublock0-epicker aside.moving #windowbar #move {
+    cursor: grabbing;
+}
+#windowbar #quit,
+#windowbar #minimize {
+    height: 2em;
+    width: 2em;
+}
+#windowbar #quit:hover,
+#windowbar #minimize:hover {
+    background-color: var(--surface-2)
+}
+#ublock0-epicker.minimized #windowbar #minimize svg > path,
+#windowbar #minimize svg > rect {
+    display: none;
+}
+#ublock0-epicker.minimized #windowbar #minimize svg > rect {
+    display: initial;
 }

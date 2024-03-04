@@ -483,6 +483,14 @@
     "message": "Malware domainek",
     "description": "Filter lists section name"
   },
+  "3pGroupSocial": {
+    "message": "Közösségi widgetek",
+    "description": "Filter lists section name"
+  },
+  "3pGroupCookies": {
+    "message": "Cookie értesítések",
+    "description": "Filter lists section name"
+  },
   "3pGroupAnnoyances": {
     "message": "Kellemetlenségek",
     "description": "Filter lists section name"

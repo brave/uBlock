@@ -109,9 +109,9 @@ vAPI.generateSecret = (size = 1) => {
  * 
  * */
 
-vAPI.sessionStorage = {
+vAPI.sessionStorage = browser.storage.session || {
     get() {
-        return Promise.resolve({});
+        return Promise.resolve();
     },
     set() {
         return Promise.resolve();
@@ -122,7 +122,7 @@ vAPI.sessionStorage = {
     clear() {
         return Promise.resolve();
     },
-    implemented: false,
+    unavailable: true,
 };
 
 /*******************************************************************************
@@ -137,46 +137,21 @@ vAPI.sessionStorage = {
 
 vAPI.storage = {
     get(key, ...args) {
-        if ( vAPI.sessionStorage.implemented !== true ) {
-            return webext.storage.local.get(key, ...args).catch(reason => {
-                console.log(reason);
-            });
-        }
-        return vAPI.sessionStorage.get(key, ...args).then(bin => {
-            const size = Object.keys(bin).length;
-            if ( size === 1 && typeof key === 'string' && bin[key] === null ) {
-                return {};
-            }
-            if ( size !== 0 ) { return bin; }
-            return webext.storage.local.get(key, ...args).then(bin => {
-                if ( bin instanceof Object === false ) { return bin; }
-                // Mirror empty result as null value in order to prevent
-                // from falling back to storage.local when there is no need.
-                const tomirror = Object.assign({}, bin);
-                if ( typeof key === 'string' && Object.keys(bin).length === 0 ) {
-                    Object.assign(tomirror, { [key]: null });
-                }
-                vAPI.sessionStorage.set(tomirror);
-                return bin;
-            }).catch(reason => {
-                console.log(reason);
-            });
+        return webext.storage.local.get(key, ...args).catch(reason => {
+            console.log(reason);
         });
     },
     set(...args) {
-        vAPI.sessionStorage.set(...args);
         return webext.storage.local.set(...args).catch(reason => {
             console.log(reason);
         });
     },
     remove(...args) {
-        vAPI.sessionStorage.remove(...args);
         return webext.storage.local.remove(...args).catch(reason => {
             console.log(reason);
         });
     },
     clear(...args) {
-        vAPI.sessionStorage.clear(...args);
         return webext.storage.local.clear(...args).catch(reason => {
             console.log(reason);
         });
@@ -341,10 +316,10 @@ vAPI.Tabs = class {
         });
      }
 
-    async executeScript() {
+    async executeScript(...args) {
         let result;
         try {
-            result = await webext.tabs.executeScript(...arguments);
+            result = await webext.tabs.executeScript(...args);
         }
         catch(reason) {
         }
@@ -569,7 +544,7 @@ vAPI.Tabs = class {
             targetURL = vAPI.getURL(targetURL);
         }
 
-        vAPI.tabs.update(tabId, { url: targetURL });
+        return vAPI.tabs.update(tabId, { url: targetURL });
     }
 
     async remove(tabId) {
@@ -1671,10 +1646,7 @@ vAPI.cloud = (( ) => {
 
     const push = async function(details) {
         const { datakey, data, encode } = details;
-        if (
-            data === undefined ||
-            typeof data === 'string' && data === ''
-        ) {
+        if ( data === undefined || typeof data === 'string' && data === '' ) {
             return deleteChunks(datakey, 0);
         }
         const item = {
@@ -1682,10 +1654,9 @@ vAPI.cloud = (( ) => {
             tstamp: Date.now(),
             data,
         };
-        const json = JSON.stringify(item);
         const encoded = encode instanceof Function
-            ? await encode(json)
-            : json;
+            ? await encode(item)
+            : JSON.stringify(item);
 
         // Chunkify taking into account QUOTA_BYTES_PER_ITEM:
         //   https://developer.chrome.com/extensions/storage#property-sync
@@ -1750,13 +1721,16 @@ vAPI.cloud = (( ) => {
             i += 1;
         }
         encoded = encoded.join('');
-        const json = decode instanceof Function
-            ? await decode(encoded)
-            : encoded;
+
         let entry = null;
         try {
-            entry = JSON.parse(json);
-        } catch(ex) {
+            if ( decode instanceof Function ) {
+                entry = await decode(encoded) || null;
+            }
+            if ( typeof entry === 'string' ) {
+                entry = JSON.parse(entry);
+            }
+        } catch(_) {
         }
         return entry;
     };
@@ -1805,15 +1779,24 @@ vAPI.cloud = (( ) => {
 /******************************************************************************/
 /******************************************************************************/
 
-vAPI.alarms = browser.alarms || {
-    create() {
+vAPI.alarms = {
+    create(...args) {
+        webext.alarms.create(...args);
     },
-    clear() {
+    createIfNotPresent(name, ...args) {
+        webext.alarms.get(name).then(details => {
+            if ( details !== undefined ) { return; }
+            webext.alarms.create(name, ...args);
+        });
+    },
+    async clear(...args) {
+        return webext.alarms.clear(...args);
     },
     onAlarm: {
-        addListener() {
-        }
-    }
+        addListener(...args) {
+            webext.alarms.onAlarm.addListener(...args);
+        },
+    },
 };
 
 /******************************************************************************/

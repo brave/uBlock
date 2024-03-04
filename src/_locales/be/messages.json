@@ -4,7 +4,7 @@
     "description": "extension name."
   },
   "extShortDesc": {
-    "message": "Нарэшце, эфектыўны блакавальнік. Не нагружае працэсар і памяць.",
+    "message": "Нарэшце, эфектыўны блакіроўшчык. Не нагружае працэсар і памяць.",
     "description": "this will be in the Chrome web store: must be 132 characters or less"
   },
   "dashboardName": {
@@ -20,7 +20,7 @@
     "description": "Label for button to prevent navigating away from unsaved changes"
   },
   "dashboardUnsavedWarningIgnore": {
-    "message": "Iгнараваць",
+    "message": "Ігнараваць",
     "description": "Label for button to ignore unsaved changes"
   },
   "settingsPageName": {
@@ -481,6 +481,14 @@
   },
   "3pGroupMalware": {
     "message": "Дамены шкодных праграм",
+    "description": "Filter lists section name"
+  },
+  "3pGroupSocial": {
+    "message": "Віджэты сацыяльных сетак",
+    "description": "Filter lists section name"
+  },
+  "3pGroupCookies": {
+    "message": "Абвесткі пра кукі",
     "description": "Filter lists section name"
   },
   "3pGroupAnnoyances": {
@@ -972,7 +980,7 @@
     "description": "Label for widget to select type of issue"
   },
   "supportS6Select1Option0": {
-    "message": "-- Выберыце катэгорыю --",
+    "message": "-- Выберыце запіс праблемы --",
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Select1Option1": {
