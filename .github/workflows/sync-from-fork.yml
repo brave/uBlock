@@ -84,3 +84,18 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           filterdiff_args: --include=**/assets/assets.json --include=**/assets/resources/scriptlets.js --include=**/web_accessible_resources/ --include=**/js/redirect-resources.js
+  on-failure:
+    runs-on: ubuntu-latest
+    if: ${{ always() && (needs.sync.result == 'failure' || needs.create-pr.result == 'failure' || needs.update-pr.result == 'failure') }}
+    needs:
+      - sync
+      - create-pr
+      - update-pr
+    steps:
+      - uses: 8398a7/action-slack@28ba43ae48961b90635b50953d216767a6bea486 # v3.16.2
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
+          author_name: "Github Actions"
+          status: failure
+          fields: repo,message,commit,author,eventName,ref,workflow,pullRequest
