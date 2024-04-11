@@ -1,0 +1,27 @@
+env:
+  browser: true
+  es2022: true
+extends: eslint:recommended
+parserOptions:
+  sourceType: module
+rules:
+    eqeqeq:
+      - warn
+      - always
+    indent:
+      - error
+      - 4
+      - ignoredNodes:
+        - Program > IfStatement > BlockStatement
+        - Program > ExpressionStatement > CallExpression > ArrowFunctionExpression > BlockStatement
+        - CallExpression > MemberExpression
+        - ArrayExpression > *
+        - ObjectExpression > *
+    no-control-regex: off
+    no-empty: off
+    sort-imports: warn
+    strict: warn
+globals:
+    browser: readonly
+    chrome: readonly
+    vAPI: readonly

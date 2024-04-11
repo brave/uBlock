@@ -1,5 +1,43 @@
 ## Fixes / changes
 
+- [Add a console pane to the logger](https://github.com/gorhill/uBlock/commit/3b4f02db21)
+- [Improve suggested candidate filters in element picker](https://github.com/gorhill/uBlock/commit/c0b56cffab)
+- [Improve `spoof-css` scriptlet](https://github.com/gorhill/uBlock/commit/277e90a4a7)
+- [Fix bad date computation in auto-comment feature](https://github.com/gorhill/uBlock/commit/a5f6c35bb0)
+- [Fix regression breaking import of `file://` lists](https://github.com/gorhill/uBlock/commit/c223a8cd39)
+- [Add `trusted-replace-outbound-text` scriptlet](https://github.com/gorhill/uBlock/commit/21e1ee30ee)
+- [Improve `[trusted-]set-cookie` scriptlets](https://github.com/gorhill/uBlock/commit/49ff7cffb1)
+
+----------
+
+# 1.57.2
+
+## Fixes / changes
+
+- [Fix stray lists in redesigned cache storage](https://github.com/gorhill/uBlock/commit/defd68ef7d)
+
+----------
+
+# 1.57.0
+
+## Fixes / changes
+
+- [Do not block large media resources when loaded as top-level document](https://github.com/gorhill/uBlock/commit/3919a16bb8)
+- [Properly manage cache storage regarding managed user filters](https://github.com/gorhill/uBlock/commit/90ab1a76ab)
+- [Improve `[trusted-]set-cookie` scriptlets](https://github.com/gorhill/uBlock/commit/11a48561e0)
+- [Fixed Belgian and Nepali flags for Windows Chromium users](https://github.com/gorhill/uBlock/commit/499c80bd8a) (by @DandelionSprout)
+- [Mind that `tabs.sendMessage` can throw](https://github.com/gorhill/uBlock/commit/3f7374c1f1)
+- [Improve `set-cookie` scriptlet](https://github.com/gorhill/uBlock/commit/9146134874)
+- [Append wildcard character only when filter starts & ends with `/`](https://github.com/gorhill/uBlock/commit/1cb190e102)
+- [Fix failure to create popup logger window sometimes](https://github.com/gorhill/uBlock/commit/c8762945d9)
+- [Improve json-prune-related scriptlets](https://github.com/gorhill/uBlock/commit/e7a0f8c781)
+- [Support maximizing editor to viewport size](https://github.com/gorhill/uBlock/commit/664dd95700)
+- [Add advanced setting to force popup panel orientation](https://github.com/gorhill/uBlock/commit/0d77ccded7)
+- [Add checkboxes to "My filters" pane](https://github.com/gorhill/uBlock/commit/46ea5519c1)
+- [Assume UTF-8 when no encoding can be looked up](https://github.com/gorhill/uBlock/commit/63acdcbdeb)
+- [Fix issue with "My filters" pane on mobile](https://github.com/gorhill/uBlock/commit/24d94e559d)
+- [Support aborting "Pick" mode in element picker](https://github.com/gorhill/uBlock/commit/a557f62112)
+- [Remove sections with no lists in "Filter lists" pane](https://github.com/gorhill/uBlock/commit/0f4e50db07)
 - [Add "Social widgets", "Cookie notices" sections in "Filter lists" pane](https://github.com/gorhill/uBlock/commit/21a76e32a1)
 - [No longer disable generic cosmetic filters by default on mobile](https://github.com/gorhill/uBlock/commit/7a768e7b1a)
 - [Improve `spoof-css` scriptlet](https://github.com/gorhill/uBlock/commit/603239970d)

@@ -144,7 +144,7 @@
     "description": "This describes the 'complete' filtering mode"
   },
   "noFilteringModeDescription": {
-    "message": "Lista de nombres de host para los cuales no tendrá lugar el filtrado",
+    "message": "Lista de nombres de dominio para los cuales no se realizará ningún filtrado.",
     "description": "A short description for the editable field which lists trusted sites"
   },
   "behaviorSectionLabel": {
@@ -153,6 +153,10 @@
   },
   "autoReloadLabel": {
     "message": "Recargar automáticamente la página al cambiar el modo de filtrado",
+    "description": "Label for a checkbox in the options page"
+  },
+  "showBlockedCountLabel": {
+    "message": "Mostrar el número de peticiones bloqueadas en el icono de la barra de herramientas",
     "description": "Label for a checkbox in the options page"
   }
 }

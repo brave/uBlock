@@ -52,11 +52,11 @@ body {
     margin: 0;
     padding: 0;
     }
-a {
+a:not(.fa-icon) {
     color: var(--link-ink);
         fill: var(--link-ink);
     }
-a:hover {
+a:not(.fa-icon):hover {
     color: var(--link-hover-ink);
         fill: var(--link-hover-ink);
     }
@@ -271,6 +271,24 @@ select {
     padding: 2px;
     }
 
+.searchfield {
+    align-items: center;
+    column-gap: var(--default-gap-xxsmall);
+    display: inline-flex;
+    position: relative;
+    }
+.searchfield .fa-icon {
+    color: var(--ink-4);
+        fill: var(--ink-4);
+    font-size: 1em !important;
+    left: 2px;
+    position: absolute;
+    transform: none;
+    }
+.searchfield input:not(:placeholder-shown) ~ .fa-icon {
+    display: none;
+    }
+
 .hidden {
     display: none;
     height: 0;
@@ -329,6 +347,22 @@ select {
     }
 .logo > img {
     width: 100%;
+    }
+
+.wikilink[href=""] {
+    display: none;
+    }
+.wikilink.fa-icon {
+    color: var(--info0-ink);
+        fill: var(--info0-ink);
+    padding: var(--default-gap-xxsmall) var(--default-gap-xsmall);
+    }
+.wikilink.fa-icon:hover {
+    transform: scale(1.2);
+    }
+.wikilink.fa-icon > svg {
+    height: 1.25rem;
+    width: 1.25rem;
     }
 
 /* high dpi devices */

@@ -13,31 +13,29 @@ for i in "$@"; do
   case $i in
     quick)
       QUICK="yes"
-      shift # past argument=value
       ;;
     full)
       FULL="yes"
-      shift # past argument=value
       ;;
     firefox)
       PLATFORM="firefox"
-      shift # past argument=value
       ;;
     chromium)
       PLATFORM="chromium"
-      shift # past argument=value
       ;;
     uBOLite_+([0-9]).+([0-9]).+([0-9]).+([0-9]))
       TAGNAME="$i"
       FULL="yes"
-      shift # past argument=value
       ;;
-    before=+([print]))
+    before=+([[:print:]]))
       BEFORE="${i:7}"
-      shift # past argument=value
       ;;
   esac
 done
+
+echo "PLATFORM=$PLATFORM"
+echo "TAGNAME=$TAGNAME"
+echo "BEFORE=$BEFORE"
 
 DES="dist/build/uBOLite.$PLATFORM"
 
@@ -117,6 +115,12 @@ if [ "$QUICK" != "yes" ]; then
     cp "$UBO_DIR"/src/web_accessible_resources/* "$TMPDIR"/web_accessible_resources/
     cd "$TMPDIR"
     node --no-warnings make-rulesets.js output="$DES" platform="$PLATFORM"
+    if [ -n "$BEFORE" ]; then
+        echo "*** uBOLite.mv3: salvaging rule ids to minimize diff size"
+        echo "    before=$BEFORE/$PLATFORM"
+        echo "    after=$DES"
+        node salvage-ruleids.mjs before="$BEFORE"/"$PLATFORM" after="$DES"
+    fi
     cd - > /dev/null
     rm -rf "$TMPDIR"
 fi
@@ -124,11 +128,14 @@ fi
 echo "*** uBOLite.mv3: extension ready"
 echo "Extension location: $DES/"
 
+# Local build: use a different extension id than the official one
+if [ -z "$TAGNAME" ] && [ "$PLATFORM" = "firefox" ]; then
+    tmp=$(mktemp)
+    jq '.browser_specific_settings.gecko.id = "uBOLite.dev@raymondhill.net"' "$DES/manifest.json"  > "$tmp" \
+        && mv "$tmp" "$DES/manifest.json"
+fi
+
 if [ "$FULL" = "yes" ]; then
-    if [ -n "$BEFORE" ]; then
-        echo "*** uBOLite.mv3: salvaging rule ids to minimize diff size"
-        node salvage-ruleids.mjs before="$BEFORE"/"$PLATFORM" after="$DES"
-    fi
     EXTENSION="zip"
     if [ "$PLATFORM" = "firefox" ]; then
         EXTENSION="xpi"

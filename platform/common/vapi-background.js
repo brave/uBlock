@@ -22,14 +22,10 @@
 
 // For background page
 
-/* globals browser */
-
-'use strict';
-
 /******************************************************************************/
 
-import webext from './webext.js';
 import { ubolog } from './console.js';
+import webext from './webext.js';
 
 /******************************************************************************/
 
@@ -46,6 +42,9 @@ if ( vAPI.canWASM === false ) {
 }
 
 vAPI.supportsUserStylesheets = vAPI.webextFlavor.soup.has('user_stylesheet');
+
+const hasOwnProperty = (o, p) =>
+    Object.prototype.hasOwnProperty.call(o, p);
 
 /******************************************************************************/
 
@@ -191,9 +190,9 @@ vAPI.browserSettings = (( ) => {
 
         set: function(details) {
             for ( const setting in details ) {
-                if ( details.hasOwnProperty(setting) === false ) { continue; }
+                if ( hasOwnProperty(details, setting) === false ) { continue; }
                 switch ( setting ) {
-                case 'prefetching':
+                case 'prefetching': {
                     const enabled = !!details[setting];
                     if ( enabled ) {
                         bp.network.networkPredictionEnabled.clear({
@@ -209,9 +208,9 @@ vAPI.browserSettings = (( ) => {
                         vAPI.prefetching(enabled);
                     }
                     break;
-
-                case 'hyperlinkAuditing':
-                    if ( !!details[setting] ) {
+                }
+                case 'hyperlinkAuditing': {
+                    if ( details[setting] ) {
                         bp.websites.hyperlinkAuditingEnabled.clear({
                             scope: 'regular',
                         });
@@ -222,7 +221,7 @@ vAPI.browserSettings = (( ) => {
                         });
                     }
                     break;
-
+                }
                 case 'webrtcIPAddress': {
                     // https://github.com/uBlockOrigin/uBlock-issues/issues/1928
                     // https://www.reddit.com/r/uBlockOrigin/comments/sl7p74/
@@ -314,7 +313,7 @@ vAPI.Tabs = class {
             }
             this.onRemovedHandler(tabId, details);
         });
-     }
+    }
 
     async executeScript(...args) {
         let result;
@@ -433,22 +432,26 @@ vAPI.Tabs = class {
         // For some reasons, some platforms do not honor the left,top
         // position when specified. I found that further calling
         // windows.update again with the same position _may_ help.
+        //
+        // https://github.com/uBlockOrigin/uBlock-issues/issues/2249
+        //   Mind that the creation of the popup window might fail.
         if ( details.popup !== undefined && vAPI.windows instanceof Object ) {
-            const createDetails = {
+            const basicDetails = {
                 url: details.url,
                 type: details.popup,
             };
-            if ( details.box instanceof Object ) {
-                Object.assign(createDetails, details.box);
+            const shouldRestorePosition = details.box instanceof Object;
+            const extraDetails = shouldRestorePosition
+                ? Object.assign({}, basicDetails, details.box)
+                : basicDetails;
+            const win = await vAPI.windows.create(extraDetails);
+            if ( win === null ) {
+                if ( shouldRestorePosition === false ) { return; }
+                return vAPI.windows.create(basicDetails);
             }
-            const win = await vAPI.windows.create(createDetails);
-            if ( win === null ) { return; }
-            if ( details.box instanceof Object === false ) { return; }
-            if (
-                win.left === details.box.left &&
-                win.top === details.box.top
-            ) {
-                return;
+            if ( shouldRestorePosition === false ) { return; }
+            if ( win.left === details.box.left ) {
+                if ( win.top === details.box.top ) { return; }
             }
             vAPI.windows.update(win.id, {
                 left: details.box.left,
@@ -865,8 +868,8 @@ if ( webext.browserAction instanceof Object ) {
         const hasUnprocessedRequest = vAPI.net && vAPI.net.hasUnprocessedRequest(tabId);
         const { parts, state } = details;
         const { badge, color } = hasUnprocessedRequest
-                ? { badge: '!', color: '#FC0' }
-                : details;
+            ? { badge: '!', color: '#FC0' }
+            : details;
 
         if ( browserAction.setIcon !== undefined ) {
             if ( parts === undefined || (parts & 0b0001) !== 0 ) {
@@ -1025,7 +1028,7 @@ vAPI.messaging = {
             });
             break;
         }
-        case 'userCSS':
+        case 'userCSS': {
             if ( tabId === undefined ) { break; }
             const promises = [];
             if ( msg.add ) {
@@ -1054,6 +1057,9 @@ vAPI.messaging = {
             Promise.all(promises).then(( ) => {
                 callback();
             });
+            break;
+        }
+        default:
             break;
         }
     },
@@ -1213,7 +1219,7 @@ vAPI.Net = class {
         {
             const wrrt = browser.webRequest.ResourceType;
             for ( const typeKey in wrrt ) {
-                if ( wrrt.hasOwnProperty(typeKey) ) {
+                if ( hasOwnProperty(wrrt, typeKey) ) {
                     this.validTypes.add(wrrt[typeKey]);
                 }
             }
@@ -1516,10 +1522,7 @@ vAPI.localStorage = {
         if ( this.cache instanceof Promise ) { return this.cache; }
         if ( this.cache instanceof Object ) { return this.cache; }
         this.cache = vAPI.storage.get('localStorage').then(bin => {
-            this.cache = bin instanceof Object &&
-                bin.localStorage instanceof Object
-                    ? bin.localStorage
-                    : {};
+            this.cache = bin && bin.localStorage || {};
         });
         return this.cache;
     },

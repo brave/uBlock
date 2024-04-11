@@ -22,10 +22,10 @@
     web page context.
 */
 
+/* eslint no-prototype-builtins: 0 */
+
 // Externally added to the private namespace in which scriptlets execute.
 /* global scriptletGlobals */
-
-'use strict';
 
 export const builtinScriptlets = [];
 
@@ -424,7 +424,8 @@ function abortCurrentScriptCore(
         if ( e instanceof HTMLScriptElement === false ) { return; }
         if ( e === thisScript ) { return; }
         if ( context !== '' && reContext.test(e.src) === false ) {
-            if ( debug === 'nomatch' || debug === 'all' ) { debugger; }  // jshint ignore: line
+            // eslint-disable-next-line no-debugger
+            if ( debug === 'nomatch' || debug === 'all' ) { debugger; }
             return;
         }
         if ( safe.logLevel > 1 && context !== '' ) {
@@ -432,17 +433,20 @@ function abortCurrentScriptCore(
         }
         const scriptText = getScriptText(e);
         if ( reNeedle.test(scriptText) === false ) {
-            if ( debug === 'nomatch' || debug === 'all' ) { debugger; }  // jshint ignore: line
+            // eslint-disable-next-line no-debugger
+            if ( debug === 'nomatch' || debug === 'all' ) { debugger; }
             return;
         }
         if ( safe.logLevel > 1 ) {
             safe.uboLog(logPrefix, `Matched text\n${scriptText}`);
         }
-        if ( debug === 'match' || debug === 'all' ) { debugger; }  // jshint ignore: line
+        // eslint-disable-next-line no-debugger
+        if ( debug === 'match' || debug === 'all' ) { debugger; }
         safe.uboLog(logPrefix, 'Aborted');
         throw new ReferenceError(exceptionToken);
     };
-    if ( debug === 'install' ) { debugger; }  // jshint ignore: line
+    // eslint-disable-next-line no-debugger
+    if ( debug === 'install' ) { debugger; }
     try {
         Object.defineProperty(owner, prop, {
             get: function() {
@@ -861,14 +865,33 @@ function objectFindOwnerFn(
             return modified;
         }
         const prop = chain.slice(0, pos);
+        const next = chain.slice(pos + 1);
+        let found = false;
+        if ( prop === '[-]' && Array.isArray(owner) ) {
+            let i = owner.length;
+            while ( i-- ) {
+                if ( objectFindOwnerFn(owner[i], next) === false ) { continue; }
+                owner.splice(i, 1);
+                found = true;
+            }
+            return found;
+        }
+        if ( prop === '{-}' && owner instanceof Object ) {
+            for ( const key of Object.keys(owner) ) {
+                if ( objectFindOwnerFn(owner[key], next) === false ) { continue; }
+                delete owner[key];
+                found = true;
+            }
+            return found;
+        }
         if (
             prop === '[]' && Array.isArray(owner) ||
+            prop === '{}' && owner instanceof Object ||
             prop === '*' && owner instanceof Object
         ) {
-            const next = chain.slice(pos + 1);
-            let found = false;
             for ( const key of Object.keys(owner) ) {
-                found = objectFindOwnerFn(owner[key], next, prune) || found;
+                if (objectFindOwnerFn(owner[key], next, prune) === false ) { continue; }
+                found = true;
             }
             return found;
         }
@@ -876,7 +899,6 @@ function objectFindOwnerFn(
         owner = owner[prop];
         chain = chain.slice(pos + 1);
     }
-    return true;
 }
 
 /******************************************************************************/
@@ -947,6 +969,18 @@ function setCookieFn(
     path = '',
     options = {},
 ) {
+    // https://datatracker.ietf.org/doc/html/rfc2616#section-2.2
+    // https://github.com/uBlockOrigin/uBlock-issues/issues/2777
+    if ( trusted === false && /[^!#$%&'*+\-.0-9A-Z[\]^_`a-z|~]/.test(name) ) {
+        name = encodeURIComponent(name);
+    }
+    // https://datatracker.ietf.org/doc/html/rfc6265#section-4.1.1
+    // The characters [",] are given a pass from the RFC requirements because
+    // apparently browsers do not follow the RFC to the letter.
+    if ( /[^ -:<-[\]-~]/.test(value) ) {
+        value = encodeURIComponent(value);
+    }
+
     const cookieBefore = getCookieFn(name);
     if ( cookieBefore !== undefined && options.dontOverwrite ) { return; }
     if ( cookieBefore === value && options.reload ) { return; }
@@ -1625,7 +1659,7 @@ function addEventListenerDefuser(
         const matchesEither = matchesType || matchesHandler;
         const matchesBoth = matchesType && matchesHandler;
         if ( debug === 1 && matchesBoth || debug === 2 && matchesEither ) {
-            debugger; // jshint ignore:line
+            debugger; // eslint-disable-line no-debugger
         }
         if ( matchesBoth && targetSelector !== undefined ) {
             if ( elementMatches(thisArg) === false ) { return false; }
@@ -3419,7 +3453,7 @@ function hrefSanitizer(
             return elem.textContent
                 .replace(/^[^\x21-\x7e]+/, '') // remove leading invalid characters
                 .replace(/[^\x21-\x7e]+$/, '') // remove trailing invalid characters
-                ;
+            ;
         }
         return '';
     };
@@ -3559,6 +3593,7 @@ function spoofCSS(
     const logPrefix = safe.makeLogPrefix('spoof-css', selector, ...args);
     const canDebug = scriptletGlobals.canDebug;
     const shouldDebug = canDebug && propToValueMap.get('debug') || 0;
+    const instanceProperties = [ 'cssText', 'length', 'parentRule' ];
     const spoofStyle = (prop, real) => {
         const normalProp = toCamelCase(prop);
         const shouldSpoof = propToValueMap.has(normalProp);
@@ -3571,11 +3606,15 @@ function spoofCSS(
     const cloackFunc = (fn, thisArg, name) => {
         const trap = fn.bind(thisArg);
         Object.defineProperty(trap, 'name', { value: name });
+        Object.defineProperty(trap, 'toString', {
+            value: ( ) => `function ${name}() { [native code] }`
+        });
         return trap;
     };
     self.getComputedStyle = new Proxy(self.getComputedStyle, {
         apply: function(target, thisArg, args) {
-            if ( shouldDebug !== 0 ) { debugger; }    // jshint ignore: line
+            // eslint-disable-next-line no-debugger
+            if ( shouldDebug !== 0 ) { debugger; }
             const style = Reflect.apply(target, thisArg, args);
             const targetElements = new WeakSet(document.querySelectorAll(selector));
             if ( targetElements.has(args[0]) === false ) { return style; }
@@ -3583,11 +3622,14 @@ function spoofCSS(
                 get(target, prop, receiver) {
                     if ( typeof target[prop] === 'function' ) {
                         if ( prop === 'getPropertyValue' ) {
-                            return cloackFunc(function(prop) {
+                            return cloackFunc(function getPropertyValue(prop) {
                                 return spoofStyle(prop, target[prop]);
                             }, target, 'getPropertyValue');
                         }
                         return cloackFunc(target[prop], target, prop);
+                    }
+                    if ( instanceProperties.includes(prop) ) {
+                        return Reflect.get(target, prop);
                     }
                     return spoofStyle(prop, Reflect.get(target, prop, receiver));
                 },
@@ -3614,7 +3656,8 @@ function spoofCSS(
     });
     Element.prototype.getBoundingClientRect = new Proxy(Element.prototype.getBoundingClientRect, {
         apply: function(target, thisArg, args) {
-            if ( shouldDebug !== 0 ) { debugger; }    // jshint ignore: line
+            // eslint-disable-next-line no-debugger
+            if ( shouldDebug !== 0 ) { debugger; }
             const rect = Reflect.apply(target, thisArg, args);
             const targetElements = new WeakSet(document.querySelectorAll(selector));
             if ( targetElements.has(thisArg) === false ) { return rect; }
@@ -3685,7 +3728,6 @@ function setCookie(
     if ( name === '' ) { return; }
     const safe = safeSelf();
     const logPrefix = safe.makeLogPrefix('set-cookie', name, value, path);
-    name = encodeURIComponent(name);
 
     const validValues = [
         'accept', 'reject',
@@ -3706,7 +3748,7 @@ function setCookie(
     if ( validValues.includes(unquoted) === false ) {
         if ( /^\d+$/.test(unquoted) === false ) { return; }
         const n = parseInt(value, 10);
-        if ( n > 15 ) { return; }
+        if ( n > 32767 ) { return; }
     }
 
     const done = setCookieFn(
@@ -4661,6 +4703,47 @@ function trustedReplaceArgument(
         arglist[argpos] = normalValue;
         safe.uboLog(logPrefix, `Replaced argument:\nBefore: ${JSON.stringify(argBefore)}\nAfter: ${normalValue}`);
         return reflector(...args);
+    });
+}
+
+/******************************************************************************/
+
+builtinScriptlets.push({
+    name: 'trusted-replace-outbound-text.js',
+    requiresTrust: true,
+    fn: trustedReplaceOutboundText,
+    dependencies: [
+        'proxy-apply.fn',
+        'safe-self.fn',
+    ],
+});
+function trustedReplaceOutboundText(
+    propChain = '',
+    pattern = '',
+    replacement = '',
+    ...args
+) {
+    if ( propChain === '' ) { return; }
+    const safe = safeSelf();
+    const logPrefix = safe.makeLogPrefix('trusted-replace-outbound-text', propChain, pattern, replacement, ...args);
+    const rePattern = safe.patternToRegex(pattern);
+    const extraArgs = safe.getExtraArgs(args);
+    const reCondition = safe.patternToRegex(extraArgs.condition || '');
+    const reflector = proxyApplyFn(propChain, function(...args) {
+        const textBefore = reflector(...args);
+        if ( pattern === '' ) {
+            safe.uboLog(logPrefix, 'Outbound text:\n', textBefore);
+            return textBefore;
+        }
+        reCondition.lastIndex = 0;
+        if ( reCondition.test(textBefore) === false ) { return textBefore; }
+        const textAfter = textBefore.replace(rePattern, replacement);
+        if ( textAfter === textBefore ) { return textBefore; }
+        safe.uboLog(logPrefix, 'Matched and replaced');
+        if ( safe.logLevel > 1 ) {
+            safe.uboLog(logPrefix, 'Modified outbound text:\n', textAfter);
+        }
+        return textAfter;
     });
 }
 

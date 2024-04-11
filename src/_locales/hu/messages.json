@@ -488,7 +488,7 @@
     "description": "Filter lists section name"
   },
   "3pGroupCookies": {
-    "message": "Cookie értesítések",
+    "message": "Sütiértesítések",
     "description": "Filter lists section name"
   },
   "3pGroupAnnoyances": {
@@ -535,13 +535,17 @@
     "message": "Egy hálózati hiba megakadályozta az erőforrás frissítését.",
     "description": "used as a tooltip for error icon beside a list"
   },
-  "1pFormatHint": {
-    "message": "Soronként egy szűrő. A szűrő lehet egy hostnév, vagy egy Adblock Plus kompatibilis szűrő.\nA <code>!</code> kezdetű sorok figyelmen kívül maradnak.",
-    "description": "Short information about how to create custom filters"
-  },
   "1pTrustWarning": {
     "message": "Ne adj hozzá szűrőket megbízhatatlan forrásokból.",
     "description": "Warning against copy-pasting filters from random sources"
+  },
+  "1pEnableMyFiltersLabel": {
+    "message": "Egyedi szűrőim engedélyezése",
+    "description": "Label for the checkbox use to enable/disable 'My filters' list"
+  },
+  "1pTrustMyFiltersLabel": {
+    "message": "Megbízhatóságot igénylő egyéni szűrők engedélyezése",
+    "description": "Label for the checkbox use to trust the content of 'My filters' list"
   },
   "1pImport": {
     "message": "Importál és hozzáad",

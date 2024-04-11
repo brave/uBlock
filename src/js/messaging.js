@@ -45,7 +45,7 @@ import { dnrRulesetFromRawLists } from './static-dnr-filtering.js';
 import { i18n$ } from './i18n.js';
 import { redirectEngine } from './redirect-engine.js';
 import * as sfp from './static-filtering-parser.js';
-import * as scuo from './scuo-serializer.js';
+import * as s14e from './s14e-serializer.js';
 
 import {
     permanentFirewall,
@@ -378,6 +378,7 @@ const popupDataFromTabId = function(tabId, tabTitle) {
         popupPanelDisabledSections: µbhs.popupPanelDisabledSections,
         popupPanelLockedSections: µbhs.popupPanelLockedSections,
         popupPanelHeightMode: µbhs.popupPanelHeightMode,
+        popupPanelOrientation: µbhs.popupPanelOrientation,
         tabId,
         tabTitle,
         tooltipsDisabled: µbus.tooltipsDisabled,
@@ -946,8 +947,8 @@ const onMessage = function(request, sender, callback) {
 
     case 'cloudPull':
         request.decode = encoded => {
-            if ( scuo.isSerialized(encoded) ) {
-                return scuo.deserializeAsync(encoded, { thread: true });
+            if ( s14e.isSerialized(encoded) ) {
+                return s14e.deserializeAsync(encoded, { thread: true });
             }
             // Legacy decoding: needs to be kept around for the foreseeable future.
             return lz4Codec.decode(encoded, fromBase64);
@@ -962,7 +963,7 @@ const onMessage = function(request, sender, callback) {
                 compress: µb.hiddenSettings.cloudStorageCompression,
                 thread: true,
             };
-            return scuo.serializeAsync(data, options);
+            return s14e.serializeAsync(data, options);
         };
         return vAPI.cloud.push(request).then(result => {
             callback(result);
@@ -1450,11 +1451,23 @@ const onMessage = function(request, sender, callback) {
 
     case 'readUserFilters':
         return µb.loadUserFilters().then(result => {
-            result.trustedSource = µb.isTrustedList(µb.userFiltersPath);
+            result.enabled = µb.selectedFilterLists.includes(µb.userFiltersPath);
+            result.trusted = µb.isTrustedList(µb.userFiltersPath);
             callback(result);
         });
 
     case 'writeUserFilters':
+        if ( request.enabled ) {
+            µb.applyFilterListSelection({
+                toSelect: [ µb.userFiltersPath ],
+                merge: true,
+            });
+        } else {
+            µb.applyFilterListSelection({
+                toRemove: [ µb.userFiltersPath ],
+            });
+        }
+        µb.changeUserSettings('userFiltersTrusted', request.trusted || false);
         return µb.saveUserFilters(request.content).then(result => {
             callback(result);
         });

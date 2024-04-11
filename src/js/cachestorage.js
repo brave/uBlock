@@ -19,17 +19,14 @@
     Home: https://github.com/gorhill/uBlock
 */
 
-/* global indexedDB */
-
-'use strict';
-
 /******************************************************************************/
 
+import * as s14e from './s14e-serializer.js';
+
 import lz4Codec from './lz4.js';
+import { ubolog } from './console.js';
 import webext from './webext.js';
 import µb from './background.js';
-import { ubolog } from './console.js';
-import * as scuo from './scuo-serializer.js';
 
 /******************************************************************************/
 
@@ -46,6 +43,10 @@ const keysFromGetArg = arg => {
 };
 
 let fastCache = 'indexedDB';
+
+// https://eslint.org/docs/latest/rules/no-prototype-builtins
+const hasOwnProperty = (o, p) =>
+    Object.prototype.hasOwnProperty.call(o, p);
 
 /*******************************************************************************
  * 
@@ -65,7 +66,7 @@ const cacheStorage = (( ) => {
             if ( found.length === wanted.length ) { return; }
             const missing = [];
             for ( const key of wanted ) {
-                if ( outbin.hasOwnProperty(key) ) { continue; }
+                if ( hasOwnProperty(outbin, key) ) { continue; }
                 missing.push(key);
             }
             return missing;
@@ -74,7 +75,7 @@ const cacheStorage = (( ) => {
 
     const compress = async (bin, key, data) => {
         const µbhs = µb.hiddenSettings;
-        const after = await scuo.serializeAsync(data, {
+        const after = await s14e.serializeAsync(data, {
             compress: µbhs.cacheStorageCompression,
             compressThreshold: µbhs.cacheStorageCompressionThreshold,
             multithreaded: µbhs.cacheStorageMultithread,
@@ -84,10 +85,10 @@ const cacheStorage = (( ) => {
 
     const decompress = async (bin, key) => {
         const data = bin[key];
-        if ( scuo.isSerialized(data) === false ) { return; }
+        if ( s14e.isSerialized(data) === false ) { return; }
         const µbhs = µb.hiddenSettings;
         const isLarge = data.length >= µbhs.cacheStorageCompressionThreshold;
-        bin[key] = await scuo.deserializeAsync(data, {
+        bin[key] = await s14e.deserializeAsync(data, {
             multithreaded: isLarge && µbhs.cacheStorageMultithread || 1,
         });
     };
@@ -107,7 +108,7 @@ const cacheStorage = (( ) => {
                 if ( argbin instanceof Object === false ) { return; }
                 if ( Array.isArray(argbin) ) { return; }
                 for ( const key of wanted ) {
-                    if ( argbin.hasOwnProperty(key) === false ) { continue; }
+                    if ( hasOwnProperty(argbin, key) === false ) { continue; }
                     outbin[key] = argbin[key];
                 }
             }).then(( ) => {
@@ -165,7 +166,7 @@ const cacheStorage = (( ) => {
         },
 
         select(api) {
-            if ( cacheAPIs.hasOwnProperty(api) === false ) { return fastCache; }
+            if ( hasOwnProperty(cacheAPIs, api) === false ) { return fastCache; }
             fastCache = api;
             for ( const k of Object.keys(cacheAPIs) ) {
                 if ( k === api ) { continue; }
@@ -485,16 +486,9 @@ const idbStorage = (( ) => {
 
     // Cache API is subject to quota so we will use it only for what is key
     // performance-wise
-    const shouldCache = bin => {
-        const out = {};
-        for ( const key of Object.keys(bin) ) {
-            if ( key.startsWith('cache/' ) ) {
-                if ( /^cache\/(compiled|selfie)\//.test(key) === false ) { continue; }
-            }
-            out[key] = bin[key];
-        }
-        if ( Object.keys(out).length === 0 ) { return; }
-        return out;
+    const shouldCache = key => {
+        if ( key.startsWith('cache/') === false ) { return true; }
+        return /^cache\/(compiled|selfie)\//.test(key);
     };
 
     const fromBlob = data => {
@@ -591,7 +585,7 @@ const idbStorage = (( ) => {
             const transaction = db.transaction(STORAGE_NAME, 'readonly');
             transaction.oncomplete =
             transaction.onerror =
-                transaction.onabort = ( ) => {
+            transaction.onabort = ( ) => {
                 resolve(Promise.all(entries));
             };
             const table = transaction.objectStore(STORAGE_NAME);
@@ -668,21 +662,32 @@ const idbStorage = (( ) => {
             if ( keys.length === 0 ) { return getAll(); }
             const entries = await getEntries(keys);
             const outbin = {};
+            const toRemove = [];
             for ( const { key, value } of entries ) {
+                if ( shouldCache(key) === false ) {
+                    toRemove.push(key);
+                    continue;
+                }
                 outbin[key] = value;
             }
             if ( argbin instanceof Object && Array.isArray(argbin) === false ) {
                 for ( const key of keys ) {
-                    if ( outbin.hasOwnProperty(key) ) { continue; }
+                    if ( hasOwnProperty(outbin, key) ) { continue; }
                     outbin[key] = argbin[key];
                 }
+            }
+            if ( toRemove.length !== 0 ) {
+                deleteEntries(toRemove);
             }
             return outbin;
         },
 
         async set(rawbin) {
-            const bin = shouldCache(rawbin);
-            if ( bin === undefined ) { return; }
+            const bin = {};
+            for ( const key of Object.keys(rawbin) ) {
+                if ( shouldCache(key) === false ) { continue; }
+                bin[key] = rawbin[key];
+            }
             return setEntries(bin);
         },
 
@@ -695,7 +700,7 @@ const idbStorage = (( ) => {
         },
 
         clear() {
-             return getDb().then(db => {
+            return getDb().then(db => {
                 if ( db === null ) { return; }
                 db.close();
                 indexedDB.deleteDatabase(STORAGE_NAME);

@@ -144,7 +144,7 @@
     "description": "This describes the 'complete' filtering mode"
   },
   "noFilteringModeDescription": {
-    "message": "Lista över värdnamn för vilka ingen filtrering kommer att äga rum",
+    "message": "Lista över värdnamn som inte kommer att filtreras",
     "description": "A short description for the editable field which lists trusted sites"
   },
   "behaviorSectionLabel": {
@@ -153,6 +153,10 @@
   },
   "autoReloadLabel": {
     "message": "Ladda automatiskt om sidan när du byter filtreringsläge",
+    "description": "Label for a checkbox in the options page"
+  },
+  "showBlockedCountLabel": {
+    "message": "Visa antalet blockerade förfrågningar på verktygsfältsikonen",
     "description": "Label for a checkbox in the options page"
   }
 }

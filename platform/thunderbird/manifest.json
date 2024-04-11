@@ -41,8 +41,7 @@
         "https://filterlists.com/*",
         "https://forums.lanik.us/*",
         "https://github.com/*",
-        "https://*.github.io/*",
-        "https://*.letsblock.it/*"
+        "https://*.github.io/*"
       ],
       "js": [
         "/js/scriptlets/subscriber.js"
@@ -78,6 +77,7 @@
     "open_in_tab": true
   },
   "permissions": [
+    "alarms",
     "privacy",
     "storage",
     "tabs",

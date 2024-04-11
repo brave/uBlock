@@ -154,5 +154,9 @@
   "autoReloadLabel": {
     "message": "Զտման ռեժիմը փոխելիս ինքնաշխատորեն վերաբեռնել էջը",
     "description": "Label for a checkbox in the options page"
+  },
+  "showBlockedCountLabel": {
+    "message": "Ցուցադրել արգելափակված հայտերի քանակը գործիքների վահանակին",
+    "description": "Label for a checkbox in the options page"
   }
 }

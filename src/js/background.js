@@ -19,21 +19,17 @@
     Home: https://github.com/gorhill/uBlock
 */
 
-/* globals browser */
-
-'use strict';
-
 /******************************************************************************/
-
-import logger from './logger.js';
-import { FilteringContext } from './filtering-context.js';
-import { ubologSet } from './console.js';
 
 import {
     domainFromHostname,
     hostnameFromURI,
     originFromURI,
 } from './uri-utils.js';
+
+import { FilteringContext } from './filtering-context.js';
+import logger from './logger.js';
+import { ubologSet } from './console.js';
 
 /******************************************************************************/
 
@@ -54,7 +50,6 @@ const hiddenSettingsDefault = {
     autoUpdatePeriod: 1,
     benchmarkDatasetURL: 'unset',
     blockingProfiles: '11111/#F00 11010/#C0F 11001/#00F 00001',
-    cacheStorageAPI: 'unset',
     cacheStorageCompression: true,
     cacheStorageCompressionThreshold: 65536,
     cacheStorageMultithread: 2,
@@ -80,8 +75,9 @@ const hiddenSettingsDefault = {
     modifyWebextFlavor: 'unset',
     popupFontSize: 'unset',
     popupPanelDisabledSections: 0,
-    popupPanelLockedSections: 0,
     popupPanelHeightMode: 0,
+    popupPanelLockedSections: 0,
+    popupPanelOrientation: 'unset',
     requestJournalProcessPeriod: 1000,
     requestStatsDisabled: false,
     selfieDelayInSeconds: 53,
@@ -96,7 +92,7 @@ const hiddenSettingsDefault = {
 
 if ( vAPI.webextFlavor.soup.has('devbuild') ) {
     hiddenSettingsDefault.consoleLogLevel = 'info';
-    hiddenSettingsDefault.trustedListPrefixes += ' user-';
+    hiddenSettingsDefault.cacheStorageAPI = 'unset';
     ubologSet(true);
 }
 
@@ -125,6 +121,7 @@ const userSettingsDefault = {
     showIconBadge: true,
     suspendUntilListsAreLoaded: vAPI.Net.canSuspend(),
     tooltipsDisabled: false,
+    userFiltersTrusted: false,
     webrtcIPAddressHidden: false,
 };
 

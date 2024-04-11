@@ -20,7 +20,7 @@
     "description": "appears as tab name in dashboard"
   },
   "aboutPageName": {
-    "message": "אודות",
+    "message": "על אודות",
     "description": "appears as tab name in dashboard"
   },
   "aboutPrivacyPolicy": {
@@ -153,6 +153,10 @@
   },
   "autoReloadLabel": {
     "message": "טעינת עמוד באופן אוטומטי עם שינוי מצב סינון",
+    "description": "Label for a checkbox in the options page"
+  },
+  "showBlockedCountLabel": {
+    "message": "הצגת מספר הבקשות החסומות על הסמל",
     "description": "Label for a checkbox in the options page"
   }
 }

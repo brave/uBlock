@@ -89,6 +89,7 @@
 .fa-icon > .fa-icon_sun-o {
     width: calc(1em * 1708 / 1792);
     }
+.fa-icon > .fa-icon_book,
 .fa-icon > .fa-icon_download-alt,
 .fa-icon > .fa-icon_font,
 .fa-icon > .fa-icon_search,
@@ -99,6 +100,9 @@
 .fa-icon > .fa-icon_zoom-in,
 .fa-icon > .fa-icon_zoom-out {
     width: calc(1em * 1664 / 1792);
+    }
+.fa-icon > .fa-icon_terminal {
+    width: calc(1em * 1651 / 1792);
     }
 .fa-icon > .fa-icon_magic {
     width: calc(1em * 1637 / 1792);

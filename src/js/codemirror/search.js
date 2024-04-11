@@ -25,18 +25,25 @@
 // Ctrl-G.
 // =====
 
-'use strict';
-
 import { dom, qs$ } from '../dom.js';
 import { i18n$ } from '../i18n.js';
 
 {
     const CodeMirror = self.CodeMirror;
 
+    CodeMirror.defineOption('maximizable', true, (cm, maximizable) => {
+        if ( typeof maximizable !== 'boolean' ) { return; }
+        const wrapper = cm.getWrapperElement();
+        if ( wrapper === null ) { return; }
+        const container = wrapper.closest('.codeMirrorContainer');
+        if ( container === null ) { return; }
+        container.dataset.maximizable = `${maximizable}`;
+    });
+
     const searchOverlay = function(query, caseInsensitive) {
         if ( typeof query === 'string' )
             query = new RegExp(
-                query.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&'),
+                query.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&'),
                 caseInsensitive ? 'gi' : 'g'
             );
         else if ( !query.global )
@@ -89,8 +96,10 @@ import { i18n$ } from '../i18n.js';
         state.queryTimer.offon(350);
     };
 
-    const searchWidgetClickHandler = function(cm, ev) {
-        const tcl = ev.target.classList;
+    const searchWidgetClickHandler = (ev, cm) => {
+        if ( ev.button !== 0 ) { return; }
+        const target = ev.target;
+        const tcl = target.classList;
         if ( tcl.contains('cm-search-widget-up') ) {
             findNext(cm, -1);
         } else if ( tcl.contains('cm-search-widget-down') ) {
@@ -99,11 +108,14 @@ import { i18n$ } from '../i18n.js';
             findNextError(cm, -1);
         } else if ( tcl.contains('cm-linter-widget-down') ) {
             findNextError(cm, 1);
+        } else if ( tcl.contains('cm-maximize') ) {
+            const container = target.closest('.codeMirrorContainer');
+            if ( container !== null ) {
+                container.classList.toggle('cm-maximized');
+            }
         }
-        if ( ev.target.localName !== 'input' ) {
-            ev.preventDefault();
-        } else {
-            ev.stopImmediatePropagation();
+        if ( target.localName !== 'input' ) {
+            cm.focus();
         }
     };
 
@@ -127,7 +139,9 @@ import { i18n$ } from '../i18n.js';
         this.widget = widgetParent.children[0];
         this.widget.addEventListener('keydown', searchWidgetKeydownHandler.bind(null, cm));
         this.widget.addEventListener('input', searchWidgetInputHandler.bind(null, cm));
-        this.widget.addEventListener('mousedown', searchWidgetClickHandler.bind(null, cm));
+        this.widget.addEventListener('click', ev => {
+            searchWidgetClickHandler(ev, cm);
+        });
         if ( typeof cm.addPanel === 'function' ) {
             this.panel = cm.addPanel(this.widget);
         }
@@ -236,10 +250,7 @@ import { i18n$ } from '../i18n.js';
                     notation: 'compact',
                     maximumSignificantDigits: 3
                 });
-                if (
-                    intl.resolvedOptions instanceof Function &&
-                    intl.resolvedOptions().hasOwnProperty('notation')
-                ) {
+                if ( intl.resolvedOptions().notation ) {
                     intlNumberFormat = intl;
                 }
             }
@@ -330,9 +341,6 @@ import { i18n$ } from '../i18n.js';
             state.annotate.update(annotations);
         });
         state.widget.setAttribute('data-query', state.queryText);
-        // Ensure the caret is visible
-        const input = state.widget.querySelector('.cm-search-widget-input input');
-        input.selectionStart = input.selectionStart;
     };
 
     const findNext = function(cm, dir, callback) {
@@ -458,26 +466,30 @@ import { i18n$ } from '../i18n.js';
     };
 
     {
-        const searchWidgetTemplate =
-            '<div class="cm-search-widget-template" style="display:none;">' +
-              '<div class="cm-search-widget">' +
-                '<span class="cm-search-widget-input">' +
-                  '<span class="fa-icon fa-icon-ro">search</span>&ensp;' +
-                  '<input type="search" spellcheck="false">&emsp;' +
-                  '<span class="cm-search-widget-up cm-search-widget-button fa-icon">angle-up</span>&nbsp;' +
-                  '<span class="cm-search-widget-down cm-search-widget-button fa-icon fa-icon-vflipped">angle-up</span>&emsp;' +
-                  '<span class="cm-search-widget-count"></span>' +
-                '</span>' +
-                '<span class="cm-linter-widget" data-lint="0">' +
-                  '<span class="cm-linter-widget-count"></span>&emsp;' +
-                  '<span class="cm-linter-widget-up cm-search-widget-button fa-icon">angle-up</span>&nbsp;' +
-                  '<span class="cm-linter-widget-down cm-search-widget-button fa-icon fa-icon-vflipped">angle-up</span>&emsp;' +
-                '</span>' +
-                '<span>' +
-                    '<a class="fa-icon sourceURL" href>external-link</a>' +
-                '</span>' +
-              '</div>' +
-            '</div>';
+        const searchWidgetTemplate = [
+            '<div class="cm-search-widget-template" style="display:none;">',
+              '<div class="cm-search-widget">',
+                '<span class="cm-maximize"><svg viewBox="0 0 40 40"><path d="M4,16V4h12M24,4H36V16M4,24V36H16M36,24V36H24" /><path d="M14 2.5v12h-12M38 14h-12v-12M14 38v-12h-12M26 38v-12h12" /></svg></span>&ensp;',
+                '<span class="cm-search-widget-input">',
+                    '<span class="searchfield">',
+                        '<input type="search" spellcheck="false" placeholder="">',
+                        '<span class="fa-icon">search</span>',
+                    '</span>&ensp;',
+                  '<span class="cm-search-widget-up cm-search-widget-button fa-icon">angle-up</span>&nbsp;',
+                  '<span class="cm-search-widget-down cm-search-widget-button fa-icon fa-icon-vflipped">angle-up</span>&ensp;',
+                  '<span class="cm-search-widget-count"></span>',
+                '</span>',
+                '<span class="cm-linter-widget" data-lint="0">',
+                  '<span class="cm-linter-widget-count"></span>&ensp;',
+                  '<span class="cm-linter-widget-up cm-search-widget-button fa-icon">angle-up</span>&nbsp;',
+                  '<span class="cm-linter-widget-down cm-search-widget-button fa-icon fa-icon-vflipped">angle-up</span>&ensp;',
+                '</span>',
+                '<span>',
+                    '<a class="fa-icon sourceURL" href>external-link</a>',
+                '</span>',
+              '</div>',
+            '</div>',
+        ].join('\n');
         const domParser = new DOMParser();
         const doc = domParser.parseFromString(searchWidgetTemplate, 'text/html');
         const widgetTemplate = document.adoptNode(doc.body.firstElementChild);

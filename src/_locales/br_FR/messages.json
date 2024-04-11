@@ -168,15 +168,15 @@
     "description": "Tooltip for the no-cosmetic-filtering per-site switch"
   },
   "popupTipNoRemoteFonts": {
-    "message": "Lazhañ/enaouiñ evit stankañ an nodrezhioù diavaez war al lec'hienn-mañ",
+    "message": "Aotren/stankañ ar polisoù diavaez war al lec'hienn-mañ",
     "description": "Tooltip for the no-remote-fonts per-site switch"
   },
   "popupTipNoRemoteFonts1": {
-    "message": "Stankañ an nodrezhioù diavaez war al lec'hienn-mañ",
+    "message": "Stankañ ar polisoù diavaez war al lec'hienn-mañ",
     "description": "Tooltip for the no-remote-fonts per-site switch"
   },
   "popupTipNoRemoteFonts2": {
-    "message": "Aotren an nodrezhioù diavaez war al lec'hienn-mañ",
+    "message": "Aotren ar polisoù diavaez war al lec'hienn-mañ",
     "description": "Tooltip for the no-remote-fonts per-site switch"
   },
   "popupTipNoScripting1": {
@@ -200,7 +200,7 @@
     "description": "Caption for the no-cosmetic-filtering per-site switch"
   },
   "popupNoRemoteFonts_v2": {
-    "message": "Nodrezhioù diavaez",
+    "message": "Polisoù diavaez",
     "description": "Caption for the no-remote-fonts per-site switch"
   },
   "popupNoScripting_v2": {
@@ -384,7 +384,7 @@
     "description": ""
   },
   "settingsNoRemoteFontsPrompt": {
-    "message": "Stankañ an nodrezhioù diavaez",
+    "message": "Stankañ ar polisoù diavaez",
     "description": ""
   },
   "settingsNoScriptingPrompt": {
@@ -535,13 +535,17 @@
     "message": "Ur fazi rouedad en deus miret an danvez da vezañ hizivaet.",
     "description": "used as a tooltip for error icon beside a list"
   },
-  "1pFormatHint": {
-    "message": "Ur sil dre linenn. Ur sil a c'hall bezañ un anv ostiz hepken pe ur sil hag a glot gant EasyList.\nAl linennoù a grog gant <code>!</code> a vo dilezet.",
-    "description": "Short information about how to create custom filters"
-  },
   "1pTrustWarning": {
     "message": "Arabat ouzhpennañ siloù a zeu diouzh mammennoù douetus.",
     "description": "Warning against copy-pasting filters from random sources"
+  },
+  "1pEnableMyFiltersLabel": {
+    "message": "Gweredekaat ma siloù personelaet",
+    "description": "Label for the checkbox use to enable/disable 'My filters' list"
+  },
+  "1pTrustMyFiltersLabel": {
+    "message": "Kaout fiziañs er siloù personelaet",
+    "description": "Label for the checkbox use to trust the content of 'My filters' list"
   },
   "1pImport": {
     "message": "Enporzhiañ hag ouzhpennañ",
@@ -960,7 +964,7 @@
     "description": "Header of 'Report a filter issue' section in Support pane"
   },
   "supportS6P1S1": {
-    "message": "Evit nompas sammañ ar genlabourerien a-youl vat gant meur a zanevell heñvel, gwiriit ma n'eo ket bet danevellet ho kudenn c'hoazh mar plij.",
+    "message": "Evit nompas sammañ ar genlabourerien a-youl vat gant meur a zanevell heñvel, gwiriit ma n'eo ket bet danevellet ho kudenn en ar-raok mar plij.",
     "description": "A paragraph in the filter issue reporter section"
   },
   "supportS6P2S1": {

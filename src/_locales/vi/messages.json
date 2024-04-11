@@ -484,11 +484,11 @@
     "description": "Filter lists section name"
   },
   "3pGroupSocial": {
-    "message": "Social widgets",
+    "message": "Tiện ích xã hội",
     "description": "Filter lists section name"
   },
   "3pGroupCookies": {
-    "message": "Cookie notices",
+    "message": "Các thông báo cookie",
     "description": "Filter lists section name"
   },
   "3pGroupAnnoyances": {
@@ -535,13 +535,17 @@
     "message": "Lỗi mạng ngăn tài nguyên được cập nhật.",
     "description": "used as a tooltip for error icon beside a list"
   },
-  "1pFormatHint": {
-    "message": "Một bộ lọc cho mỗi dòng. Bộ lọc có thể là tên máy chủ thuần hoặc bộ lọc tương thích với EasyList. Các dòng có tiền tố <code>!</code> sẽ bị bỏ qua.",
-    "description": "Short information about how to create custom filters"
-  },
   "1pTrustWarning": {
     "message": "Không thêm các bộ lọc từ các nguồn không đáng tin cậy. ",
     "description": "Warning against copy-pasting filters from random sources"
+  },
+  "1pEnableMyFiltersLabel": {
+    "message": "Bật bộ lọc tùy chỉnh của tôi",
+    "description": "Label for the checkbox use to enable/disable 'My filters' list"
+  },
+  "1pTrustMyFiltersLabel": {
+    "message": "Cho phép các bộ lọc tùy chỉnh yêu cầu sự tin cậy",
+    "description": "Label for the checkbox use to trust the content of 'My filters' list"
   },
   "1pImport": {
     "message": "Nhập và thêm vào",

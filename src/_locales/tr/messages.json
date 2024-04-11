@@ -480,15 +480,15 @@
     "description": "Filter lists section name"
   },
   "3pGroupMalware": {
-    "message": "Zararlı alan adları",
+    "message": "Kötü amaçlı yazılım koruması, güvenlik.",
     "description": "Filter lists section name"
   },
   "3pGroupSocial": {
-    "message": "Social widgets",
+    "message": "Sosyal gereçler",
     "description": "Filter lists section name"
   },
   "3pGroupCookies": {
-    "message": "Cookie notices",
+    "message": "Çerez bildirimleri",
     "description": "Filter lists section name"
   },
   "3pGroupAnnoyances": {
@@ -535,13 +535,17 @@
     "message": "Bir ağ hatası kaynağın güncellenmesini engelledi.",
     "description": "used as a tooltip for error icon beside a list"
   },
-  "1pFormatHint": {
-    "message": "Her satırda bir filtre. Bir filtre yalın bir alan adı veya EasyList-uyumlu bir filtre olabilir. <code>!</code> ile başlayan satırlar yok sayılacaktır.",
-    "description": "Short information about how to create custom filters"
-  },
   "1pTrustWarning": {
     "message": "Güvenilmeyen kaynaklardan filtre eklemeyin.",
     "description": "Warning against copy-pasting filters from random sources"
+  },
+  "1pEnableMyFiltersLabel": {
+    "message": "Özel filtrelerimi etkinleştir",
+    "description": "Label for the checkbox use to enable/disable 'My filters' list"
+  },
+  "1pTrustMyFiltersLabel": {
+    "message": "Güven gerektiren özel filtrelere izin ver",
+    "description": "Label for the checkbox use to trust the content of 'My filters' list"
   },
   "1pImport": {
     "message": "İçe aktar ve ekle",
@@ -592,7 +596,7 @@
     "description": ""
   },
   "rulesExport": {
-    "message": "Dosyaya aktar",
+    "message": "Dosyaya aktar…",
     "description": "Button in the 'My rules' pane"
   },
   "rulesDefaultFileName": {
@@ -1260,7 +1264,7 @@
     "description": "Label for keyboard shortcut used to toggle cosmetic filtering"
   },
   "toggleJavascript": {
-    "message": "Javascript'i Aç/Kapa",
+    "message": "JavaScript'i Aç/Kapa",
     "description": "Label for keyboard shortcut used to toggle no-scripting switch"
   },
   "relaxBlockingMode": {

@@ -484,11 +484,11 @@
     "description": "Filter lists section name"
   },
   "3pGroupSocial": {
-    "message": "Social widgets",
+    "message": "יישומונים חברתיים",
     "description": "Filter lists section name"
   },
   "3pGroupCookies": {
-    "message": "Cookie notices",
+    "message": "הודעות בקשר לעוגיות",
     "description": "Filter lists section name"
   },
   "3pGroupAnnoyances": {
@@ -535,13 +535,17 @@
     "message": "בעיית רשת מנעה מהמשאב להתעדכן.",
     "description": "used as a tooltip for error icon beside a list"
   },
-  "1pFormatHint": {
-    "message": "מסנן אחד לכל שורה. המסנן יכול להיות דומיין פשוט, או מסנן התואם ל- EasyList. שורות עם קידומת <code>!</code> לא יפורשו.",
-    "description": "Short information about how to create custom filters"
-  },
   "1pTrustWarning": {
     "message": "אל תוסיף מסננים ממקורות לא מהימנים.",
     "description": "Warning against copy-pasting filters from random sources"
+  },
+  "1pEnableMyFiltersLabel": {
+    "message": "אפשור מסננים מותאמים אישית",
+    "description": "Label for the checkbox use to enable/disable 'My filters' list"
+  },
+  "1pTrustMyFiltersLabel": {
+    "message": "אפשור למסננים מותאמים אישית לדרוש אמון",
+    "description": "Label for the checkbox use to trust the content of 'My filters' list"
   },
   "1pImport": {
     "message": "ייבא וצרף…",
@@ -1260,7 +1264,7 @@
     "description": "Label for keyboard shortcut used to toggle cosmetic filtering"
   },
   "toggleJavascript": {
-    "message": "הפעלה וחסימה של JavaScript",
+    "message": "מיתוג JavaScript",
     "description": "Label for keyboard shortcut used to toggle no-scripting switch"
   },
   "relaxBlockingMode": {
@@ -1292,7 +1296,7 @@
     "description": "Summary of number of errors as reported by the linter "
   },
   "unprocessedRequestTooltip": {
-    "message": "לא ניתן היה לסנן כראוי בעת הפעלת הדפדפן. טען מחדש את הדף כדי להבטיח סינון מתאים.",
+    "message": "לא ניתן היה לסנן כראוי בעת הפעלת הדפדפן. נא לטעון את העמוד מחדש להבטחת סינון ראוי.",
     "description": "A warning which will appear in the popup panel if needed"
   },
   "dummy": {
