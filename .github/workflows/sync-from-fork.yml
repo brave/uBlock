@@ -14,7 +14,7 @@ jobs:
     outputs:
       changes: ${{ steps.git-check.outputs.changes-present }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Fetch release version
         run: |
           git remote add upstream ${UPSTREAM_URL}
@@ -57,7 +57,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       UPSTREAM_URL: "https://github.com/gorhill/ublock.git"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Collate Changes
         run: |
           git remote add upstream ${UPSTREAM_URL}
