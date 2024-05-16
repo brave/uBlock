@@ -155,6 +155,12 @@ function safeSelf() {
             }, []);
             return this.Object_fromEntries(entries);
         },
+        onIdle(fn, options) {
+            if ( self.requestIdleCallback ) {
+                return self.requestIdleCallback(fn, options);
+            }
+            return self.requestAnimationFrame(fn);
+        },
     };
     scriptletGlobals.safeSelf = safe;
     if ( scriptletGlobals.bcSecret === undefined ) { return safe; }
@@ -1047,19 +1053,21 @@ function setLocalStorageItemFn(
         'false', 'true',
         'on', 'off',
         'yes', 'no',
+        'accept', 'reject',
+        'accepted', 'rejected',
         '{}', '[]', '""',
         '$remove$',
     ];
 
     if ( trusted ) {
         if ( value.includes('$now$') ) {
-            value.replaceAll('$now$', Date.now());
+            value = value.replaceAll('$now$', Date.now());
         }
         if ( value.includes('$currentDate$') ) {
-            value.replaceAll('$currentDate$', `${Date()}`);
+            value = value.replaceAll('$currentDate$', `${Date()}`);
         }
         if ( value.includes('$currentISODate$') ) {
-            value.replaceAll('$currentISODate$', (new Date()).toISOString());
+            value = value.replaceAll('$currentISODate$', (new Date()).toISOString());
         }
     } else {
         const normalized = value.toLowerCase();
@@ -2230,7 +2238,7 @@ function removeAttr(
             }
         }
         if ( skip ) { return; }
-        timer = self.requestIdleCallback(rmattr, { timeout: 67 });
+        timer = safe.onIdle(rmattr, { timeout: 67 });
     };
     const start = ( ) => {
         rmattr();
@@ -2308,7 +2316,7 @@ function removeClass(
             }
         }
         if ( skip ) { return; }
-        timer = self.requestIdleCallback(rmclass, { timeout: 67 });
+        timer = safe.onIdle(rmclass, { timeout: 67 });
     };
     const observer = new MutationObserver(mutationHandler);
     const start = ( ) => {
@@ -3521,7 +3529,7 @@ function hrefSanitizer(
             if ( shouldSanitize ) { break; }
         }
         if ( shouldSanitize === false ) { return; }
-        timer = self.requestIdleCallback(( ) => {
+        timer = safe.onIdle(( ) => {
             timer = undefined;
             sanitize();
         });
@@ -3769,6 +3777,7 @@ function setCookie(
         'true', 't', 'false', 'f',
         'yes', 'y', 'no', 'n',
         'necessary', 'required',
+        'approved', 'disapproved',
     ];
     const normalized = value.toLowerCase();
     const match = /^("?)(.+)\1$/.exec(normalized);
@@ -4480,6 +4489,20 @@ function trustedClickElement(
         }
     }
 
+    const getShadowRoot = elem => {
+        // Firefox
+        if ( elem.openOrClosedShadowRoot ) {
+            return elem.openOrClosedShadowRoot;
+        }
+        // Chromium
+        if ( typeof chrome === 'object' ) {
+            if ( chrome.dom && chrome.dom.openOrClosedShadowRoot ) {
+                return chrome.dom.openOrClosedShadowRoot(elem);
+            }
+        }
+        return null;
+    };
+
     const querySelectorEx = (selector, context = document) => {
         const pos = selector.indexOf(' >>> ');
         if ( pos === -1 ) { return context.querySelector(selector); }
@@ -4487,7 +4510,7 @@ function trustedClickElement(
         const inside = selector.slice(pos + 5).trim();
         const elem = context.querySelector(outside);
         if ( elem === null ) { return null; }
-        const shadowRoot = elem.shadowRoot;
+        const shadowRoot = getShadowRoot(elem);
         return shadowRoot && querySelectorEx(inside, shadowRoot);
     };
 
