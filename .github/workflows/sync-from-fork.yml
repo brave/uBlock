@@ -82,7 +82,7 @@ jobs:
           repo: ${{ github.event.repository.name }}
           prnum: ${{ env.PR_NUMBER }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           filterdiff_args: --include=**/assets/assets.json --include=**/assets/resources/scriptlets.js --include=**/web_accessible_resources/ --include=**/js/redirect-resources.js
   on-failure:
     runs-on: ubuntu-latest
