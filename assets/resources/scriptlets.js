@@ -764,6 +764,7 @@ function replaceNodeTextFn(
             count += 1;
             if ( node === null ) { break; }
             if ( reNodeName.test(node.nodeName) === false ) { continue; }
+            if ( node === document.currentScript ) { continue; }
             if ( handleNode(node) ) { continue; }
             stop(); break;
         }
@@ -1332,6 +1333,8 @@ function replaceFetchResponseFn(
     if ( pattern === '*' ) { pattern = '.*'; }
     const rePattern = safe.patternToRegex(pattern);
     const propNeedles = parsePropertiesToMatch(propsToMatch, 'url');
+    const extraArgs = safe.getExtraArgs(Array.from(arguments), 4);
+    const reIncludes = extraArgs.includes ? safe.patternToRegex(extraArgs.includes) : null;
     self.fetch = new Proxy(self.fetch, {
         apply: function(target, thisArg, args) {
             const fetchPromise = Reflect.apply(target, thisArg, args);
@@ -1361,6 +1364,9 @@ function replaceFetchResponseFn(
             return fetchPromise.then(responseBefore => {
                 const response = responseBefore.clone();
                 return response.text().then(textBefore => {
+                    if ( reIncludes && reIncludes.test(textBefore) === false ) {
+                        return responseBefore;
+                    }
                     const textAfter = textBefore.replace(rePattern, replacement);
                     const outcome = textAfter !== textBefore ? 'match' : 'nomatch';
                     if ( outcome === 'nomatch' ) { return responseBefore; }
@@ -1642,6 +1648,8 @@ function addEventListenerDefuser(
     const debug = shouldDebug(extraArgs);
     const targetSelector = extraArgs.elements || undefined;
     const elementMatches = elem => {
+        if ( targetSelector === 'window' ) { return elem === window; }
+        if ( targetSelector === 'document' ) { return elem === document; }
         if ( elem && elem.matches && elem.matches(targetSelector) ) { return true; }
         const elems = Array.from(document.querySelectorAll(targetSelector));
         return elems.includes(elem);
@@ -3778,6 +3786,7 @@ function setCookie(
         'yes', 'y', 'no', 'n',
         'necessary', 'required',
         'approved', 'disapproved',
+        'hide', 'hidden',
     ];
     const normalized = value.toLowerCase();
     const match = /^("?)(.+)\1$/.exec(normalized);
@@ -4363,6 +4372,8 @@ function trustedReplaceXhrResponse(
     if ( pattern === '*' ) { pattern = '.*'; }
     const rePattern = safe.patternToRegex(pattern);
     const propNeedles = parsePropertiesToMatch(propsToMatch, 'url');
+    const extraArgs = safe.getExtraArgs(Array.from(arguments), 3);
+    const reIncludes = extraArgs.includes ? safe.patternToRegex(extraArgs.includes) : null;
     self.XMLHttpRequest = class extends self.XMLHttpRequest {
         open(method, url, ...args) {
             const outerXhr = this;
@@ -4398,6 +4409,9 @@ function trustedReplaceXhrResponse(
                 return xhrDetails.response;
             }
             if ( typeof innerResponse !== 'string' ) {
+                return (xhrDetails.response = innerResponse);
+            }
+            if ( reIncludes && reIncludes.test(innerResponse) === false ) {
                 return (xhrDetails.response = innerResponse);
             }
             const textBefore = innerResponse;
