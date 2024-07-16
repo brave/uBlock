@@ -57,6 +57,7 @@ function safeSelf() {
         'Math_random': Math.random,
         'Object': Object,
         'Object_defineProperty': Object.defineProperty.bind(Object),
+        'Object_defineProperties': Object.defineProperties.bind(Object),
         'Object_fromEntries': Object.fromEntries.bind(Object),
         'Object_getOwnPropertyDescriptor': Object.getOwnPropertyDescriptor.bind(Object),
         'RegExp': self.RegExp,
@@ -2067,11 +2068,11 @@ builtinScriptlets.push({
 });
 function noFetchIf(
     propsToMatch = '',
-    responseBody = ''
+    responseBody = '',
+    responseType = ''
 ) {
-    if ( typeof propsToMatch !== 'string' ) { return; }
     const safe = safeSelf();
-    const logPrefix = safe.makeLogPrefix('prevent-fetch', propsToMatch, responseBody);
+    const logPrefix = safe.makeLogPrefix('prevent-fetch', propsToMatch, responseBody, responseType);
     const needles = [];
     for ( const condition of propsToMatch.split(/\s+/) ) {
         if ( condition === '' ) { continue; }
@@ -2085,6 +2086,28 @@ function noFetchIf(
             value = condition;
         }
         needles.push({ key, re: safe.patternToRegex(value) });
+    }
+    const validResponseProps = {
+        ok: [ false, true ],
+        statusText: [ '', 'Not Found' ],
+        type: [ 'basic', 'cors', 'default', 'error', 'opaque' ],
+    };
+    const responseProps = {
+        statusText: { value: 'OK' },
+    };
+    if ( /^\{.*\}$/.test(responseType) ) {
+        try {
+            Object.entries(JSON.parse(responseType)).forEach(([ p, v ]) => {
+                if ( validResponseProps[p] === undefined ) { return; }
+                if ( validResponseProps[p].includes(v) === false ) { return; }
+                responseProps[p] = { value: v };
+            });
+        }
+        catch(ex) {}
+    } else if ( responseType !== '' ) {
+        if ( validResponseProps.type.includes(responseType) ) {
+            responseProps.type = { value: responseType };
+        }
     }
     self.fetch = new Proxy(self.fetch, {
         apply: function(target, thisArg, args) {
@@ -2123,33 +2146,18 @@ function noFetchIf(
             if ( proceed ) {
                 return Reflect.apply(target, thisArg, args);
             }
-            let responseType = '';
-            if ( details.mode === undefined || details.mode === 'cors' ) {
-                try {
-                    const desURL = new URL(details.url);
-                    responseType = desURL.origin !== document.location.origin
-                        ? 'cors'
-                        : 'basic';
-                } catch(ex) {
-                    safe.uboErr(logPrefix, `Error: ${ex}`);
-                }
-            }
             return generateContentFn(responseBody).then(text => {
                 safe.uboLog(logPrefix, `Prevented with response "${text}"`);
                 const response = new Response(text, {
-                    statusText: 'OK',
                     headers: {
                         'Content-Length': text.length,
                     }
                 });
-                safe.Object_defineProperty(response, 'url', {
-                    value: details.url
-                });
-                if ( responseType !== '' ) {
-                    safe.Object_defineProperty(response, 'type', {
-                        value: responseType
-                    });
-                }
+                const props = Object.assign(
+                    { url: { value: details.url } },
+                    responseProps
+                );
+                safe.Object_defineProperties(response, props);
                 return response;
             });
         }
@@ -3477,7 +3485,7 @@ function hrefSanitizer(
     };
     const validateURL = text => {
         if ( text === '' ) { return ''; }
-        if ( /[^\x21-\x7e]/.test(text) ) { return ''; }
+        if ( /[\x00-\x20\x7f]/.test(text) ) { return ''; }
         try {
             const url = new URL(text, document.location);
             return url.href;
@@ -3791,6 +3799,7 @@ function setCookie(
         'necessary', 'required',
         'approved', 'disapproved',
         'hide', 'hidden',
+        'essential', 'nonessential',
     ];
     const normalized = value.toLowerCase();
     const match = /^("?)(.+)\1$/.exec(normalized);
@@ -4246,6 +4255,9 @@ function trustedSetCookie(
     }
     if ( value.includes('$currentDate$') ) {
         value = value.replaceAll('$currentDate$', time.toUTCString());
+    }
+    if ( value.includes('$currentISODate$') ) {
+        value = value.replaceAll('$currentISODate$', time.toISOString());
     }
 
     let expires = '';
@@ -4752,24 +4764,29 @@ builtinScriptlets.push({
 });
 function trustedReplaceArgument(
     propChain = '',
-    argpos = '',
+    argposRaw = '',
     argraw = ''
 ) {
     if ( propChain === '' ) { return; }
-    if ( argpos === '' ) { return; }
-    if ( argraw === '' ) { return; }
     const safe = safeSelf();
-    const logPrefix = safe.makeLogPrefix('trusted-replace-argument', propChain, argpos, argraw);
+    const logPrefix = safe.makeLogPrefix('trusted-replace-argument', propChain, argposRaw, argraw);
+    const argpos = parseInt(argposRaw, 10) || 0;
     const extraArgs = safe.getExtraArgs(Array.from(arguments), 3);
     const normalValue = validateConstantFn(true, argraw);
     const reCondition = extraArgs.condition
         ? safe.patternToRegex(extraArgs.condition)
         : /^/;
     const reflector = proxyApplyFn(propChain, function(...args) {
+        if ( argposRaw === '' ) {
+            safe.uboLog(logPrefix, `Arguments:\n${args.join('\n')}`);
+            return reflector(...args);
+        }
         const arglist = args[args.length-1];
         if ( Array.isArray(arglist) === false ) { return reflector(...args); }
         const argBefore = arglist[argpos];
-        if ( reCondition.test(argBefore) === false ) { return reflector(...args); }
+        if ( safe.RegExp_test.call(reCondition, argBefore) === false ) {
+            return reflector(...args);
+        }
         arglist[argpos] = normalValue;
         safe.uboLog(logPrefix, `Replaced argument:\nBefore: ${JSON.stringify(argBefore)}\nAfter: ${normalValue}`);
         return reflector(...args);
@@ -4823,6 +4840,91 @@ function trustedReplaceOutboundText(
             encodedTextAfter = self.btoa(textAfter);
         }
         return encodedTextAfter;
+    });
+}
+
+/*******************************************************************************
+ * 
+ * Reference:
+ * https://github.com/AdguardTeam/Scriptlets/blob/5a92d79489/wiki/about-trusted-scriptlets.md#trusted-suppress-native-method
+ * 
+ * This is a first version with current limitations:
+ * - Does not support matching arguments which are object or array
+ * - Does not support `stack` parameter
+ * 
+ * If `signatureStr` parameter is not declared, the scriptlet will log all calls
+ * to `methodPath` along with the arguments passed and will not prevent the
+ * trapped method.
+ * 
+ * */
+
+builtinScriptlets.push({
+    name: 'trusted-suppress-native-method.js',
+    requiresTrust: true,
+    fn: trustedSuppressNativeMethod,
+    dependencies: [
+        'proxy-apply.fn',
+        'safe-self.fn',
+    ],
+});
+function trustedSuppressNativeMethod(
+    methodPath = '',
+    signature = '',
+    how = '',
+    stack = ''
+) {
+    if ( methodPath === '' ) { return; }
+    if ( stack !== '' ) { return; }
+    const safe = safeSelf();
+    const logPrefix = safe.makeLogPrefix('trusted-suppress-native-method', methodPath, signature, how);
+    const signatureArgs = signature.split(/\s*\|\s*/).map(v => {
+        if ( /^".*"$/.test(v) ) {
+            return { type: 'pattern', re: safe.patternToRegex(v.slice(1, -1)) };
+        }
+        if ( v === 'false' ) {
+            return { type: 'exact', value: false };
+        }
+        if ( v === 'true' ) {
+            return { type: 'exact', value: true };
+        }
+        if ( v === 'null' ) {
+            return { type: 'exact', value: null };
+        }
+        if ( v === 'undefined' ) {
+            return { type: 'exact', value: undefined };
+        }
+    });
+    const reflector = proxyApplyFn(methodPath, function(...args) {
+        if ( signature === '' ) {
+            safe.uboLog(logPrefix, `Arguments:\n${args.join('\n')}`);
+            return reflector(...args);
+        }
+        const arglist = args[args.length-1];
+        if ( Array.isArray(arglist) === false ) {
+            return reflector(...args);
+        }
+        if ( arglist.length < signatureArgs.length ) {
+            return reflector(...args);
+        }
+        for ( let i = 0; i < signatureArgs.length; i++ ) {
+            const signatureArg = signatureArgs[i];
+            if ( signatureArg === undefined ) { continue; }
+            const targetArg = arglist[i];
+            if ( signatureArg.type === 'exact' ) {
+                if ( targetArg !== signatureArg.value ) {
+                    return reflector(...args);
+                }
+            }
+            if ( signatureArg.type === 'pattern' ) {
+                if ( safe.RegExp_test.call(signatureArg.re, targetArg) === false ) {
+                    return reflector(...args);
+                }
+            }
+        }
+        safe.uboLog(logPrefix, `Suppressed:\n${args.join('\n')}`);
+        if ( how === 'abort' ) {
+            throw new ReferenceError();
+        }
     });
 }
 
