@@ -485,9 +485,8 @@ builtinScriptlets.push({
         'safe-self.fn',
     ],
 });
-function validateConstantFn(trusted, raw) {
+function validateConstantFn(trusted, raw, extraArgs = {}) {
     const safe = safeSelf();
-    const extraArgs = safe.getExtraArgs(Array.from(arguments), 2);
     let value;
     if ( raw === 'undefined' ) {
         value = undefined;
@@ -587,7 +586,7 @@ function setConstantFn(
         };
         if ( trappedProp === '' ) { return; }
         const thisScript = document.currentScript;
-        let normalValue = validateConstantFn(trusted, rawValue);
+        let normalValue = validateConstantFn(trusted, rawValue, extraArgs);
         if ( rawValue === 'noopFunc' || rawValue === 'trueFunc' || rawValue === 'falseFunc' ) {
             normalValue = cloakFunc(normalValue);
         }
@@ -715,7 +714,12 @@ function replaceNodeTextFn(
     const reNodeName = safe.patternToRegex(nodeName, 'i', true);
     const rePattern = safe.patternToRegex(pattern, 'gms');
     const extraArgs = safe.getExtraArgs(Array.from(arguments), 3);
-    const reCondition = safe.patternToRegex(extraArgs.condition || '', 'ms');
+    const reIncludes = extraArgs.includes || extraArgs.condition
+        ? safe.patternToRegex(extraArgs.includes || extraArgs.condition, 'ms')
+        : null;
+    const reExcludes = extraArgs.excludes
+        ? safe.patternToRegex(extraArgs.excludes, 'ms')
+        : null;
     const stop = (takeRecord = true) => {
         if ( takeRecord ) {
             handleMutations(observer.takeRecords());
@@ -728,8 +732,14 @@ function replaceNodeTextFn(
     let sedCount = extraArgs.sedCount || 0;
     const handleNode = node => {
         const before = node.textContent;
-        reCondition.lastIndex = 0;
-        if ( safe.RegExp_test.call(reCondition, before) === false ) { return true; }
+        if ( reIncludes ) {
+            reIncludes.lastIndex = 0;
+            if ( safe.RegExp_test.call(reIncludes, before) === false ) { return true; }
+        }
+        if ( reExcludes ) {
+            reExcludes.lastIndex = 0;
+            if ( safe.RegExp_test.call(reExcludes, before) ) { return true; }
+        }
         rePattern.lastIndex = 0;
         if ( safe.RegExp_test.call(rePattern, before) === false ) { return true; }
         rePattern.lastIndex = 0;
@@ -3493,17 +3503,26 @@ function hrefSanitizer(
         }
         return '';
     };
+    const extractParam = (href, source) => {
+        if ( Boolean(source) === false ) { return href; }
+        const recursive = source.includes('?', 1);
+        const end = recursive ? source.indexOf('?', 1) : source.length;
+        try {
+            const url = new URL(href, document.location);
+            const value = url.searchParams.get(source.slice(1, end));
+            if ( value === null ) { return href }
+            if ( recursive ) { return extractParam(value, source.slice(end)); }
+            return value;
+        } catch(x) {
+        }
+        return href;
+    };
     const extractText = (elem, source) => {
         if ( /^\[.*\]$/.test(source) ) {
             return elem.getAttribute(source.slice(1,-1).trim()) || '';
         }
         if ( source.startsWith('?') ) {
-            try {
-                const url = new URL(elem.href, document.location);
-                return url.searchParams.get(source.slice(1)) || '';
-            } catch(x) {
-            }
-            return '';
+            return extractParam(elem.href, source);
         }
         if ( source === 'text' ) {
             return elem.textContent
@@ -3750,10 +3769,10 @@ builtinScriptlets.push({
 });
 function removeNodeText(
     nodeName,
-    condition,
+    includes,
     ...extraArgs
 ) {
-    replaceNodeTextFn(nodeName, '', '', 'condition', condition || '', ...extraArgs);
+    replaceNodeTextFn(nodeName, '', '', 'includes', includes || '', ...extraArgs);
 }
 
 /*******************************************************************************
@@ -4772,7 +4791,7 @@ function trustedReplaceArgument(
     const logPrefix = safe.makeLogPrefix('trusted-replace-argument', propChain, argposRaw, argraw);
     const argpos = parseInt(argposRaw, 10) || 0;
     const extraArgs = safe.getExtraArgs(Array.from(arguments), 3);
-    const normalValue = validateConstantFn(true, argraw);
+    const normalValue = validateConstantFn(true, argraw, extraArgs);
     const reCondition = extraArgs.condition
         ? safe.patternToRegex(extraArgs.condition)
         : /^/;
