@@ -1,4 +1,4 @@
-assets/assets.json @bcaller
-assets/resources/scriptlets.js @bcaller
-web_accessible_resources/* @bcaller
-js/redirect-resources.js @bcaller
+assets/assets.json @thypon
+assets/resources/scriptlets.js @thypon
+web_accessible_resources/* @thypon
+js/redirect-resources.js @thypon
