@@ -4,7 +4,7 @@
     "description": "extension name."
   },
   "extShortDesc": {
-    "message": "مسدود کننده محتوا بدون نیاز به مجوز که بلافاصله پس از نصب، تبلیغات، ردیاب ها، ابزار‌های استخراج ارز دیجیتال و موارد دیگر را مسدود می کند.",
+    "message": "یک مسدود کننده محتوای بدون مجوز که بلافاصله پس از نصب، تبلیغات، ردیاب ها، ابزارهای استخراج و موارد دیگر را مسدود می کند.",
     "description": "this will be in the Chrome web store: must be 132 characters or less"
   },
   "perRulesetStats": {
@@ -144,8 +144,12 @@
     "description": "This describes the 'complete' filtering mode"
   },
   "noFilteringModeDescription": {
-    "message": "List of hostnames for which no filtering will take place.",
+    "message": "List of websites for which no filtering will take place.",
     "description": "A short description for the editable field which lists trusted sites"
+  },
+  "noFilteringModePlaceholder": {
+    "message": "[hostnames only]\nexample.com\ngames.example\n...",
+    "description": "Default text for in edit field"
   },
   "behaviorSectionLabel": {
     "message": "Behavior",

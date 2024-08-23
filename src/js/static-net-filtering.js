@@ -19,28 +19,15 @@
     Home: https://github.com/gorhill/uBlock
 */
 
-/* globals vAPI */
-
-'use strict';
-
-/******************************************************************************/
-
-import { queueTask, dropTask } from './tasks.js';
-import BidiTrieContainer from './biditrie.js';
-import HNTrieContainer from './hntrie.js';
-import { CompiledListReader } from './static-filtering-io.js';
 import * as sfp from './static-filtering-parser.js';
 
-import {
-    domainFromHostname,
-    hostnameFromNetworkURL,
-} from './uri-utils.js';
+import { domainFromHostname, hostnameFromNetworkURL } from './uri-utils.js';
+import { dropTask, queueTask } from './tasks.js';
 
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#browser_compatibility
-//
-// This import would be best done dynamically, but since dynamic imports are
-// not supported by older browsers, for now a static import is necessary.
+import BidiTrieContainer from './biditrie.js';
+import { CompiledListReader } from './static-filtering-io.js';
 import { FilteringContext } from './filtering-context.js';
+import HNTrieContainer from './hntrie.js';
 
 /******************************************************************************/
 
@@ -765,7 +752,7 @@ class FilterImportant {
     }
 
     static dnrFromCompiled(args, rule) {
-        rule.priority = (rule.priority || 1) + 10;
+        rule.priority = (rule.priority || 0) + 30;
     }
 
     static keyFromArgs() {
@@ -3423,63 +3410,63 @@ class FilterCompiler {
 
     processOptionWithValue(parser, id) {
         switch ( id ) {
-            case sfp.NODE_TYPE_NET_OPTION_NAME_CSP:
-                if ( this.processCspOption(parser.getNetOptionValue(id)) === false ) { return false; }
-                break;
-            case sfp.NODE_TYPE_NET_OPTION_NAME_DENYALLOW:
-                this.denyallowOpt = this.processHostnameList(
-                    parser.getNetFilterDenyallowOptionIterator(),
-                );
-                if ( this.denyallowOpt === '' ) { return false; }
-                this.optionUnitBits |= DENYALLOW_BIT;
-                break;
-            case sfp.NODE_TYPE_NET_OPTION_NAME_FROM:
-                this.fromDomainOpt = this.processHostnameList(
-                    parser.getNetFilterFromOptionIterator(),
-                    this.fromDomainOptList
-                );
-                if ( this.fromDomainOpt === '' ) { return false; }
-                this.optionUnitBits |= FROM_BIT;
-                break;
-            case sfp.NODE_TYPE_NET_OPTION_NAME_HEADER: {
-                this.headerOpt = parser.getNetOptionValue(id) || '';
-                this.optionUnitBits |= HEADER_BIT;
-                break;
+        case sfp.NODE_TYPE_NET_OPTION_NAME_CSP:
+            if ( this.processCspOption(parser.getNetOptionValue(id)) === false ) { return false; }
+            break;
+        case sfp.NODE_TYPE_NET_OPTION_NAME_DENYALLOW:
+            this.denyallowOpt = this.processHostnameList(
+                parser.getNetFilterDenyallowOptionIterator(),
+            );
+            if ( this.denyallowOpt === '' ) { return false; }
+            this.optionUnitBits |= DENYALLOW_BIT;
+            break;
+        case sfp.NODE_TYPE_NET_OPTION_NAME_FROM:
+            this.fromDomainOpt = this.processHostnameList(
+                parser.getNetFilterFromOptionIterator(),
+                this.fromDomainOptList
+            );
+            if ( this.fromDomainOpt === '' ) { return false; }
+            this.optionUnitBits |= FROM_BIT;
+            break;
+        case sfp.NODE_TYPE_NET_OPTION_NAME_HEADER: {
+            this.headerOpt = parser.getNetOptionValue(id) || '';
+            this.optionUnitBits |= HEADER_BIT;
+            break;
+        }
+        case sfp.NODE_TYPE_NET_OPTION_NAME_METHOD:
+            this.processMethodOption(parser.getNetOptionValue(id));
+            this.optionUnitBits |= METHOD_BIT;
+            break;
+        case sfp.NODE_TYPE_NET_OPTION_NAME_PERMISSIONS:
+        case sfp.NODE_TYPE_NET_OPTION_NAME_REDIRECTRULE:
+        case sfp.NODE_TYPE_NET_OPTION_NAME_REMOVEPARAM:
+        case sfp.NODE_TYPE_NET_OPTION_NAME_REPLACE:
+        case sfp.NODE_TYPE_NET_OPTION_NAME_URLTRANSFORM:
+            if ( this.processModifierOption(id, parser.getNetOptionValue(id)) === false ) {
+                return false;
             }
-            case sfp.NODE_TYPE_NET_OPTION_NAME_METHOD:
-                this.processMethodOption(parser.getNetOptionValue(id));
-                this.optionUnitBits |= METHOD_BIT;
-                break;
-            case sfp.NODE_TYPE_NET_OPTION_NAME_PERMISSIONS:
-            case sfp.NODE_TYPE_NET_OPTION_NAME_REDIRECTRULE:
-            case sfp.NODE_TYPE_NET_OPTION_NAME_REMOVEPARAM:
-            case sfp.NODE_TYPE_NET_OPTION_NAME_REPLACE:
-            case sfp.NODE_TYPE_NET_OPTION_NAME_URLTRANSFORM:
-                if ( this.processModifierOption(id, parser.getNetOptionValue(id)) === false ) {
-                    return false;
-                }
-                this.optionUnitBits |= MODIFY_BIT;
-                break;
-            case sfp.NODE_TYPE_NET_OPTION_NAME_REDIRECT: {
-                const actualId = this.action === ALLOW_REALM
-                    ? sfp.NODE_TYPE_NET_OPTION_NAME_REDIRECTRULE
-                    : id;
-                if ( this.processModifierOption(actualId, parser.getNetOptionValue(id)) === false ) {
-                    return false;
-                }
-                this.optionUnitBits |= MODIFY_BIT;
-                break;
+            this.optionUnitBits |= MODIFY_BIT;
+            break;
+        case sfp.NODE_TYPE_NET_OPTION_NAME_REDIRECT: {
+            const actualId = this.action === ALLOW_REALM
+                ? sfp.NODE_TYPE_NET_OPTION_NAME_REDIRECTRULE
+                : id;
+            if ( this.processModifierOption(actualId, parser.getNetOptionValue(id)) === false ) {
+                return false;
             }
-            case sfp.NODE_TYPE_NET_OPTION_NAME_TO:
-                this.toDomainOpt = this.processHostnameList(
-                    parser.getNetFilterToOptionIterator(),
-                    this.toDomainOptList
-                );
-                if ( this.toDomainOpt === '' ) { return false; }
-                this.optionUnitBits |= TO_BIT;
-                break;
-            default:
-                break;
+            this.optionUnitBits |= MODIFY_BIT;
+            break;
+        }
+        case sfp.NODE_TYPE_NET_OPTION_NAME_TO:
+            this.toDomainOpt = this.processHostnameList(
+                parser.getNetFilterToOptionIterator(),
+                this.toDomainOptList
+            );
+            if ( this.toDomainOpt === '' ) { return false; }
+            this.optionUnitBits |= TO_BIT;
+            break;
+        default:
+            break;
         }
         return true;
     }
@@ -3798,7 +3785,7 @@ class FilterCompiler {
     isJustOrigin() {
         if ( this.optionUnitBits !== FROM_BIT ) { return false; }
         if ( this.isRegex ) { return false; }
-        if ( /[\/~]/.test(this.fromDomainOpt) ) { return false; }
+        if ( /[/~]/.test(this.fromDomainOpt) ) { return false; }
         if ( this.pattern === '*' ) { return true; }
         if ( this.anchor !== 0b010 ) { return false; }
         if ( /^(?:http[s*]?:(?:\/\/)?)$/.test(this.pattern) ) { return true; }
@@ -4325,14 +4312,22 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
         }
     }
 
+    // Priority:
+    //   Block: 1 (default priority)
+    //   Redirect: 2-9
+    //   Excepted redirect: 12-19
+    //   Allow: 20
+    //   Block important: 30
+    //   Redirect important: 32-39
+
     const realms = new Map([
-        [ BLOCK_REALM, 'block' ],
-        [ ALLOW_REALM, 'allow' ],
-        [ REDIRECT_REALM, 'redirect' ],
-        [ REMOVEPARAM_REALM, 'removeparam' ],
-        [ CSP_REALM, 'csp' ],
-        [ PERMISSIONS_REALM, 'permissions' ],
-        [ URLTRANSFORM_REALM, 'uritransform' ],
+        [ BLOCK_REALM, { type: 'block', priority: 0 } ],
+        [ ALLOW_REALM, { type: 'allow', priority: 20 } ],
+        [ REDIRECT_REALM, { type: 'redirect', priority: 2 } ],
+        [ REMOVEPARAM_REALM, { type: 'removeparam', priority: 0 } ],
+        [ CSP_REALM, { type: 'csp', priority: 0 } ],
+        [ PERMISSIONS_REALM, { type: 'permissions', priority: 0 } ],
+        [ URLTRANSFORM_REALM, { type: 'uritransform', priority: 0 } ],
     ]);
     const partyness = new Map([
         [ ANYPARTY_REALM, '' ],
@@ -4355,7 +4350,7 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
         'other',
     ]);
     const ruleset = [];
-    for ( const [ realmBits, realmName ] of realms ) {
+    for ( const [ realmBits, realmDetails ] of realms ) {
         for ( const [ partyBits, partyName ] of partyness ) {
             for ( const typeName in typeNameToTypeValue ) {
                 if ( types.has(typeName) === false ) { continue; }
@@ -4366,7 +4361,10 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
                 for ( const rules of bucket.values() ) {
                     for ( const rule of rules ) {
                         rule.action = rule.action || {};
-                        rule.action.type = realmName;
+                        rule.action.type = realmDetails.type;
+                        if ( realmDetails.priority !== 0 ) {
+                            rule.priority = (rule.priority || 0) + realmDetails.priority;
+                        }
                         if ( partyName !== '' ) {
                             rule.condition = rule.condition || {};
                             rule.condition.domainType = partyName;
@@ -4462,12 +4460,11 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
             }
             break;
         case 'redirect-rule': {
-            let priority = rule.priority || 1;
             let token = rule.__modifierValue;
             if ( token !== '' ) {
                 const match = /:(\d+)$/.exec(token);
                 if ( match !== null ) {
-                    priority += parseInt(match[1], 10);
+                    rule.priority = Math.min(rule.priority + parseInt(match[1], 10), 9);
                     token = token.slice(0, match.index);
                 }
             }
@@ -4479,10 +4476,9 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
                 const extensionPath = resource || token;
                 rule.action.type = 'redirect';
                 rule.action.redirect = { extensionPath };
-                rule.priority = priority + 1;
             } else {
                 rule.action.type = 'block';
-                rule.priority = priority + 2;
+                rule.priority += 10;
             }
             break;
         }
@@ -5156,6 +5152,10 @@ StaticNetFilteringEngine.prototype.matchHeaders = function(fctxt, headers) {
     if ( r !== 0 && $isBlockImportant !== true ) {
         if ( this.realmMatchString(HEADERS_REALM | ALLOW_REALM, typeBits, partyBits) ) {
             r = 2;
+        } else if ( this.realmMatchString(ALLOW_REALM, typeBits, partyBits) ) {
+            r = 2;
+        }
+        if ( r === 2 ) {
             if ( this.realmMatchString(HEADERS_REALM | BLOCKIMPORTANT_REALM, typeBits, partyBits) ) {
                 r = 1;
             }
