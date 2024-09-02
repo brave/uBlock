@@ -1,3 +1,8 @@
+- [Fix `prevent-window-open` for when logger is open](https://github.com/gorhill/uBlock/commit/f552f655cb)
+- [Improve `prevent-window-open` scriptlet](https://github.com/gorhill/uBlock/commit/7f11d6216e)
+- [Improve `trusted-replace-outbound-text` scriptlet](https://github.com/gorhill/uBlock/commit/0dcb985601)
+- [Improve `prevent-xhr` scriptlet](https://github.com/gorhill/uBlock/commit/3a249f395c)
+- [Add noop resources for redirect purpose](https://github.com/gorhill/uBlock/commit/59a9a43a83)
 - [Use helper function to lookup safe cookie values](https://github.com/gorhill/uBlock/commit/79e10323ad)
 - [Add `checked`/`unchecked` to `set-cookie`](https://github.com/gorhill/uBlock/commit/3e2171f550) (by @ryanbr)
 - [Add `allowed`/`denied` to `set-local-storage-item`](https://github.com/gorhill/uBlock/commit/41c2258f91) (by @ryanbr)
