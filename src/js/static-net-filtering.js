@@ -242,6 +242,7 @@ let $requestTypeValue = 0;
 let $requestURL = '';
 let $requestURLRaw = '';
 let $requestHostname = '';
+let $requestAddress = '';
 let $docHostname = '';
 let $docDomain = '';
 let $tokenBeg = 0;
@@ -408,6 +409,14 @@ class LogData {
     }
     isPureHostname() {
         return this.tokenHash === DOT_TOKEN_HASH;
+    }
+
+    static requote(s) {
+        if ( /^(["'`]).+\1$|,/.test(s) === false ) { return s; }
+        if ( s.includes("'") === false ) { return `'${s}'`; }
+        if ( s.includes('"') === false ) { return `"${s}"`; }
+        if ( s.includes('`') === false ) { return `\`${s}\``; }
+        return `'${s.replace(/'/g, "\\'")}'`;
     }
 }
 
@@ -694,6 +703,8 @@ const dnrAddRuleWarning = (rule, msg) => {
         FilterNotType
         FilterStrictParty
         FilterModifier
+        FilterOnHeaders
+        FilterIPAddress
 
     Collection:
         FilterCollection
@@ -1226,7 +1237,7 @@ class FilterRegex {
         return [
             FilterRegex.fid,
             details.pattern,
-            details.patternMatchCase ? 1 : 0
+            details.optionValues.has('match-case') ? 1 : 0,
         ];
     }
 
@@ -2067,7 +2078,7 @@ const compileToDomainOpt = (...args) => {
 
 class FilterDenyAllow extends FilterToDomainMissSet {
     static compile(details) {
-        return super.compile(details.denyallowOpt, 0b01);
+        return super.compile(details.optionValues.get('denyallow'), 0b01);
     }
 
     static logData(idata, details) {
@@ -2128,7 +2139,7 @@ class FilterModifier {
         let opt = modifierNameFromType.get(filterData[idata+2]);
         const refs = filterRefs[filterData[idata+3]];
         if ( refs.value !== '' ) {
-            opt += `=${refs.value}`;
+            opt += `=${LogData.requote(refs.value)}`;
         }
         details.options.push(opt);
     }
@@ -2894,7 +2905,7 @@ class FilterStrictParty {
 
     static dnrFromCompiled(args, rule) {
         const partyness = args[1] === 0 ? 1 : 3;
-        dnrAddRuleError(rule, `FilterStrictParty: Strict partyness strict${partyness}p not supported`);
+        dnrAddRuleError(rule, `strict${partyness}p not supported`);
     }
 
     static keyFromArgs(args) {
@@ -2929,12 +2940,12 @@ class FilterOnHeaders {
     }
 
     static compile(details) {
-        return [ FilterOnHeaders.fid, details.headerOpt ];
+        return [ FilterOnHeaders.fid, details.optionValues.get('header') ];
     }
 
     static fromCompiled(args) {
         return filterDataAlloc(
-            args[0],                // fid
+            args[0], // fid
             filterRefAdd({
                 headerOpt: args[1],
                 $parsed: null,
@@ -2942,18 +2953,110 @@ class FilterOnHeaders {
         );
     }
 
+    static dnrFromCompiled(args, rule) {
+        dnrAddRuleError(rule, `header="${args[1]}" not supported`);
+    }
+
     static logData(idata, details) {
         const irefs = filterData[idata+1];
         const headerOpt = filterRefs[irefs].headerOpt;
         let opt = 'header';
         if ( headerOpt !== '' ) {
-            opt += `=${headerOpt}`;
+            opt += `=${LogData.requote(headerOpt)}`;
         }
         details.options.push(opt);
     }
 }
 
 registerFilterClass(FilterOnHeaders);
+
+/******************************************************************************/
+
+class FilterIPAddress {
+    static match(idata) {
+        const ipaddr = $requestAddress;
+        const details = filterRefs[filterData[idata+1]];
+        if ( details.isRegex ) {
+            if ( details.$re === undefined ) {
+                details.$re = new RegExp(details.pattern.slice(1, -1));
+            }
+            return details.$re.test(ipaddr);
+        }
+        if ( ipaddr === '' ) { return false; }
+        if ( details.pattern === 'lan' ) {
+            return this.isLAN(ipaddr);
+        }
+        if ( details.pattern === 'loopback' ) {
+            return this.isLoopback(ipaddr);
+        }
+        return ipaddr.startsWith(details.pattern);
+    }
+
+    // https://github.com/uBlockOrigin/uAssets/blob/master/filters/lan-block.txt
+    // https://en.wikipedia.org/wiki/Reserved_IP_addresses
+    // `ipaddr` is assumed well-formed
+    static isLAN(ipaddr) {
+        const c0 = ipaddr.charCodeAt(0);
+        // ipv4
+        if ( c0 === 0x30 /* 0 */ ) {
+            return ipaddr.startsWith('0.');
+        }
+        if ( c0 === 0x31 /* 1 */ ) {
+            if ( ipaddr.startsWith('10.') ) { return true; }
+            if ( ipaddr.startsWith('127.') ) { return true; }
+            if ( ipaddr.startsWith('169.254.') ) { return true; }
+            if ( ipaddr.startsWith('172.') ) {
+                const v = parseInt(ipaddr.slice(4), 10);
+                return v >= 16 && v <= 31;
+            }
+            return ipaddr.startsWith('192.168.');
+        }
+        if ( c0 !== 0x5B /* [ */ ) { return false; }
+        // ipv6
+        const c1 = ipaddr.charCodeAt(1);
+        if ( c1 === 0x3A /* : */ ) {
+            if ( ipaddr.startsWith('[::') === false ) { return false; }
+            if ( ipaddr === '[::]' || ipaddr === '[::1]' ) { return true; }
+            if ( ipaddr.startsWith('[::ffff:') === false ) { return false; }
+            return /^\[::ffff:(7f\w{2}|a\w{2}|a9fe|c0a8):\w+\]$/.test(ipaddr);
+        }
+        if ( c1 === 0x36 /* 6 */ ) {
+            return ipaddr.startsWith('[64:ff9b:');
+        }
+        if ( c1 === 0x66 /* f */ ) {
+            return /^\[f[cd]\w{2}:/.test(ipaddr);
+        }
+        return false;
+    }
+
+    static isLoopback(ipaddr) {
+        return ipaddr === '127.0.0.1' || ipaddr === '[::1]';
+    }
+
+    static compile(details) {
+        return [ FilterIPAddress.fid, details.optionValues.get('ipaddress') ];
+    }
+
+    static fromCompiled(args) {
+        const pattern = args[1];
+        const details = {
+            pattern,
+            isRegex: pattern.startsWith('/') && pattern.endsWith('/'),
+        };
+        return filterDataAlloc(args[0], filterRefAdd(details));
+    }
+
+    static dnrFromCompiled(args, rule) {
+        dnrAddRuleError(rule, `"ipaddress=${args[1]}" not supported`);
+    }
+
+    static logData(idata, details) {
+        const irefs = filterData[idata+1];
+        details.options.push(`ipaddress=${LogData.requote(filterRefs[irefs].pattern)}`);
+    }
+}
+
+registerFilterClass(FilterIPAddress);
 
 /******************************************************************************/
 /******************************************************************************/
@@ -3138,8 +3241,7 @@ class FilterCompiler {
             return Object.assign(this, other);
         }
         this.reToken = /[%0-9A-Za-z]+/g;
-        this.fromDomainOptList = [];
-        this.toDomainOptList = [];
+        this.optionValues = new Map();
         this.tokenIdToNormalizedType = new Map([
             [ sfp.NODE_TYPE_NET_OPTION_NAME_CNAME, bitFromType('cname') ],
             [ sfp.NODE_TYPE_NET_OPTION_NAME_CSS, bitFromType('stylesheet') ],
@@ -3296,13 +3398,9 @@ class FilterCompiler {
         this.modifyType = undefined;
         this.modifyValue = undefined;
         this.pattern = '';
-        this.patternMatchCase = false;
         this.party = ANYPARTY_REALM;
         this.optionUnitBits = 0;
-        this.fromDomainOpt = '';
-        this.toDomainOpt = '';
-        this.denyallowOpt = '';
-        this.headerOpt = undefined;
+        this.optionValues.clear();
         this.isPureHostname = false;
         this.isGeneric = false;
         this.isRegex = false;
@@ -3314,8 +3412,7 @@ class FilterCompiler {
         this.notTypeBits = 0;
         this.methodBits = 0;
         this.notMethodBits = 0;
-        this.wildcardPos = -1;
-        this.caretPos = -1;
+        this.responseHeadersRealm = false;
         return this;
     }
 
@@ -3413,26 +3510,36 @@ class FilterCompiler {
         case sfp.NODE_TYPE_NET_OPTION_NAME_CSP:
             if ( this.processCspOption(parser.getNetOptionValue(id)) === false ) { return false; }
             break;
-        case sfp.NODE_TYPE_NET_OPTION_NAME_DENYALLOW:
-            this.denyallowOpt = this.processHostnameList(
-                parser.getNetFilterDenyallowOptionIterator(),
+        case sfp.NODE_TYPE_NET_OPTION_NAME_DENYALLOW: {
+            const value = this.processHostnameList(
+                parser.getNetFilterDenyallowOptionIterator()
             );
-            if ( this.denyallowOpt === '' ) { return false; }
+            if ( value === '' ) { return false; }
+            this.optionValues.set('denyallow', value);
             this.optionUnitBits |= DENYALLOW_BIT;
             break;
-        case sfp.NODE_TYPE_NET_OPTION_NAME_FROM:
-            this.fromDomainOpt = this.processHostnameList(
-                parser.getNetFilterFromOptionIterator(),
-                this.fromDomainOptList
-            );
-            if ( this.fromDomainOpt === '' ) { return false; }
+        }
+        case sfp.NODE_TYPE_NET_OPTION_NAME_FROM: {
+            const iter = parser.getNetFilterFromOptionIterator();
+            const list = [];
+            const value = this.processHostnameList(iter, list);
+            if ( value === '' ) { return false; }
+            this.optionValues.set('from', value);
+            this.optionValues.set('fromList', list);
             this.optionUnitBits |= FROM_BIT;
             break;
+        }
         case sfp.NODE_TYPE_NET_OPTION_NAME_HEADER: {
-            this.headerOpt = parser.getNetOptionValue(id) || '';
+            this.optionValues.set('header', parser.getNetOptionValue(id) || '');
             this.optionUnitBits |= HEADER_BIT;
+            this.responseHeadersRealm = true;
             break;
         }
+        case sfp.NODE_TYPE_NET_OPTION_NAME_IPADDRESS:
+            this.optionValues.set('ipaddress', parser.getNetOptionValue(id) || '');
+            this.optionUnitBits |= IPADDRESS_BIT;
+            this.responseHeadersRealm = true;
+            break;
         case sfp.NODE_TYPE_NET_OPTION_NAME_METHOD:
             this.processMethodOption(parser.getNetOptionValue(id));
             this.optionUnitBits |= METHOD_BIT;
@@ -3457,14 +3564,16 @@ class FilterCompiler {
             this.optionUnitBits |= MODIFY_BIT;
             break;
         }
-        case sfp.NODE_TYPE_NET_OPTION_NAME_TO:
-            this.toDomainOpt = this.processHostnameList(
-                parser.getNetFilterToOptionIterator(),
-                this.toDomainOptList
-            );
-            if ( this.toDomainOpt === '' ) { return false; }
+        case sfp.NODE_TYPE_NET_OPTION_NAME_TO: {
+            const iter = parser.getNetFilterToOptionIterator();
+            const list = [];
+            const value = this.processHostnameList(iter, list);
+            if ( value === '' ) { return false; }
+            this.optionValues.set('to', value);
+            this.optionValues.set('toList', list);
             this.optionUnitBits |= TO_BIT;
             break;
+        }
         default:
             break;
         }
@@ -3550,6 +3659,7 @@ class FilterCompiler {
             case sfp.NODE_TYPE_NET_OPTION_NAME_DENYALLOW:
             case sfp.NODE_TYPE_NET_OPTION_NAME_FROM:
             case sfp.NODE_TYPE_NET_OPTION_NAME_HEADER:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_IPADDRESS:
             case sfp.NODE_TYPE_NET_OPTION_NAME_METHOD:
             case sfp.NODE_TYPE_NET_OPTION_NAME_PERMISSIONS:
             case sfp.NODE_TYPE_NET_OPTION_NAME_REDIRECT:
@@ -3583,7 +3693,7 @@ class FilterCompiler {
                 this.action = BLOCKIMPORTANT_REALM;
                 break;
             case sfp.NODE_TYPE_NET_OPTION_NAME_MATCHCASE:
-                this.patternMatchCase = true;
+                this.optionValues.set('match-case', true);
                 break;
             case sfp.NODE_TYPE_NET_OPTION_NAME_MP4: {
                 const id = this.action === ALLOW_REALM
@@ -3651,11 +3761,6 @@ class FilterCompiler {
         // regex?
         if ( this.isRegex ) {
             return this.FILTER_OK;
-        }
-
-        if ( this.isGeneric ) {
-            this.wildcardPos = this.pattern.indexOf('*');
-            this.caretPos = this.pattern.indexOf('^');
         }
 
         if ( this.pattern.length > 1024 ) {
@@ -3785,7 +3890,7 @@ class FilterCompiler {
     isJustOrigin() {
         if ( this.optionUnitBits !== FROM_BIT ) { return false; }
         if ( this.isRegex ) { return false; }
-        if ( /[/~]/.test(this.fromDomainOpt) ) { return false; }
+        if ( /[/~]/.test(this.optionValues.get('from')) ) { return false; }
         if ( this.pattern === '*' ) { return true; }
         if ( this.anchor !== 0b010 ) { return false; }
         if ( /^(?:http[s*]?:(?:\/\/)?)$/.test(this.pattern) ) { return true; }
@@ -3862,7 +3967,7 @@ class FilterCompiler {
             } else /* 'http:' */ {
                 this.tokenHash = ANY_HTTP_TOKEN_HASH;
             }
-            for ( const hn of this.fromDomainOptList ) {
+            for ( const hn of this.optionValues.get('fromList') ) {
                 this.compileToAtomicFilter(hn, writer);
             }
             return;
@@ -3903,31 +4008,36 @@ class FilterCompiler {
         }
 
         // Origin
-        if ( this.fromDomainOpt !== '' ) {
+        if ( this.optionValues.has('from') ) {
             compileFromDomainOpt(
-                this.fromDomainOptList,
+                this.optionValues.get('fromList'),
                 units.length !== 0 && patternClass.isSlow === true,
                 units
             );
         }
 
         // Destination
-        if ( this.toDomainOpt !== '' ) {
+        if ( this.optionValues.has('to') ) {
             compileToDomainOpt(
-                this.toDomainOptList,
+                this.optionValues.get('toList'),
                 units.length !== 0 && patternClass.isSlow === true,
                 units
             );
         }
 
         // Deny-allow
-        if ( this.denyallowOpt !== '' ) {
+        if ( this.optionValues.has('denyallow') ) {
             units.push(FilterDenyAllow.compile(this));
         }
 
         // Header
-        if ( this.headerOpt !== undefined ) {
-            units.push(FilterOnHeaders.compile(this));
+        if ( this.responseHeadersRealm ) {
+            if ( this.optionValues.has('ipaddress') ) {
+                units.push(FilterIPAddress.compile(this));
+            }
+            if ( this.optionValues.has('header') ) {
+                units.push(FilterOnHeaders.compile(this));
+            }
             this.action |= HEADERS_REALM;
         }
 
@@ -3969,12 +4079,13 @@ class FilterCompiler {
             units.push(FilterPatternGeneric.compile(this));
             return FilterPatternGeneric;
         }
-        if ( this.wildcardPos === -1 ) {
-            if ( this.caretPos === -1 ) {
+        if ( this.pattern.includes('*') === false ) {
+            const caretPos = this.pattern.indexOf('^');
+            if ( caretPos === -1 ) {
                 units.push(FilterPatternPlain.compile(this));
                 return FilterPatternPlain;
             }
-            if ( this.caretPos === (this.pattern.length - 1) ) {
+            if ( caretPos === (this.pattern.length - 1) ) {
                 this.pattern = this.pattern.slice(0, -1);
                 units.push(FilterPatternPlain.compile(this));
                 units.push(FilterTrailingSeparator.compile());
@@ -4019,15 +4130,16 @@ class FilterCompiler {
 }
 
 // These are to quickly test whether a filter is composite
-const FROM_BIT         = 0b000000001;
-const TO_BIT           = 0b000000010;
-const DENYALLOW_BIT    = 0b000000100;
-const HEADER_BIT       = 0b000001000;
-const STRICT_PARTY_BIT = 0b000010000;
-const MODIFY_BIT       = 0b000100000;
-const NOT_TYPE_BIT     = 0b001000000;
-const IMPORTANT_BIT    = 0b010000000;
-const METHOD_BIT       = 0b100000000;
+const FROM_BIT         = 0b0000000001;
+const TO_BIT           = 0b0000000010;
+const DENYALLOW_BIT    = 0b0000000100;
+const HEADER_BIT       = 0b0000001000;
+const STRICT_PARTY_BIT = 0b0000010000;
+const MODIFY_BIT       = 0b0000100000;
+const NOT_TYPE_BIT     = 0b0001000000;
+const IMPORTANT_BIT    = 0b0010000000;
+const METHOD_BIT       = 0b0100000000;
+const IPADDRESS_BIT    = 0b1000000000;
 
 FilterCompiler.prototype.FILTER_OK          = 0;
 FilterCompiler.prototype.FILTER_INVALID     = 1;
@@ -4328,6 +4440,7 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
         [ CSP_REALM, { type: 'csp', priority: 0 } ],
         [ PERMISSIONS_REALM, { type: 'permissions', priority: 0 } ],
         [ URLTRANSFORM_REALM, { type: 'uritransform', priority: 0 } ],
+        [ HEADERS_REALM, { type: 'block', priority: 0 } ],
     ]);
     const partyness = new Map([
         [ ANYPARTY_REALM, '' ],
@@ -4743,6 +4856,7 @@ StaticNetFilteringEngine.prototype.matchAndFetchModifiers = function(
     $requestHostname = fctxt.getHostname();
     $requestMethodBit = fctxt.method || 0;
     $requestTypeValue = (typeBits & TypeBitsMask) >>> TypeBitsOffset;
+    $requestAddress = fctxt.ipaddress || '';
 
     const modifierType = modifierTypeFromName.get(modifierName);
     const modifierBits = modifierBitsFromType.get(modifierType);
@@ -5040,6 +5154,7 @@ StaticNetFilteringEngine.prototype.matchRequestReverse = function(type, url) {
     $requestURLRaw = url;
     $requestMethodBit = 0;
     $requestTypeValue = (typeBits & TypeBitsMask) >>> TypeBitsOffset;
+    $requestAddress = '';
     $isBlockImportant = false;
     this.$filterUnit = 0;
 
@@ -5108,6 +5223,7 @@ StaticNetFilteringEngine.prototype.matchRequest = function(fctxt, modifiers = 0)
     $requestHostname = fctxt.getHostname();
     $requestMethodBit = fctxt.method || 0;
     $requestTypeValue = (typeBits & TypeBitsMask) >>> TypeBitsOffset;
+    $requestAddress = fctxt.ipaddress || '';
     $isBlockImportant = false;
 
     // Evaluate block realm before allow realm, and allow realm before
@@ -5143,6 +5259,7 @@ StaticNetFilteringEngine.prototype.matchHeaders = function(fctxt, headers) {
     $requestHostname = fctxt.getHostname();
     $requestMethodBit = fctxt.method || 0;
     $requestTypeValue = (typeBits & TypeBitsMask) >>> TypeBitsOffset;
+    $requestAddress = fctxt.ipaddress || '';
     $httpHeaders.init(headers);
 
     let r = 0;
@@ -5384,17 +5501,70 @@ StaticNetFilteringEngine.prototype.enableWASM = function(wasmModuleFetcher, path
 
 /******************************************************************************/
 
-StaticNetFilteringEngine.prototype.test = async function(docURL, type, url) {
+StaticNetFilteringEngine.prototype.test = function(details) {
+    const { url, type, from, redirectEngine } = details;
+    if ( url === undefined ) { return; }
     const fctxt = new FilteringContext();
-    fctxt.setDocOriginFromURL(docURL);
-    fctxt.setType(type);
     fctxt.setURL(url);
+    fctxt.setType(type || '');
+    fctxt.setDocOriginFromURL(from || '');
     const r = this.matchRequest(fctxt);
-    console.info(`${r}`);
-    if ( r !== 0 ) {
-        console.info(this.toLogData());
+    const out = [ `url: ${url}` ];
+    if ( type ) {
+        out.push(`type: ${type}`);
     }
-};
+    if ( from ) {
+        out.push(`context: ${from}`);
+    }
+    if ( r !== 0 ) {
+        const logdata = this.toLogData();
+        if ( r === 1 ) {
+            out.push(`blocked: ${logdata.raw}`);
+        } else if ( r === 2 ) {
+            out.push(`unblocked: ${logdata.raw}`);
+        }
+    } else {
+        out.push('not blocked');
+    }
+    if ( r !== 1 ) {
+        const entries = this.transformRequest(fctxt);
+        if ( entries ) {
+            for ( const entry of entries ) {
+                out.push(`modified: ${entry.logData().raw}`);
+            }
+        }
+        if ( fctxt.redirectURL !== undefined && this.hasQuery(fctxt) ) {
+            const entries = this.filterQuery(fctxt, 'removeparam');
+            if ( entries ) {
+                for ( const entry of entries ) {
+                    out.push(`modified: ${entry.logData().raw}`);
+                }
+            }
+        }
+        if ( fctxt.type === 'main_frame' || fctxt.type === 'sub_frame' ) {
+            const csps = this.matchAndFetchModifiers(fctxt, 'csp');
+            if ( csps ) {
+                for ( const csp of csps ) {
+                    out.push(`modified: ${csp.logData().raw}`);
+                }
+            }
+            const pps = this.matchAndFetchModifiers(fctxt, 'permissions');
+            if ( pps ) {
+                for ( const pp of pps ) {
+                    out.push(`modified: ${pp.logData().raw}`);
+                }
+            }
+        }
+    } else if ( redirectEngine ) {
+        const redirects = this.redirectRequest(redirectEngine, fctxt);
+        if ( redirects ) {
+            for ( const redirect of redirects ) {
+                out.push(`modified: ${redirect.logData().raw}`);
+            }
+        }
+    }
+    return out.join('\n');
+}
 
 /******************************************************************************/
 

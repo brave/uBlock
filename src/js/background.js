@@ -61,7 +61,6 @@ const hiddenSettingsDefault = {
     cnameIgnoreRootDocument: true,
     cnameMaxTTL: 120,
     cnameReplayFullURL: false,
-    cnameUncloakProxied: false,
     consoleLogLevel: 'unset',
     debugAssetsJson: false,
     debugScriptlets: false,
@@ -307,6 +306,7 @@ const µBlock = {  // jshint ignore:line
         this.setMethod(details.method);
         this.setURL(details.url);
         this.aliasURL = details.aliasURL || undefined;
+        this.ipaddress = details.ip || undefined;
         this.redirectURL = undefined;
         this.filter = undefined;
         if ( this.itype !== this.SUB_FRAME ) {
@@ -346,7 +346,7 @@ const µBlock = {  // jshint ignore:line
             this.setDocOrigin(origin).setTabOrigin(origin);
             return this;
         }
-        const origin = (this.itype & this.FRAME_ANY) !== 0
+        const origin = this.isDocument()
             ? originFromURI(this.url)
             : this.tabOrigin;
         this.setDocOrigin(origin).setTabOrigin(origin);
