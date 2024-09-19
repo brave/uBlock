@@ -59,7 +59,6 @@ const hiddenSettingsDefault = {
     cnameIgnore1stParty: true,
     cnameIgnoreExceptions: true,
     cnameIgnoreRootDocument: true,
-    cnameMaxTTL: 120,
     cnameReplayFullURL: false,
     consoleLogLevel: 'unset',
     debugAssetsJson: false,
@@ -67,6 +66,7 @@ const hiddenSettingsDefault = {
     debugScriptletInjector: false,
     differentialUpdate: true,
     disableWebAssembly: false,
+    dnsResolveEnabled: true,
     extensionUpdateForceReload: false,
     filterAuthorMode: false,
     loggerPopupType: 'popup',
@@ -305,8 +305,8 @@ const µBlock = {  // jshint ignore:line
         this.realm = '';
         this.setMethod(details.method);
         this.setURL(details.url);
+        this.setIPAddress(details.ip);
         this.aliasURL = details.aliasURL || undefined;
-        this.ipaddress = details.ip || undefined;
         this.redirectURL = undefined;
         this.filter = undefined;
         if ( this.itype !== this.SUB_FRAME ) {

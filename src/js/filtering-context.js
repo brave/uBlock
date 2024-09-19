@@ -122,6 +122,8 @@ const methodBitToStrMap = new Map([
     [ METHOD_PUT, 'put' ],
 ]);
 
+const reIPv4 = /^\d+\.\d+\.\d+\.\d+$/;
+
 /******************************************************************************/
 
 export const FilteringContext = class {
@@ -136,9 +138,9 @@ export const FilteringContext = class {
         this.stype = undefined;
         this.url = undefined;
         this.aliasURL = undefined;
-        this.ipaddress = undefined;
         this.hostname = undefined;
         this.domain = undefined;
+        this.ipaddress = undefined;
         this.docId = -1;
         this.frameId = -1;
         this.docOrigin = undefined;
@@ -161,6 +163,9 @@ export const FilteringContext = class {
         this.stype = a;
     }
 
+    isRootDocument() {
+        return (this.itype & MAIN_FRAME) !== 0;
+    }
     isDocument() {
         return (this.itype & FRAME_ANY) !== 0;
     }
@@ -176,6 +181,7 @@ export const FilteringContext = class {
         this.url = other.url;
         this.hostname = other.hostname;
         this.domain = other.domain;
+        this.ipaddress = other.ipaddress;
         this.docId = other.docId;
         this.frameId = other.frameId;
         this.docOrigin = other.docOrigin;
@@ -213,7 +219,7 @@ export const FilteringContext = class {
 
     setURL(a) {
         if ( a !== this.url ) {
-            this.hostname = this.domain = undefined;
+            this.hostname = this.domain = this.ipaddress = undefined;
             this.url = a;
         }
         return this;
@@ -243,6 +249,28 @@ export const FilteringContext = class {
 
     setDomain(a) {
         this.domain = a;
+        return this;
+    }
+
+    getIPAddress() {
+        if ( this.ipaddress !== undefined ) {
+            return this.ipaddress;
+        }
+        const ipaddr = this.getHostname();
+        const c0 = ipaddr.charCodeAt(0);
+        if ( c0 === 0x5B /* [ */ ) {
+            return (this.ipaddress = ipaddr.slice(1, -1));
+        } else if ( c0 <= 0x39 && c0 >= 0x30 ) {
+            if ( reIPv4.test(ipaddr) ) {
+                return (this.ipaddress = ipaddr);
+            }
+        }
+        return (this.ipaddress = '');
+    }
+
+    // Must always be called *after* setURL()
+    setIPAddress(ipaddr) {
+        this.ipaddress = ipaddr || undefined;
         return this;
     }
 

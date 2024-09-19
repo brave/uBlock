@@ -43,97 +43,99 @@ const keyvalStore = typeof vAPI !== 'undefined'
 
 /******************************************************************************/
 
-// 0fedcba9876543210
-// |||||||    | || |
-// |||||||    | || |
-// |||||||    | || |
-// |||||||    | || |
-// |||||||    | || +---- bit 0- 1: block=0, allow=1, block important=2
-// |||||||    | |+------ bit    2: unused
-// |||||||    | +------- bit 3- 4: party [0-3]
-// |||||||    +--------- bit 5- 9: type [0-31]
-// ||||||+-------------- bit   10: headers-based filters
-// |||||+--------------- bit   11: redirect filters
-// ||||+---------------- bit   12: removeparam filters
-// |||+----------------- bit   13: csp filters
-// ||+------------------ bit   14: permissions filters
-// |+------------------- bit   15: uritransform filters
-// +-------------------- bit   16: replace filters
-// TODO: bit 11-16 can be converted into 3-bit value, as these options are not
+// 10fedcba9876543210
+// ||||||||    | || |
+// ||||||||    | || |
+// ||||||||    | || |
+// ||||||||    | || |
+// ||||||||    | || +---- bit 0- 1: block=0, allow=1, block important=2
+// ||||||||    | |+------ bit    2: unused
+// ||||||||    | +------- bit 3- 4: party [0-3]
+// ||||||||    +--------- bit 5- 9: type [0-31]
+// |||||||+-------------- bit   10: headers-based filters
+// ||||||+--------------- bit   11: redirect filters
+// |||||+---------------- bit   12: removeparam filters
+// ||||+----------------- bit   13: csp filters
+// |||+------------------ bit   14: permissions filters
+// ||+------------------- bit   15: uritransform filters
+// |+-------------------- bit   16: replace filters
+// +--------------------- bit   17: urlskip filters
+// TODO: bit 11-17 could be converted into 3-bit value, as these options are not
 //       meant to be combined.
 
-const RealmBitsMask  = 0b00000000111;
-const ActionBitsMask = 0b00000000011;
-const TypeBitsMask   = 0b01111100000;
-const TypeBitsOffset = 5;
-
-const BLOCK_REALM          = 0b00000000000000000;
-const ALLOW_REALM          = 0b00000000000000001;
-const IMPORTANT_REALM      = 0b00000000000000010;
+const BLOCK_REALM          = 0b0000_0000_0000_0000_0000;
+const ALLOW_REALM          = 0b0000_0000_0000_0000_0001;
+const IMPORTANT_REALM      = 0b0000_0000_0000_0000_0010;
+const BLOCKALLOW_REALM     = BLOCK_REALM | ALLOW_REALM | IMPORTANT_REALM;
 const BLOCKIMPORTANT_REALM = BLOCK_REALM | IMPORTANT_REALM;
-const ANYPARTY_REALM       = 0b00000000000000000;
-const FIRSTPARTY_REALM     = 0b00000000000001000;
-const THIRDPARTY_REALM     = 0b00000000000010000;
+const ANYPARTY_REALM       = 0b0000_0000_0000_0000_0000;
+const FIRSTPARTY_REALM     = 0b0000_0000_0000_0000_1000;
+const THIRDPARTY_REALM     = 0b0000_0000_0000_0001_0000;
 const ALLPARTIES_REALM     = FIRSTPARTY_REALM | THIRDPARTY_REALM;
-const HEADERS_REALM        = 0b00000010000000000;
-const REDIRECT_REALM       = 0b00000100000000000;
-const REMOVEPARAM_REALM    = 0b00001000000000000;
-const CSP_REALM            = 0b00010000000000000;
-const PERMISSIONS_REALM    = 0b00100000000000000;
-const URLTRANSFORM_REALM   = 0b01000000000000000;
-const REPLACE_REALM        = 0b10000000000000000;
+const TYPE_REALM           = 0b0000_0000_0011_1110_0000;
+const HEADERS_REALM        = 0b0000_0000_0100_0000_0000;
+const REDIRECT_REALM       = 0b0000_0000_1000_0000_0000;
+const REMOVEPARAM_REALM    = 0b0000_0001_0000_0000_0000;
+const CSP_REALM            = 0b0000_0010_0000_0000_0000;
+const PERMISSIONS_REALM    = 0b0000_0100_0000_0000_0000;
+const URLTRANSFORM_REALM   = 0b0000_1000_0000_0000_0000;
+const REPLACE_REALM        = 0b0001_0000_0000_0000_0000;
+const URLSKIP_REALM        = 0b0010_0000_0000_0000_0000;
 const MODIFY_REALMS        = REDIRECT_REALM | CSP_REALM |
                              REMOVEPARAM_REALM | PERMISSIONS_REALM |
-                             URLTRANSFORM_REALM | REPLACE_REALM;
+                             URLTRANSFORM_REALM | REPLACE_REALM |
+                             URLSKIP_REALM;
+
+const TYPE_REALM_OFFSET = 5;
 
 const typeNameToTypeValue = {
-           'no_type':  0 << TypeBitsOffset,
-        'stylesheet':  1 << TypeBitsOffset,
-             'image':  2 << TypeBitsOffset,
-            'object':  3 << TypeBitsOffset,
- 'object_subrequest':  3 << TypeBitsOffset,
-            'script':  4 << TypeBitsOffset,
-             'fetch':  5 << TypeBitsOffset,
-    'xmlhttprequest':  5 << TypeBitsOffset,
-         'sub_frame':  6 << TypeBitsOffset,
-              'font':  7 << TypeBitsOffset,
-             'media':  8 << TypeBitsOffset,
-         'websocket':  9 << TypeBitsOffset,
-            'beacon': 10 << TypeBitsOffset,
-              'ping': 10 << TypeBitsOffset,
-             'other': 11 << TypeBitsOffset,
-             'popup': 12 << TypeBitsOffset, // start of behavioral filtering
-          'popunder': 13 << TypeBitsOffset,
-        'main_frame': 14 << TypeBitsOffset, // start of 1p behavioral filtering
-       'generichide': 15 << TypeBitsOffset,
-      'specifichide': 16 << TypeBitsOffset,
-       'inline-font': 17 << TypeBitsOffset,
-     'inline-script': 18 << TypeBitsOffset,
-             'cname': 19 << TypeBitsOffset,
-            'webrtc': 20 << TypeBitsOffset,
-       'unsupported': 21 << TypeBitsOffset,
+           'no_type':  0 << TYPE_REALM_OFFSET,
+        'stylesheet':  1 << TYPE_REALM_OFFSET,
+             'image':  2 << TYPE_REALM_OFFSET,
+            'object':  3 << TYPE_REALM_OFFSET,
+ 'object_subrequest':  3 << TYPE_REALM_OFFSET,
+            'script':  4 << TYPE_REALM_OFFSET,
+             'fetch':  5 << TYPE_REALM_OFFSET,
+    'xmlhttprequest':  5 << TYPE_REALM_OFFSET,
+         'sub_frame':  6 << TYPE_REALM_OFFSET,
+              'font':  7 << TYPE_REALM_OFFSET,
+             'media':  8 << TYPE_REALM_OFFSET,
+         'websocket':  9 << TYPE_REALM_OFFSET,
+            'beacon': 10 << TYPE_REALM_OFFSET,
+              'ping': 10 << TYPE_REALM_OFFSET,
+             'other': 11 << TYPE_REALM_OFFSET,
+             'popup': 12 << TYPE_REALM_OFFSET, // start of behavioral filtering
+          'popunder': 13 << TYPE_REALM_OFFSET,
+        'main_frame': 14 << TYPE_REALM_OFFSET, // start of 1p behavioral filtering
+       'generichide': 15 << TYPE_REALM_OFFSET,
+      'specifichide': 16 << TYPE_REALM_OFFSET,
+       'inline-font': 17 << TYPE_REALM_OFFSET,
+     'inline-script': 18 << TYPE_REALM_OFFSET,
+             'cname': 19 << TYPE_REALM_OFFSET,
+            'webrtc': 20 << TYPE_REALM_OFFSET,
+       'unsupported': 21 << TYPE_REALM_OFFSET,
 };
 
 const otherTypeBitValue = typeNameToTypeValue.other;
 
 const bitFromType = type =>
-    1 << ((typeNameToTypeValue[type] >>> TypeBitsOffset) - 1);
+    1 << ((typeNameToTypeValue[type] >>> TYPE_REALM_OFFSET) - 1);
 
 // All network request types to bitmap
-//   bring origin to 0 (from TypeBitsOffset -- see typeNameToTypeValue)
+//   bring origin to 0 (from TYPE_REALM_OFFSET -- see typeNameToTypeValue)
 //   left-shift 1 by the above-calculated value
 //   subtract 1 to set all type bits
 const allNetworkTypesBits =
-    (1 << (otherTypeBitValue >>> TypeBitsOffset)) - 1;
+    (1 << (otherTypeBitValue >>> TYPE_REALM_OFFSET)) - 1;
 
 const allTypesBits =
     allNetworkTypesBits |
-    1 << (typeNameToTypeValue['popup'] >>> TypeBitsOffset) - 1 |
-    1 << (typeNameToTypeValue['main_frame'] >>> TypeBitsOffset) - 1 |
-    1 << (typeNameToTypeValue['inline-font'] >>> TypeBitsOffset) - 1 |
-    1 << (typeNameToTypeValue['inline-script'] >>> TypeBitsOffset) - 1;
+    1 << (typeNameToTypeValue['popup'] >>> TYPE_REALM_OFFSET) - 1 |
+    1 << (typeNameToTypeValue['main_frame'] >>> TYPE_REALM_OFFSET) - 1 |
+    1 << (typeNameToTypeValue['inline-font'] >>> TYPE_REALM_OFFSET) - 1 |
+    1 << (typeNameToTypeValue['inline-script'] >>> TYPE_REALM_OFFSET) - 1;
 const unsupportedTypeBit =
-    1 << (typeNameToTypeValue['unsupported'] >>> TypeBitsOffset) - 1;
+    1 << (typeNameToTypeValue['unsupported'] >>> TYPE_REALM_OFFSET) - 1;
 
 const typeValueToTypeName = [
     '',
@@ -186,6 +188,7 @@ const MODIFIER_TYPE_CSP = 4;
 const MODIFIER_TYPE_PERMISSIONS = 5;
 const MODIFIER_TYPE_URLTRANSFORM = 6;
 const MODIFIER_TYPE_REPLACE = 7;
+const MODIFIER_TYPE_URLSKIP = 8;
 
 const modifierBitsFromType = new Map([
     [ MODIFIER_TYPE_REDIRECT, REDIRECT_REALM ],
@@ -195,6 +198,7 @@ const modifierBitsFromType = new Map([
     [ MODIFIER_TYPE_PERMISSIONS, PERMISSIONS_REALM ],
     [ MODIFIER_TYPE_URLTRANSFORM, URLTRANSFORM_REALM ],
     [ MODIFIER_TYPE_REPLACE, REPLACE_REALM ],
+    [ MODIFIER_TYPE_URLSKIP, URLSKIP_REALM ],
 ]);
 
 const modifierTypeFromName = new Map([
@@ -205,6 +209,7 @@ const modifierTypeFromName = new Map([
     [ 'permissions', MODIFIER_TYPE_PERMISSIONS ],
     [ 'uritransform', MODIFIER_TYPE_URLTRANSFORM ],
     [ 'replace', MODIFIER_TYPE_REPLACE ],
+    [ 'urlskip', MODIFIER_TYPE_URLSKIP ],
 ]);
 
 const modifierNameFromType = new Map([
@@ -215,22 +220,23 @@ const modifierNameFromType = new Map([
     [ MODIFIER_TYPE_PERMISSIONS, 'permissions' ],
     [ MODIFIER_TYPE_URLTRANSFORM, 'uritransform' ],
     [ MODIFIER_TYPE_REPLACE, 'replace' ],
+    [ MODIFIER_TYPE_URLSKIP, 'urlskip' ],
 ]);
 
-//const typeValueFromCatBits = catBits => (catBits >>> TypeBitsOffset) & 0b11111;
+//const typeValueFromCatBits = catBits => (catBits >>> TYPE_REALM_OFFSET) & 0b11111;
 
 const MAX_TOKEN_LENGTH = 7;
 
 // Four upper bits of token hash are reserved for built-in predefined
 // token hashes, which should never end up being used when tokenizing
 // any arbitrary string.
-const        NO_TOKEN_HASH = 0x50000000;
-const       DOT_TOKEN_HASH = 0x10000000;
-const       ANY_TOKEN_HASH = 0x20000000;
-const ANY_HTTPS_TOKEN_HASH = 0x30000000;
-const  ANY_HTTP_TOKEN_HASH = 0x40000000;
-const     EMPTY_TOKEN_HASH = 0xF0000000;
-const   INVALID_TOKEN_HASH = 0xFFFFFFFF;
+const        NO_TOKEN_HASH = 0x5000_0000;
+const       DOT_TOKEN_HASH = 0x1000_0000;
+const       ANY_TOKEN_HASH = 0x2000_0000;
+const ANY_HTTPS_TOKEN_HASH = 0x3000_0000;
+const  ANY_HTTP_TOKEN_HASH = 0x4000_0000;
+const     EMPTY_TOKEN_HASH = 0xF000_0000;
+const   INVALID_TOKEN_HASH = 0xFFFF_FFFF;
 
 /******************************************************************************/
 
@@ -374,9 +380,9 @@ class LogData {
         } else if ( (categoryBits & FIRSTPARTY_REALM) !== 0 ) {
             logData.options.unshift('1p');
         }
-        const type = categoryBits & TypeBitsMask;
+        const type = categoryBits & TYPE_REALM;
         if ( type !== 0 ) {
-            logData.options.unshift(typeValueToTypeName[type >>> TypeBitsOffset]);
+            logData.options.unshift(typeValueToTypeName[type >>> TYPE_REALM_OFFSET]);
         }
         let raw = logData.pattern.join('');
         if (
@@ -2163,7 +2169,7 @@ class FilterModifierResult {
         this.refs = filterRefs[filterData[imodifierunit+3]];
         this.ireportedunit = env.iunit;
         this.th = env.th;
-        this.bits = (env.bits & ~RealmBitsMask) | filterData[imodifierunit+1];
+        this.bits = (env.bits & ~BLOCKALLOW_REALM) | filterData[imodifierunit+1];
     }
 
     get result() {
@@ -2973,23 +2979,48 @@ registerFilterClass(FilterOnHeaders);
 /******************************************************************************/
 
 class FilterIPAddress {
+    static TYPE_UNKNOWN = 0;
+    static TYPE_EQUAL = 1;
+    static TYPE_STARTSWITH = 2;
+    static TYPE_LAN = 3;
+    static TYPE_LOOPBACK = 4;
+    static TYPE_RE = 5;
+    static reIPv6IPv4lan = /^::ffff:(7f\w{2}|a\w{2}|a9fe|c0a8):\w+$/;
+    static reIPv6local = /^f[cd]\w{2}:/;
+
     static match(idata) {
         const ipaddr = $requestAddress;
-        const details = filterRefs[filterData[idata+1]];
-        if ( details.isRegex ) {
-            if ( details.$re === undefined ) {
-                details.$re = new RegExp(details.pattern.slice(1, -1));
-            }
-            return details.$re.test(ipaddr);
-        }
         if ( ipaddr === '' ) { return false; }
-        if ( details.pattern === 'lan' ) {
+        const details = filterRefs[filterData[idata+1]];
+        switch ( details.$type || this.TYPE_UNKNOWN ) {
+        case this.TYPE_EQUAL:
+            return ipaddr === details.pattern;
+        case this.TYPE_LAN:
             return this.isLAN(ipaddr);
-        }
-        if ( details.pattern === 'loopback' ) {
+        case this.TYPE_LOOPBACK:
             return this.isLoopback(ipaddr);
+        case this.TYPE_STARTSWITH:
+            return ipaddr.startsWith(details.$pattern);
+        case this.TYPE_RE:
+            return details.$pattern.test(ipaddr)
+        default:
+            break;
         }
-        return ipaddr.startsWith(details.pattern);
+        const { pattern } = details;
+        if ( pattern === 'lan' ) {
+            details.$type = this.TYPE_LAN;
+        } else if ( pattern === 'loopback' ) {
+            details.$type = this.TYPE_LOOPBACK;
+        } else if ( pattern.startsWith('/') && pattern.endsWith('/') ) {
+            details.$type = this.TYPE_RE;
+            details.$pattern = new RegExp(pattern.slice(1, -1));
+        } else if ( pattern.endsWith('*') ) {
+            details.$type = this.TYPE_STARTSWITH;
+            details.$pattern = pattern.slice(0, -1);
+        } else {
+            details.$type = this.TYPE_EQUAL;
+        }
+        return this.match(idata);
     }
 
     // https://github.com/uBlockOrigin/uAssets/blob/master/filters/lan-block.txt
@@ -3011,26 +3042,26 @@ class FilterIPAddress {
             }
             return ipaddr.startsWith('192.168.');
         }
-        if ( c0 !== 0x5B /* [ */ ) { return false; }
         // ipv6
-        const c1 = ipaddr.charCodeAt(1);
-        if ( c1 === 0x3A /* : */ ) {
-            if ( ipaddr.startsWith('[::') === false ) { return false; }
-            if ( ipaddr === '[::]' || ipaddr === '[::1]' ) { return true; }
-            if ( ipaddr.startsWith('[::ffff:') === false ) { return false; }
-            return /^\[::ffff:(7f\w{2}|a\w{2}|a9fe|c0a8):\w+\]$/.test(ipaddr);
+        if ( c0 === 0x3A /* : */ ) {
+            if ( ipaddr.startsWith('::') === false ) { return false; }
+            if ( ipaddr === '::' || ipaddr === '::1' ) { return true; }
+            if ( ipaddr.startsWith('::ffff:') === false ) { return false; }
+            return this.reIPv6IPv4lan.test(ipaddr);
         }
-        if ( c1 === 0x36 /* 6 */ ) {
-            return ipaddr.startsWith('[64:ff9b:');
-        }
-        if ( c1 === 0x66 /* f */ ) {
-            return /^\[f[cd]\w{2}:/.test(ipaddr);
+        if ( ipaddr.includes(':') ) {
+            if ( c0 === 0x36 /* 6 */ ) {
+                return ipaddr.startsWith('64:ff9b:');
+            }
+            if ( c0 === 0x66 /* f */ ) {
+                return this.reIPv6local.test(ipaddr);
+            }
         }
         return false;
     }
 
     static isLoopback(ipaddr) {
-        return ipaddr === '127.0.0.1' || ipaddr === '[::1]';
+        return ipaddr === '127.0.0.1' || ipaddr === '::1';
     }
 
     static compile(details) {
@@ -3039,10 +3070,7 @@ class FilterIPAddress {
 
     static fromCompiled(args) {
         const pattern = args[1];
-        const details = {
-            pattern,
-            isRegex: pattern.startsWith('/') && pattern.endsWith('/'),
-        };
+        const details = { pattern };
         return filterDataAlloc(args[0], filterRefAdd(details));
     }
 
@@ -3273,6 +3301,7 @@ class FilterCompiler {
             [ sfp.NODE_TYPE_NET_OPTION_NAME_REMOVEPARAM, MODIFIER_TYPE_REMOVEPARAM ],
             [ sfp.NODE_TYPE_NET_OPTION_NAME_URLTRANSFORM, MODIFIER_TYPE_URLTRANSFORM ],
             [ sfp.NODE_TYPE_NET_OPTION_NAME_REPLACE, MODIFIER_TYPE_REPLACE ],
+            [ sfp.NODE_TYPE_NET_OPTION_NAME_URLSKIP, MODIFIER_TYPE_URLSKIP ],
         ]);
         // These top 100 "bad tokens" are collated using the "miss" histogram
         // from tokenHistograms(). The "score" is their occurrence among the
@@ -3412,7 +3441,6 @@ class FilterCompiler {
         this.notTypeBits = 0;
         this.methodBits = 0;
         this.notMethodBits = 0;
-        this.responseHeadersRealm = false;
         return this;
     }
 
@@ -3532,13 +3560,11 @@ class FilterCompiler {
         case sfp.NODE_TYPE_NET_OPTION_NAME_HEADER: {
             this.optionValues.set('header', parser.getNetOptionValue(id) || '');
             this.optionUnitBits |= HEADER_BIT;
-            this.responseHeadersRealm = true;
             break;
         }
         case sfp.NODE_TYPE_NET_OPTION_NAME_IPADDRESS:
             this.optionValues.set('ipaddress', parser.getNetOptionValue(id) || '');
             this.optionUnitBits |= IPADDRESS_BIT;
-            this.responseHeadersRealm = true;
             break;
         case sfp.NODE_TYPE_NET_OPTION_NAME_METHOD:
             this.processMethodOption(parser.getNetOptionValue(id));
@@ -3548,6 +3574,7 @@ class FilterCompiler {
         case sfp.NODE_TYPE_NET_OPTION_NAME_REDIRECTRULE:
         case sfp.NODE_TYPE_NET_OPTION_NAME_REMOVEPARAM:
         case sfp.NODE_TYPE_NET_OPTION_NAME_REPLACE:
+        case sfp.NODE_TYPE_NET_OPTION_NAME_URLSKIP:
         case sfp.NODE_TYPE_NET_OPTION_NAME_URLTRANSFORM:
             if ( this.processModifierOption(id, parser.getNetOptionValue(id)) === false ) {
                 return false;
@@ -3667,6 +3694,7 @@ class FilterCompiler {
             case sfp.NODE_TYPE_NET_OPTION_NAME_REMOVEPARAM:
             case sfp.NODE_TYPE_NET_OPTION_NAME_REPLACE:
             case sfp.NODE_TYPE_NET_OPTION_NAME_TO:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_URLSKIP:
             case sfp.NODE_TYPE_NET_OPTION_NAME_URLTRANSFORM:
                 if ( this.processOptionWithValue(parser, type) === false ) {
                     return this.FILTER_INVALID;
@@ -4008,7 +4036,7 @@ class FilterCompiler {
         }
 
         // Origin
-        if ( this.optionValues.has('from') ) {
+        if ( (this.optionUnitBits & FROM_BIT) !== 0 ) {
             compileFromDomainOpt(
                 this.optionValues.get('fromList'),
                 units.length !== 0 && patternClass.isSlow === true,
@@ -4017,7 +4045,7 @@ class FilterCompiler {
         }
 
         // Destination
-        if ( this.optionValues.has('to') ) {
+        if ( (this.optionUnitBits & TO_BIT) !== 0 ) {
             compileToDomainOpt(
                 this.optionValues.get('toList'),
                 units.length !== 0 && patternClass.isSlow === true,
@@ -4026,18 +4054,18 @@ class FilterCompiler {
         }
 
         // Deny-allow
-        if ( this.optionValues.has('denyallow') ) {
+        if ( (this.optionUnitBits & DENYALLOW_BIT) !== 0 ) {
             units.push(FilterDenyAllow.compile(this));
         }
 
+        // IP address
+        if ( (this.optionUnitBits & IPADDRESS_BIT) !== 0 ) {
+            units.push(FilterIPAddress.compile(this));
+        }
+
         // Header
-        if ( this.responseHeadersRealm ) {
-            if ( this.optionValues.has('ipaddress') ) {
-                units.push(FilterIPAddress.compile(this));
-            }
-            if ( this.optionValues.has('header') ) {
-                units.push(FilterOnHeaders.compile(this));
-            }
+        if ( (this.optionUnitBits & HEADER_BIT) !== 0 ) {
+            units.push(FilterOnHeaders.compile(this));
             this.action |= HEADERS_REALM;
         }
 
@@ -4054,16 +4082,21 @@ class FilterCompiler {
         // IMPORTANT: the modifier unit MUST always appear first in a sequence
         if ( this.modifyType !== undefined ) {
             units.unshift(FilterModifier.compile(this));
-            this.action = (this.action & ~ActionBitsMask) |
+            this.action = (this.action & ~BLOCKALLOW_REALM) |
                 modifierBitsFromType.get(this.modifyType);
         }
 
-        this.compileToAtomicFilter(
-            units.length === 1
-                ? units[0]
-                : FilterCompositeAll.compile(units),
-            writer
-        );
+        const fdata = units.length === 1
+            ? units[0]
+            : FilterCompositeAll.compile(units);
+
+        this.compileToAtomicFilter(fdata, writer);
+
+        if ( (this.optionUnitBits & IPADDRESS_BIT) !== 0 ) {
+            if ( (this.action & HEADERS_REALM) !== 0 ) { return; }
+            this.action |= HEADERS_REALM;
+            this.compileToAtomicFilter(fdata, writer);
+        }
     }
 
     compilePattern(units) {
@@ -4118,7 +4151,7 @@ class FilterCompiler {
         do {
             if ( typeBits & 1 ) {
                 writer.push([
-                    catBits | (bitOffset << TypeBitsOffset),
+                    catBits | (bitOffset << TYPE_REALM_OFFSET),
                     this.tokenHash,
                     fdata
                 ]);
@@ -4281,7 +4314,7 @@ StaticNetFilteringEngine.prototype.freeze = function() {
         // the block-important realm should be checked when and only when
         // there is a matched exception filter, which important filters are
         // meant to override.
-        if ( (bits & ActionBitsMask) === BLOCKIMPORTANT_REALM ) {
+        if ( (bits & BLOCKALLOW_REALM) === BLOCKIMPORTANT_REALM ) {
             this.addFilterUnit(
                 bits & ~IMPORTANT_REALM,
                 tokenHash,
@@ -4441,6 +4474,7 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
         [ PERMISSIONS_REALM, { type: 'permissions', priority: 0 } ],
         [ URLTRANSFORM_REALM, { type: 'uritransform', priority: 0 } ],
         [ HEADERS_REALM, { type: 'block', priority: 0 } ],
+        [ URLSKIP_REALM, { type: 'urlskip', priority: 0 } ],
     ]);
     const partyness = new Map([
         [ ANYPARTY_REALM, '' ],
@@ -4855,8 +4889,8 @@ StaticNetFilteringEngine.prototype.matchAndFetchModifiers = function(
     $docDomain = fctxt.getDocDomain();
     $requestHostname = fctxt.getHostname();
     $requestMethodBit = fctxt.method || 0;
-    $requestTypeValue = (typeBits & TypeBitsMask) >>> TypeBitsOffset;
-    $requestAddress = fctxt.ipaddress || '';
+    $requestTypeValue = (typeBits & TYPE_REALM) >>> TYPE_REALM_OFFSET;
+    $requestAddress = fctxt.getIPAddress();
 
     const modifierType = modifierTypeFromName.get(modifierName);
     const modifierBits = modifierBitsFromType.get(modifierType);
@@ -4950,7 +4984,7 @@ StaticNetFilteringEngine.prototype.matchAndFetchModifiers = function(
     const toRemove = new Map();
 
     for ( const result of results ) {
-        const actionBits = result.bits & ActionBitsMask;
+        const actionBits = result.bits & BLOCKALLOW_REALM;
         const modifyValue = result.value;
         if ( actionBits === BLOCKIMPORTANT_REALM ) {
             toAddImportant.set(modifyValue, result);
@@ -5153,7 +5187,7 @@ StaticNetFilteringEngine.prototype.matchRequestReverse = function(type, url) {
     $requestURL = urlTokenizer.setURL(url);
     $requestURLRaw = url;
     $requestMethodBit = 0;
-    $requestTypeValue = (typeBits & TypeBitsMask) >>> TypeBitsOffset;
+    $requestTypeValue = (typeBits & TYPE_REALM) >>> TYPE_REALM_OFFSET;
     $requestAddress = '';
     $isBlockImportant = false;
     this.$filterUnit = 0;
@@ -5222,8 +5256,8 @@ StaticNetFilteringEngine.prototype.matchRequest = function(fctxt, modifiers = 0)
     $docDomain = fctxt.getDocDomain();
     $requestHostname = fctxt.getHostname();
     $requestMethodBit = fctxt.method || 0;
-    $requestTypeValue = (typeBits & TypeBitsMask) >>> TypeBitsOffset;
-    $requestAddress = fctxt.ipaddress || '';
+    $requestTypeValue = (typeBits & TYPE_REALM) >>> TYPE_REALM_OFFSET;
+    $requestAddress = fctxt.getIPAddress();
     $isBlockImportant = false;
 
     // Evaluate block realm before allow realm, and allow realm before
@@ -5258,8 +5292,8 @@ StaticNetFilteringEngine.prototype.matchHeaders = function(fctxt, headers) {
     $docDomain = fctxt.getDocDomain();
     $requestHostname = fctxt.getHostname();
     $requestMethodBit = fctxt.method || 0;
-    $requestTypeValue = (typeBits & TypeBitsMask) >>> TypeBitsOffset;
-    $requestAddress = fctxt.ipaddress || '';
+    $requestTypeValue = (typeBits & TYPE_REALM) >>> TYPE_REALM_OFFSET;
+    $requestAddress = fctxt.getIPAddress();
     $httpHeaders.init(headers);
 
     let r = 0;
@@ -5304,11 +5338,35 @@ StaticNetFilteringEngine.prototype.redirectRequest = function(redirectEngine, fc
     return directives;
 };
 
-StaticNetFilteringEngine.prototype.transformRequest = function(fctxt) {
+function parseRedirectRequestValue(directive) {
+    if ( directive.cache === null ) {
+        directive.cache = sfp.parseRedirectValue(directive.value);
+    }
+    return directive.cache;
+}
+
+function compareRedirectRequests(redirectEngine, a, b) {
+    const { token: atok, priority: aint, bits: abits } =
+        parseRedirectRequestValue(a);
+    if ( redirectEngine.hasToken(atok) === false ) { return -1; }
+    const { token: btok, priority: bint, bits: bbits } =
+        parseRedirectRequestValue(b);
+    if ( redirectEngine.hasToken(btok) === false ) { return 1; }
+    if ( abits !== bbits ) {
+        if ( (abits & IMPORTANT_REALM) !== 0 ) { return 1; }
+        if ( (bbits & IMPORTANT_REALM) !== 0 ) { return -1; }
+        if ( (abits & ALLOW_REALM) !== 0 ) { return -1; }
+        if ( (bbits & ALLOW_REALM) !== 0 ) { return 1; }
+    }
+    return aint - bint;
+}
+
+/******************************************************************************/
+
+StaticNetFilteringEngine.prototype.transformRequest = function(fctxt, out = []) {
     const directives = this.matchAndFetchModifiers(fctxt, 'uritransform');
     if ( directives === undefined ) { return; }
     const redirectURL = new URL(fctxt.url);
-    const out = [];
     for ( const directive of directives ) {
         if ( (directive.bits & ALLOW_REALM) !== 0 ) {
             out.push(directive);
@@ -5340,27 +5398,47 @@ StaticNetFilteringEngine.prototype.transformRequest = function(fctxt) {
     return out;
 };
 
-function parseRedirectRequestValue(directive) {
-    if ( directive.cache === null ) {
-        directive.cache = sfp.parseRedirectValue(directive.value);
-    }
-    return directive.cache;
-}
+/******************************************************************************/
 
-function compareRedirectRequests(redirectEngine, a, b) {
-    const { token: atok, priority: aint, bits: abits } =
-        parseRedirectRequestValue(a);
-    if ( redirectEngine.hasToken(atok) === false ) { return -1; }
-    const { token: btok, priority: bint, bits: bbits } =
-        parseRedirectRequestValue(b);
-    if ( redirectEngine.hasToken(btok) === false ) { return 1; }
-    if ( abits !== bbits ) {
-        if ( (abits & IMPORTANT_REALM) !== 0 ) { return 1; }
-        if ( (bbits & IMPORTANT_REALM) !== 0 ) { return -1; }
-        if ( (abits & ALLOW_REALM) !== 0 ) { return -1; }
-        if ( (bbits & ALLOW_REALM) !== 0 ) { return 1; }
+StaticNetFilteringEngine.prototype.urlSkip = function(fctxt, out = []) {
+    if ( fctxt.redirectURL !== undefined ) { return; }
+    const directives = this.matchAndFetchModifiers(fctxt, 'urlskip');
+    if ( directives === undefined ) { return; }
+    for ( const directive of directives ) {
+        if ( (directive.bits & ALLOW_REALM) !== 0 ) {
+            out.push(directive);
+            continue;
+        }
+        const urlin = fctxt.url;
+        const value = directive.value;
+        const steps = value.includes(' ') && value.split(/ +/) || [ value ];
+        const urlout = urlSkip(urlin, steps);
+        if ( urlout === undefined ) { continue; }
+        if ( urlout === urlin ) { continue; }
+        fctxt.redirectURL = urlout;
+        out.push(directive);
+        break;
     }
-    return aint - bint;
+    if ( out.length === 0 ) { return; }
+    return out;
+};
+
+function urlSkip(urlin, steps) {
+    try {
+        let urlout;
+        for ( const step of steps ) {
+            if ( step.startsWith('?') === false ) { return; }
+            urlout = (new URL(urlin)).searchParams.get(step.slice(1));
+            if ( urlout === null ) { return; }
+            if ( urlout.includes(' ') ) {
+                urlout = urlout.replace(/ /g, '%20');
+            }
+            urlin = urlout;
+        }
+        void new URL(urlout);
+        return urlout;
+    } catch(x) {
+    }
 }
 
 /******************************************************************************/
@@ -5368,7 +5446,8 @@ function compareRedirectRequests(redirectEngine, a, b) {
 // https://github.com/uBlockOrigin/uBlock-issues/issues/1626
 //   Do not redirect when the number of query parameters does not change.
 
-StaticNetFilteringEngine.prototype.filterQuery = function(fctxt) {
+StaticNetFilteringEngine.prototype.filterQuery = function(fctxt, out = []) {
+    if ( fctxt.redirectURL !== undefined ) { return; }
     const directives = this.matchAndFetchModifiers(fctxt, 'removeparam');
     if ( directives === undefined ) { return; }
     const url = fctxt.url;
@@ -5391,7 +5470,6 @@ StaticNetFilteringEngine.prototype.filterQuery = function(fctxt) {
         }
     }
     const inParamCount = params.size;
-    const out = [];
     for ( const directive of directives ) {
         if ( params.size === 0 ) { break; }
         const isException = (directive.bits & ALLOW_REALM) !== 0;
@@ -5659,6 +5737,7 @@ StaticNetFilteringEngine.prototype.dump = function() {
         [ PERMISSIONS_REALM, 'permissions' ],
         [ URLTRANSFORM_REALM, 'uritransform' ],
         [ REPLACE_REALM, 'replace' ],
+        [ URLSKIP_REALM, 'urlskip' ],
     ]);
     const partyness = new Map([
         [ ANYPARTY_REALM, 'any-party' ],

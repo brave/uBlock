@@ -312,7 +312,7 @@
     "description": "English: Click, Ctrl-click"
   },
   "pickerContextMenuEntry": {
-    "message": "إحجب العنصر...",
+    "message": "حجب العنصر...",
     "description": "An entry in the browser's contextual menu"
   },
   "settingsCollapseBlockedPrompt": {
@@ -1009,6 +1009,10 @@
   },
   "supportS6Select1Option6": {
     "message": "افتح التبويبات أو النوافذ التي ليس مرغوبًا بها",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option7": {
+    "message": "يؤدي إلى البرامج الضارة والإحتيال",
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Checkbox1": {

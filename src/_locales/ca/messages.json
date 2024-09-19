@@ -1011,6 +1011,10 @@
     "message": "Obre pestanyes o finestres no desitjades",
     "description": "An entry in the widget used to select the type of issue"
   },
+  "supportS6Select1Option7": {
+    "message": "Condueix a programari maliciós, pesca electrònica",
+    "description": "An entry in the widget used to select the type of issue"
+  },
   "supportS6Checkbox1": {
     "message": "Marca aquesta pàgina com a &ldquo;NSFW&rdquo; (<a href=\"https://ca.wikipedia.org/wiki/NSFW\">&ldquo;No segur per al treball&rdquo;</a>)",
     "description": "A checkbox to use for NSFW sites"

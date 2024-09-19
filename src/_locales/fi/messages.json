@@ -544,7 +544,7 @@
     "description": "Label for the checkbox use to enable/disable 'My filters' list"
   },
   "1pTrustMyFiltersLabel": {
-    "message": "Salli omat suodattimet, joihin luotat",
+    "message": "Salli luottamusta edellyttävät omat suodattimet",
     "description": "Label for the checkbox use to trust the content of 'My filters' list"
   },
   "1pImport": {
@@ -1011,6 +1011,10 @@
     "message": "Avaa ei-toivottuja välilehtiä tai ikkunoita",
     "description": "An entry in the widget used to select the type of issue"
   },
+  "supportS6Select1Option7": {
+    "message": "Leads to badware, phishing",
+    "description": "An entry in the widget used to select the type of issue"
+  },
   "supportS6Checkbox1": {
     "message": "Luokittele verkkosivu ns. työpaikalle sopimattomaksi, \"NSFW\" (<a href=\"https://wikipedia.org/wiki/Not_safe_for_work\">\"Not Safe For Work\"</a>)",
     "description": "A checkbox to use for NSFW sites"
@@ -1264,7 +1268,7 @@
     "description": "Label for keyboard shortcut used to toggle cosmetic filtering"
   },
   "toggleJavascript": {
-    "message": "Kytke JavaScript käyttöön/pois käytöstä",
+    "message": "Kytke JavaScript",
     "description": "Label for keyboard shortcut used to toggle no-scripting switch"
   },
   "relaxBlockingMode": {

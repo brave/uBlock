@@ -191,6 +191,7 @@ export const NODE_TYPE_NET_OPTION_NAME_REPLACE      = iota++;
 export const NODE_TYPE_NET_OPTION_NAME_SCRIPT       = iota++;
 export const NODE_TYPE_NET_OPTION_NAME_SHIDE        = iota++;
 export const NODE_TYPE_NET_OPTION_NAME_TO           = iota++;
+export const NODE_TYPE_NET_OPTION_NAME_URLSKIP      = iota++;
 export const NODE_TYPE_NET_OPTION_NAME_URLTRANSFORM = iota++;
 export const NODE_TYPE_NET_OPTION_NAME_XHR          = iota++;
 export const NODE_TYPE_NET_OPTION_NAME_WEBRTC       = iota++;
@@ -274,6 +275,7 @@ export const nodeTypeFromOptionName = new Map([
     [ 'shide', NODE_TYPE_NET_OPTION_NAME_SHIDE ],
     /* synonym */ [ 'specifichide', NODE_TYPE_NET_OPTION_NAME_SHIDE ],
     [ 'to', NODE_TYPE_NET_OPTION_NAME_TO ],
+    [ 'urlskip', NODE_TYPE_NET_OPTION_NAME_URLSKIP ],
     [ 'uritransform', NODE_TYPE_NET_OPTION_NAME_URLTRANSFORM ],
     [ 'xhr', NODE_TYPE_NET_OPTION_NAME_XHR ],
     /* synonym */ [ 'xmlhttprequest', NODE_TYPE_NET_OPTION_NAME_XHR ],
@@ -578,6 +580,7 @@ export const preparserIfTokens = new Set([
     'env_mv3',
     'env_safari',
     'cap_html_filtering',
+    'cap_ipaddress',
     'cap_user_stylesheet',
     'false',
     'ext_abp',
@@ -899,7 +902,7 @@ export class AstFilterParser {
         this.reGoodRegexToken = /[^\x01%0-9A-Za-z][%0-9A-Za-z]{7,}|[^\x01%0-9A-Za-z][%0-9A-Za-z]{1,6}[^\x01%0-9A-Za-z]/;
         this.reBadCSP = /(?:^|[;,])\s*report-(?:to|uri)\b/i;
         this.reBadPP = /(?:^|[;,])\s*report-to\b/i;
-        this.reNetOption = /^(~?)([13a-z_-]+)(=?)/;
+        this.reNetOption = /^(~?)([134a-z_-]+)(=?)/;
         this.reNoopOption = /^_+$/;
         this.netOptionValueParser = new ArgListParser(',');
         this.scriptletArgListParser = new ArgListParser(',');
@@ -1440,6 +1443,7 @@ export class AstFilterParser {
             case NODE_TYPE_NET_OPTION_NAME_REDIRECT:
             case NODE_TYPE_NET_OPTION_NAME_REDIRECTRULE:
             case NODE_TYPE_NET_OPTION_NAME_REPLACE:
+            case NODE_TYPE_NET_OPTION_NAME_URLSKIP:
             case NODE_TYPE_NET_OPTION_NAME_URLTRANSFORM:
                 realBad = isNegated || (isException || hasValue) === false ||
                     modifierType !== 0;
@@ -1513,6 +1517,21 @@ export class AstFilterParser {
             }
             const value = this.getNetOptionValue(NODE_TYPE_NET_OPTION_NAME_REPLACE);
             if ( parseReplaceValue(value) === undefined ) {
+                this.astError = AST_ERROR_OPTION_BADVALUE;
+                realBad = true;
+            }
+            break;
+        }
+        case NODE_TYPE_NET_OPTION_NAME_URLSKIP: {
+            realBad = abstractTypeCount || behaviorTypeCount || unredirectableTypeCount;
+            if ( realBad ) { break; }
+            if ( requiresTrustedSource() ) {
+                this.astError = AST_ERROR_UNTRUSTED_SOURCE;
+                realBad = true;
+                break;
+            }
+            const value = this.getNetOptionValue(NODE_TYPE_NET_OPTION_NAME_URLSKIP);
+            if ( value.startsWith('?') === false || value.length < 2 ) {
                 this.astError = AST_ERROR_OPTION_BADVALUE;
                 realBad = true;
             }
@@ -3138,6 +3157,7 @@ export const netOptionTokenDescriptors = new Map([
     [ 'shide', { } ],
     /* synonym */ [ 'specifichide', { } ],
     [ 'to', { mustAssign: true } ],
+    [ 'urlskip', { mustAssign: true } ],
     [ 'uritransform', { mustAssign: true } ],
     [ 'xhr', { canNegate: true } ],
     /* synonym */ [ 'xmlhttprequest', { canNegate: true } ],
