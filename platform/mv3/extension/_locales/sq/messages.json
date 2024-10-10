@@ -31,6 +31,10 @@
     "message": "mënyra e filtrimit",
     "description": "Label in the popup panel for the current filtering mode"
   },
+  "popupTipReport": {
+    "message": "Raportoj problemin me uebsajtin",
+    "description": "Tooltip used for the 'chat' icon in the panel"
+  },
   "popupTipDashboard": {
     "message": "Hapni panelin e kontrollit",
     "description": "English: Click to open the dashboard"
@@ -98,6 +102,70 @@
   "aboutDependencies": {
     "message": "Programet kushtëzuese (sipas GPLv3):",
     "description": "Shown in the About pane"
+  },
+  "supportS6H": {
+    "message": "Raportoni problemet me filtrat",
+    "description": "Header of 'Report a filter issue' section in Support pane"
+  },
+  "supportS3P1": {
+    "message": "Raportoni problemet me filtrat në uebsajt specifikë në <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"><code>uBlockOrigin/uAssets</code> issue tracker</span>. <u>Kërkon një llogari GitHub.</u>",
+    "description": "First paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS6P1S1": {
+    "message": "Verifikoni a është raportuar më parë problemi që të mos i lodhni vullnetarët e tjerë me të njëjtat gjëra.",
+    "description": "A paragraph in the filter issue reporter section"
+  },
+  "supportFindSpecificButton": {
+    "message": "Gjej raporte të ngjashme",
+    "description": "A clickable link in the filter issue reporter section"
+  },
+  "supportS6URL": {
+    "message": "Adresa e uebsajtit:",
+    "description": "Label for the URL of the page"
+  },
+  "supportS6Select1": {
+    "message": "Uebsajti...",
+    "description": "Label for widget to select type of issue"
+  },
+  "supportS6Select1Option0": {
+    "message": "-- Zgjidhni --",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option1": {
+    "message": "Shfaq reklama ose pjesë reklamash",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option2": {
+    "message": "Ka mbivendosje ose parregullsi të tjera",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option3": {
+    "message": "Zbulon uBO Lite",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option4": {
+    "message": "Ka probleme me privatësinë",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option5": {
+    "message": "Krijon mosfunksionime kur uBO Lite është i aktivizuar",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option6": {
+    "message": "Hap skeda ose dritare të panevojshme",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option7": {
+    "message": "Çon në instalimin e programeve keqdashëse, mashtruese",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Checkbox1": {
+    "message": "Etiketoni faqen e internetit si “NSFW” (<a href=\"https://wikipedia.org/wiki/Not_safe_for_work\">“Not Safe For Work”</a>)",
+    "description": "A checkbox to use for NSFW sites"
+  },
+  "supportReportSpecificButton": {
+    "message": "Krijoj raport të ri",
+    "description": "Text for button which open an external webpage in Support pane"
   },
   "firstRunSectionLabel": {
     "message": "Përshëndetje",

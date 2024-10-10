@@ -130,8 +130,6 @@ const loadBenchmarkDataset = (( ) => {
 
 /******************************************************************************/
 
-// action: 1=test
-
 export async function benchmarkStaticNetFiltering(options = {}) {
     const { target, redirectEngine } = options;
 
@@ -174,6 +172,9 @@ export async function benchmarkStaticNetFiltering(options = {}) {
     for ( let i = 0; i < requests.length; i++ ) {
         const request = requests[i];
         fctxt.setURL(request.url);
+        if ( fctxt.getIPAddress() === '' ) {
+            fctxt.setIPAddress('93.184.215.14\n2606:2800:21f:cb07:6820:80da:af6b:8b2c');
+        }
         fctxt.setDocOriginFromURL(request.frameUrl);
         fctxt.setType(request.cpt);
         sfne.redirectURL = undefined;
@@ -216,7 +217,7 @@ export async function benchmarkStaticNetFiltering(options = {}) {
 
     const output = [
         'Benchmarked static network filtering engine:',
-        `\tEvaluated ${matchCount} match calls in ${dur.toFixed(0)} ms`,
+        `\tEvaluated ${matchCount} requests in ${dur.toFixed(0)} ms`,
         `\tAverage: ${(dur / matchCount).toFixed(3)} ms per request`,
         `\tNot blocked: ${matchCount - blockCount - allowCount}`,
         `\tBlocked: ${blockCount}`,

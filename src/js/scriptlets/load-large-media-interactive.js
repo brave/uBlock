@@ -19,10 +19,6 @@
     Home: https://github.com/gorhill/uBlock
 */
 
-'use strict';
-
-/******************************************************************************/
-
 (( ) => {
 
 /******************************************************************************/
@@ -32,8 +28,6 @@ if ( typeof vAPI !== 'object' || vAPI.loadAllLargeMedia instanceof Function ) {
     return;
 }
 
-/******************************************************************************/
-
 const largeMediaElementAttribute = 'data-' + vAPI.sessionId;
 const largeMediaElementSelector =
     ':root   audio[' + largeMediaElementAttribute + '],\n' +
@@ -41,25 +35,19 @@ const largeMediaElementSelector =
     ':root picture[' + largeMediaElementAttribute + '],\n' +
     ':root   video[' + largeMediaElementAttribute + ']';
 
-/******************************************************************************/
+const isMediaElement = elem =>
+    (/^(?:audio|img|picture|video)$/.test(elem.localName));
 
-const isMediaElement = function(elem) {
-    return /^(?:audio|img|picture|video)$/.test(elem.localName);
-};
+const isPlayableMediaElement = elem =>
+    (/^(?:audio|video)$/.test(elem.localName));
 
 /******************************************************************************/
 
 const mediaNotLoaded = function(elem) {
     switch ( elem.localName ) {
     case 'audio':
-    case 'video': {
-        const src = elem.src || '';
-        if ( src.startsWith('blob:') ) {
-            elem.autoplay = false;
-            elem.pause();
-        }
+    case 'video':
         return elem.readyState === 0 || elem.error !== null;
-    }
     case 'img': {
         if ( elem.naturalWidth !== 0 || elem.naturalHeight !== 0 ) {
             break;
@@ -103,44 +91,41 @@ const surveyMissingMediaElements = function() {
     return largeMediaElementCount;
 };
 
-if ( surveyMissingMediaElements() === 0 ) { return; }
-
-// Insert CSS to highlight blocked media elements.
-if ( vAPI.largeMediaElementStyleSheet === undefined ) {
-    vAPI.largeMediaElementStyleSheet = [
-        largeMediaElementSelector + ' {',
-            'border: 2px dotted red !important;',
-            'box-sizing: border-box !important;',
-            'cursor: zoom-in !important;',
-            'display: inline-block;',
-            'filter: none !important;',
-            'font-size: 1rem !important;',
-            'min-height: 1em !important;',
-            'min-width: 1em !important;',
-            'opacity: 1 !important;',
-            'outline: none !important;',
-            'transform: none !important;',
-            'visibility: visible !important;',
-            'z-index: 2147483647',
-        '}',
-    ].join('\n');
-    vAPI.userStylesheet.add(vAPI.largeMediaElementStyleSheet);
-    vAPI.userStylesheet.apply();
+if ( surveyMissingMediaElements() ) {
+    // Insert CSS to highlight blocked media elements.
+    if ( vAPI.largeMediaElementStyleSheet === undefined ) {
+        vAPI.largeMediaElementStyleSheet = [
+            largeMediaElementSelector + ' {',
+                'border: 2px dotted red !important;',
+                'box-sizing: border-box !important;',
+                'cursor: zoom-in !important;',
+                'display: inline-block;',
+                'filter: none !important;',
+                'font-size: 1rem !important;',
+                'min-height: 1em !important;',
+                'min-width: 1em !important;',
+                'opacity: 1 !important;',
+                'outline: none !important;',
+                'transform: none !important;',
+                'visibility: visible !important;',
+                'z-index: 2147483647',
+            '}',
+        ].join('\n');
+        vAPI.userStylesheet.add(vAPI.largeMediaElementStyleSheet);
+        vAPI.userStylesheet.apply();
+    }
 }
 
 /******************************************************************************/
 
 const loadMedia = async function(elem) {
     const src = elem.getAttribute('src') || '';
+    if ( src === '' ) { return; }
     elem.removeAttribute('src');
-
     await vAPI.messaging.send('scriptlets', {
         what: 'temporarilyAllowLargeMediaElement',
     });
-
-    if ( src !== '' ) {
-        elem.setAttribute('src', src);
-    }
+    elem.setAttribute('src', src);
     elem.load();
 };
 
@@ -148,14 +133,21 @@ const loadMedia = async function(elem) {
 
 const loadImage = async function(elem) {
     const src = elem.getAttribute('src') || '';
-    elem.removeAttribute('src');
-
+    const srcset = src === '' && elem.getAttribute('srcset') || '';
+    if ( src === '' && srcset === '' ) { return; }
+    if ( src !== '' ) {
+        elem.removeAttribute('src');
+    }
+    if ( srcset !== '' ) {
+        elem.removeAttribute('srcset');
+    }
     await vAPI.messaging.send('scriptlets', {
         what: 'temporarilyAllowLargeMediaElement',
     });
-
     if ( src !== '' ) {
         elem.setAttribute('src', src);
+    } else if ( srcset !== '' ) {
+        elem.setAttribute('srcset', srcset);
     }
 };
 
@@ -255,6 +247,27 @@ const onLoadError = function(ev) {
 };
 
 document.addEventListener('error', onLoadError, true);
+
+/******************************************************************************/
+
+const autoPausedMedia = new WeakMap();
+
+for ( const elem of document.querySelectorAll('audio,video') ) {
+    elem.setAttribute('autoplay', 'false');
+}
+
+const preventAutoplay = function(ev) {
+    const elem = ev.target;
+    if ( isPlayableMediaElement(elem) === false ) { return; }
+    const currentSrc = elem.getAttribute('src') || '';
+    const pausedSrc = autoPausedMedia.get(elem);
+    if ( pausedSrc === currentSrc ) { return; }
+    autoPausedMedia.set(elem, currentSrc);
+    elem.setAttribute('autoplay', 'false');
+    elem.pause();
+};
+
+document.addEventListener('timeupdate', preventAutoplay, true);
 
 /******************************************************************************/
 

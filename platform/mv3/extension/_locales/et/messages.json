@@ -31,6 +31,10 @@
     "message": "filtreerimisrežiim",
     "description": "Label in the popup panel for the current filtering mode"
   },
+  "popupTipReport": {
+    "message": "Teavita veast selle veebilehega",
+    "description": "Tooltip used for the 'chat' icon in the panel"
+  },
   "popupTipDashboard": {
     "message": "Ava töölaud",
     "description": "English: Click to open the dashboard"
@@ -98,6 +102,70 @@
   "aboutDependencies": {
     "message": "Välised sõltuvused (ühilduvad GPLv3-ga):",
     "description": "Shown in the About pane"
+  },
+  "supportS6H": {
+    "message": "Teavita filtri veast",
+    "description": "Header of 'Report a filter issue' section in Support pane"
+  },
+  "supportS3P1": {
+    "message": "Teavita vigasest filtrist kindlate veebilehtedega <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\">uBlockOrigin/uAssets</code> vigade andmebaasi kaudu</span>. <u>Nõuab GitHubi kontot.</u>",
+    "description": "First paragraph of 'Filter issues' section in Support pane"
+  },
+  "supportS6P1S1": {
+    "message": "Vabatahtlike koormamise vältimiseks samade teadetega veenduge, et keegi pole selle murega juba varem pöördunud.",
+    "description": "A paragraph in the filter issue reporter section"
+  },
+  "supportFindSpecificButton": {
+    "message": "Leidke sarnased aruanded",
+    "description": "A clickable link in the filter issue reporter section"
+  },
+  "supportS6URL": {
+    "message": "Veebilehe aadress:",
+    "description": "Label for the URL of the page"
+  },
+  "supportS6Select1": {
+    "message": "Veebileht...",
+    "description": "Label for widget to select type of issue"
+  },
+  "supportS6Select1Option0": {
+    "message": "-- Valige --",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option1": {
+    "message": "Näitab reklaame või reklaami kohatäitjaid",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option2": {
+    "message": "Omab ülekatteid või teisi nuhtlusi",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option3": {
+    "message": "Tuvastab uBO Lite'i",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option4": {
+    "message": "Omab privaatsusega seonduvaid probleeme",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option5": {
+    "message": "Streigib, kui uBO Lite on kasutusel",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option6": {
+    "message": "Avab soovimatuid kaarte või aknaid",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Select1Option7": {
+    "message": "Põhjustab pahavara, õngitsuskirju",
+    "description": "An entry in the widget used to select the type of issue"
+  },
+  "supportS6Checkbox1": {
+    "message": "Märgi veebileht kui „NSFW” (<a href=\"https://wikipedia.org/wiki/Not_safe_for_work\">„Ohtlik”</a>)",
+    "description": "A checkbox to use for NSFW sites"
+  },
+  "supportReportSpecificButton": {
+    "message": "Loo uus aruanne",
+    "description": "Text for button which open an external webpage in Support pane"
   },
   "firstRunSectionLabel": {
     "message": "Tere tulemast",

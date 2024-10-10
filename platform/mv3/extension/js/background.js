@@ -145,6 +145,36 @@ async function onPermissionsRemoved() {
 
 /******************************************************************************/
 
+async function gotoURL(url, type) {
+    const pageURL = new URL(url, runtime.getURL('/'));
+    const tabs = await browser.tabs.query({
+        url: pageURL.href,
+        windowType: type !== 'popup' ? 'normal' : 'popup'
+    });
+
+    if ( Array.isArray(tabs) && tabs.length !== 0 ) {
+        const { windowId, id } = tabs[0];
+        return Promise.all([
+            browser.windows.update(windowId, { focused: true }),
+            browser.tabs.update(id, { active: true }),
+        ]);
+    }
+
+    if ( type === 'popup' ) {
+        return windows.create({
+            type: 'popup',
+            url: pageURL.href,
+        });
+    }
+
+    return browser.tabs.create({
+        active: true,
+        url: pageURL.href,
+    });
+}
+
+/******************************************************************************/
+
 function onMessage(request, sender, callback) {
 
     // Does not require trusted origin.
@@ -265,6 +295,10 @@ function onMessage(request, sender, callback) {
         return true;
     }
 
+    case 'gotoURL':
+        gotoURL(request.url, request.type);
+        break;
+
     case 'setFilteringMode': {
         getFilteringMode(request.hostname).then(actualLevel => {
             if ( request.level === actualLevel ) { return actualLevel; }
@@ -272,6 +306,13 @@ function onMessage(request, sender, callback) {
         }).then(actualLevel => {
             registerInjectables();
             callback(actualLevel);
+        });
+        return true;
+    }
+
+    case 'getDefaultFilteringMode': {
+        getDefaultFilteringMode().then(level => {
+            callback(level);
         });
         return true;
     }
@@ -388,15 +429,14 @@ async function start() {
 
 // https://github.com/uBlockOrigin/uBOL-home/issues/199
 // Force a restart of the extension once when an "internal error" occurs
-try {
-    start();
+start().then(( ) => {
     localWrite({ goodStart: true });
-} catch(reason) {
+}).catch(reason => {
     console.trace(reason);
-    localRead.get('goodStart').then((bin = {}) => {
-        if ( bin.goodStart !== true ) { return; }
+    localRead('goodStart').then((bin = {}) => {
+        if ( bin.goodStart === false ) { return; }
         localWrite({ goodStart: false }).then(( ) => {
             runtime.reload();
         });
     });
-}
+});

@@ -27,6 +27,8 @@ and also lists of domain names or hosts file format (i.e. block lists from [The 
 
 ## Usage
 
+See `./demo.js` in package for instructions to quickly get started.
+
 At the moment, there can be only one instance of the static network filtering
 engine ("SNFE"), which proxy API must be imported as follow:
 
@@ -44,7 +46,7 @@ const { StaticNetFilteringEngine } = await import('@gorhill/ubo-core');
 Create an instance of SNFE:
 
 ```js
-const snfe = StaticNetFilteringEngine.create();
+const snfe = await StaticNetFilteringEngine.create();
 ```
 
 Feed the SNFE with filter lists -- `useLists()` accepts an array of
@@ -54,8 +56,8 @@ through the `raw` property, and optionally the name of the list through the
 
 ```js
 await snfe.useLists([
-    fetch('easylist').then(raw => ({ name: 'easylist', raw })),
-    fetch('easyprivacy').then(raw => ({ name: 'easyprivacy', raw })),
+    fetch('easylist').then(r => r.text()).then(raw => ({ name: 'easylist', raw })),
+    fetch('easyprivacy').then(r => r.text()).then(raw => ({ name: 'easyprivacy', raw })),
 ]);
 ```
 
@@ -90,10 +92,20 @@ if ( snfe.matchRequest({
 }
 ```
 
-It is possible to pre-parse filter lists and save the intermediate results for 
-later use -- useful to speed up the loading of filter lists. This will be 
-documented eventually, but if you feel adventurous, you can look at the code 
-and use this capability now if you figure out the details.
+Once all the filter lists are loaded into the static network filtering engine,
+you can serialize the content of the engine into a JS string:
+
+```js
+const serializedData = await snfe.serialize();
+```
+
+You can save and later use that JS string to fast-load the content of the
+static network filtering engine without having to parse and compile the lists:
+
+```js
+const snfe = await StaticNetFilteringEngine.create();
+await snfe.deserialize(serializedData);
+```
 
 ---
 

@@ -2993,16 +2993,14 @@ class FilterIPAddress {
         if ( ipaddr === '' ) { return false; }
         const details = filterRefs[filterData[idata+1]];
         switch ( details.$type || this.TYPE_UNKNOWN ) {
-        case this.TYPE_EQUAL:
-            return ipaddr === details.pattern;
         case this.TYPE_LAN:
             return this.isLAN(ipaddr);
         case this.TYPE_LOOPBACK:
             return this.isLoopback(ipaddr);
+        case this.TYPE_EQUAL:
         case this.TYPE_STARTSWITH:
-            return ipaddr.startsWith(details.$pattern);
         case this.TYPE_RE:
-            return details.$pattern.test(ipaddr)
+            return details.$pattern.test(ipaddr);
         default:
             break;
         }
@@ -3013,12 +3011,13 @@ class FilterIPAddress {
             details.$type = this.TYPE_LOOPBACK;
         } else if ( pattern.startsWith('/') && pattern.endsWith('/') ) {
             details.$type = this.TYPE_RE;
-            details.$pattern = new RegExp(pattern.slice(1, -1));
+            details.$pattern = new RegExp(pattern.slice(1, -1), 'm');
         } else if ( pattern.endsWith('*') ) {
             details.$type = this.TYPE_STARTSWITH;
-            details.$pattern = pattern.slice(0, -1);
+            details.$pattern = new RegExp(`^${restrFromPlainPattern(pattern.slice(0, -1))}`, 'm');
         } else {
             details.$type = this.TYPE_EQUAL;
+            details.$pattern = new RegExp(`^${restrFromPlainPattern(pattern)}$`, 'm');
         }
         return this.match(idata);
     }
@@ -3049,13 +3048,11 @@ class FilterIPAddress {
             if ( ipaddr.startsWith('::ffff:') === false ) { return false; }
             return this.reIPv6IPv4lan.test(ipaddr);
         }
-        if ( ipaddr.includes(':') ) {
-            if ( c0 === 0x36 /* 6 */ ) {
-                return ipaddr.startsWith('64:ff9b:');
-            }
-            if ( c0 === 0x66 /* f */ ) {
-                return this.reIPv6local.test(ipaddr);
-            }
+        if ( c0 === 0x36 /* 6 */ ) {
+            return ipaddr.startsWith('64:ff9b:');
+        }
+        if ( c0 === 0x66 /* f */ ) {
+            return this.reIPv6local.test(ipaddr);
         }
         return false;
     }
@@ -4792,20 +4789,13 @@ StaticNetFilteringEngine.prototype.toSelfie = function() {
     };
 };
 
-StaticNetFilteringEngine.prototype.serialize = async function() {
-    const selfie = [];
-    const storage = {
-        put(name, data) {
-            selfie.push([ name, data ]);
-        }
-    };
-    await this.toSelfie(storage, '');
-    return JSON.stringify(selfie);
+StaticNetFilteringEngine.prototype.serialize = function() {
+    return this.toSelfie();
 };
 
 /******************************************************************************/
 
-StaticNetFilteringEngine.prototype.fromSelfie = async function(selfie) {
+StaticNetFilteringEngine.prototype.fromSelfie = function(selfie) {
     if ( typeof selfie !== 'object' || selfie === null ) { return; }
 
     this.reset();
@@ -4838,14 +4828,8 @@ StaticNetFilteringEngine.prototype.fromSelfie = async function(selfie) {
     return true;
 };
 
-StaticNetFilteringEngine.prototype.unserialize = async function(s) {
-    const selfie = new Map(JSON.parse(s));
-    const storage = {
-        async get(name) {
-            return { content: selfie.get(name) };
-        }
-    };
-    return this.fromSelfie(storage, '');
+StaticNetFilteringEngine.prototype.unserialize = function(selfie) {
+    return this.fromSelfie(selfie);
 };
 
 /******************************************************************************/
@@ -5372,12 +5356,10 @@ StaticNetFilteringEngine.prototype.transformRequest = function(fctxt, out = []) 
             out.push(directive);
             continue;
         }
-        const { refs } = directive;
-        if ( refs instanceof Object === false ) { continue; }
-        if ( refs.$cache === null ) {
-            refs.$cache = sfp.parseReplaceValue(refs.value);
+        if ( directive.cache === null ) {
+            directive.cache = sfp.parseReplaceValue(directive.value);
         }
-        const cache = refs.$cache;
+        const cache = directive.cache;
         if ( cache === undefined ) { continue; }
         const before = `${redirectURL.pathname}${redirectURL.search}${redirectURL.hash}`;
         if ( cache.re.test(before) !== true ) { continue; }
@@ -5398,7 +5380,49 @@ StaticNetFilteringEngine.prototype.transformRequest = function(fctxt, out = []) 
     return out;
 };
 
-/******************************************************************************/
+/**
+ * @trustedOption urlskip
+ * 
+ * @description
+ * Extract a URL from another URL according to one or more transformation steps,
+ * thereby skipping over intermediate network request(s) to remote servers.
+ * Requires a trusted source.
+ * 
+ * @param steps
+ * A serie of space-separated directives representing the transformation steps
+ * to perform to extract the final URL to which a network request should be
+ * redirected.
+ * 
+ * Supported directives:
+ * 
+ * `?name`: extract the value of parameter `name` as the current string.
+ * 
+ * `&i`: extract the name of the parameter at position `i` as the current
+ *   string. The position is 1-based.
+ * 
+ * `/.../`: extract the first capture group of a regex as the current string.
+ * 
+ * `+https`: prepend the current string with `https://`.
+ * 
+ * `-base64`: decode the current string as a base64-encoded string.
+ * 
+ * At any given step, the currently extracted string may not necessarily be
+ * a valid URL, and more transformation steps may be needed to obtain a valid
+ * URL once all the steps are applied.
+ * 
+ * An unsupported step or a failed step will abort the transformation and no
+ * redirection will be performed.
+ * 
+ * The final step is expected to yield a valid URL. If the result is not a
+ * valid URL, no redirection will be performed.
+ * 
+ * @example
+ * ||example.com/path/to/tracker$urlskip=?url
+ * ||example.com/path/to/tracker$urlskip=?url ?to
+ * ||pixiv.net/jump.php?$urlskip=&1
+ * ||podtrac.com/pts/redirect.mp3/$urlskip=/\/redirect\.mp3\/(.*?\.mp3\b)/ +https
+ * 
+ * */
 
 StaticNetFilteringEngine.prototype.urlSkip = function(fctxt, out = []) {
     if ( fctxt.redirectURL !== undefined ) { return; }
@@ -5412,7 +5436,7 @@ StaticNetFilteringEngine.prototype.urlSkip = function(fctxt, out = []) {
         const urlin = fctxt.url;
         const value = directive.value;
         const steps = value.includes(' ') && value.split(/ +/) || [ value ];
-        const urlout = urlSkip(urlin, steps);
+        const urlout = urlSkip(directive, urlin, steps);
         if ( urlout === undefined ) { continue; }
         if ( urlout === urlin ) { continue; }
         fctxt.redirectURL = urlout;
@@ -5423,17 +5447,56 @@ StaticNetFilteringEngine.prototype.urlSkip = function(fctxt, out = []) {
     return out;
 };
 
-function urlSkip(urlin, steps) {
+function urlSkip(directive, urlin, steps) {
     try {
-        let urlout;
+        let urlout = urlin;
         for ( const step of steps ) {
-            if ( step.startsWith('?') === false ) { return; }
-            urlout = (new URL(urlin)).searchParams.get(step.slice(1));
-            if ( urlout === null ) { return; }
-            if ( urlout.includes(' ') ) {
-                urlout = urlout.replace(/ /g, '%20');
+            const urlin = urlout;
+            const c0 = step.charCodeAt(0);
+            // Extract from URL parameter name at position i
+            if ( c0 === 0x26 ) { // &
+                const i = (parseInt(step.slice(1)) || 0) - 1;
+                if ( i < 0 ) { return; }
+                const url = new URL(urlin);
+                if ( i >= url.searchParams.size ) { return; }
+                const params = Array.from(url.searchParams.keys());
+                urlout = decodeURIComponent(params[i]);
+                continue;
             }
-            urlin = urlout;
+            // Enforce https
+            if ( c0 === 0x2B && step === '+https' ) {
+                const s = urlin.replace(/^https?:\/\//, '');
+                if ( /^[\w-]:\/\//.test(s) ) { return; }
+                urlout = `https://${s}`;
+                continue;
+            }
+            // Decode base64
+            if ( c0 === 0x2D && step === '-base64' ) {
+                urlout = self.atob(urlin);
+                continue;
+            }
+            // Regex extraction from first capture group
+            if ( c0 === 0x2F ) { // /
+                if ( directive.cache === null ) {
+                    directive.cache = new RegExp(step.slice(1, -1));
+                }
+                const match = directive.cache.exec(urlin);
+                if ( match === null ) { return; }
+                if ( match.length <= 1 ) { return; }
+                urlout = match[1];
+                continue;
+            }
+            // Extract from URL parameter
+            if ( c0 === 0x3F ) { // ?
+                urlout = (new URL(urlin)).searchParams.get(step.slice(1));
+                if ( urlout === null ) { return; }
+                if ( urlout.includes(' ') ) {
+                    urlout = urlout.replace(/ /g, '%20');
+                }
+                continue;
+            }
+            // Unknown directive
+            return;
         }
         void new URL(urlout);
         return urlout;
@@ -5639,6 +5702,12 @@ StaticNetFilteringEngine.prototype.test = function(details) {
             for ( const redirect of redirects ) {
                 out.push(`modified: ${redirect.logData().raw}`);
             }
+        }
+    }
+    const urlskips = this.matchAndFetchModifiers(fctxt, 'urlskip');
+    if ( urlskips ) {
+        for ( const urlskip of urlskips ) {
+            out.push(`modified: ${urlskip.logData().raw}`);
         }
     }
     return out.join('\n');

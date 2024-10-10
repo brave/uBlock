@@ -457,7 +457,7 @@ class HNTrieContainer {
     }
 
     fromSelfie(selfie) {
-        if ( selfie instanceof Object === false ) { return false; }
+        if ( typeof selfie !== 'object' || selfie === null ) { return false; }
         if ( selfie.buf32 instanceof Uint32Array === false ) { return false; }
         if ( selfie.checksum !== i32Checksum(selfie.buf32) ) { return false; }
         this.needle = '';
