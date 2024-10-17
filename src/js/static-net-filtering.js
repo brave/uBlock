@@ -5449,9 +5449,9 @@ StaticNetFilteringEngine.prototype.urlSkip = function(fctxt, out = []) {
     return out;
 };
 
-function urlSkip(directive, urlin, steps) {
+function urlSkip(directive, url, steps) {
     try {
-        let urlout = urlin;
+        let urlout = url;
         for ( const step of steps ) {
             const urlin = urlout;
             const c0 = step.charCodeAt(0);
@@ -5508,7 +5508,8 @@ function urlSkip(directive, urlin, steps) {
             // Unknown directive
             return;
         }
-        void new URL(urlout);
+        const urlfinal = new URL(urlout);
+        if ( urlfinal.protocol !== 'https:' ) { return; }
         return urlout;
     } catch(x) {
     }
