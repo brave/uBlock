@@ -925,8 +925,11 @@ const PageStore = class {
     }
 
     redirectBlockedRequest(fctxt) {
-        const directives = staticNetFilteringEngine.redirectRequest(redirectEngine, fctxt);
-        if ( directives === undefined ) { return; }
+        const directives = staticNetFilteringEngine.redirectRequest(redirectEngine, fctxt) || [];
+        if ( this.urlSkippableResources.has(fctxt.itype) ) {
+            staticNetFilteringEngine.urlSkip(fctxt, true, directives);
+        }
+        if ( directives.length === 0 ) { return; }
         if ( logger.enabled !== true ) { return; }
         fctxt.pushFilters(directives.map(a => a.logData()));
         if ( fctxt.redirectURL === undefined ) { return; }
@@ -943,7 +946,7 @@ const PageStore = class {
             staticNetFilteringEngine.filterQuery(fctxt, directives);
         }
         if ( this.urlSkippableResources.has(fctxt.itype) ) {
-            staticNetFilteringEngine.urlSkip(fctxt, directives);
+            staticNetFilteringEngine.urlSkip(fctxt, false, directives);
         }
         if ( directives.length === 0 ) { return; }
         if ( logger.enabled !== true ) { return; }
@@ -955,8 +958,8 @@ const PageStore = class {
         });
     }
 
-    skipMainDocument(fctxt) {
-        const directives = staticNetFilteringEngine.urlSkip(fctxt);
+    skipMainDocument(fctxt, blocked) {
+        const directives = staticNetFilteringEngine.urlSkip(fctxt, blocked);
         if ( directives === undefined ) { return; }
         if ( logger.enabled !== true ) { return; }
         fctxt.pushFilters(directives.map(a => a.logData()));
@@ -1152,6 +1155,7 @@ const PageStore = class {
         µb.FilteringContext.MAIN_FRAME,
         µb.FilteringContext.MEDIA,
         µb.FilteringContext.OBJECT,
+        µb.FilteringContext.OTHER,
         µb.FilteringContext.SUB_FRAME,
     ]);
 

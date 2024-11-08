@@ -1191,6 +1191,10 @@
     "message": "Nastavi",
     "description": "Button text to navigate to the blocked page"
   },
+  "docblockedRedirectPrompt": {
+    "message": "Blokirana stranica želi preusmjeriti na drugu stranicu. Ako odlučite nastaviti, otići ćete izravno na: {{url}}",
+    "description": "Text warning about an incoming redirect"
+  },
   "cloudPush": {
     "message": "Izvezi u pohranu u oblaku",
     "description": "tooltip"

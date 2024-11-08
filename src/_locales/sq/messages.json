@@ -1191,6 +1191,10 @@
     "message": "Vazhdoj",
     "description": "Button text to navigate to the blocked page"
   },
+  "docblockedRedirectPrompt": {
+    "message": "Faqja e bllokuar do t'ju drejtojë në një uebsajt tjetër. Në rast se vijoni do të shkoni te: {{url}}",
+    "description": "Text warning about an incoming redirect"
+  },
   "cloudPush": {
     "message": "Eksportoni në renë informatike",
     "description": "tooltip"

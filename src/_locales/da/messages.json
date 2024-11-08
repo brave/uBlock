@@ -1191,6 +1191,10 @@
     "message": "Fortsæt",
     "description": "Button text to navigate to the blocked page"
   },
+  "docblockedRedirectPrompt": {
+    "message": "Den blokerede side ønsker at omdirigere til et andet websted. Vælger man at fortsætte, navigeres direkte til: {{url}}",
+    "description": "Text warning about an incoming redirect"
+  },
   "cloudPush": {
     "message": "Eksportér til Skylager",
     "description": "tooltip"

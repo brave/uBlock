@@ -1,3 +1,20 @@
+- [Keep moving related scriptlets into separate files](https://github.com/gorhill/uBlock/commit/e5a088738d)
+- [Improve `prevent-xhr` scriptlet](https://github.com/gorhill/uBlock/commit/ce4908b341)
+- [Improve `trusted-suppress-native-method` scriptlet](https://github.com/gorhill/uBlock/commit/41616df866)
+- [Improve `set-cookie` scriptlet](https://github.com/gorhill/uBlock/commit/e613282698)
+
+----------
+
+# 1.61.0
+
+## Fixes / changes
+
+- [Improve `prevent-refresh` scriptlet](https://github.com/gorhill/uBlock/commit/8884f259c1)
+- [Improve `googlesyndication_adsbygoogle.js` scriptlet](https://github.com/gorhill/uBlock/commit/f645e8f0d2)
+- [Offer ability to skip redirects in strict-blocked page](https://github.com/gorhill/uBlock/commit/20b54185fa)
+- [Add `-blocked` directive to `urlskip=` option](https://github.com/gorhill/uBlock/commit/d04dc4c767)
+- [Add `trusted-set-attr` scriptlet](https://github.com/gorhill/uBlock/commit/11ca4a3923)
+- [Remove `64:ff9b:` as private network block](https://github.com/gorhill/uBlock/commit/2621c908c3)
 - [Ensure `urlskip=` redirects only to `https:`](https://github.com/gorhill/uBlock/commit/32f27c5131)
 - [Add support to `urlskip=` media resources](https://github.com/gorhill/uBlock/commit/ce9fc5dc14)
 - [Add `-uricomponent` to `urlskip=` option](https://github.com/gorhill/uBlock/commit/01eebffc1f)

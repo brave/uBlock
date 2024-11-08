@@ -1191,6 +1191,10 @@
     "message": "続行する",
     "description": "Button text to navigate to the blocked page"
   },
+  "docblockedRedirectPrompt": {
+    "message": "ブロックしたページは別のサイトへリダイレクトしようとしています。続行すると次の URL へ移動します: {{url}}",
+    "description": "Text warning about an incoming redirect"
+  },
   "cloudPush": {
     "message": "クラウドストレージにエクスポートします",
     "description": "tooltip"

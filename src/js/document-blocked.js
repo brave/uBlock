@@ -19,10 +19,8 @@
     Home: https://github.com/gorhill/uBlock
 */
 
-'use strict';
-
-import { i18n, i18n$ } from './i18n.js';
 import { dom, qs$ } from './dom.js';
+import { i18n, i18n$ } from './i18n.js';
 
 /******************************************************************************/
 
@@ -47,7 +45,7 @@ let details = {};
 
     let lists;
     for ( const rawFilter in response ) {
-        if ( response.hasOwnProperty(rawFilter) ) {
+        if ( Object.prototype.hasOwnProperty.call(response, rawFilter) ) {
             lists = response[rawFilter];
             break;
         }
@@ -77,8 +75,46 @@ let details = {};
 
 /******************************************************************************/
 
-dom.text('#theURL > p > span:first-of-type', details.url);
+const urlToFragment = raw => {
+    try {
+        const fragment = new DocumentFragment();
+        const url = new URL(raw);
+        const hn = url.hostname;
+        const i = raw.indexOf(hn);
+        const b = document.createElement('b');
+        b.append(hn);
+        fragment.append(raw.slice(0,i), b, raw.slice(i+hn.length));
+        return fragment;
+    } catch(_) {
+    }
+    return raw;
+};
+
+/******************************************************************************/
+
+dom.clear('#theURL > p > span:first-of-type');
+qs$('#theURL > p > span:first-of-type').append(urlToFragment(details.url));
 dom.text('#why', details.fs);
+
+if ( typeof details.to === 'string' && details.to.length !== 0 ) {
+    const fragment = new DocumentFragment();
+    const text = i18n$('docblockedRedirectPrompt');
+    const linkPlaceholder = '{{url}}';
+    let pos = text.indexOf(linkPlaceholder);
+    if ( pos !== -1 ) {
+        const link = document.createElement('a');
+        link.href = details.to;
+        dom.cl.add(link, 'code');
+        link.append(urlToFragment(details.to)); 
+        fragment.append(
+            text.slice(0, pos),
+            link,
+            text.slice(pos + linkPlaceholder.length)
+        );
+        qs$('#urlskip').append(fragment);
+        dom.attr('#urlskip', 'hidden', null);
+    }
+}
 
 /******************************************************************************/
 

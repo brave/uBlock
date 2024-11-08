@@ -1191,6 +1191,10 @@
     "message": "Jatka",
     "description": "Button text to navigate to the blocked page"
   },
+  "docblockedRedirectPrompt": {
+    "message": "Estetty sivu ohjautuu eri sivustolle. Jos jatkat, siirryt suoraan osoitteeseen {{url}}",
+    "description": "Text warning about an incoming redirect"
+  },
   "cloudPush": {
     "message": "Vie pilvitallennustilaan",
     "description": "tooltip"

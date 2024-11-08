@@ -1191,6 +1191,10 @@
     "message": "Fortfahren",
     "description": "Button text to navigate to the blocked page"
   },
+  "docblockedRedirectPrompt": {
+    "message": "Die blockierte Seite möchte zu einer anderen Website weiterleiten. Beim Fortfahren wird folgende Seite aufgerufen: {{url}}",
+    "description": "Text warning about an incoming redirect"
+  },
   "cloudPush": {
     "message": "In den Cloud-Speicher exportieren",
     "description": "tooltip"

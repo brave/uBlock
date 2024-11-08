@@ -1004,7 +1004,7 @@
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Select1Option5": {
-    "message": "Se rompe cuando uBlock Origin está habilitado",
+    "message": "Funciona mal cuando uBlock Origin está habilitado",
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Select1Option6": {
@@ -1190,6 +1190,10 @@
   "docblockedDisable": {
     "message": "Continuar",
     "description": "Button text to navigate to the blocked page"
+  },
+  "docblockedRedirectPrompt": {
+    "message": "La página bloqueada quiere redirigir a otro sitio. Si eliges continuar, navegarás directamente a: {{url}}",
+    "description": "Text warning about an incoming redirect"
   },
   "cloudPush": {
     "message": "Exportar datos a la nube",

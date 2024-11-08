@@ -1191,6 +1191,10 @@
     "message": "继续加载",
     "description": "Button text to navigate to the blocked page"
   },
+  "docblockedRedirectPrompt": {
+    "message": "被屏蔽的网页想重定向到另一个网站。如果您选择继续，将直接导航到：{{url}}",
+    "description": "Text warning about an incoming redirect"
+  },
   "cloudPush": {
     "message": "导出到云端储存",
     "description": "tooltip"

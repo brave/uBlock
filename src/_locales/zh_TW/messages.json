@@ -1191,6 +1191,10 @@
     "message": "繼續載入",
     "description": "Button text to navigate to the blocked page"
   },
+  "docblockedRedirectPrompt": {
+    "message": "被封鎖的頁面想要重新導向至另一個網站。如果您選擇繼續，則會直接前往：{{url}}",
+    "description": "Text warning about an incoming redirect"
+  },
   "cloudPush": {
     "message": "匯出至雲端儲存空間",
     "description": "tooltip"

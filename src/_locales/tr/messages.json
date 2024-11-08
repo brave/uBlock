@@ -1191,6 +1191,10 @@
     "message": "Devam et",
     "description": "Button text to navigate to the blocked page"
   },
+  "docblockedRedirectPrompt": {
+    "message": "Engellenen sayfa sizi başka bir siteye yönlendirmek istiyor. Devam etmek isterseniz doğrudan şuraya yönlendirileceksiniz: {{url}}",
+    "description": "Text warning about an incoming redirect"
+  },
   "cloudPush": {
     "message": "Bulut depolamaya aktar",
     "description": "tooltip"
