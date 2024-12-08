@@ -1,3 +1,6 @@
+body.loading {
+    visibility: hidden;
+    }
 body .firstRun {
     display: none;
     }
@@ -9,8 +12,22 @@ body.firstRun .firstRun {
 h3 {
     margin: 1em 0;
     }
-p {
-    white-space: pre-line;
+
+label + legend {
+    color: color-mix(in srgb, currentColor 69%, transparent);
+    font-size: var(--font-size-smaller);
+    margin-inline-start: var(--default-gap-large);
+    }
+
+body[data-forbid~="dashboard"] #dashboard-nav [data-pane="settings"],
+body[data-forbid~="dashboard"] section[data-pane="settings"],
+body[data-forbid~="dashboard"] #dashboard-nav [data-pane="rulesets"],
+body[data-forbid~="dashboard"] section[data-pane="rulesets"] {
+    display: none;
+    }
+body[data-forbid~="filteringMode"] section[data-pane="settings"] > div:has(> h3[data-i18n="defaultFilteringModeSectionLabel"]),
+body[data-forbid~="filteringMode"] section[data-pane="settings"] > div:has(> h3[data-i18n="filteringMode0Name"]) {
+    display: none;
     }
 
 #showBlockedCount:has(input[type="checkbox"][disabled]) {

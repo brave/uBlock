@@ -36,6 +36,17 @@ function hashFromIterable(iter) {
 
 /******************************************************************************/
 
+function renderAdminRules() {
+    const { disabledFeatures: forbid = [] } = cachedRulesetData;
+    if ( forbid.length === 0 ) { return; }
+    dom.body.dataset.forbid = forbid.join(' ');
+    if ( forbid.includes('dashboard') ) {
+        dom.body.dataset.pane = 'about';
+    }
+}
+
+/******************************************************************************/
+
 function renderWidgets() {
     if ( cachedRulesetData.firstRun ) {
         dom.cl.add(dom.body, 'firstRun');
@@ -53,6 +64,17 @@ function renderWidgets() {
         } else {
             input.checked = false;
             dom.attr(input, 'disabled', '');
+        }
+    }
+
+    qs$('#strictBlockMode input[type="checkbox"]').checked = cachedRulesetData.strictBlockMode;
+
+    {
+        dom.prop('#developerMode input[type="checkbox"]', 'checked',
+            Boolean(cachedRulesetData.developerMode)
+        );
+        if ( cachedRulesetData.isSideloaded ) {
+            dom.attr('#developerMode', 'hidden', null);
         }
     }
 }
@@ -122,6 +144,20 @@ dom.on('#autoReload input[type="checkbox"]', 'change', ev => {
 dom.on('#showBlockedCount input[type="checkbox"]', 'change', ev => {
     sendMessage({
         what: 'setShowBlockedCount',
+        state: ev.target.checked,
+    });
+});
+
+dom.on('#strictBlockMode input[type="checkbox"]', 'change', ev => {
+    sendMessage({
+        what: 'setStrictBlockMode',
+        state: ev.target.checked,
+    });
+});
+
+dom.on('#developerMode input[type="checkbox"]', 'change', ev => {
+    sendMessage({
+        what: 'setDeveloperMode',
         state: ev.target.checked,
     });
 });
@@ -213,6 +249,13 @@ listen.onmessage = ev => {
         }
     }
 
+    if ( message.strictBlockMode !== undefined ) {
+        if ( message.strictBlockMode !== local.strictBlockMode ) {
+            local.strictBlockMode = message.strictBlockMode;
+            render = true;
+        }
+    }
+
     if ( message.adminRulesets !== undefined ) {
         if ( hashFromIterable(message.adminRulesets) !== hashFromIterable(local.adminRulesets) ) {
             local.adminRulesets = message.adminRulesets;
@@ -240,8 +283,10 @@ sendMessage({
     if ( !data ) { return; }
     cachedRulesetData = data;
     try {
+        renderAdminRules();
         renderFilterLists(cachedRulesetData);
         renderWidgets();
+        dom.cl.remove(dom.body, 'loading');
     } catch(ex) {
     }
     listen();
