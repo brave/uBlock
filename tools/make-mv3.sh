@@ -76,6 +76,7 @@ cp "$UBO_DIR"/src/css/fa-icons.css "$DES"/css/
 cp "$UBO_DIR"/src/js/dom.js "$DES"/js/
 cp "$UBO_DIR"/src/js/fa-icons.js "$DES"/js/
 cp "$UBO_DIR"/src/js/i18n.js "$DES"/js/
+cp "$UBO_DIR"/src/js/urlskip.js "$DES"/js/
 cp "$UBO_DIR"/src/lib/punycode.js "$DES"/js/
 
 cp -R "$UBO_DIR/src/img/flags-of-the-world" "$DES"/img
@@ -107,9 +108,10 @@ if [ "$QUICK" != "yes" ]; then
     cp platform/mv3/package.json "$TMPDIR"/
     cp platform/mv3/*.js "$TMPDIR"/
     cp platform/mv3/*.mjs "$TMPDIR"/
+    cp platform/mv3/*.html "$TMPDIR"/
     cp platform/mv3/extension/js/utils.js "$TMPDIR"/js/
+    cp -R "$UBO_DIR"/src/js/resources "$TMPDIR"/js/
     cp "$UBO_DIR"/assets/assets.dev.json "$TMPDIR"/
-    cp "$UBO_DIR"/assets/resources/*.js "$TMPDIR"/
     cp -R platform/mv3/scriptlets "$TMPDIR"/
     mkdir -p "$TMPDIR"/web_accessible_resources
     cp "$UBO_DIR"/src/web_accessible_resources/* "$TMPDIR"/web_accessible_resources/
@@ -161,6 +163,7 @@ if [ "$FULL" = "yes" ]; then
     mkdir -p "$TMPDIR"
     cp -R "$DES"/* "$TMPDIR"/
     cd "$TMPDIR" > /dev/null
+    rm -f ./log.txt
     zip "$PACKAGENAME" -qr ./*
     cd - > /dev/null
     cp "$TMPDIR"/"$PACKAGENAME" dist/build/

@@ -231,8 +231,52 @@
     "message": "It tal blokkearre oanfragen op it arkbalkepiktogram toane",
     "description": "Label for a checkbox in the options page"
   },
+  "enableStrictBlockLabel": {
+    "message": "Strange blokkearring ynskeakelje",
+    "description": "Label for a checkbox in the options page"
+  },
+  "enableStrictBlockLegend": {
+    "message": "Navigaasje nei potinsjeel net-winske websites wurdt blokkearre, en jo krije de opsje om troch te gean.",
+    "description": "Label for a checkbox in the options page"
+  },
   "findListsPlaceholder": {
-    "message": "Find lists",
+    "message": "Listen sykje",
     "description": "Placeholder for the input field used to find lists"
+  },
+  "strictblockTitle": {
+    "message": "Side blokkearre",
+    "description": "Webpage title for the strict-blocked page"
+  },
+  "strictblockSentence1": {
+    "message": "uBO Lite hat it laden fan de folgjende side opkeard:",
+    "description": "Sentence used in the strict-blocked page"
+  },
+  "strictblockReasonSentence1": {
+    "message": "De side is blokkearre fanwegen in oerienkommend filter yn {{listname}}.",
+    "description": "Text informing about what is causing the page to be blocked"
+  },
+  "strictblockRedirectSentence1": {
+    "message": "De blokkearre side wol jo omliede nei in oare website. As jo trochgean, navigearje jo streekrjocht nei: {{url}}",
+    "description": "Text warning about an incoming redirect"
+  },
+  "strictblockNoParamsPrompt": {
+    "message": "sûnder parameters",
+    "description": "Label to be used for the parameter-less URL"
+  },
+  "strictblockBack": {
+    "message": "Tebek",
+    "description": "A button to go back to the previous webpage"
+  },
+  "strictblockClose": {
+    "message": "Dit finster slute",
+    "description": "A button to close the current tab"
+  },
+  "strictblockDontWarn": {
+    "message": "My net mear warskôgje oer dizze website",
+    "description": "Label for checkbox in document-blocked page"
+  },
+  "strictblockProceed": {
+    "message": "Tochgean",
+    "description": "A button to navigate to the blocked page"
   }
 }
