@@ -7,6 +7,7 @@ set -e
 DES=$1
 
 mkdir -p $DES/js
+cp src/js/arglist-parser.js          $DES/js
 cp src/js/base64-custom.js           $DES/js
 cp src/js/biditrie.js                $DES/js
 cp src/js/dynamic-net-filtering.js   $DES/js
@@ -21,6 +22,7 @@ cp src/js/static-net-filtering.js    $DES/js
 cp src/js/static-filtering-io.js     $DES/js
 cp src/js/tasks.js                   $DES/js
 cp src/js/text-utils.js              $DES/js
+cp src/js/urlskip.js                 $DES/js
 cp src/js/uri-utils.js               $DES/js
 cp src/js/url-net-filtering.js       $DES/js
 

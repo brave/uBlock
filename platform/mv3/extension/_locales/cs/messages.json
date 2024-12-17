@@ -231,8 +231,52 @@
     "message": "Zobrazit počet blokovaných požadavků u ikony v panelu nástrojů",
     "description": "Label for a checkbox in the options page"
   },
+  "enableStrictBlockLabel": {
+    "message": "Povolit přísné blokování",
+    "description": "Label for a checkbox in the options page"
+  },
+  "enableStrictBlockLegend": {
+    "message": "Navigace na potenciálně nežádoucí stránky bude zablokována a bude vám nabídnuta možnost pokračovat.",
+    "description": "Label for a checkbox in the options page"
+  },
   "findListsPlaceholder": {
-    "message": "Find lists",
+    "message": "Najít seznamy",
     "description": "Placeholder for the input field used to find lists"
+  },
+  "strictblockTitle": {
+    "message": "Stránka zablokována",
+    "description": "Webpage title for the strict-blocked page"
+  },
+  "strictblockSentence1": {
+    "message": "uBO Lite zabránil načtení následující stránky:",
+    "description": "Sentence used in the strict-blocked page"
+  },
+  "strictblockReasonSentence1": {
+    "message": "Stránka byla zablokována z důvodu shodného filtru v {{listname}}.",
+    "description": "Text informing about what is causing the page to be blocked"
+  },
+  "strictblockRedirectSentence1": {
+    "message": "Zablokovaná stránka vás chce přesměrovat na jiný web. Pokud se rozhodnete pokračovat, přejdete přímo na: {{url}}",
+    "description": "Text warning about an incoming redirect"
+  },
+  "strictblockNoParamsPrompt": {
+    "message": "bez parametrů",
+    "description": "Label to be used for the parameter-less URL"
+  },
+  "strictblockBack": {
+    "message": "Zpět",
+    "description": "A button to go back to the previous webpage"
+  },
+  "strictblockClose": {
+    "message": "Zavřít toto okno",
+    "description": "A button to close the current tab"
+  },
+  "strictblockDontWarn": {
+    "message": "Nevarujte mě znovu o této stránce",
+    "description": "Label for checkbox in document-blocked page"
+  },
+  "strictblockProceed": {
+    "message": "Pokračovat",
+    "description": "A button to navigate to the blocked page"
   }
 }

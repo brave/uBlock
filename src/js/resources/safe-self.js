@@ -18,8 +18,6 @@
 
     Home: https://github.com/gorhill/uBlock
 
-    The scriptlets below are meant to be injected only into a
-    web page context.
 */
 
 import { registerScriptlet } from './base.js';
@@ -53,6 +51,7 @@ export function safeSelf() {
         'RegExp_exec': self.RegExp.prototype.exec,
         'Request_clone': self.Request.prototype.clone,
         'String_fromCharCode': String.fromCharCode,
+        'String_split': String.prototype.split,
         'XMLHttpRequest': self.XMLHttpRequest,
         'addEventListener': self.EventTarget.prototype.addEventListener,
         'removeEventListener': self.EventTarget.prototype.removeEventListener,

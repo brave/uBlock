@@ -1,13 +1,30 @@
+- [Improve quote usage in filter options and scriptlets](https://github.com/gorhill/uBlock/commit/8ba71f09d7)
+- [Improve `trusted-suppress-native-method` scriptlet](https://github.com/gorhill/uBlock/commit/7ed3470844)
+- [Improve `trusted-replace-argument` scriptlet](https://github.com/gorhill/uBlock/commit/3417fe3d5d)
+- [Block media elements unconditionally when max size is set to 0](https://github.com/gorhill/uBlock/commit/36db7f8327)
+    - Regression from <https://github.com/gorhill/uBlock/commit/73ce4e6bcf>
+- [Visually separate scriptlet parameters in active line](https://github.com/gorhill/uBlock/commit/076e9fa73e)
+- [Mitigate potentially delayed execution of scriptlets in Firefox](https://github.com/gorhill/uBlock/commit/b1a00145bd)
+- [Improve `prevent-setTimeout`/`prevent-setInterval` scriptlets](https://github.com/gorhill/uBlock/commit/3b7fa79a68)
+- [Improve `trusted-replace-argument` scriptlet](https://github.com/gorhill/uBlock/commit/adced29b5b)
+- [Add `-safebase64` directive to `urlskip=` option](https://github.com/gorhill/uBlock/commit/bcc058eba7)
 - [Improve `urlskip=` filter option](https://github.com/gorhill/uBlock/commit/77ed83ff2f)
 - [Improve `spoof-css` scriptlet](https://github.com/gorhill/uBlock/commit/5f5e3d730f)
 - [Improve `trusted-set-attr` scriptlet](https://github.com/gorhill/uBlock/commit/c8174d6032)
-- [Better handle unexpected conditions when deserializing](https://github.com/gorhill/uBlock/commit/4c299bfca9)
 - [Add support for EasyList `{ remove: true }` cosmetic filter syntax](https://github.com/gorhill/uBlock/commit/ff5fc61753)
-- [Fix potential infinite async loop](https://github.com/gorhill/uBlock/commit/335d947c10) (issue found by @Rob--W)
 - [Keep moving related scriptlets into separate files](https://github.com/gorhill/uBlock/commit/e5a088738d)
 - [Improve `prevent-xhr` scriptlet](https://github.com/gorhill/uBlock/commit/ce4908b341)
 - [Improve `trusted-suppress-native-method` scriptlet](https://github.com/gorhill/uBlock/commit/41616df866)
 - [Improve `set-cookie` scriptlet](https://github.com/gorhill/uBlock/commit/e613282698)
+
+----------
+
+# 1.61.2
+
+## Fixes / changes
+
+- [Better handle unexpected conditions when deserializing](https://github.com/gorhill/uBlock/commit/4c299bfca9)
+- [Fix potential infinite async loop](https://github.com/gorhill/uBlock/commit/335d947c10) (issue found by @Rob--W)
 
 ----------
 
