@@ -9,7 +9,7 @@ jobs:
   check-for-changes:
     runs-on: ubuntu-latest
     env:
-      FILES_TO_CHECK: "assets/assets.json|assets/resources/scriptlets.js|web_accessible_resources/|js/redirect-resources.js"
+      FILES_TO_CHECK: "assets/assets.json|assets/resources/|src/js/resources|web_accessible_resources/|js/redirect-resources.js"
       UPSTREAM_URL: "https://github.com/gorhill/ublock.git"
     outputs:
       changes: ${{ steps.git-check.outputs.changes-present }}
@@ -55,26 +55,10 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      UPSTREAM_URL: "https://github.com/gorhill/ublock.git"
     steps:
       - uses: actions/checkout@v4
-      - name: Collate Changes
-        run: |
-          git remote add upstream ${UPSTREAM_URL}
-          git fetch upstream
-
-          FILES_TO_CHECK=("assets/assets.json"  "assets/resources" "src/web_accessible_resources"  "src/js/redirect-resources.js")
-          for files in ${FILES_TO_CHECK[*]}; do
-          echo '```diff' >> changes.txt;
-          git diff --diff-filter AM HEAD..remotes/upstream/master -- $files >> changes.txt;
-          echo -e '```\n' >> changes.txt;
-          done;
-
-          git remote remove upstream
       - name: Set PR Number to env
         run: echo "PR_NUMBER=`gh pr list | grep 'Fork Sync' | awk {'print $1'}`" >> $GITHUB_ENV
-      - name: Update PR Description
-        run: gh pr edit $PR_NUMBER -b "`cat "changes.txt"`"
       - name: Run puLL-Merge
         uses: brave/pull-merge@main
         with:
@@ -83,7 +67,8 @@ jobs:
           prnum: ${{ env.PR_NUMBER }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          filterdiff_args: --include=**/assets/assets.json --include=**/assets/resources/* --include=**/web_accessible_resources/* --include=**/js/redirect-resources.js
+          include_diff: true
+          filterdiff_args: --include=**/assets/assets.json --include=**/assets/resources/* --include=**/src/js/resources/* --include=**/web_accessible_resources/* --include=**/js/redirect-resources.js
   on-failure:
     runs-on: ubuntu-latest
     if: ${{ always() && (needs.sync.result == 'failure' || needs.create-pr.result == 'failure' || needs.update-pr.result == 'failure') }}
