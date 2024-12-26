@@ -19,9 +19,6 @@
     Home: https://github.com/gorhill/uBlock
 */
 
-const safeBase64Map = { '-': '+', '_': '/' };
-const safeBase64Replacer = s => safeBase64Map[s];
-
 /**
  * @trustedOption urlskip
  * 
@@ -41,6 +38,8 @@ const safeBase64Replacer = s => safeBase64Map[s];
  * 
  * `&i`: extract the name of the parameter at position `i` as the current
  *   string. The position is 1-based.
+ * 
+ * `#`: extract the hash as the current string.
  * 
  * `/.../`: extract the first capture group of a regex as the current string.
  * 
@@ -80,6 +79,12 @@ export function urlSkip(url, blocked, steps, directive = {}) {
         for ( const step of steps ) {
             const urlin = urlout;
             const c0 = step.charCodeAt(0);
+            // Extract from hash
+            if ( c0 === 0x23 && step === '#' ) { // #
+                const pos = urlin.indexOf('#');
+                urlout = pos !== -1 ? urlin.slice(pos+1) : '';
+                continue;
+            }
             // Extract from URL parameter name at position i
             if ( c0 === 0x26 ) { // &
                 const i = (parseInt(step.slice(1)) || 0) - 1;
@@ -91,14 +96,14 @@ export function urlSkip(url, blocked, steps, directive = {}) {
                 continue;
             }
             // Enforce https
-            if ( c0 === 0x2B && step === '+https' ) {
+            if ( c0 === 0x2B && step === '+https' ) { // +
                 const s = urlin.replace(/^https?:\/\//, '');
                 if ( /^[\w-]:\/\//.test(s) ) { return; }
                 urlout = `https://${s}`;
                 continue;
             }
             // Decode
-            if ( c0 === 0x2D ) {
+            if ( c0 === 0x2D ) { // -
                 // Base64
                 if ( step === '-base64' ) {
                     urlout = self.atob(urlin);
@@ -106,7 +111,11 @@ export function urlSkip(url, blocked, steps, directive = {}) {
                 }
                 // Safe Base64
                 if ( step === '-safebase64' ) {
-                    urlout = urlin.replace(/[-_]/g, safeBase64Replacer);
+                    if ( urlSkip.safeBase64Replacer === undefined ) {
+                        urlSkip.safeBase64Map = { '-': '+', '_': '/' };
+                        urlSkip.safeBase64Replacer = s => urlSkip.safeBase64Map[s];
+                    }
+                    urlout = urlin.replace(/[-_]/g, urlSkip.safeBase64Replacer);
                     urlout = self.atob(urlout);
                     continue;
                 }
