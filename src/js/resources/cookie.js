@@ -46,6 +46,7 @@ export function getSafeCookieValuesFn() {
         'yes', 'y', 'no', 'n',
         'all', 'none', 'functional',
         'granted', 'done',
+        'decline', 'declined',
     ];
 }
 registerScriptlet(getSafeCookieValuesFn, {
@@ -141,7 +142,7 @@ export function setCookieFn(
 
     try {
         document.cookie = cookieParts.join('');
-    } catch(_) {
+    } catch {
     }
 
     const done = getCookieFn(name) === value;

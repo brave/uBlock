@@ -769,10 +769,6 @@ class FilterImportant {
         return filterDataAlloc(args[0]);
     }
 
-    static dnrFromCompiled(args, rule) {
-        rule.priority = (rule.priority || 0) + 30;
-    }
-
     static keyFromArgs() {
     }
 
@@ -3453,7 +3449,7 @@ class FilterCompiler {
         try {
             const re = new RegExp(s);
             return re.source;
-        } catch (ex) {
+        } catch {
         }
         return '';
     }
@@ -4463,13 +4459,17 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
 
     const realms = new Map([
         [ BLOCK_REALM, { type: 'block', priority: 10 } ],
+        [ BLOCK_REALM | IMPORTANT_REALM, { type: 'block', priority: 40 } ],
         [ ALLOW_REALM, { type: 'allow', priority: 30 } ],
         [ REDIRECT_REALM, { type: 'redirect', priority: 11 } ],
+        [ REDIRECT_REALM | IMPORTANT_REALM, { type: 'redirect', priority: 41 } ],
         [ REMOVEPARAM_REALM, { type: 'removeparam', priority: 0 } ],
         [ CSP_REALM, { type: 'csp', priority: 0 } ],
         [ PERMISSIONS_REALM, { type: 'permissions', priority: 0 } ],
         [ URLTRANSFORM_REALM, { type: 'uritransform', priority: 0 } ],
         [ HEADERS_REALM, { type: 'block', priority: 10 } ],
+        [ HEADERS_REALM | ALLOW_REALM, { type: 'allow', priority: 30 } ],
+        [ HEADERS_REALM | IMPORTANT_REALM, { type: 'allow', priority: 40 } ],
         [ URLSKIP_REALM, { type: 'urlskip', priority: 0 } ],
     ]);
     const partyness = new Map([
@@ -5503,7 +5503,7 @@ StaticNetFilteringEngine.prototype.filterQuery = function(fctxt, out = []) {
         for ( const [ key, raw ] of params ) {
             let value = raw;
             try { value = decodeURIComponent(value); }
-            catch(ex) { }
+            catch { }
             if ( re.test(`${key}=${value}`) === not ) { continue; }
             if ( isException === false ) { params.delete(key); }
             filtered = true;

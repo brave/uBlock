@@ -32,11 +32,16 @@ firefox: dist/build/uBlock0.firefox
 dist/build/uBlock0.npm: tools/make-nodejs.sh $(sources) $(platform) $(assets)
 	tools/make-npm.sh
 
-# Build the Node.js package.
 npm: dist/build/uBlock0.npm
 
-lint: npm
-	cd dist/build/uBlock0.npm && npm run lint
+# Dev tools
+node_modules:
+	npm install
+
+init: node_modules
+
+lint: init
+	npm run lint
 
 test: npm
 	cd dist/build/uBlock0.npm && npm run test
@@ -76,7 +81,7 @@ dist/build/uAssets:
 	tools/pull-assets.sh
 
 clean:
-	rm -rf dist/build tmp/node_modules
+	rm -rf dist/build tmp/node_modules node_modules
 
 cleanassets:
 	rm -rf dist/build/mv3-data dist/build/uAssets
