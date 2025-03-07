@@ -74,12 +74,22 @@ async function commitFilteringMode() {
     const afterLevel = parseInt(modeSlider.dataset.level, 10);
     const beforeLevel = parseInt(modeSlider.dataset.levelBefore, 10);
     if ( afterLevel > 1 ) {
+        if ( beforeLevel <= 1 ) {
+            sendMessage({
+                what: 'setPendingFilteringMode',
+                tabId: currentTab.id,
+                url: tabURL.href,
+                hostname: targetHostname,
+                beforeLevel,
+                afterLevel,
+            });
+        }
         let granted = false;
         try {
             granted = await browser.permissions.request({
                 origins: [ `*://*.${targetHostname}/*` ],
             });
-        } catch(ex) {
+        } catch {
         }
         if ( granted !== true ) {
             setFilteringMode(beforeLevel);
@@ -287,7 +297,7 @@ dom.on('[data-i18n-title="popupTipReport"]', 'click', ev => {
     let url;
     try {
         url = new URL(currentTab.url);
-    } catch(_) {
+    } catch {
     }
     if ( url === undefined ) { return; }
     const reportURL = new URL(runtime.getURL('/report.html'));
@@ -325,7 +335,7 @@ async function init() {
             url = new URL(url.hash.slice(1));
         }
         tabURL.href = url.href || '';
-    } catch(ex) {
+    } catch {
     }
 
     if ( url !== undefined ) {
@@ -393,7 +403,7 @@ async function init() {
 async function tryInit() {
     try {
         await init();
-    } catch(ex) {
+    } catch {
         setTimeout(tryInit, 100);
     }
 }

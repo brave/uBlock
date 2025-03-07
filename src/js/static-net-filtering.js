@@ -550,14 +550,6 @@ const bidiTrieMatchExtra = (l, r, ix) => {
 
 const bidiTrie = new BidiTrieContainer(bidiTrieMatchExtra);
 
-const bidiTriePrime = ( ) => {
-    bidiTrie.reset(keyvalStore.getItem('SNFE.bidiTrie'));
-};
-
-const bidiTrieOptimize = (shrink = false) => {
-    keyvalStore.setItem('SNFE.bidiTrie', bidiTrie.optimize(shrink));
-};
-
 /*******************************************************************************
 
     Each filter class will register itself in the map.
@@ -800,7 +792,7 @@ class FilterPatternPlain {
         if (
             bidiTrie.startsWith(
                 left,
-                bidiTrie.haystackLen,
+                bidiTrie.getHaystackLen(),
                 filterData[idata+1],
                 n
             ) === 0
@@ -877,7 +869,7 @@ class FilterPatternPlain1 extends FilterPatternPlain {
         if (
             bidiTrie.startsWith(
                 left,
-                bidiTrie.haystackLen,
+                bidiTrie.getHaystackLen(),
                 filterData[idata+1],
                 n
             ) === 0
@@ -900,7 +892,7 @@ class FilterPatternPlainX extends FilterPatternPlain {
         if (
             bidiTrie.startsWith(
                 left,
-                bidiTrie.haystackLen,
+                bidiTrie.getHaystackLen(),
                 filterData[idata+1],
                 n
             ) === 0
@@ -1035,7 +1027,7 @@ class FilterAnchorHnLeft {
             lastBeg = len !== 0 ? haystackCodes.indexOf(0x3A) : -1;
             if ( lastBeg !== -1 ) {
                 if (
-                    lastBeg >= bidiTrie.haystackLen ||
+                    lastBeg >= bidiTrie.getHaystackLen() ||
                     haystackCodes[lastBeg+1] !== 0x2F ||
                     haystackCodes[lastBeg+2] !== 0x2F
                 ) {
@@ -3199,14 +3191,9 @@ const urlTokenizer = new (class {
 
     _tokenize(encodeInto) {
         const tokens = this._tokens;
-        let url = this._urlOut;
-        let l = url.length;
+        const url = this._urlOut;
+        const l = encodeInto.setHaystackLen(url.length);
         if ( l === 0 ) { return 0; }
-        if ( l > 2048 ) {
-            url = url.slice(0, 2048);
-            l = 2048;
-        }
-        encodeInto.haystackLen = l;
         let j = 0;
         let hasq = -1;
         mainLoop: {
@@ -4197,7 +4184,6 @@ StaticNetFilteringEngine.prototype.prime = function() {
     destHNTrieContainer.reset(
         keyvalStore.getItem('SNFE.destHNTrieContainer.trieDetails')
     );
-    bidiTriePrime();
 };
 
 /******************************************************************************/
@@ -4579,6 +4565,7 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
     // Patch modifier filters
     for ( const rule of ruleset ) {
         if ( rule.__modifierType === undefined ) { continue; }
+        let patchDomainOption = false;
         switch ( rule.__modifierType ) {
         case 'csp':
             rule.action.type = 'modifyHeaders';
@@ -4601,6 +4588,7 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
             if ( rule.__modifierAction === ALLOW_REALM ) {
                 dnrAddRuleError(rule, `Unsupported permissions exception: ${rule.__modifierValue}`);
             }
+            patchDomainOption = true;
             break;
         case 'redirect-rule': {
             let token = rule.__modifierValue;
@@ -4703,6 +4691,21 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
             dnrAddRuleError(rule, `Unsupported modifier ${rule.__modifierType}`);
             break;
         }
+
+        // Some modifiers only work on document resources
+        // Related issue: https://github.com/uBlockOrigin/uBOL-home/issues/156
+        if ( patchDomainOption ) {
+            const domains = rule.condition.initiatorDomains;
+            if ( Array.isArray(domains) && domains.length !== 0 ) {
+                rule.condition.requestDomains ||= [];
+                rule.condition.requestDomains.push(...domains);
+            }
+            const notDomains = rule.condition.excludedInitiatorDomains;
+            if ( Array.isArray(notDomains) && notDomains.length !== 0 ) {
+                rule.condition.excludedRequestDomains ||= [];
+                rule.condition.excludedRequestDomains.push(...notDomains);
+            }
+        }
     }
 
     return {
@@ -4793,7 +4796,6 @@ StaticNetFilteringEngine.prototype.optimize = function(throttle = 0) {
         'SNFE.destHNTrieContainer.trieDetails',
         destHNTrieContainer.optimize()
     );
-    bidiTrieOptimize();
     filterDataShrink();
 };
 
@@ -4801,7 +4803,7 @@ StaticNetFilteringEngine.prototype.optimize = function(throttle = 0) {
 
 StaticNetFilteringEngine.prototype.toSelfie = function() {
     this.optimize(0);
-    bidiTrieOptimize(true);
+    bidiTrie.optimize();
     keyvalStore.setItem('SNFE.origHNTrieContainer.trieDetails',
         origHNTrieContainer.optimize()
     );

@@ -91,14 +91,17 @@ const uidint32 = (s) => {
 
 /******************************************************************************/
 
+const consoleLog = console.log;
 const stdOutput = [];
 
-const log = (text, silent = false) => {
+const log = (text, silent = true) => {
     stdOutput.push(text);
     if ( silent === false ) {
-        console.log(text);
+        consoleLog(text);
     }
 };
+
+console.log = log;
 
 /******************************************************************************/
 
@@ -166,7 +169,7 @@ const requiredRedirectResources = new Set();
 
 // This will be used to sign our inserted `!#trusted on` directives
 const secret = createHash('sha256').update(randomBytes(16)).digest('hex').slice(0,16);
-log(`Secret: ${secret}`);
+log(`Secret: ${secret}`, false);
 
 /******************************************************************************/
 
@@ -230,7 +233,10 @@ async function fetchList(assetDetails) {
                 continue;
             }
             fetchedURLs.add(part.url);
-            if ( part.url.startsWith('https://ublockorigin.github.io/uAssets/filters/') ) {
+            if (
+                assetDetails.trustedSource ||
+                part.url.startsWith('https://ublockorigin.github.io/uAssets/filters/')
+            ) {
                 newParts.push(`!#trusted on ${secret}`);
             }
             newParts.push(
@@ -245,7 +251,7 @@ async function fetchList(assetDetails) {
                             return { url, content };
                         }
                     }
-                    log(`No valid content for ${details.name}`);
+                    log(`No valid content for ${url}`, false);
                     return { url, content: '' };
                 })
             );
@@ -257,7 +263,7 @@ async function fetchList(assetDetails) {
     const text = parts.join('\n');
 
     if ( text === '' ) {
-        log('No filterset found');
+        log('No filterset found', false);
     }
     return text;
 }
@@ -1126,7 +1132,7 @@ async function processScriptletFilters(assetDetails, mapin) {
     makeScriptlet.init();
 
     for ( const details of mapin.values() ) {
-        makeScriptlet.compile(details);
+        makeScriptlet.compile(assetDetails, details);
     }
     const stats = await makeScriptlet.commit(
         assetDetails.id,
@@ -1308,7 +1314,7 @@ async function main() {
         const minutePart = Math.floor(now.getUTCMinutes());
         version = `${yearPart}.${monthPart}.${dayPart}.${hourPart * 60 + minutePart}`;
     }
-    log(`Version: ${version}`);
+    log(`Version: ${version}`, false);
 
     // Get assets.json content
     const assets = await fs.readFile(
@@ -1459,6 +1465,17 @@ async function main() {
         enabled: false,
         urls: [ 'https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts' ],
         homeURL: 'https://github.com/StevenBlack/hosts#readme',
+    });
+
+    await rulesetFromURLs({
+        id: 'ubol-tests',
+        name: 'uBO Lite Test Filters',
+        enabled: false,
+        trusted: true,
+        urls: [ 'https://ublockorigin.github.io/uBOL-home/tests/test-filters.txt' ],
+        homeURL: 'https://ublockorigin.github.io/uBOL-home/tests/test-filters.html',
+        filters: [
+        ],
     });
 
     // Regional rulesets

@@ -222,9 +222,11 @@ export const nodeTypeFromOptionName = new Map([
     [ '1p', NODE_TYPE_NET_OPTION_NAME_1P ],
     /* synonym */ [ 'first-party', NODE_TYPE_NET_OPTION_NAME_1P ],
     [ 'strict1p', NODE_TYPE_NET_OPTION_NAME_STRICT1P ],
+    /* synonym */ [ 'strict-first-party', NODE_TYPE_NET_OPTION_NAME_STRICT1P ],
     [ '3p', NODE_TYPE_NET_OPTION_NAME_3P ],
     /* synonym */ [ 'third-party', NODE_TYPE_NET_OPTION_NAME_3P ],
     [ 'strict3p', NODE_TYPE_NET_OPTION_NAME_STRICT3P ],
+    /* synonym */ [ 'strict-third-party', NODE_TYPE_NET_OPTION_NAME_STRICT3P ],
     [ 'all', NODE_TYPE_NET_OPTION_NAME_ALL ],
     [ 'badfilter', NODE_TYPE_NET_OPTION_NAME_BADFILTER ],
     [ 'cname', NODE_TYPE_NET_OPTION_NAME_CNAME ],
@@ -330,6 +332,27 @@ export const nodeNameFromNodeType = new Map([
         nodeNameFromNodeType.set(type, name);
     }
 }
+
+/******************************************************************************/
+
+// Local constants
+
+const DOMAIN_CAN_USE_WILDCARD        = 0b000001;
+const DOMAIN_CAN_USE_ENTITY          = 0b000010;
+const DOMAIN_CAN_USE_SINGLE_WILDCARD = 0b000100;
+const DOMAIN_CAN_BE_NEGATED          = 0b001000;
+const DOMAIN_CAN_BE_REGEX            = 0b010000;
+const DOMAIN_CAN_BE_ANCESTOR         = 0b100000;
+
+const DOMAIN_FROM_FROMTO_LIST = DOMAIN_CAN_USE_ENTITY |
+    DOMAIN_CAN_BE_NEGATED |
+    DOMAIN_CAN_BE_REGEX;
+const DOMAIN_FROM_DENYALLOW_LIST = 0;
+const DOMAIN_FROM_EXT_LIST = DOMAIN_CAN_USE_ENTITY |
+    DOMAIN_CAN_USE_SINGLE_WILDCARD |
+    DOMAIN_CAN_BE_NEGATED |
+    DOMAIN_CAN_BE_REGEX |
+    DOMAIN_CAN_BE_ANCESTOR;
 
 /******************************************************************************/
 
@@ -1837,7 +1860,7 @@ export class AstFilterParser {
             const hn = match[0].replace(this.reHostnameLabel, s => {
                 if ( this.reHasUnicodeChar.test(s) === false ) { return s; }
                 if ( s.charCodeAt(0) === 0x2D /* - */ ) { s = '*' + s; }
-                return this.normalizeHostnameValue(s, 0b0001) || s;
+                return this.normalizeHostnameValue(s, DOMAIN_CAN_USE_WILDCARD) || s;
             });
             normal = hn + normal.slice(match.index + match[0].length);
         }
@@ -2016,11 +2039,11 @@ export class AstFilterParser {
         }
         switch ( nodeOptionType ) {
         case NODE_TYPE_NET_OPTION_NAME_DENYALLOW:
-            this.linkDown(next, this.parseDomainList(next, '|'), 0b00000);
+            this.linkDown(next, this.parseDomainList(next, '|'), DOMAIN_FROM_DENYALLOW_LIST);
             break;
         case NODE_TYPE_NET_OPTION_NAME_FROM:
         case NODE_TYPE_NET_OPTION_NAME_TO:
-            this.linkDown(next, this.parseDomainList(next, '|', 0b11010));
+            this.linkDown(next, this.parseDomainList(next, '|', DOMAIN_FROM_FROMTO_LIST));
             break;
         default:
             break;
@@ -2052,7 +2075,7 @@ export class AstFilterParser {
         return this.getNodeTransform(valueNode);
     }
 
-    parseDomainList(parent, separator, mode = 0b00000) {
+    parseDomainList(parent, separator, mode = 0) {
         const parentBeg = this.nodes[parent+NODE_BEG_INDEX];
         const parentEnd = this.nodes[parent+NODE_END_INDEX];
         const containerNode = this.allocTypedNode(
@@ -2126,7 +2149,7 @@ export class AstFilterParser {
         if ( not ) {
             this.addNodeFlags(parent, NODE_FLAG_IS_NEGATED);
             head = this.allocTypedNode(NODE_TYPE_OPTION_VALUE_NOT, beg, beg + 1);
-            if ( (parseDetails.mode & 0b1000) === 0 ) {
+            if ( (parseDetails.mode & DOMAIN_CAN_BE_NEGATED) === 0 ) {
                 this.addNodeFlags(parent, NODE_FLAG_ERROR);
             }
             beg += 1;
@@ -2171,23 +2194,29 @@ export class AstFilterParser {
         parseDetails.len = end - parentBeg;
     }
 
-    // mode bits:
-    //   0b00001: can use wildcard at any position
-    //   0b00010: can use entity-based hostnames
-    //   0b00100: can use single wildcard
-    //   0b01000: can be negated
-    //   0b10000: can be a regex
     normalizeDomainValue(node, type, modeBits) {
-        const s = this.getNodeString(node);
-        if ( type === 0 ) {
-            return this.normalizeHostnameValue(s, modeBits);
+        const raw = this.getNodeString(node);
+        const isAncestor = raw.endsWith('>>');
+        if ( isAncestor ) {
+            if ( (modeBits & DOMAIN_CAN_BE_ANCESTOR) === 0 ) { return ''; }
         }
-        if ( (modeBits & 0b10000) === 0 ) { return ''; }
-        const regex = type === 1 ? s : `/${s.slice(10, -2)}/`;
-        const source = this.normalizeRegexPattern(regex);
-        if ( source === '' ) { return ''; }
-        if ( type === 1 && source === regex ) { return; }
-        return `/${source}/`;
+        const before = isAncestor ? raw.slice(0, -2) : raw;
+        let after;
+        if ( type === 0 ) {
+            after = this.normalizeHostnameValue(before, modeBits) ?? before;
+            if ( after === '' ) { return ''; }
+        } else {
+            if ( (modeBits & DOMAIN_CAN_BE_REGEX) === 0 ) { return ''; }
+            const regex = type === 1 ? before : `/${before.slice(10, -2)}/`;
+            const source = this.normalizeRegexPattern(regex);
+            if ( source === '' ) { return ''; }
+            after = type === 2 || source !== regex ? `/${source}/` : before;
+        }
+        if ( isAncestor ) {
+            after = `${after}>>`;
+        }
+        if ( after === raw ) { return; }
+        return after;
     }
 
     parseExt(parent, anchorBeg, anchorLen) {
@@ -2205,7 +2234,8 @@ export class AstFilterParser {
             );
             this.addFlags(AST_FLAG_HAS_OPTIONS);
             this.addNodeToRegister(NODE_TYPE_EXT_OPTIONS, next);
-            this.linkDown(next, this.parseDomainList(next, ',', 0b11110));
+            const down = this.parseDomainList(next, ',', DOMAIN_FROM_EXT_LIST);
+            this.linkDown(next, down);
             prev = this.linkRight(prev, next);
         }
         next = this.allocTypedNode(
@@ -2492,6 +2522,12 @@ export class AstFilterParser {
         next = this.allocTypedNode(NODE_TYPE_EXT_DECORATION, rawArg1, end);
         this.linkRight(prev, next);
         return head;
+    }
+
+    getResponseheaderName() {
+        if ( this.isResponseheaderFilter() === false ) { return ''; }
+        const root = this.getBranchFromType(NODE_TYPE_EXT_PATTERN_RESPONSEHEADER);
+        return this.getNodeString(root);
     }
 
     parseExtPatternHtml(parent) {
@@ -2792,17 +2828,11 @@ export class AstFilterParser {
     // Ultimately, let the browser API do the hostname normalization, after
     // making some other trivial checks.
     //
-    // mode bits:
-    //   0b00001: can use wildcard at any position
-    //   0b00010: can use entity-based hostnames
-    //   0b00100: can use single wildcard
-    //   0b01000: can be negated
-    //
     // returns:
     //   undefined: no normalization needed, use original hostname
     //   empty string: hostname is invalid
     //   non-empty string: normalized hostname
-    normalizeHostnameValue(s, modeBits = 0b00000) {
+    normalizeHostnameValue(s, modeBits = 0) {
         if ( this.reHostnameAscii.test(s) ) { return; }
         if ( this.reBadHostnameChars.test(s) ) { return ''; }
         let hn = s;
@@ -2810,13 +2840,13 @@ export class AstFilterParser {
         if ( hasWildcard ) {
             if ( modeBits === 0 ) { return ''; }
             if ( hn.length === 1 ) {
-                if ( (modeBits & 0b0100) === 0 ) { return ''; }
+                if ( (modeBits & DOMAIN_CAN_USE_SINGLE_WILDCARD) === 0 ) { return ''; }
                 return;
             }
-            if ( (modeBits & 0b0010) !== 0 ) {
+            if ( (modeBits & DOMAIN_CAN_USE_ENTITY) !== 0 ) {
                 if ( this.rePlainEntity.test(hn) ) { return; }
                 if ( this.reIsEntity.test(hn) === false ) { return ''; }
-            } else if ( (modeBits & 0b0001) === 0 ) {
+            } else if ( (modeBits & DOMAIN_CAN_USE_WILDCARD) === 0 ) {
                 return '';
             }
             hn = hn.replace(/\*/g, '__asterisk__');
@@ -2833,7 +2863,7 @@ export class AstFilterParser {
             hn = this.punycoder.hostname.replace(/__asterisk__/g, '*');
         }
         if (
-            (modeBits & 0b0001) === 0 && (
+            (modeBits & DOMAIN_CAN_USE_WILDCARD) === 0 && (
                 hn.charCodeAt(0) === 0x2E /* . */ ||
                 exCharCodeAt(hn, -1) === 0x2E /* . */
             )
@@ -3030,9 +3060,11 @@ export const netOptionTokenDescriptors = new Map([
     [ '1p', { canNegate: true } ],
     /* synonym */ [ 'first-party', { canNegate: true } ],
     [ 'strict1p', { } ],
+    /* synonym */ [ 'strict-first-party', { } ],
     [ '3p', { canNegate: true } ],
     /* synonym */ [ 'third-party', { canNegate: true } ],
     [ 'strict3p', { } ],
+    /* synonym */ [ 'strict-third-party', { } ],
     [ 'all', { } ],
     [ 'badfilter', { } ],
     [ 'cname', { allowOnly: true } ],

@@ -22,6 +22,7 @@
 
 import './attribute.js';
 import './href-sanitizer.js';
+import './noeval.js';
 import './replace-argument.js';
 import './spoof-css.js';
 import './prevent-settimeout.js';
@@ -1280,30 +1281,32 @@ function addEventListenerDefuser(
         }
         return matchesBoth;
     };
-    runAt(( ) => {
-        proxyApplyFn('EventTarget.prototype.addEventListener', function(context) {
-            const { callArgs, thisArg } = context;
-            let t, h;
-            try {
-                t = String(callArgs[0]);
-                if ( typeof callArgs[1] === 'function' ) {
-                    h = String(safe.Function_toString(callArgs[1]));
-                } else if ( typeof callArgs[1] === 'object' && callArgs[1] !== null ) {
-                    if ( typeof callArgs[1].handleEvent === 'function' ) {
-                        h = String(safe.Function_toString(callArgs[1].handleEvent));
-                    }
-                } else {
-                    h = String(callArgs[1]);
+    const proxyFn = function(context) {
+        const { callArgs, thisArg } = context;
+        let t, h;
+        try {
+            t = String(callArgs[0]);
+            if ( typeof callArgs[1] === 'function' ) {
+                h = String(safe.Function_toString(callArgs[1]));
+            } else if ( typeof callArgs[1] === 'object' && callArgs[1] !== null ) {
+                if ( typeof callArgs[1].handleEvent === 'function' ) {
+                    h = String(safe.Function_toString(callArgs[1].handleEvent));
                 }
-            } catch {
+            } else {
+                h = String(callArgs[1]);
             }
-            if ( type === '' && pattern === '' ) {
-                safe.uboLog(logPrefix, `Called: ${t}\n${h}\n${elementDetails(thisArg)}`);
-            } else if ( shouldPrevent(thisArg, t, h) ) {
-                return safe.uboLog(logPrefix, `Prevented: ${t}\n${h}\n${elementDetails(thisArg)}`);
-            }
-            return context.reflect();
-        });
+        } catch {
+        }
+        if ( type === '' && pattern === '' ) {
+            safe.uboLog(logPrefix, `Called: ${t}\n${h}\n${elementDetails(thisArg)}`);
+        } else if ( shouldPrevent(thisArg, t, h) ) {
+            return safe.uboLog(logPrefix, `Prevented: ${t}\n${h}\n${elementDetails(thisArg)}`);
+        }
+        return context.reflect();
+    };
+    runAt(( ) => {
+        proxyApplyFn('EventTarget.prototype.addEventListener', proxyFn);
+        proxyApplyFn('document.addEventListener', proxyFn);
     }, extraArgs.runAt);
 }
 
@@ -1471,21 +1474,19 @@ builtinScriptlets.push({
     fn: evaldataPrune,
     dependencies: [
         'object-prune.fn',
+        'proxy-apply.fn',
     ],
 });
 function evaldataPrune(
     rawPrunePaths = '',
     rawNeedlePaths = ''
 ) {
-    self.eval = new Proxy(self.eval, {
-        apply(target, thisArg, args) {
-            const before = Reflect.apply(target, thisArg, args);
-            if ( typeof before === 'object' ) {
-                const after = objectPruneFn(before, rawPrunePaths, rawNeedlePaths);
-                return after || before;
-            }
-            return before;
-        }
+    proxyApplyFn('eval', function(context) {
+        const before = context.reflect();
+        if ( typeof before !== 'object' ) { return before; }
+        if ( before === null ) { return null; }
+        const after = objectPruneFn(before, rawPrunePaths, rawNeedlePaths);
+        return after || before;
     });
 }
 
@@ -1592,40 +1593,6 @@ function adjustSetTimeout(
                 args[1] = b * boost;
             }
             return target.apply(thisArg, args);
-        }
-    });
-}
-
-/******************************************************************************/
-
-builtinScriptlets.push({
-    name: 'noeval-if.js',
-    aliases: [
-        'prevent-eval-if.js',
-    ],
-    fn: noEvalIf,
-    dependencies: [
-        'safe-self.fn',
-    ],
-});
-function noEvalIf(
-    needle = ''
-) {
-    if ( typeof needle !== 'string' ) { return; }
-    const safe = safeSelf();
-    const logPrefix = safe.makeLogPrefix('noeval-if', needle);
-    const reNeedle = safe.patternToRegex(needle);
-    window.eval = new Proxy(window.eval, {  // jshint ignore: line
-        apply: function(target, thisArg, args) {
-            const a = String(args[0]);
-            if ( needle !== '' && reNeedle.test(a) ) {
-                safe.uboLog(logPrefix, 'Prevented:\n', a);
-                return;
-            }
-            if ( needle === '' || safe.logLevel > 1 ) {
-                safe.uboLog(logPrefix, 'Not prevented:\n', a);
-            }
-            return Reflect.apply(target, thisArg, args);
         }
     });
 }
@@ -2136,8 +2103,8 @@ builtinScriptlets.push({
 // Experimental: Generic nuisance overlay buster.
 // if this works well and proves to be useful, this may end up
 // as a stock tool in uBO's popup panel.
-function overlayBuster() {
-    if ( window !== window.top ) { return; }
+function overlayBuster(allFrames) {
+    if ( allFrames === '' && window !== window.top ) { return; }
     var tstart;
     var ttl = 30000;
     var delay = 0;
@@ -2255,8 +2222,8 @@ builtinScriptlets.push({
 });
 // https://github.com/uBlockOrigin/uAssets/issues/913
 function disableNewtabLinks() {
-    document.addEventListener('click', function(ev) {
-        var target = ev.target;
+    document.addEventListener('click', ev => {
+        let target = ev.target;
         while ( target !== null ) {
             if ( target.localName === 'a' && target.hasAttribute('target') ) {
                 ev.stopPropagation();
@@ -2265,7 +2232,7 @@ function disableNewtabLinks() {
             }
             target = target.parentNode;
         }
-    });
+    }, { capture: true });
 }
 
 /******************************************************************************/
