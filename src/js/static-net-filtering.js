@@ -3100,7 +3100,7 @@ const urlTokenizer = new (class {
         this._hasQuery = 0;
         // https://www.reddit.com/r/uBlockOrigin/comments/dzw57l/
         //   Remember: 1 token needs two slots
-        this._tokens = new Uint32Array(2064);
+        this._tokens = new Uint32Array(bidiTrie.haystack.length + 16);
 
         this.knownTokens = new Uint8Array(65536);
         this.resetKnownTokens();
@@ -3130,9 +3130,9 @@ const urlTokenizer = new (class {
     }
 
     // Tokenize on demand.
-    getTokens(encodeInto) {
+    getTokens() {
         if ( this._tokenized ) { return this._tokens; }
-        let i = this._tokenize(encodeInto);
+        let i = this._tokenize();
         this._tokens[i+0] = ANY_TOKEN_HASH;
         this._tokens[i+1] = 0;
         i += 2;
@@ -3189,17 +3189,17 @@ const urlTokenizer = new (class {
     // https://github.com/chrisaljoudi/uBlock/issues/1118
     // We limit to a maximum number of tokens.
 
-    _tokenize(encodeInto) {
+    _tokenize() {
         const tokens = this._tokens;
         const url = this._urlOut;
-        const l = encodeInto.setHaystackLen(url.length);
+        const l = bidiTrie.setHaystackLen(url.length);
         if ( l === 0 ) { return 0; }
         let j = 0;
         let hasq = -1;
         mainLoop: {
             const knownTokens = this.knownTokens;
             const vtc = this._validTokenChars;
-            const charCodes = encodeInto.haystack;
+            const charCodes = bidiTrie.haystack;
             let i = 0, n = 0, ti = 0, th = 0;
             for (;;) {
                 for (;;) {
@@ -4511,6 +4511,7 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
 
     // Collect generichide filters
     const generichideExclusions = [];
+    const generichideInclusions = [];
     {
         const bucket = buckets.get(ALLOW_REALM | typeNameToTypeValue['generichide']);
         if ( bucket ) {
@@ -4521,6 +4522,26 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
                         generichideExclusions.push(...rule.condition.initiatorDomains);
                     } else if ( rule.condition.requestDomains ) {
                         generichideExclusions.push(...rule.condition.requestDomains);
+                    }
+                    if ( rule.condition.excludedInitiatorDomains ) {
+                        generichideInclusions.push(...rule.condition.excludedInitiatorDomains);
+                    } else if ( rule.condition.excludedRequestDomains ) {
+                        generichideInclusions.push(...rule.condition.excludedRequestDomains);
+                    }
+                }
+            }
+        }
+    }
+    {
+        const bucket = buckets.get(BLOCKIMPORTANT_REALM | typeNameToTypeValue['generichide']);
+        if ( bucket ) {
+            for ( const rules of bucket.values() ) {
+                for ( const rule of rules ) {
+                    if ( rule.condition === undefined ) { continue; }
+                    if ( rule.condition.initiatorDomains ) {
+                        generichideInclusions.push(...rule.condition.initiatorDomains);
+                    } else if ( rule.condition.requestDomains ) {
+                        generichideInclusions.push(...rule.condition.requestDomains);
                     }
                 }
             }
@@ -4714,6 +4735,7 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
         acceptedFilterCount: context.acceptedFilterCount,
         rejectedFilterCount: context.rejectedFilterCount,
         generichideExclusions: Array.from(new Set(generichideExclusions)),
+        generichideInclusions: Array.from(new Set(generichideInclusions)),
     };
 };
 
@@ -4946,7 +4968,7 @@ StaticNetFilteringEngine.prototype.matchAndFetchModifiers = function(
         results,
     };
 
-    const tokenHashes = urlTokenizer.getTokens(bidiTrie);
+    const tokenHashes = urlTokenizer.getTokens();
     let i = 0;
     let th = 0, iunit = 0;
     for (;;) {
@@ -5136,7 +5158,7 @@ StaticNetFilteringEngine.prototype.realmMatchString = function(
     }
     // Pattern-based filters
     else {
-        const tokenHashes = urlTokenizer.getTokens(bidiTrie);
+        const tokenHashes = urlTokenizer.getTokens();
         let i = 0;
         for (;;) {
             tokenHash = tokenHashes[i];

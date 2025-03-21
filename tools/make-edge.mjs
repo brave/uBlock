@@ -1,7 +1,7 @@
 /*******************************************************************************
 
     uBlock Origin Lite - a comprehensive, MV3-compliant content blocker
-    Copyright (C) 2014-present Raymond Hill
+    Copyright (C) 2022-present Raymond Hill
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,24 +19,36 @@
     Home: https://github.com/gorhill/uBlock
 */
 
-// ruleset: $rulesetId$
-
-// Important!
-// Isolate from global scope
-(function uBOL_cssProceduralImport() {
+'use strict';
 
 /******************************************************************************/
 
-const argsList = self.$argsList$;
-const argsSeqs = self.$argsSeqs$;
-const hostnamesMap = new Map(self.$hostnamesMap$);
-const hasEntities = self.$hasEntities$;
-
-self.proceduralImports = self.proceduralImports || [];
-self.proceduralImports.push({ argsList, argsSeqs, hostnamesMap, hasEntities });
+import fs from 'fs/promises';
 
 /******************************************************************************/
 
-})();
+async function main() {
+    const manifestPath = 'dist/build/uBOLite.edge/manifest.json';
+
+    // Get manifest content
+    const manifest = await fs.readFile(manifestPath, { encoding: 'utf8'
+    }).then(text =>
+        JSON.parse(text)
+    );
+
+    // https://learn.microsoft.com/answers/questions/918426/cant-update-extension-with-declarative-net-request
+    // Set all ruleset path to package root
+    for ( const ruleset of manifest.declarative_net_request.rule_resources ) {
+        const pos = ruleset.path.lastIndexOf('/');
+        if ( pos === -1 ) { continue; }
+        ruleset.path = ruleset.path.slice(pos + 1);
+    }
+    // Commit changes
+    await fs.writeFile(manifestPath,
+        JSON.stringify(manifest, null, 2) + '\n'
+    );
+}
+
+main();
 
 /******************************************************************************/
