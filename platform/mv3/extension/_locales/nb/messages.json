@@ -111,6 +111,10 @@
     "message": "Rapporter filterproblemer med bestemte nettsteder til <span data-url=\"https://github.com/uBlockOrigin/uAssets/issues?q=is%3Aissue\"><code>uBlockOrigin/uAssets</code> problemsporing</span>. <u>Krever en GitHub-konto.</u>",
     "description": "First paragraph of 'Filter issues' section in Support pane"
   },
+  "supportS5H": {
+    "message": "Troubleshooting information",
+    "description": "Label of 'Troubleshooting information' section in 'Report a filter issue' page"
+  },
   "supportS6P1S1": {
     "message": "For å unngå å belaste de frivillige med dobbeltrapporter, må du kontrollere at problemet ikke allerede har blitt rapportert. <b>Noter:</b> ved å klikke på knappen vil sidens opprinnelse bli sendt til GitHub..",
     "description": "A paragraph in the filter issue reporter section"
@@ -136,7 +140,7 @@
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Select1Option2": {
-    "message": "Har overlegg eller andre ulemper",
+    "message": "Har overlegg eller andre plager",
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Select1Option3": {
@@ -148,7 +152,7 @@
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Select1Option5": {
-    "message": "Feilfunksjoner når uBO Lite er aktivert",
+    "message": "Fungerer ikke når uBO Lite er aktivert",
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Select1Option6": {
@@ -212,7 +216,7 @@
     "description": "This describes the 'complete' filtering mode"
   },
   "noFilteringModeDescription": {
-    "message": "Liste over vertsnavn der ingen filtrering vil finne sted",
+    "message": "Liste over nettsider der ingen filtrering vil finne sted.",
     "description": "A short description for the editable field which lists trusted sites"
   },
   "noFilteringModePlaceholder": {
@@ -278,5 +282,13 @@
   "strictblockProceed": {
     "message": "Fortsett",
     "description": "A button to navigate to the blocked page"
+  },
+  "zapperTipEnter": {
+    "message": "Enter element zapper mode",
+    "description": "Tooltip for the button used to enter zapper mode"
+  },
+  "zapperTipQuit": {
+    "message": "Exit element zapper mode",
+    "description": "Tooltip for the button used to exit zapper mode"
   }
 }

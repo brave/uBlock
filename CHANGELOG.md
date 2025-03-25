@@ -1,3 +1,26 @@
+- [Improve `trusted-prevent-dom-bypass` scriptlet](https://github.com/gorhill/uBlock/commit/68a256bdde)
+- [Add `jsonl-prune-xhr-response`/`jsonl-prune-fetch-response` scriptlets](https://github.com/gorhill/uBlock/commit/95a3be9d56)
+- [Improve `[json-prune|trusted-replace]-fetch-response` scriptlets](https://github.com/gorhill/uBlock/commit/88fa550a96)
+
+----------
+
+# 1.63.2
+
+## Fixes / changes
+
+- [Fix TypedArray overflow](https://github.com/gorhill/uBlock/commit/76b80baaea)
+- [Add prevent-innerHTML scriptlet](https://github.com/gorhill/uBlock/commit/fe744816f1)
+
+----------
+
+# 1.63.0
+
+## Fixes / changes
+
+- [Improve `prevent-set[Timeout|Interval]` scriptlets](https://github.com/gorhill/uBlock/commit/d36ea89a02)
+- [Add quit button to element zapper mode](https://github.com/gorhill/uBlock/commit/4aebdbb0a9)
+- [Improve `trusted-override-element-method` scriptlet](https://github.com/gorhill/uBlock/commit/9e946ce0c3)
+- [Disable obsolete cache-control workaround for Firefox](https://github.com/gorhill/uBlock/commit/34cea70924)
 - [Improve `overlay-buster` scriptlet](https://github.com/gorhill/uBlock/commit/fc231998b9)
 - [Add ability to inject scriptlets according to origin of ancestor contexts](https://github.com/gorhill/uBlock/commit/a483f7955f)
 - [Fix range parser in prevent-setTimeout scriptlet](https://github.com/gorhill/uBlock/commit/e636c32f2a)
@@ -10,7 +33,7 @@
 - [Improve `evaldata-prune` scriptlet](https://github.com/gorhill/uBlock/commit/9bb1a2baaf)
 - [Comply with Mozilla's "User Consent and Control"](https://github.com/gorhill/uBlock/commit/344539d793)
 - [Improve `noeval-if` scriptlet](https://github.com/gorhill/uBlock/commit/0df7faffac)
-- [Add "closed","next", "mandatory", "agree/disagree" values to `trusted-set-cookie` scriptlet](https://github.com/gorhill/uBlock/commit/35a47d674b) (by @ryanbr)
+- [Add "closed","next", "mandatory", "agree/disagree" values to `set-cookie` scriptlet](https://github.com/gorhill/uBlock/commit/35a47d674b) (by @ryanbr)
 - [Add `decline` value to `set-cookie` scriptlet](https://github.com/gorhill/uBlock/commit/4b12247da1)
 - [Improve `abort-on-stack-trace` scriptlet](https://github.com/gorhill/uBlock/commit/b617926c1c)
 - [Improve `href-sanitizer` scriptlet](https://github.com/gorhill/uBlock/commit/551c6bc6eb)
