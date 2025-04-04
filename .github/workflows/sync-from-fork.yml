@@ -9,7 +9,7 @@ jobs:
   check-for-changes:
     runs-on: ubuntu-latest
     env:
-      FILES_TO_CHECK: "assets/assets.json|assets/resources/|src/js/resources|web_accessible_resources/|js/redirect-resources.js"
+      FILES_TO_CHECK: "assets/assets.json|src/web_accessible_resources/|src/js/resources/|src/js/redirect-resources.js"
       UPSTREAM_URL: "https://github.com/gorhill/ublock.git"
     outputs:
       changes: ${{ steps.git-check.outputs.changes-present }}
@@ -68,7 +68,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           include_diff: true
-          filterdiff_args: --include=**/assets/assets.json --include=**/assets/resources/* --include=**/src/js/resources/* --include=**/web_accessible_resources/* --include=**/js/redirect-resources.js
+          filterdiff_args: --include=**/assets/assets.json --include=**/src/web_accessible_resources/* --include=**/src/js/resources/* --include=**/src/js/redirect-resources.js
   on-failure:
     runs-on: ubuntu-latest
     if: ${{ always() && (needs.sync.result == 'failure' || needs.create-pr.result == 'failure' || needs.update-pr.result == 'failure') }}
