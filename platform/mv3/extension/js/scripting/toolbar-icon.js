@@ -1,7 +1,7 @@
 /*******************************************************************************
 
     uBlock Origin Lite - a comprehensive, MV3-compliant content blocker
-    Copyright (C) 2014-present Raymond Hill
+    Copyright (C) 2025-present Raymond Hill
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,26 +19,9 @@
     Home: https://github.com/gorhill/uBlock
 */
 
-import { dom } from './dom.js';
-import { runtime } from './ext.js';
-
-/******************************************************************************/
-
-{
-    const manifest = runtime.getManifest();
-    dom.text('#aboutNameVer', `${manifest.name} ${manifest.version}`);
-}
-
-dom.attr('a', 'target', '_blank');
-
-dom.on('#dashboard-nav', 'click', '.tabButton', ev => {
-    dom.body.dataset.pane = ev.target.dataset.pane;
-});
-
-/******************************************************************************/
-
-export function hashFromIterable(iter) {
-    return Array.from(iter).sort().join('\n');
-}
-
-/******************************************************************************/
+(function uBOL_toggleToolbarIcon() {
+    chrome.runtime.sendMessage({
+        what: 'toggleToolbarIcon',
+    }).catch(( ) => {
+    });
+})();

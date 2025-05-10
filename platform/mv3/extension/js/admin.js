@@ -28,26 +28,83 @@ import {
 import {
     enableRulesets,
     getRulesetDetails,
+    setStrictBlockMode,
 } from './ruleset-manager.js';
 
 import {
+    getDefaultFilteringMode,
     getTrustedSites,
     readFilteringModeDetails,
 } from './mode-manager.js';
 
+import {
+    rulesetConfig,
+    saveRulesetConfig,
+} from './config.js';
+
 import { broadcastMessage } from './utils.js';
-import { dnr } from './ext.js';
+import { dnr } from './ext-compat.js';
 import { registerInjectables } from './scripting-manager.js';
-import { rulesetConfig } from './config.js';
 import { ubolLog } from './debug.js';
 
 /******************************************************************************/
 
+export async function loadAdminConfig() {
+    const [
+        showBlockedCount,
+        strictBlockMode,
+    ] = await Promise.all([
+        adminReadEx('showBlockedCount'),
+        adminReadEx('strictBlockMode'),
+    ]);
+    applyAdminConfig({ showBlockedCount, strictBlockMode });
+}
+
+/******************************************************************************/
+
+function applyAdminConfig(config, apply = false) {
+    const toApply = [];
+    for ( const [ key, val ] of Object.entries(config) ) {
+        if ( typeof val !== typeof rulesetConfig[key] ) { continue; }
+        if ( val === rulesetConfig[key] ) { continue; }
+        rulesetConfig[key] = val;
+        toApply.push(key);
+    }
+    if ( toApply.length === 0 ) { return; }
+    saveRulesetConfig();
+    if ( apply !== true ) { return; }
+    while ( toApply.length !== 0 ) {
+        const key = toApply.pop();
+        switch ( key ) {
+        case 'showBlockedCount': {
+            if ( typeof dnr.setExtensionActionOptions !== 'function' ) { break; }
+            const { showBlockedCount } = config;
+            dnr.setExtensionActionOptions({
+                displayActionCountAsBadgeText: showBlockedCount,
+            });
+            broadcastMessage({ showBlockedCount });
+            break;
+        }
+        case 'strictBlockMode': {
+            const { strictBlockMode } = config;
+            setStrictBlockMode(strictBlockMode, true).then(( ) => {
+                broadcastMessage({ strictBlockMode });
+            });
+            break;
+        }
+        default:
+            break;
+        }
+    }
+}
+
+/******************************************************************************/
+
 const adminSettings = {
-    keys: new Set(),
+    keys: new Map(),
     timer: undefined,
-    change(key) {
-        this.keys.add(key);
+    change(key, value) {
+        this.keys.set(key, value);
         if ( this.timer !== undefined ) { return; }
         this.timer = self.setTimeout(( ) => {
             this.timer = undefined;
@@ -66,11 +123,28 @@ const adminSettings = {
             const [ adminRulesets, enabledRulesets ] = results;
             broadcastMessage({ adminRulesets, enabledRulesets });
         }
+        if ( this.keys.has('defaultFiltering') ) {
+            ubolLog('admin setting "defaultFiltering" changed');
+            await readFilteringModeDetails(true);
+            await registerInjectables();
+            const defaultFilteringMode = await getDefaultFilteringMode();
+            broadcastMessage({ defaultFilteringMode });
+        }
         if ( this.keys.has('noFiltering') ) {
             ubolLog('admin setting "noFiltering" changed');
             await readFilteringModeDetails(true);
             const trustedSites = await getTrustedSites();
             broadcastMessage({ trustedSites: Array.from(trustedSites) });
+        }
+        if ( this.keys.has('showBlockedCount') ) {
+            ubolLog('admin setting "showBlockedCount" changed');
+            const showBlockedCount = this.keys.get('showBlockedCount');
+            applyAdminConfig({ showBlockedCount }, true);
+        }
+        if ( this.keys.has('strictBlockMode') ) {
+            ubolLog('admin setting "strictBlockMode" changed');
+            const strictBlockMode = this.keys.get('strictBlockMode');
+            applyAdminConfig({ strictBlockMode }, true);
         }
         this.keys.clear();
     }
@@ -79,11 +153,32 @@ const adminSettings = {
 /******************************************************************************/
 
 export async function getAdminRulesets() {
-    const adminList = await adminReadEx('rulesets');
+    const [
+        adminList,
+        rulesetDetails,
+    ] = await Promise.all([
+        adminReadEx('rulesets'),
+        getRulesetDetails(),
+    ]);
     const adminRulesets = new Set(Array.isArray(adminList) && adminList || []);
+    if ( adminRulesets.has('-default') ) {
+        adminRulesets.delete('-default');
+        for ( const ruleset of rulesetDetails.values() ) {
+            if ( ruleset.enabled !== true ) { continue; }
+            if ( adminRulesets.has(`+${ruleset.id}`) ) { continue; }
+            adminRulesets.add(`-${ruleset.id}`);
+        }
+    }
+    if ( adminRulesets.has('+default') ) {
+        adminRulesets.delete('+default');
+        for ( const ruleset of rulesetDetails.values() ) {
+            if ( ruleset.enabled !== true ) { continue; }
+            if ( adminRulesets.has(`-${ruleset.id}`) ) { continue; }
+            adminRulesets.add(`+${ruleset.id}`);
+        }
+    }
     if ( adminRulesets.has('-*') ) {
         adminRulesets.delete('-*');
-        const rulesetDetails = await getRulesetDetails();
         for ( const ruleset of rulesetDetails.values() ) {
             if ( ruleset.enabled ) { continue; }
             if ( adminRulesets.has(`+${ruleset.id}`) ) { continue; }
@@ -113,7 +208,7 @@ export async function adminReadEx(key) {
             localWrite(adminKey, { data: value }),
         ]);
         if ( JSON.stringify(value) === JSON.stringify(cacheValue) ) { return; }
-        adminSettings.change(key);
+        adminSettings.change(key, value);
     });
     return cacheValue;
 }

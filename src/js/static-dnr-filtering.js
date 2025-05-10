@@ -437,6 +437,20 @@ function finalizeRuleset(context, network) {
     mergeRules(rulesetMap, 'requestDomains');
     mergeRules(rulesetMap, 'responseHeaders');
 
+    // Convert back single-entry requestDomains into pattern-based filters
+    // https://github.com/uBlockOrigin/uBOL-home/issues/327
+    // TODO: Remove when (if) Safari is changed to interpret requestDomains as
+    //       in other browsers.
+    for ( const rule of rulesetMap.values() ) {
+        const { condition } = rule;
+        if ( condition?.requestDomains === undefined ) { continue; }
+        if ( condition.requestDomains.length !== 1 ) { continue; }
+        if ( condition.urlFilter !== undefined ) { continue; }
+        if ( condition.regexFilter !== undefined ) { continue; }
+        condition.urlFilter = `||${condition.requestDomains[0]}^`;
+        condition.requestDomains = undefined;
+    }
+
     // Patch id
     const rulesetFinal = [];
     {
@@ -461,6 +475,7 @@ function finalizeRuleset(context, network) {
 
 async function dnrRulesetFromRawLists(lists, options = {}) {
     const context = Object.assign({}, options);
+    context.bad = options.networkBad;
     staticNetFilteringEngine.dnrFromCompiled('begin', context);
     context.extensionPaths = new Map(context.extensionPaths || []);
     const toLoad = [];
@@ -475,6 +490,7 @@ async function dnrRulesetFromRawLists(lists, options = {}) {
     await Promise.all(toLoad);
     const result = {
         network: staticNetFilteringEngine.dnrFromCompiled('end', context),
+        networkBad: context.bad,
         genericCosmeticFilters: context.genericCosmeticFilters,
         genericCosmeticExceptions: context.genericCosmeticExceptions,
         specificCosmetic: context.specificCosmeticFilters,

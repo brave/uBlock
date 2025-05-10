@@ -1,3 +1,7 @@
+- [Bring zapper look in line with uBO Lite's zapper](https://github.com/gorhill/uBlock/commit/3f59f94b60)
+- [Ignore `start_page` transition for popup-blocking purpose](https://github.com/gorhill/uBlock/commit/0243a141a7)
+- [Exclude `chrome:` as valid openers for popup candidates](https://github.com/gorhill/uBlock/commit/59f4aca010)
+- [Fetch diff patches from "reliable" servers only](https://github.com/gorhill/uBlock/commit/8b964a8c54)
 - [Add `trusted-create-html` scriptlet](https://github.com/gorhill/uBlock/commit/20dd606504)
 - [Mind potential race condition when dynamically registering scriptlets](https://github.com/gorhill/uBlock/commit/15e832da8a)
 - [Fix undue unchecking of setting in "My filters"](https://github.com/gorhill/uBlock/commit/2bb6999e3f)
