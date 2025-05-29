@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="color-scheme" content="light dark" />
 <title data-i18n="dashboardName"></title>
 <link rel="stylesheet" href="css/default.css">
 <link rel="stylesheet" href="css/common.css">
@@ -90,8 +91,7 @@
         <div>
             <h3 data-i18n="filteringMode0Name"></h3>
             <p data-i18n="noFilteringModeDescription">_</p>
-            <p><textarea id="trustedSites" spellcheck="false" placeholder="noFilteringModePlaceholder"></textarea>
-            </p>
+            <div id="trustedSites"></div>
         </div>
     </section>
     <!-- -------- -->
@@ -155,6 +155,7 @@
             </span>
         </div>
     </div>
+<script src="lib/codemirror/cm6.bundle.ubol.min.js"></script>
 <script src="js/theme.js" type="module"></script>
 <script src="js/fa-icons.js" type="module"></script>
 <script src="js/i18n.js" type="module"></script>

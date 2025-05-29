@@ -4,18 +4,21 @@
     top: -20%;
     }
 
+:root {
+    --popup-min-width: calc(
+        var(--filtering-mode-slider-width) +
+        var(--filtering-mode-button-size) / 2
+    );
+}
+
 :root body,
 :root.mobile body {
-    --font-size: 14px;
+    --font-size: 15px;
     --popup-gap: var(--font-size);
     --popup-gap-thin: calc(0.5 * var(--popup-gap));
     --popup-gap-extra-thin: calc(0.25 * var(--popup-gap));
-    --popup-main-min-width: 18em;
-    --popup-firewall-min-width: 30em;
-    --popup-rule-cell-width: 5em;
     font-size: var(--font-size);
-    line-height: 20px;
-    min-width: 100%;
+    min-width: var(--popup-min-width);
     }
 :root body.loading {
     opacity: 0;
@@ -34,7 +37,6 @@ a {
     display: flex;
     flex-direction: column;
     max-width: 340px;
-    min-width: 100%;
     }
 :root.portrait #main {
     align-self: inherit;
@@ -66,13 +68,14 @@ hr {
 body[data-forbid~="filteringMode"] .filteringModeSlider {
     pointer-events: none;
     }
-body[data-forbid~="dashboard"] #gotoDashboard {
-    display: none;
+body[data-forbid~="dashboard"] #gotoDashboard,
+body[data-forbid~="zapper"] #gotoZapper {
+    visibility: hidden;
     }
 
 #filteringModeText {
     color: var(--ink-3);
-    margin: var(--default-gap-small);
+    margin-bottom: var(--default-gap-small);
     margin-top: 0;
     text-align: center;
     text-transform: lowercase;
@@ -95,8 +98,8 @@ body[data-forbid~="dashboard"] #gotoDashboard {
 
 .filteringModeSlider {
     align-self: center;
-    margin: var(--popup-gap);
-    width: calc(var(--popup-main-min-width) - 1em);
+    margin-bottom: var(--popup-gap);
+    margin-top: var(--popup-gap);
     }
 
 .rulesetTools {
@@ -171,7 +174,7 @@ body.needReload #refresh {
     font-size: 1.4em;
     min-width: 32px;
     padding: var(--popup-gap)
-             var(--popup-gap-thin);
+             var(--popup-gap-extra-thin);
     unicode-bidi: embed;
     visibility: hidden;
     }
@@ -183,6 +186,7 @@ body.needReload #refresh {
     visibility: visible;
     }
 .toolRibbon .tool .caption {
+    color: var(--ink-2);
     font: 10px/12px sans-serif;
     margin-top: 6px;
     text-align: center;

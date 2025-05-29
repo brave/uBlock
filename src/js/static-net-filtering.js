@@ -23,7 +23,7 @@ import * as sfp from './static-filtering-parser.js';
 
 import { domainFromHostname, hostnameFromNetworkURL } from './uri-utils.js';
 import { dropTask, queueTask } from './tasks.js';
-import { isRE2, tokenizableStrFromRegex } from './regex-analyzer.js';
+import { isRE2, toHeaderPattern, tokenizableStrFromRegex } from './regex-analyzer.js';
 
 import BidiTrieContainer from './biditrie.js';
 import { CompiledListReader } from './static-filtering-io.js';
@@ -760,6 +760,10 @@ class FilterImportant {
 
     static fromCompiled(args) {
         return filterDataAlloc(args[0]);
+    }
+
+    static dnrFromCompiled(args, rule) {
+        rule.__important = true;
     }
 
     static keyFromArgs() {
@@ -2925,18 +2929,26 @@ class FilterOnHeaders {
         if ( refs.$parsed === null ) {
             refs.$parsed = sfp.parseHeaderValue(refs.headerOpt);
         }
-        const { bad, name, not, re, value } = refs.$parsed;
+        const { bad, name, not, value } = refs.$parsed;
         if ( bad ) { return false; }
         const headerValue = $httpHeaders.lookup(name);
         if ( headerValue === undefined ) { return false; }
         if ( value === '' ) { return true; }
-        return re === undefined
-            ? (headerValue === value) !== not
-            : re.test(headerValue) !== not;
+        let { re } = refs.$parsed;
+        if ( re === undefined ) {
+            re = new RegExp(refs.$parsed.reStr, refs.$parsed.reFlags);
+            refs.$parsed.re = re;
+        }
+        return re.test(headerValue) !== not;
     }
 
     static compile(details) {
-        return [ FilterOnHeaders.fid, details.optionValues.get('header') ];
+        const parsed = sfp.parseHeaderValue(details.optionValues.get('header'));
+        let normalized = parsed.name;
+        if ( parsed.value !== '' ) {
+            normalized += `:${parsed.value}`;
+        }
+        return [ FilterOnHeaders.fid, normalized ];
     }
 
     static fromCompiled(args) {
@@ -2950,6 +2962,27 @@ class FilterOnHeaders {
     }
 
     static dnrFromCompiled(args, rule) {
+        rule.condition ||= {};
+        const parsed = sfp.parseHeaderValue(args[1]);
+        if ( parsed.bad !== true ) {
+            const value = parsed.isRegex
+                ? toHeaderPattern(parsed.reStr)
+                : parsed.value;
+            if ( value !== undefined ) {
+                const prop = parsed.not
+                    ? 'excludedResponseHeaders'
+                    : 'responseHeaders';
+                rule.condition[prop] ||= [];
+                const details = {
+                    header: parsed.name,
+                };
+                if ( value !== '' ) {
+                    details.values = [ value ];
+                }
+                rule.condition[prop].push(details);
+                return;
+            }
+        }
         dnrAddRuleError(rule, `header="${args[1]}" not supported`);
     }
 
@@ -4324,7 +4357,7 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
     if ( op === 'begin' ) {
         Object.assign(context, {
             good: new Set(),
-            bad: new Set(),
+            bad: new Set(context.bad),
             invalid: new Set(),
             filterCount: 0,
             acceptedFilterCount: 0,
@@ -4446,10 +4479,8 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
 
     const realms = new Map([
         [ BLOCK_REALM, { type: 'block', priority: 10 } ],
-        [ BLOCK_REALM | IMPORTANT_REALM, { type: 'block', priority: 40 } ],
         [ ALLOW_REALM, { type: 'allow', priority: 30 } ],
         [ REDIRECT_REALM, { type: 'redirect', priority: 11 } ],
-        [ REDIRECT_REALM | IMPORTANT_REALM, { type: 'redirect', priority: 41 } ],
         [ REMOVEPARAM_REALM, { type: 'removeparam', priority: 0 } ],
         [ CSP_REALM, { type: 'csp', priority: 0 } ],
         [ PERMISSIONS_REALM, { type: 'permissions', priority: 0 } ],
@@ -4508,6 +4539,13 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
                 }
             }
         }
+    }
+
+    // Adjust `important` priority
+    for ( const rule of ruleset ) {
+        if ( rule.__important !== true ) { continue; }
+        if ( rule.priority === undefined ) { continue; }
+        rule.priority += 30;
     }
 
     // Collect generichide filters

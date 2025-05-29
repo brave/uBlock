@@ -34,20 +34,20 @@ import {
 import {
     adminReadEx,
     getAdminRulesets,
+    loadAdminConfig,
 } from './admin.js';
 
 import {
     broadcastMessage,
+    gotoURL,
     hasBroadHostPermissions,
     hostnamesFromMatches,
 } from './utils.js';
 
 import {
     browser,
-    dnr,
     localRead, localRemove, localWrite,
     runtime,
-    windows,
 } from './ext.js';
 
 import {
@@ -75,11 +75,13 @@ import {
     saveRulesetConfig,
 } from './config.js';
 
+import { dnr } from './ext-compat.js';
 import { registerInjectables } from './scripting-manager.js';
+import { toggleToolbarIcon } from './action.js';
 
 /******************************************************************************/
 
-const UBOL_ORIGIN = runtime.getURL('').replace(/\/$/, '');
+const UBOL_ORIGIN = runtime.getURL('').replace(/\/$/, '').toLowerCase();
 
 const canShowBlockedCount = typeof dnr.setExtensionActionOptions === 'function';
 
@@ -133,36 +135,6 @@ async function onPermissionsAdded(permissions) {
 
 /******************************************************************************/
 
-async function gotoURL(url, type) {
-    const pageURL = new URL(url, runtime.getURL('/'));
-    const tabs = await browser.tabs.query({
-        url: pageURL.href,
-        windowType: type !== 'popup' ? 'normal' : 'popup'
-    });
-
-    if ( Array.isArray(tabs) && tabs.length !== 0 ) {
-        const { windowId, id } = tabs[0];
-        return Promise.all([
-            browser.windows.update(windowId, { focused: true }),
-            browser.tabs.update(id, { active: true }),
-        ]);
-    }
-
-    if ( type === 'popup' ) {
-        return windows.create({
-            type: 'popup',
-            url: pageURL.href,
-        });
-    }
-
-    return browser.tabs.create({
-        active: true,
-        url: pageURL.href,
-    });
-}
-
-/******************************************************************************/
-
 function onMessage(request, sender, callback) {
 
     // Does not require trusted origin.
@@ -197,6 +169,14 @@ function onMessage(request, sender, callback) {
         return false;
     }
 
+    case 'toggleToolbarIcon': {
+        const tabId = sender?.tab?.id ?? false;
+        if ( tabId ) {
+            toggleToolbarIcon(tabId);
+        }
+        return false;
+    }
+
     default:
         break;
     }
@@ -205,7 +185,9 @@ function onMessage(request, sender, callback) {
 
     // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/MessageSender
     //   Firefox API does not set `sender.origin`
-    if ( sender.origin !== undefined && sender.origin !== UBOL_ORIGIN ) { return; }
+    if ( sender.origin !== undefined ) {
+        if ( sender.origin.toLowerCase() !== UBOL_ORIGIN ) { return; }
+    }
 
     switch ( request.what ) {
 
@@ -338,12 +320,12 @@ function onMessage(request, sender, callback) {
         break;
 
     case 'setFilteringMode': {
-        getFilteringMode(request.hostname).then(actualLevel => {
-            if ( request.level === actualLevel ) { return actualLevel; }
+        getFilteringMode(request.hostname).then(beforeLevel => {
+            if ( request.level === beforeLevel ) { return beforeLevel; }
             return setFilteringMode(request.hostname, request.level);
-        }).then(actualLevel => {
+        }).then(afterLevel => {
             registerInjectables();
-            callback(actualLevel);
+            callback(afterLevel);
         });
         return true;
     }
@@ -402,7 +384,7 @@ function onMessage(request, sender, callback) {
         return true;
 
     case 'showMatchedRules':
-        windows.create({
+        browser.windows.create({
             type: 'popup',
             url: `/matched-rules.html?tab=${request.tabId}`,
         });
@@ -434,11 +416,12 @@ function onCommand(command, tab) {
 
 /******************************************************************************/
 
-async function start() {
-    await loadRulesetConfig();
-
+async function startSession() {
     const currentVersion = getCurrentVersion();
     const isNewVersion = currentVersion !== rulesetConfig.version;
+
+    // Admin settings override user settings
+    await loadAdminConfig();
 
     // The default rulesets may have changed, find out new ruleset to enable,
     // obsolete ruleset to remove.
@@ -449,38 +432,28 @@ async function start() {
         saveRulesetConfig();
     }
 
-    const rulesetsUpdated = process.wakeupRun === false &&
-        await enableRulesets(rulesetConfig.enabledRulesets);
+    const rulesetsUpdated = await enableRulesets(rulesetConfig.enabledRulesets);
 
     // We need to update the regex rules only when ruleset version changes.
     if ( rulesetsUpdated === false ) {
         if ( isNewVersion ) {
             updateDynamicRules();
-        } else if ( process.wakeupRun === false ) {
+        } else {
             updateSessionRules();
         }
     }
 
     // Permissions may have been removed while the extension was disabled
-    const permissionsChanged = await onPermissionsRemoved();
+    await syncWithBrowserPermissions();
 
     // Unsure whether the browser remembers correctly registered css/scripts
     // after we quit the browser. For now uBOL will check unconditionally at
     // launch time whether content css/scripts are properly registered.
-    if ( process.wakeupRun === false || permissionsChanged ) {
-        registerInjectables();
-
-        const enabledRulesets = await dnr.getEnabledRulesets();
-        ubolLog(`Enabled rulesets: ${enabledRulesets}`);
-
-        dnr.getAvailableStaticRuleCount().then(count => {
-            ubolLog(`Available static rule count: ${count}`);
-        });
-    }
+    registerInjectables();
 
     // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/declarativeNetRequest
     //   Firefox API does not support `dnr.setExtensionActionOptions`
-    if ( process.wakeupRun === false && canShowBlockedCount ) {
+    if ( canShowBlockedCount ) {
         dnr.setExtensionActionOptions({
             displayActionCountAsBadgeText: rulesetConfig.showBlockedCount,
         });
@@ -499,12 +472,20 @@ async function start() {
         }
     }
 
-    toggleDeveloperMode(rulesetConfig.developerMode);
-
     // Required to ensure the up to date property is available when needed
+    adminReadEx('disabledFeatures');
+}
+
+/******************************************************************************/
+
+async function start() {
+    await loadRulesetConfig();
+
     if ( process.wakeupRun === false ) {
-        adminReadEx('disabledFeatures');
+        await startSession();
     }
+
+    toggleDeveloperMode(rulesetConfig.developerMode);
 }
 
 /******************************************************************************/

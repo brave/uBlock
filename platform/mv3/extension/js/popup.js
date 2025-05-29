@@ -109,10 +109,13 @@ async function commitFilteringMode() {
         setFilteringMode(actualLevel);
     }
     if ( actualLevel !== beforeLevel && popupPanelData.autoReload ) {
+        const justReload = tabURL.href === currentTab.url;
         self.setTimeout(( ) => {
-            browser.tabs.update(currentTab.id, {
-                url: tabURL.href,
-            });
+            if ( justReload ) {
+                browser.tabs.reload(currentTab.id);
+            } else {
+                browser.tabs.update(currentTab.id, { url: tabURL.href });
+            }
         }, 437);
     }
 }
@@ -347,6 +350,7 @@ async function init() {
         }
         tabURL.href = url.href || '';
     } catch {
+        return false;
     }
 
     if ( url !== undefined ) {

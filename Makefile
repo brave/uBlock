@@ -2,13 +2,17 @@
 run_options := $(filter-out $@,$(MAKECMDGOALS))
 
 .PHONY: all clean cleanassets test lint chromium opera firefox npm dig \
-	mv3-chromium mv3-firefox mv3-edge \
+	mv3-chromium mv3-firefox mv3-edge mv3-safari \
 	compare maxcost medcost mincost modifiers record wasm
 
-sources := $(wildcard assets/* assets/*/* dist/version src/* src/*/* src/*/*/* src/*/*/*/*)
-platform := $(wildcard platform/* platform/*/* platform/*/*/* platform/*/*/*/* platform/*/*/*/*/*)
+sources := ./dist/version $(shell find ./assets -type f) $(shell find ./src -type f)
+platform := $(wildcard platform/*/*)
 assets := dist/build/uAssets
-mv3-data := $(wildcard dist/build/mv3-data/*)
+mv3-sources := $(shell find ./src -type f) $(wildcard platform/mv3/*) $(shell find ./platform/mv3/extension -type f)
+mv3-data := $(shell find ./dist/build/mv3-data -type f)
+
+mv3-edge-deps := $(wildcard platform/mv3/edge/*)
+mv3-safari-deps := $(wildcard platform/mv3/safari/*)
 
 all: chromium firefox npm
 
@@ -65,20 +69,25 @@ dig-snfe: dig
 dist/build/mv3-data:
 	mkdir -p dist/build/mv3-data
 
-dist/build/uBOLite.chromium: tools/make-mv3.sh $(sources) $(platform) $(mv3-data) dist/build/mv3-data
+dist/build/uBOLite.chromium: tools/make-mv3.sh $(mv3-sources) $(platform) $(mv3-data) dist/build/mv3-data
 	tools/make-mv3.sh chromium
 
 mv3-chromium: dist/build/uBOLite.chromium
 
-dist/build/uBOLite.firefox: tools/make-mv3.sh $(sources) $(platform) $(mv3-data) dist/build/mv3-data
+dist/build/uBOLite.firefox: tools/make-mv3.sh $(mv3-sources) $(platform) $(mv3-data) dist/build/mv3-data
 	tools/make-mv3.sh firefox
 
 mv3-firefox: dist/build/uBOLite.firefox
 
-dist/build/uBOLite.edge: tools/make-mv3.sh tools/make-edge.mjs $(sources) $(platform) $(mv3-data) dist/build/mv3-data
+dist/build/uBOLite.edge: tools/make-mv3.sh $(mv3-sources) $(mv3-edge-deps) $(mv3-data) dist/build/mv3-data
 	tools/make-mv3.sh edge
 
 mv3-edge: dist/build/uBOLite.edge
+
+dist/build/uBOLite.safari: tools/make-mv3.sh $(mv3-sources) $(mv3-safari-deps) $(mv3-data) dist/build/mv3-data
+	tools/make-mv3.sh safari
+
+mv3-safari: dist/build/uBOLite.safari
 
 dist/build/uAssets:
 	tools/pull-assets.sh

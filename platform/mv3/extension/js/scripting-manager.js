@@ -21,10 +21,16 @@
 
 import * as ut from './utils.js';
 
-import { browser } from './ext.js';
+import {
+    browser,
+    localRemove,
+    localWrite,
+} from './ext.js';
+
 import { fetchJSON } from './fetch.js';
 import { getEnabledRulesetsDetails } from './ruleset-manager.js';
 import { getFilteringModeDetails } from './mode-manager.js';
+import { registerToolbarIconToggler } from './action.js';
 import { ubolLog } from './debug.js';
 
 /******************************************************************************/
@@ -53,22 +59,11 @@ function getGenericDetails() {
 
 /******************************************************************************/
 
-// Important: We need to sort the arrays for fast comparison
-const arrayEq = (a = [], b = [], sort = true) => {
-    const alen = a.length;
-    if ( alen !== b.length ) { return false; }
-    if ( sort ) { a.sort(); b.sort(); }
-    for ( let i = 0; i < alen; i++ ) {
-        if ( a[i] !== b[i] ) { return false; }
-    }
-    return true;
-};
-
-/******************************************************************************/
-
 const normalizeMatches = matches => {
     if ( matches.length <= 1 ) { return; }
-    if ( matches.includes('<all_urls>') === false ) { return; }
+    if ( matches.includes('<all_urls>') === false ) {
+        if ( matches.includes('*://*/*') === false ) { return; }
+    }
     matches.length = 0;
     matches.push('<all_urls>');
 };
@@ -152,11 +147,13 @@ function registerHighGeneric(context, genericDetails) {
     const directive = {
         id: 'css-generichigh',
         css,
-        allFrames: true,
         matches,
-        excludeMatches,
+        allFrames: true,
         runAt: 'document_end',
     };
+    if ( excludeMatches.length !== 0 ) {
+        directive.excludeMatches = excludeMatches;
+    }
 
     // register
     if ( registered === undefined ) {
@@ -166,9 +163,9 @@ function registerHighGeneric(context, genericDetails) {
 
     // update
     if (
-        arrayEq(registered.css, css, false) === false ||
-        arrayEq(registered.matches, matches) === false ||
-        arrayEq(registered.excludeMatches, excludeMatches) === false
+        ut.strArrayEq(registered.css, css, false) === false ||
+        ut.strArrayEq(registered.matches, matches) === false ||
+        ut.strArrayEq(registered.excludeMatches, excludeMatches) === false
     ) {
         context.toRemove.push('css-generichigh');
         context.toAdd.push(directive);
@@ -229,8 +226,8 @@ function registerGeneric(context, genericDetails) {
         if ( registered === undefined ) { // register
             context.toAdd.push(directive);
         } else if ( // update
-            arrayEq(registered.js, js, false) === false ||
-            arrayEq(registered.matches, directive.matches) === false
+            ut.strArrayEq(registered.js, js, false) === false ||
+            ut.strArrayEq(registered.matches, directive.matches) === false
         ) {
             context.toRemove.push('css-generic-some');
             context.toAdd.push(directive);
@@ -249,14 +246,17 @@ function registerGeneric(context, genericDetails) {
         js,
         allFrames: true,
         matches: [ '<all_urls>' ],
-        excludeMatches,
         runAt: 'document_idle',
     };
+    if ( excludeMatches.length !== 0 ) {
+        directiveAll.excludeMatches = excludeMatches;
+    }
+
     if ( registeredAll === undefined ) { // register
         context.toAdd.push(directiveAll);
     } else if ( // update
-        arrayEq(registeredAll.js, js, false) === false ||
-        arrayEq(registeredAll.excludeMatches, directiveAll.excludeMatches) === false
+        ut.strArrayEq(registeredAll.js, js, false) === false ||
+        ut.strArrayEq(registeredAll.excludeMatches, directiveAll.excludeMatches) === false
     ) {
         context.toRemove.push('css-generic-all');
         context.toAdd.push(directiveAll);
@@ -279,8 +279,8 @@ function registerGeneric(context, genericDetails) {
     if ( registeredSome === undefined ) { // register
         context.toAdd.push(directiveSome);
     } else if ( // update
-        arrayEq(registeredSome.js, js, false) === false ||
-        arrayEq(registeredSome.matches, directiveSome.matches) === false
+        ut.strArrayEq(registeredSome.js, js, false) === false ||
+        ut.strArrayEq(registeredSome.matches, directiveSome.matches) === false
     ) {
         context.toRemove.push('css-generic-some');
         context.toAdd.push(directiveSome);
@@ -326,11 +326,13 @@ function registerProcedural(context) {
     const directive = {
         id: 'css-procedural',
         js,
-        allFrames: true,
         matches,
-        excludeMatches,
+        allFrames: true,
         runAt: 'document_start',
     };
+    if ( excludeMatches.length !== 0 ) {
+        directive.excludeMatches = excludeMatches;
+    }
 
     // register
     if ( registered === undefined ) {
@@ -340,9 +342,9 @@ function registerProcedural(context) {
 
     // update
     if (
-        arrayEq(registered.js, js, false) === false ||
-        arrayEq(registered.matches, matches) === false ||
-        arrayEq(registered.excludeMatches, excludeMatches) === false
+        ut.strArrayEq(registered.js, js, false) === false ||
+        ut.strArrayEq(registered.matches, matches) === false ||
+        ut.strArrayEq(registered.excludeMatches, excludeMatches) === false
     ) {
         context.toRemove.push('css-procedural');
         context.toAdd.push(directive);
@@ -388,11 +390,13 @@ function registerDeclarative(context) {
     const directive = {
         id: 'css-declarative',
         js,
-        allFrames: true,
         matches,
-        excludeMatches,
+        allFrames: true,
         runAt: 'document_start',
     };
+    if ( excludeMatches.length !== 0 ) {
+        directive.excludeMatches = excludeMatches;
+    }
 
     // register
     if ( registered === undefined ) {
@@ -402,9 +406,9 @@ function registerDeclarative(context) {
 
     // update
     if (
-        arrayEq(registered.js, js, false) === false ||
-        arrayEq(registered.matches, matches) === false ||
-        arrayEq(registered.excludeMatches, excludeMatches) === false
+        ut.strArrayEq(registered.js, js, false) === false ||
+        ut.strArrayEq(registered.matches, matches) === false ||
+        ut.strArrayEq(registered.excludeMatches, excludeMatches) === false
     ) {
         context.toRemove.push('css-declarative');
         context.toAdd.push(directive);
@@ -450,11 +454,13 @@ function registerSpecific(context) {
     const directive = {
         id: 'css-specific',
         js,
-        allFrames: true,
         matches,
-        excludeMatches,
+        allFrames: true,
         runAt: 'document_start',
     };
+    if ( excludeMatches.length !== 0 ) {
+        directive.excludeMatches = excludeMatches;
+    }
 
     // register
     if ( registered === undefined ) {
@@ -464,9 +470,9 @@ function registerSpecific(context) {
 
     // update
     if (
-        arrayEq(registered.js, js, false) === false ||
-        arrayEq(registered.matches, matches) === false ||
-        arrayEq(registered.excludeMatches, excludeMatches) === false
+        ut.strArrayEq(registered.js, js, false) === false ||
+        ut.strArrayEq(registered.matches, matches) === false ||
+        ut.strArrayEq(registered.excludeMatches, excludeMatches) === false
     ) {
         context.toRemove.push('css-specific');
         context.toAdd.push(directive);
@@ -521,19 +527,22 @@ function registerScriptlet(context, scriptletDetails) {
             }
             if ( targetHostnames.length === 0 ) { continue; }
             matches.push(...ut.matchesFromHostnames(targetHostnames));
+            normalizeMatches(matches);
 
             before.delete(id); // Important!
 
             const directive = {
                 id,
                 js: [ `/rulesets/scripting/scriptlet/${id}.js` ],
-                allFrames: true,
                 matches,
-                excludeMatches,
+                allFrames: true,
                 matchOriginAsFallback: true,
                 runAt: 'document_start',
                 world: details.world,
             };
+            if ( excludeMatches.length !== 0 ) {
+                directive.excludeMatches = excludeMatches;
+            }
 
             // register
             if ( registered === undefined ) {
@@ -543,8 +552,8 @@ function registerScriptlet(context, scriptletDetails) {
 
             // update
             if (
-                arrayEq(registered.matches, matches) === false ||
-                arrayEq(registered.excludeMatches, excludeMatches) === false
+                ut.strArrayEq(registered.matches, matches) === false ||
+                ut.strArrayEq(registered.excludeMatches, excludeMatches) === false
             ) {
                 context.toRemove.push(id);
                 context.toAdd.push(directive);
@@ -554,6 +563,9 @@ function registerScriptlet(context, scriptletDetails) {
 }
 
 /******************************************************************************/
+
+// Issue: Safari appears to completely ignore excludeMatches
+// https://github.com/radiolondra/ExcludeMatches-Test
 
 async function registerInjectables() {
     if ( browser.scripting === undefined ) { return false; }
@@ -594,19 +606,30 @@ async function registerInjectables() {
     registerSpecific(context);
     registerGeneric(context, genericDetails);
     registerHighGeneric(context, genericDetails);
+    registerToolbarIconToggler(context);
 
     toRemove.push(...Array.from(before.keys()));
 
     if ( toRemove.length !== 0 ) {
         ubolLog(`Unregistered ${toRemove} content (css/js)`);
-        await browser.scripting.unregisterContentScripts({ ids: toRemove })
-            .catch(reason => { console.info(reason); });
+        try {
+            await browser.scripting.unregisterContentScripts({ ids: toRemove });
+            localRemove('$scripting.unregisterContentScripts');
+        } catch(reason) {
+            localWrite('$scripting.unregisterContentScripts', reason);
+            console.info(reason);
+        }
     }
 
     if ( toAdd.length !== 0 ) {
         ubolLog(`Registered ${toAdd.map(v => v.id)} content (css/js)`);
-        await browser.scripting.registerContentScripts(toAdd)
-            .catch(reason => { console.info(reason); });
+        try {
+            await browser.scripting.registerContentScripts(toAdd);
+            localRemove('$scripting.registerContentScripts');
+        } catch(reason) {
+            localWrite('$scripting.registerContentScripts', reason);
+            console.info(reason);
+        }
     }
 
     registerInjectables.barrier = false;

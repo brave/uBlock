@@ -1,4 +1,5 @@
 html, body {
+    background-color: var(--surface-0);
     display: flex;
     flex-direction: column;
     height: 100vh;
@@ -13,6 +14,7 @@ body.notReady {
     }
 #dashboard-nav {
     align-items: center;
+    background-color: var(--surface-1);
     border: 0;
     border-bottom: 1px solid var(--border-1);
     display: flex;

@@ -20,8 +20,6 @@
 */
 
 import {
-    TAB_ID_NONE,
-    dnr,
     i18n,
     localRead, localRemove, localWrite,
     runtime,
@@ -33,6 +31,7 @@ import {
     saveRulesetConfig,
 } from './config.js';
 
+import { dnr } from './ext-compat.js';
 import { fetchJSON } from './fetch.js';
 import { getAdminRulesets } from './admin.js';
 import { hasBroadHostPermissions } from './utils.js';
@@ -43,14 +42,25 @@ import { ubolLog } from './debug.js';
 const TRUSTED_DIRECTIVE_BASE_RULE_ID = 8000000;
 const STRICTBLOCK_PRIORITY = 29;
 
+let dynamicRegexCount = 0;
+let sessionRegexCount = 0;
+
 /******************************************************************************/
 
 const isStrictBlockRule = rule => {
     if ( rule.priority !== STRICTBLOCK_PRIORITY ) { return false; }
-    if ( rule.action.type !== 'redirect' ) { return false; }
-    const substitution = rule.action.redirect.regexSubstitution;
-    return substitution !== undefined &&
-        substitution.includes('/strictblock.');
+    if ( rule.condition?.resourceTypes === undefined ) { return false; }
+    if ( rule.condition.resourceTypes.length !== 1 ) { return false; }
+    if ( rule.condition.resourceTypes[0] !== 'main_frame' ) { return false; }
+    if ( rule.action.type === 'redirect' ) {
+        const substitution = rule.action.redirect.regexSubstitution;
+        return substitution !== undefined &&
+            substitution.includes('/strictblock.');
+    }
+    if ( rule.action.type === 'allow' ) {
+        return Array.isArray(rule.condition?.requestDomains);
+    }
+    return false;
 };
 
 /******************************************************************************/
@@ -280,16 +290,15 @@ async function updateDynamicRules() {
     ]);
     if ( addRules.length === 0 && removeRuleIds.length === 0 ) { return; }
 
-    const maxRegexRuleCount = dnr.MAX_NUMBER_OF_REGEX_RULES;
-    let regexRuleCount = 0;
+    dynamicRegexCount = 0;
     let ruleId = 1;
     for ( const rule of addRules ) {
-        if ( rule?.condition.regexFilter ) { regexRuleCount += 1; }
+        if ( rule?.condition.regexFilter ) { dynamicRegexCount += 1; }
         if ( (rule.id || 0) >= TRUSTED_DIRECTIVE_BASE_RULE_ID ) { continue; }
         rule.id = ruleId++;
     }
-    if ( regexRuleCount !== 0 ) {
-        ubolLog(`Using ${regexRuleCount}/${maxRegexRuleCount} dynamic regex-based DNR rules`);
+    if ( dynamicRegexCount !== 0 ) {
+        ubolLog(`Using ${dynamicRegexCount}/${dnr.MAX_NUMBER_OF_REGEX_RULES} dynamic regex-based DNR rules`);
     }
     return Promise.all([
         dnr.updateDynamicRules({ addRules, removeRuleIds }).then(( ) => {
@@ -358,12 +367,13 @@ async function updateStrictBlockRules(currentRules, addRules, removeRuleIds) {
     if ( validRules.length === 0 ) { return; }
     ubolLog(`Add ${validRules.length} DNR strictblock rules`);
     for ( const rule of validRules ) {
+        rule.priority = STRICTBLOCK_PRIORITY;
         addRules.push(rule);
     }
 
     const allExcluded = permanentlyExcluded.concat(temporarilyExcluded);
     if ( allExcluded.length === 0 ) { return; }
-    addRules.push({
+    addRules.unshift({
         action: { type: 'allow' },
         condition: {
             requestDomains: allExcluded,
@@ -384,9 +394,11 @@ async function excludeFromStrictBlock(hostname, permanent) {
     return updateSessionRules();
 }
 
-async function setStrictBlockMode(state) {
+async function setStrictBlockMode(state, force = false) {
     const newState = Boolean(state);
-    if ( newState === rulesetConfig.strictBlockMode ) { return; }
+    if ( force === false ) {
+        if ( newState === rulesetConfig.strictBlockMode ) { return; }
+    }
     rulesetConfig.strictBlockMode = newState;
     const promises = [ saveRulesetConfig() ];
     if ( newState === false ) {
@@ -402,20 +414,26 @@ async function setStrictBlockMode(state) {
 /******************************************************************************/
 
 async function updateSessionRules() {
-    const addRules = [];
+    const addRulesUnfiltered = [];
     const removeRuleIds = [];
     const currentRules = await dnr.getSessionRules();
-    await updateStrictBlockRules(currentRules, addRules, removeRuleIds);
-    if ( addRules.length === 0 && removeRuleIds.length === 0 ) { return; }
-    const maxRegexRuleCount = dnr.MAX_NUMBER_OF_REGEX_RULES;
-    let regexRuleCount = 0;
+    await updateStrictBlockRules(currentRules, addRulesUnfiltered, removeRuleIds);
+    if ( addRulesUnfiltered.length === 0 && removeRuleIds.length === 0 ) { return; }
+    const maxRegexCount = dnr.MAX_NUMBER_OF_REGEX_RULES * 0.80;
+    let regexCount = dynamicRegexCount;
     let ruleId = 1;
-    for ( const rule of addRules ) {
-        if ( rule?.condition.regexFilter ) { regexRuleCount += 1; }
-        rule.id = ruleId++;
+    for ( const rule of addRulesUnfiltered ) {
+        if ( rule?.condition.regexFilter ) { regexCount += 1; }
+        rule.id = regexCount < maxRegexCount ? ruleId++ : 0;
     }
-    if ( regexRuleCount !== 0 ) {
-        ubolLog(`Using ${regexRuleCount}/${maxRegexRuleCount} session regex-based DNR rules`);
+    sessionRegexCount = regexCount - dynamicRegexCount;
+    const addRules = addRulesUnfiltered.filter(a => a.id !== 0);
+    const rejectedRuleCount = addRulesUnfiltered.length - addRules.length;
+    if ( rejectedRuleCount !== 0 ) {
+        ubolLog(`Too many regex-based filters, ${rejectedRuleCount} session rules dropped`);
+    }
+    if ( sessionRegexCount !== 0 ) {
+        ubolLog(`Using ${sessionRegexCount}/${dnr.MAX_NUMBER_OF_REGEX_RULES} session regex-based DNR rules`);
     }
     return dnr.updateSessionRules({ addRules, removeRuleIds }).then(( ) => {
         if ( removeRuleIds.length !== 0 ) {
@@ -432,127 +450,33 @@ async function updateSessionRules() {
 /******************************************************************************/
 
 async function filteringModesToDNR(modes) {
-    const [
-        dynamicRules,
-        sessionRules,
-    ] = await Promise.all([
-        dnr.getDynamicRules({ ruleIds: [ TRUSTED_DIRECTIVE_BASE_RULE_ID+0 ] }),
-        dnr.getSessionRules({ ruleIds: [ TRUSTED_DIRECTIVE_BASE_RULE_ID+1 ] }),
-    ]);
-    const dynamicRule = dynamicRules?.length && dynamicRules[0] || undefined;
-    const beforeRequestDomainSet = new Set(dynamicRule?.condition.requestDomains);
-    const beforeExcludedRrequestDomainSet = new Set(dynamicRule?.condition.excludedRequestDomains);
-    if ( dynamicRule !== undefined && beforeRequestDomainSet.size === 0 ) {
-        beforeRequestDomainSet.add('all-urls');
-    } else {
-        beforeExcludedRrequestDomainSet.add('all-urls');
-    }
-
     const noneHostnames = new Set([ ...modes.none ]);
     const notNoneHostnames = new Set([ ...modes.basic, ...modes.optimal, ...modes.complete ]);
-    let afterRequestDomainSet = new Set();
-    let afterExcludedRequestDomainSet = new Set();
-    if ( noneHostnames.has('all-urls') ) {
-        afterRequestDomainSet = new Set([ 'all-urls' ]);
-        afterExcludedRequestDomainSet = notNoneHostnames;
+    const requestDomains = [];
+    const excludedRequestDomains = [];
+    const allowEverywhere = noneHostnames.has('all-urls');
+    if ( allowEverywhere ) {
+        excludedRequestDomains.push(...notNoneHostnames);
     } else {
-        afterRequestDomainSet = noneHostnames;
-        afterExcludedRequestDomainSet = new Set();
+        requestDomains.push(...noneHostnames);
     }
-
-    const removeDynamicRuleIds = [];
-    const removeSessionRuleIds = [];
-    if ( dynamicRule ) {
-        removeDynamicRuleIds.push(TRUSTED_DIRECTIVE_BASE_RULE_ID+0);
-        removeSessionRuleIds.push(TRUSTED_DIRECTIVE_BASE_RULE_ID+1);
-    }
-
-    const allowEverywhere = afterRequestDomainSet.delete('all-urls');
-    const addDynamicRules = [];
-    const addSessionRules = [];
-    if (
-        allowEverywhere ||
-        afterRequestDomainSet.size !== 0 ||
-        afterExcludedRequestDomainSet.size !== 0
-    ) {
-        const rule0 = {
-            id: TRUSTED_DIRECTIVE_BASE_RULE_ID+0,
-            action: { type: 'allowAllRequests' },
-            condition: {
-                resourceTypes: [ 'main_frame' ],
-            },
-            priority: 100,
-        };
-        if ( afterRequestDomainSet.size !== 0 ) {
-            rule0.condition.requestDomains =
-                Array.from(afterRequestDomainSet).sort();
-        } else if ( afterExcludedRequestDomainSet.size !== 0 ) {
-            rule0.condition.excludedRequestDomains =
-                Array.from(afterExcludedRequestDomainSet).sort();
-        }
-        addDynamicRules.push(rule0);
-        // https://github.com/uBlockOrigin/uBOL-home/issues/114
-        // https://github.com/uBlockOrigin/uBOL-home/issues/247
-        const rule1 = {
-            id: TRUSTED_DIRECTIVE_BASE_RULE_ID+1,
-            action: { type: 'allow' },
-            condition: {
-                tabIds: [ TAB_ID_NONE ],
-            },
-            priority: 100,
-        };
-        if ( rule0.condition.requestDomains ) {
-            rule1.condition.initiatorDomains =
-                rule0.condition.requestDomains.slice();
-        } else if ( rule0.condition.excludedRequestDomains ) {
-            rule1.condition.excludedInitiatorDomains =
-                rule0.condition.excludedRequestDomains.slice();
-        }
-        addSessionRules.push(rule1);
-    }
-
-    const noneCount = noneHostnames.has('all-urls')
-        ? -notNoneHostnames.size
+    const noneCount = allowEverywhere
+        ? notNoneHostnames.size
         : noneHostnames.size;
-
-    const promises = [];
-    if ( isDifferentAllowRules(addDynamicRules, dynamicRules) ) {
-        promises.push(dnr.updateDynamicRules({
-            addRules: addDynamicRules,
-            removeRuleIds: removeDynamicRuleIds,
-        }));
-        ubolLog(`Add "allowAllRequests" dynamic rule for ${noneCount} sites`);
-    }
-    if ( isDifferentAllowRules(addSessionRules, sessionRules) ) {
-        promises.push(dnr.updateSessionRules({
-            addRules: addSessionRules,
-            removeRuleIds: removeSessionRuleIds,
-        }));
-        ubolLog(`Add "allow" session rule for ${noneCount} sites`);
-    }
-    if ( promises.length === 0 ) { return; }
-    return Promise.all(promises);
+    return dnr.setAllowAllRules(
+        TRUSTED_DIRECTIVE_BASE_RULE_ID,
+        requestDomains.sort(),
+        excludedRequestDomains.sort(),
+        allowEverywhere
+    ).then(modified => {
+        if ( modified === false ) { return; }
+        ubolLog(`${allowEverywhere ? 'Enabled' : 'Disabled'} DNR filtering for ${noneCount} sites`);
+    });
 }
-
-const isDifferentAllowRules = (a = [], b = []) => {
-    if ( a.length !== b.length ) { return true; }
-    const pp = [
-        'requestDomains',
-        'excludedRequestDomains',
-        'initiatorDomains',
-        'excludedInitiatorDomains',
-    ];
-    for ( const p of pp ) {
-        const ac = a.length && a[0].condition[p] || [];
-        const bc = b.length && b[0].condition[p] || [];
-        if ( ac.join() !== bc.join() ) { return true; }
-    }
-    return false;
-};
 
 /******************************************************************************/
 
-async function defaultRulesetsFromLanguage() {
+async function defaultRulesetsFromEnv() {
     const dropCountry = lang => {
         const pos = lang.indexOf('-');
         if ( pos === -1 ) { return lang; }
@@ -570,21 +494,32 @@ async function defaultRulesetsFromLanguage() {
         `\\b(${Array.from(langSet).join('|')})\\b`
     );
 
-    const manifest = runtime.getManifest();
-    const rulesets = manifest.declarative_net_request.rule_resources;
+    const reMobile = /\bMobile\b/.test(navigator.userAgent)
+        ? /\bmobile\b/
+        : null
+
     const rulesetDetails = await getRulesetDetails();
     const out = [];
-    for ( const ruleset of rulesets ) {
+    for ( const ruleset of rulesetDetails.values() ) {
         const { id, enabled } = ruleset;
         if ( enabled ) {
             out.push(id);
             continue;
         }
-        const details = rulesetDetails.get(id);
-        if ( typeof details.lang !== 'string' ) { continue; }
-        if ( reTargetLang.test(details.lang) === false ) { continue; }
-        out.push(id);
+        if ( typeof ruleset.lang === 'string' ) {
+            if ( reTargetLang.test(ruleset.lang) ) {
+                out.push(id);
+                continue;
+            }
+        }
+        if ( typeof ruleset.tags === 'string' ) {
+            if ( reMobile?.test(ruleset.tags) ) {
+                out.push(id);
+                continue;
+            }
+        }
     }
+   
     return out;
 }
 
@@ -594,15 +529,12 @@ async function patchDefaultRulesets() {
     const [
         oldDefaultIds = [],
         newDefaultIds,
+        staticRulesetIds,
     ] = await Promise.all([
         localRead('defaultRulesetIds'),
-        defaultRulesetsFromLanguage(),
+        defaultRulesetsFromEnv(),
+        getStaticRulesets().then(r => r.map(a => a.id)),
     ]);
-
-    const manifest = runtime.getManifest();
-    const validIds = new Set(
-        manifest.declarative_net_request.rule_resources.map(r => r.id)
-    );
     const toAdd = [];
     const toRemove = [];
     for ( const id of newDefaultIds ) {
@@ -614,7 +546,7 @@ async function patchDefaultRulesets() {
         toRemove.push(id);
     }
     for ( const id of rulesetConfig.enabledRulesets ) {
-        if ( validIds.has(id) ) { continue; }
+        if ( staticRulesetIds.includes(id) ) { continue; }
         toRemove.push(id);
     }
     localWrite('defaultRulesetIds', newDefaultIds);
@@ -631,7 +563,11 @@ async function patchDefaultRulesets() {
 
 async function enableRulesets(ids) {
     const afterIds = new Set(ids);
-    const [ beforeIds, adminIds, rulesetDetails ] = await Promise.all([
+    const [
+        beforeIds,
+        adminIds,
+        rulesetDetails,
+    ] = await Promise.all([
         dnr.getEnabledRulesets().then(ids => new Set(ids)),
         getAdminRulesets(),
         getRulesetDetails(),
@@ -682,11 +618,27 @@ async function enableRulesets(ids) {
     if ( disableRulesetIds.length !== 0 ) {
         ubolLog(`Disable ruleset: ${disableRulesetIds}`);
     }
-    await dnr.updateEnabledRulesets({ enableRulesetIds, disableRulesetIds });
+    await dnr.updateEnabledRulesets({ enableRulesetIds, disableRulesetIds }).catch(reason => {
+        ubolLog(reason);
+    });
 
     await updateDynamicRules();
 
+    dnr.getEnabledRulesets().then(enabledRulesets => {
+        ubolLog(`Enabled rulesets: ${enabledRulesets}`);
+        return dnr.getAvailableStaticRuleCount();
+    }).then(count => {
+        ubolLog(`Available static rule count: ${count}`);
+    });
+
     return true;
+}
+
+/******************************************************************************/
+
+async function getStaticRulesets() {
+    const manifest = runtime.getManifest();
+    return manifest.declarative_net_request.rule_resources;
 }
 
 /******************************************************************************/
@@ -711,12 +663,11 @@ async function getEnabledRulesetsDetails() {
 /******************************************************************************/
 
 export {
-    defaultRulesetsFromLanguage,
     enableRulesets,
     excludeFromStrictBlock,
     filteringModesToDNR,
-    getRulesetDetails,
     getEnabledRulesetsDetails,
+    getRulesetDetails,
     patchDefaultRulesets,
     setStrictBlockMode,
     updateDynamicRules,

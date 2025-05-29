@@ -31,8 +31,8 @@ import {
     mergeRules,
 } from './js/static-dnr-filtering.js';
 
+import { execSync } from 'node:child_process';
 import fs from 'fs/promises';
-import https from 'https';
 import path from 'path';
 import process from 'process';
 import redirectResourcesMap from './js/redirect-resources.js';
@@ -107,45 +107,55 @@ console.log = log;
 const logProgress = text => {
     process?.stdout?.clearLine?.();
     process?.stdout?.cursorTo?.(0);
-    process?.stdout?.write?.(text);
+    process?.stdout?.write?.(text.length > 120 ? `${text.slice(0, 119)}… ` : `${text} `);
 };
 
 /******************************************************************************/
 
-const urlToFileName = url => {
-    return url
+async function fetchText(url, cacheDir) {
+    logProgress(`Reading locally cached ${url}`);
+    const fname = url
         .replace(/^https?:\/\//, '')
-        .replace(/\//g, '_');
-};
+        .replace(/\//g, '_');(url);
+    const content = await fs.readFile(
+        `${cacheDir}/${fname}`,
+        { encoding: 'utf8' }
+    ).catch(( ) => { });
+    if ( content !== undefined ) {
+        log(`\tFetched local ${url}`);
+        return { url, content };
+    }
+    logProgress(`Fetching remote ${url}`);
+    log(`\tFetching remote ${url}`);
+    const response = await fetch(url).catch(( ) => { });
+    if ( response === undefined ) {
+        return { url, error: `Fetching failed: ${url}` };
+    }
+    let text;
+    if ( response.ok ) {
+        text = await response.text().catch(( ) => { });
+    } else {
+        text = await fallbackFetchText(url).catch(( ) => { });
+    }
+    if ( text === undefined ) {
+        return { url, error: `Fetching text content failed: ${url}` };
+    }
+    writeFile(`${cacheDir}/${fname}`, text);
+    return { url, content: text };
+}
 
-const fetchText = (url, cacheDir) => {
-    return new Promise((resolve, reject) => {
-        logProgress(`Fetching ${url}`);
-        const fname = urlToFileName(url);
-        fs.readFile(`${cacheDir}/${fname}`, { encoding: 'utf8' }).then(content => {
-            log(`\tFetched local ${url}`);
-            resolve({ url, content });
-        }).catch(( ) => {
-            log(`\tFetching remote ${url}`);
-            https.get(url, response => {
-                const data = [];
-                response.on('data', chunk => {
-                    data.push(chunk.toString());
-                });
-                response.on('end', ( ) => {
-                    const content = data.join('');
-                    try {
-                        writeFile(`${cacheDir}/${fname}`, content);
-                    } catch {
-                    }
-                    resolve({ url, content });
-                });
-            }).on('error', error => {
-                reject(error);
-            });
-        });
-    });
-};
+async function fallbackFetchText(url) {
+    const match = /^https:\/\/raw\.githubusercontent\.com\/([^/]+)\/([^/]+)\/master\/([^?]+)/.exec(url);
+    if ( match === null ) { return; }
+    logProgress(`\tGitHub CLI-fetching remote ${url}`);
+    // https://docs.github.com/en/rest/repos/contents
+    const content = execSync(`gh api \
+        -H "Accept: application/vnd.github.raw+json" \
+        -H "X-GitHub-Api-Version: 2022-11-28" \
+        /repos/${match[1]}/${match[2]}/contents/${match[3]} \
+    `, { encoding: 'utf8' });
+    return content;
+}
 
 /******************************************************************************/
 
@@ -174,6 +184,7 @@ const rulesetDetails = [];
 const scriptletStats = new Map();
 const genericDetails = new Map();
 const requiredRedirectResources = new Set();
+let networkBad = new Set();
 
 // This will be used to sign our inserted `!#trusted on` directives
 const secret = createHash('sha256').update(randomBytes(16)).digest('hex').slice(0,16);
@@ -249,22 +260,18 @@ async function fetchList(assetDetails) {
             }
             newParts.push(
                 fetchText(part.url, cacheDir).then(details => {
-                    const { url } = details;
+                    const { url, error } = details;
+                    if ( error !== undefined ) { return details; }
                     const content = details.content.trim();
-                    if ( typeof content === 'string' && content !== '' ) {
-                        if (
-                            content.startsWith('<') === false ||
-                            content.endsWith('>') === false
-                        ) {
-                            return { url, content };
-                        }
+                    if ( content === '' || /^<.*>$/.test(content) ) {
+                        return { url, error: `Bad content: ${url}` };
                     }
-                    log(`No valid content for ${url}`, false);
-                    return { url, content: '' };
+                    return { url, content };
                 })
             );
             newParts.push(`!#trusted off ${secret}`);
         }
+        if ( parts.some(v => typeof v === 'object' && v.error) ) { return; }
         parts = await Promise.all(newParts);
         parts = sfp.utils.preparser.expandIncludes(parts, env);
     }
@@ -314,6 +321,42 @@ const isURLSkip = rule =>
     isUnsupported(rule) === false &&
     rule.action !== undefined &&
     rule.action.type === 'urlskip';
+
+/******************************************************************************/
+
+function patchRuleset(ruleset) {
+    if ( platform !== 'safari' ) { return ruleset; }
+    const out = [];
+    for ( const rule of ruleset ) {
+        const condition = rule.condition;
+        if ( rule.action.type === 'modifyHeaders' ) {
+            log(`Safari's incomplete API: ${JSON.stringify(rule)}`, true);
+            continue;
+        }
+        if ( Array.isArray(rule.condition.responseHeaders) ) {
+            log(`Safari's incomplete API: ${JSON.stringify(rule)}`, true);
+            continue;
+        }
+        if ( Array.isArray(condition.requestMethods) ) {
+            log(`Safari's incomplete API: ${JSON.stringify(rule)}`, true);
+            continue;
+        }
+        if ( Array.isArray(condition.excludedRequestMethods) ) {
+            log(`Safari's incomplete API: ${JSON.stringify(rule)}`, true);
+            continue;
+        }
+        if ( Array.isArray(condition.initiatorDomains) ) {
+            condition.domains = condition.initiatorDomains;
+            delete condition.initiatorDomains;
+        }
+        if ( Array.isArray(condition.excludedInitiatorDomains) ) {
+            condition.excludedDomains = condition.excludedInitiatorDomains;
+            delete condition.excludedInitiatorDomains;
+        }
+        out.push(rule);
+    }
+    return out;
+}
 
 /******************************************************************************/
 
@@ -372,6 +415,23 @@ function pruneHostnameArray(hostnames) {
  * */
 
 function toJSONRuleset(ruleset) {
+    const nodupProps = [ 'domains', 'excludedDomains', 'requestDomains', 'excludedRequestDomains', 'initiatorDomains', 'excludedInitiatorDomains' ];
+    for ( const { condition } of ruleset ) {
+        if ( condition === undefined ) { continue; }
+        for ( const prop of nodupProps ) {
+            if ( condition[prop] === undefined ) { continue; }
+            condition[prop] = Array.from(new Set(condition[prop]));
+        }
+    }
+    const sortProps = [ 'requestDomains', 'initiatorDomains', 'domains' ];
+    ruleset.sort((a, b) => {
+        let aLen = 0, bLen = 0;
+        for ( const prop of sortProps ) {
+            aLen += a.condition[prop]?.length ?? 0;
+            bLen += b.condition[prop]?.length ?? 0;
+        }
+        return bLen - aLen;
+    });
     const replacer = (k, v) => {
         if ( k.startsWith('_') ) { return; }
         if ( Array.isArray(v) ) {
@@ -388,7 +448,9 @@ function toJSONRuleset(ruleset) {
     };
     const indent = ruleset.length > 10 ? undefined : 1;
     const out = [];
+    let id = 1;
     for ( const rule of ruleset ) {
+        rule.id = id++;
         out.push(JSON.stringify(rule, replacer, indent));
     }
     return `[\n${out.join(',\n')}\n]\n`;
@@ -408,7 +470,6 @@ function toStrictBlockRule(rule, out) {
     if ( condition.excludedResponseHeaders ) { return; }
     if ( condition.initiatorDomains ) { return; }
     if ( condition.excludedInitiatorDomains ) { return; }
-    if ( condition.excludedRequestDomains ) { return; }
     const { resourceTypes } = condition;
     if ( resourceTypes === undefined ) {
         if ( condition.requestDomains === undefined ) { return; }
@@ -423,9 +484,7 @@ function toStrictBlockRule(rule, out) {
     } else {
         regexFilter = '^https?://.*';
     }
-    if (
-        regexFilter.startsWith('^') === false
-    ) {
+    if ( regexFilter.startsWith('^') === false ) {
         regexFilter = `^.*${regexFilter}`;
     }
     if (
@@ -435,7 +494,7 @@ function toStrictBlockRule(rule, out) {
     ) {
         regexFilter = `${regexFilter}.*`;
     }
-    const strictBlockRule = {
+    const strictBlockRule = out.get(regexFilter) || {
         action: {
             type: 'redirect',
             redirect: {
@@ -449,9 +508,14 @@ function toStrictBlockRule(rule, out) {
         priority: 29,
     };
     if ( condition.requestDomains ) {
-        strictBlockRule.condition.requestDomains = condition.requestDomains.slice();
+        strictBlockRule.condition.requestDomains ??= [];
+        strictBlockRule.condition.requestDomains.push(...condition.requestDomains);
     }
-    out.set(toStrictBlockRule.ruleId++, strictBlockRule);
+    if ( condition.excludedRequestDomains ) {
+        strictBlockRule.condition.excludedRequestDomains ??= [];
+        strictBlockRule.condition.excludedRequestDomains.push(...condition.excludedRequestDomains);
+    }
+    out.set(regexFilter, strictBlockRule);
 }
 toStrictBlockRule.ruleId = 1;
 
@@ -486,7 +550,9 @@ async function processNetworkFilters(assetDetails, network) {
         }
     }
 
-    const plainGood = rules.filter(rule => isSafe(rule) && isRegex(rule) === false);
+    const plainGood = patchRuleset(
+        rules.filter(rule => isSafe(rule) && isRegex(rule) === false)
+    );
     log(`\tPlain good: ${plainGood.length}`);
     log(plainGood
         .filter(rule => Array.isArray(rule._warning))
@@ -494,12 +560,16 @@ async function processNetworkFilters(assetDetails, network) {
         .join('\n'), true
     );
 
-    const regexes = rules.filter(rule => isSafe(rule) && isRegex(rule));
+    const regexes = patchRuleset(
+        rules.filter(rule => isSafe(rule) && isRegex(rule))
+    );
     log(`\tMaybe good (regexes): ${regexes.length}`);
 
-    const redirects = rules.filter(rule =>
-        isUnsupported(rule) === false &&
-        isRedirect(rule)
+    const redirects = patchRuleset(
+        rules.filter(rule =>
+            isUnsupported(rule) === false &&
+            isRedirect(rule)
+        )
     );
     redirects.forEach(rule => {
         if ( rule.action.redirect.extensionPath === undefined ) { return; }
@@ -509,17 +579,23 @@ async function processNetworkFilters(assetDetails, network) {
     });
     log(`\tredirect=: ${redirects.length}`);
 
-    const removeparamsGood = rules.filter(rule =>
-        isUnsupported(rule) === false && isRemoveparam(rule)
+    const removeparamsGood = patchRuleset(
+        rules.filter(rule =>
+            isUnsupported(rule) === false && isRemoveparam(rule)
+        )
     );
-    const removeparamsBad = rules.filter(rule =>
-        isUnsupported(rule) && isRemoveparam(rule)
+    const removeparamsBad = patchRuleset(
+        rules.filter(rule =>
+            isUnsupported(rule) && isRemoveparam(rule)
+        )
     );
     log(`\tremoveparams= (accepted/discarded): ${removeparamsGood.length}/${removeparamsBad.length}`);
 
-    const modifyHeaders = rules.filter(rule =>
-        isUnsupported(rule) === false &&
-        isModifyHeaders(rule)
+    const modifyHeaders = patchRuleset(
+        rules.filter(rule =>
+            isUnsupported(rule) === false &&
+            isModifyHeaders(rule)
+        )
     );
     log(`\tmodifyHeaders=: ${modifyHeaders.length}`);
 
@@ -570,35 +646,30 @@ async function processNetworkFilters(assetDetails, network) {
     log(`\tUnsupported: ${bad.length}`);
     log(bad.map(rule => rule._error.map(v => `\t\t${v}`)).join('\n'), true);
 
-    writeFile(
-        `${rulesetDir}/main/${assetDetails.id}.json`,
+    writeFile(`${rulesetDir}/main/${assetDetails.id}.json`,
         toJSONRuleset(plainGood)
     );
 
     if ( regexes.length !== 0 ) {
-        writeFile(
-            `${rulesetDir}/regex/${assetDetails.id}.json`,
+        writeFile(`${rulesetDir}/regex/${assetDetails.id}.json`,
             toJSONRuleset(regexes)
         );
     }
 
     if ( removeparamsGood.length !== 0 ) {
-        writeFile(
-            `${rulesetDir}/removeparam/${assetDetails.id}.json`,
+        writeFile(`${rulesetDir}/removeparam/${assetDetails.id}.json`,
             toJSONRuleset(removeparamsGood)
         );
     }
 
     if ( redirects.length !== 0 ) {
-        writeFile(
-            `${rulesetDir}/redirect/${assetDetails.id}.json`,
+        writeFile(`${rulesetDir}/redirect/${assetDetails.id}.json`,
             toJSONRuleset(redirects)
         );
     }
 
     if ( modifyHeaders.length !== 0 ) {
-        writeFile(
-            `${rulesetDir}/modify-headers/${assetDetails.id}.json`,
+        writeFile(`${rulesetDir}/modify-headers/${assetDetails.id}.json`,
             toJSONRuleset(modifyHeaders)
         );
     }
@@ -609,19 +680,13 @@ async function processNetworkFilters(assetDetails, network) {
     }
     if ( strictBlocked.size !== 0 ) {
         mergeRules(strictBlocked, 'requestDomains');
-        let id = 1;
-        for ( const rule of strictBlocked.values() ) {
-            rule.id = id++;
-        }
-        writeFile(
-            `${rulesetDir}/strictblock/${assetDetails.id}.json`,
+        writeFile(`${rulesetDir}/strictblock/${assetDetails.id}.json`,
             toJSONRuleset(Array.from(strictBlocked.values()))
         );
     }
 
     if ( urlskips.size !== 0 ) {
-        writeFile(
-            `${rulesetDir}/urlskip/${assetDetails.id}.json`,
+        writeFile(`${rulesetDir}/urlskip/${assetDetails.id}.json`,
             JSON.stringify(Array.from(urlskips.values()), null, 1)
         );
     }
@@ -756,8 +821,7 @@ async function processGenericCosmeticFilters(
         `${JSON.stringify(genericExceptionMap, scriptletJsonReplacer)}`
     );
 
-    writeFile(
-        `${scriptletDir}/generic/${assetDetails.id}.js`,
+    writeFile(`${scriptletDir}/generic/${assetDetails.id}.js`,
         patchedScriptlet
     );
 
@@ -815,8 +879,7 @@ async function processGenericHighCosmeticFilters(
         selectorLists
     );
 
-    writeFile(
-        `${scriptletDir}/generichigh/${assetDetails.id}.css`,
+    writeFile(`${scriptletDir}/generichigh/${assetDetails.id}.css`,
         patchedScriptlet
     );
 
@@ -1185,6 +1248,9 @@ async function rulesetFromURLs(assetDetails) {
 
     if ( assetDetails.text === undefined && assetDetails.urls.length !== 0 ) {
         const text = await fetchList(assetDetails);
+        if ( text === undefined ) {
+            process.exit(1);
+        }
         assetDetails.text = text;
     } else {
         assetDetails.text = '';
@@ -1219,8 +1285,12 @@ async function rulesetFromURLs(assetDetails) {
 
     const results = await dnrRulesetFromRawLists(
         [ { name: assetDetails.id, text: assetDetails.text } ],
-        { env, extensionPaths, secret }
+        { env, extensionPaths, secret, networkBad }
     );
+    networkBad = results.networkBad;
+
+    // Release memory used by filter list content
+    assetDetails.text = undefined;
 
     const netStats = await processNetworkFilters(
         assetDetails,
@@ -1355,242 +1425,32 @@ async function main() {
         const dayPart = now.getUTCDate();
         const hourPart = Math.floor(now.getUTCHours());
         const minutePart = Math.floor(now.getUTCMinutes());
-        version = `${yearPart}.${monthPart}.${dayPart}.${hourPart * 60 + minutePart}`;
+        version = `${yearPart}.${monthPart*100+dayPart}.${hourPart*100+minutePart}`;
     }
     log(`Version: ${version}`, false);
 
-    // Get assets.json content
-    const assets = await fs.readFile(
-        `./assets.dev.json`,
-        { encoding: 'utf8' }
-    ).then(text =>
+    // Get list of rulesets
+    const rulesets = await fs.readFile('rulesets.json', {
+        encoding: 'utf8'
+    }).then(text =>
         JSON.parse(text)
     );
 
-    // Assemble all default lists as the default ruleset
-    await rulesetFromURLs({
-        id: 'default',
-        name: 'Ads, trackers, miners, and more' ,
-        enabled: true,
-        urls: [
-            'https://ublockorigin.github.io/uAssets/filters/filters.min.txt',
-            'https://ublockorigin.github.io/uAssets/filters/privacy.min.txt',
-            'https://ublockorigin.github.io/uAssets/filters/unbreak.min.txt',
-            'https://ublockorigin.github.io/uAssets/filters/quick-fixes.min.txt',
-            'https://ublockorigin.github.io/uAssets/filters/ubol-filters.txt',
-            'https://ublockorigin.github.io/uAssets/thirdparties/easylist.txt',
-            'https://ublockorigin.github.io/uAssets/thirdparties/easyprivacy.txt',
-            'https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=1&mimetype=plaintext',
-        ],
-        dnrURL: 'https://ublockorigin.github.io/uAssets/dnr/default.json',
-        homeURL: 'https://github.com/uBlockOrigin/uAssets',
-        filters: [`
-        `],
-    });
-
-    await rulesetFromURLs({
-        id: 'badware',
-        name: 'Badware risks' ,
-        group: 'malware',
-        enabled: true,
-        urls: [
-            'https://ublockorigin.github.io/uAssets/filters/badware.min.txt',
-        ],
-        homeURL: 'https://github.com/uBlockOrigin/uAssets',
-        filters: [
-        ],
-    });
-
-    // Handpicked rulesets from assets.json
-    const handpicked = [
-        'block-lan',
-        'dpollock-0',
-        'adguard-spyware-url',
-    ];
-    for ( const id of handpicked ) {
-        const asset = assets[id];
-        if ( asset.content !== 'filters' ) { continue; }
-        const contentURL = Array.isArray(asset.contentURL)
-            ? asset.contentURL[0]
-            : asset.contentURL;
-        await rulesetFromURLs({
-            id: id.toLowerCase(),
-            name: asset.title,
-            enabled: false,
-            urls: [ contentURL ],
-            homeURL: asset.supportURL,
-        });
+    for ( const ruleset of rulesets ) {
+        await rulesetFromURLs(ruleset);
     }
-
-    // Handpicked annoyance rulesets from assets.json
-    await rulesetFromURLs({
-        id: 'annoyances-cookies',
-        name: 'EasyList/uBO – Cookie Notices',
-        group: 'annoyances',
-        enabled: false,
-        urls: [
-            'https://ublockorigin.github.io/uAssets/thirdparties/easylist-cookies.txt',
-            'https://ublockorigin.github.io/uAssets/filters/annoyances-cookies.txt',
-        ],
-        homeURL: 'https://github.com/easylist/easylist#fanboy-lists',
-    });
-    await rulesetFromURLs({
-        id: 'annoyances-overlays',
-        name: 'EasyList/uBO – Overlay Notices',
-        group: 'annoyances',
-        enabled: false,
-        urls: [
-            'https://ublockorigin.github.io/uAssets/thirdparties/easylist-newsletters.txt',
-            'https://ublockorigin.github.io/uAssets/filters/annoyances-others.txt',
-        ],
-        homeURL: 'https://github.com/easylist/easylist#fanboy-lists',
-    });
-    await rulesetFromURLs({
-        id: 'annoyances-social',
-        name: 'EasyList – Social Widgets',
-        group: 'annoyances',
-        enabled: false,
-        urls: [
-            'https://ublockorigin.github.io/uAssets/thirdparties/easylist-social.txt',
-        ],
-        homeURL: 'https://github.com/easylist/easylist#fanboy-lists',
-    });
-    await rulesetFromURLs({
-        id: 'annoyances-widgets',
-        name: 'EasyList – Chat Widgets',
-        group: 'annoyances',
-        enabled: false,
-        urls: [
-            'https://ublockorigin.github.io/uAssets/thirdparties/easylist-chat.txt',
-        ],
-        homeURL: 'https://github.com/easylist/easylist#fanboy-lists',
-    });
-    await rulesetFromURLs({
-        id: 'annoyances-others',
-        name: 'EasyList – Other Annoyances',
-        group: 'annoyances',
-        enabled: false,
-        urls: [
-            'https://ublockorigin.github.io/uAssets/thirdparties/easylist-annoyances.txt'
-        ],
-        homeURL: 'https://github.com/easylist/easylist#fanboy-lists',
-    });
-
-    // Handpicked rulesets from abroad
-    await rulesetFromURLs({
-        id: 'urlhaus-full',
-        name: 'Malicious URL Blocklist',
-        group: 'malware',
-        enabled: true,
-        urls: [
-            'https://malware-filter.gitlab.io/malware-filter/urlhaus-filter-hosts.txt',
-        ],
-        filters: [
-        ],
-        homeURL: 'https://gitlab.com/malware-filter/urlhaus-filter',
-    });
-    await rulesetFromURLs({
-        id: 'openphish-domains',
-        name: 'OpenPhish Domain Blocklist',
-        group: 'malware',
-        enabled: true,
-        urls: [
-            'https://raw.githubusercontent.com/stephenhawk8054/openphish-adblock/refs/heads/main/filters_init_domains.txt',
-        ],
-        filters: [
-        ],
-        homeURL: 'https://github.com/stephenhawk8054/openphish-adblock',
-    });
-
-    await rulesetFromURLs({
-        id: 'stevenblack-hosts',
-        name: 'Steven Black’s Unified Hosts (adware + malware)',
-        enabled: false,
-        urls: [ 'https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts' ],
-        homeURL: 'https://github.com/StevenBlack/hosts#readme',
-    });
-
-    await rulesetFromURLs({
-        id: 'ubol-tests',
-        name: 'uBO Lite Test Filters',
-        enabled: false,
-        trusted: true,
-        urls: [ 'https://ublockorigin.github.io/uBOL-home/tests/test-filters.txt' ],
-        homeURL: 'https://ublockorigin.github.io/uBOL-home/tests/test-filters.html',
-        filters: [`
-        `],
-    });
-
-    // Regional rulesets
-    const excludedLists = [
-        'ara-0',
-        'EST-0',
-    ];
-    // Merge lists which have same target languages
-    const langToListsMap = new Map();
-    for ( const [ id, asset ] of Object.entries(assets) ) {
-        if ( asset.content !== 'filters' ) { continue; }
-        if ( asset.off !== true ) { continue; }
-        if ( asset.group !== 'regions' ) { continue; }
-        if ( excludedLists.includes(id) ) { continue; }
-        // Not all "regions" lists have a set language
-        const bundleId = asset.lang ||
-            createHash('sha256').update(randomBytes(16)).digest('hex').slice(0,16);
-        let ids = langToListsMap.get(bundleId);
-        if ( ids === undefined ) {
-            langToListsMap.set(bundleId, ids = []);
-        }
-        ids.push(id);
-    }
-    for ( const ids of langToListsMap.values() ) {
-        const urls = [];
-        for ( const id of ids ) {
-            const asset = assets[id];
-            const contentURL = Array.isArray(asset.contentURL)
-                ? asset.contentURL[0]
-                : asset.contentURL;
-            urls.push(contentURL);
-        }
-        const id = ids[0];
-        const asset = assets[id];
-        const rulesetDetails = {
-            id: id.toLowerCase(),
-            group: 'regions',
-            parent: asset.parent,
-            lang: asset.lang,
-            name: asset.title,
-            tags: asset.tags,
-            enabled: false,
-            urls,
-            homeURL: asset.supportURL,
-        };
-        await rulesetFromURLs(rulesetDetails);
-    }
-
-    await rulesetFromURLs({
-        id: 'est-0',
-        group: 'regions',
-        lang: 'et',
-        name: '🇪🇪ee: Eesti saitidele kohandatud filter',
-        enabled: false,
-        urls: [ 'https://ubol-et.adblock.ee/list.txt' ],
-        homeURL: 'https://github.com/sander85/uBOL-et',
-    });
 
     logProgress('');
 
-    writeFile(
-        `${rulesetDir}/ruleset-details.json`,
+    writeFile(`${rulesetDir}/ruleset-details.json`,
         `${JSON.stringify(rulesetDetails, null, 1)}\n`
     );
 
-    writeFile(
-        `${rulesetDir}/scriptlet-details.json`,
+    writeFile(`${rulesetDir}/scriptlet-details.json`,
         `${JSON.stringify(scriptletStats, jsonSetMapReplacer, 1)}\n`
     );
 
-    writeFile(
-        `${rulesetDir}/generic-details.json`,
+    writeFile(`${rulesetDir}/generic-details.json`,
         `${JSON.stringify(genericDetails, jsonSetMapReplacer, 1)}\n`
     );
 
@@ -1614,10 +1474,10 @@ async function main() {
     // Patch web_accessible_resources key
     manifest.web_accessible_resources = manifest.web_accessible_resources || [];
     const web_accessible_resources = {
-        resources: Array.from(requiredRedirectResources).map(path => `/${path}`),
+        resources: Array.from(requiredRedirectResources).map(path => `${path}`),
         matches: [ '<all_urls>' ],
     };
-    if ( env.includes('chromium') ) {
+    if ( env.includes('chromium') && env.includes('safari') === false ) {
         web_accessible_resources.use_dynamic_url = true;
     }
     manifest.web_accessible_resources.push(web_accessible_resources);
@@ -1625,8 +1485,7 @@ async function main() {
     // Patch manifest version property
     manifest.version = version;
     // Commit changes
-    await fs.writeFile(
-        `${outputDir}/manifest.json`,
+    await fs.writeFile(`${outputDir}/manifest.json`,
         JSON.stringify(manifest, null, 2) + '\n'
     );
 
