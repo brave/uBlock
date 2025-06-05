@@ -1,4 +1,13 @@
 <!DOCTYPE html>
+<!--
+
+Requires a local server in root of uBlock repo:
+python3 -m http.server
+
+Then load the following URL in the browser:
+http://localhost:8000/tools/jsonpath-tool.html
+
+-->
 <html>
 <head>
 <meta charset="utf-8">
@@ -9,6 +18,7 @@ body {
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
+    font-size: 16px;
     gap: 0;
     height: 100vh;
     margin: 0;
@@ -25,13 +35,29 @@ main {
     flex-grow: 1;
     gap: 0.5em;
 }
-#json-data {
+section {
     box-sizing: border-box;
-    min-height: 20vh;
+    display: flex;
+    gap: 0.5em;
+    max-height: 80cqh;
+    overflow: auto;
+}
+section > * {
+    border: 1px solid gray;
+    box-sizing: border-box;
+    flex-grow: 1;
+    font-family: monospace;
+    font-size: small;
+}
+section .cm-lineWrapping {
+    word-break: break-all !important;
+}
+#jsondata-in {
+    min-height: 50vh;
     resize: vertical;
 }
 #jsonpath-input {
-    font-size: 16px;
+    font-size: medium;
 }
 #jsonpath-result {
     background-color: #eee;
@@ -43,11 +69,13 @@ main {
 <body>
 <h2>uBO-flavored JSONPath tool</h2>
 <main>
-    <textarea id="json-data" placeholder="JSON data" spellcheck="false"></textarea>
-    <input id="jsonpath-input" placeholder="JSON path expression" spellcheck="false" />
+    <section>
+    </section>
+    <input id="jsonpath-input" placeholder="JSON path expression" spellcheck="false" value="$..book[?@.price<10]" />
     <div id="jsonpath-result">&nbsp;</div>
 </main>
 
+<script src="../platform/mv3/extension/lib/codemirror/codemirror-ubol/dist/cm6.bundle.ubol.min.js"></script>
 <script type="module">
     // Requires a local server in root of repo:
     // python3 -m http.server
@@ -56,6 +84,53 @@ main {
     // http://localhost:8000/tools/jsonpath-tool.html
 
     import { JSONPath } from '../src/js/jsonpath.js';
+
+    let aLastText = JSON.stringify({
+      store: {
+        book: [ {
+            category: "reference",
+            author: "Nigel Rees",
+            title: "Sayings of the Century",
+            price: 8.95
+          }, {
+            category: "fiction",
+            author: "Evelyn Waugh",
+            title: "Sword of Honour",
+            price: 12.99
+          }, {
+            category: "fiction",
+            author: "Herman Melville",
+            title: "Moby Dick",
+            isbn: "0-553-21311-3",
+            price: 8.99
+          }, {
+            category: "fiction",
+            author: "J. R. R. Tolkien",
+            title: "The Lord of the Rings",
+            isbn: "0-395-19395-8",
+            price: 22.99
+        } ],
+        bicycle: {
+          color: "red",
+          price: 19.95
+        }
+      }
+    }, null, 2);
+
+    function readJSON() {
+        const textarea = document.querySelector('#jsondata-in');
+        let data;
+        try {
+            const text = cmMergeView.a.state.doc.toString();
+            data = JSON.parse(text);
+        } catch {
+            data = {};
+        }
+        if ( typeof data !== 'object' || data === null ) {
+            data = {};
+        }
+        return data;
+    }
 
     function formatResult(a) {
         if ( a === undefined ) { return 'undefined'; }
@@ -74,27 +149,39 @@ main {
         const input = document.querySelector('#jsonpath-input');
         const jsonpath = input.value;
         jsonp.compile(jsonpath);
-        const result = formatResult(jsonp.evaluate(jsonData));
-        const div = document.querySelector('#jsonpath-result');
-        div.textContent = result;
+        const jsonDataIn = readJSON();
+        const result = formatResult(jsonp.evaluate(jsonDataIn));
+        const pathsDiv = document.querySelector('#jsonpath-result');
+        pathsDiv.textContent = result;
+        const jsonDataOut = readJSON();
+        jsonp.apply(jsonDataOut);
+        const bText = JSON.stringify(jsonDataOut, null, 2);
+        cmMergeView.b.dispatch({
+            changes: {
+                from: 0, to: cmMergeView.b.state.doc.length,
+                insert: bText,
+            },
+        });
     }
 
     const jsonp = new JSONPath();
-    let jsonData = {};
+    let jsonDataIn = {};
+    let processTimer;
 
-    {
-        const textarea = document.querySelector('#json-data');
-        textarea.addEventListener('input', ( ) => {
-            try {
-                jsonData = JSON.parse(textarea.value);
-            } catch {
-            }
-            if ( typeof jsonData !== 'object' || jsonData === null ) {
-                jsonData = {};
-            }
-            process();
-        });
-    }
+    const cmMergeView = self.cm6.createMergeView({
+        aDoc: aLastText,
+        aUpdateListener: info => {
+            if ( info.docChanged === false ) { return; }
+            if ( processTimer !== undefined ) { return; }
+            processTimer = setTimeout(( ) => {
+                processTimer = undefined;
+                const aNewText = info.state.doc.toString();
+                if ( aNewText === aLastText ) { return; }
+                aLastText = aNewText;
+                process();
+            }, 71);
+        },
+    }, document.querySelector('section'));
 
     {
         const input = document.querySelector('#jsonpath-input');
@@ -102,6 +189,8 @@ main {
             process();
         });
     }
+
+    process();
 </script>
 
 </body>

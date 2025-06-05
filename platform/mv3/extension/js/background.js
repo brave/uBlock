@@ -53,12 +53,14 @@ import {
 import {
     enableRulesets,
     excludeFromStrictBlock,
+    getEffectiveUserRules,
     getEnabledRulesetsDetails,
     getRulesetDetails,
     patchDefaultRulesets,
     setStrictBlockMode,
     updateDynamicRules,
     updateSessionRules,
+    updateUserRules,
 } from './ruleset-manager.js';
 
 import {
@@ -131,6 +133,17 @@ async function onPermissionsAdded(permissions) {
             });
         }, 437);
     }
+}
+
+/******************************************************************************/
+
+function setDeveloperMode(state) {
+    rulesetConfig.developerMode = state === true;
+    toggleDeveloperMode(rulesetConfig.developerMode);
+    return Promise.all([
+        updateUserRules(),
+        saveRulesetConfig(),
+    ]);
 }
 
 /******************************************************************************/
@@ -275,9 +288,7 @@ function onMessage(request, sender, callback) {
         return true;
 
     case 'setDeveloperMode':
-        rulesetConfig.developerMode = request.state;
-        toggleDeveloperMode(rulesetConfig.developerMode);
-        saveRulesetConfig().then(( ) => {
+        setDeveloperMode(request.state).then(( ) => {
             callback();
         });
         return true;
@@ -390,6 +401,18 @@ function onMessage(request, sender, callback) {
         });
         break;
 
+    case 'getEffectiveUserRules':
+        getEffectiveUserRules().then(result => {
+            callback(result);
+        });
+        return true;
+
+    case 'updateUserDnrRules':
+        updateUserRules().then(result => {
+            callback(result);
+        });
+        return true;
+
     default:
         break;
     }
@@ -472,8 +495,15 @@ async function startSession() {
         }
     }
 
-    // Required to ensure the up to date property is available when needed
-    adminReadEx('disabledFeatures');
+    // Required to ensure up to date properties are available when needed
+    adminReadEx('disabledFeatures').then(items => {
+        if ( Array.isArray(items) === false ) { return; }
+        if ( items.includes('develop') ) {
+            if ( rulesetConfig.developerMode ) {
+                setDeveloperMode(false);
+            }
+        }
+    });
 }
 
 /******************************************************************************/

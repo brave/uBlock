@@ -53,11 +53,22 @@ const prepareUpdateRules = optionsBefore => {
     const { addRules, removeRuleIds } = optionsBefore;
     const addRulesAfter = addRules?.filter(isSupportedRule);
     if ( Boolean(addRulesAfter?.length || removeRuleIds?.length) === false ) { return; }
-    addRulesAfter.forEach(r => {
-        if ( r.action.redirect?.regexSubstitution === undefined ) { return; }
-        if ( r.condition.requestDomains === undefined ) { return; }
-        r.condition.domains = r.condition.requestDomains;
-        delete r.condition.requestDomains;
+    addRulesAfter?.forEach(r => {
+        if ( r.action?.redirect?.regexSubstitution ) {
+            if ( r.condition?.requestDomains ) {
+                r.condition.domains = r.condition.requestDomains;
+                delete r.condition.requestDomains;
+                return;
+            }
+        }
+        if ( r.condition?.initiatorDomains ) {
+            r.condition.domains = r.condition.initiatorDomains;
+            delete r.condition.initiatorDomains;
+        }
+        if ( r.condition?.excludedInitiatorDomains ) {
+            r.condition.excludedDomains = r.condition.excludedInitiatorDomains;
+            delete r.condition.excludedInitiatorDomains;
+        }
     });
     const optionsAfter = {};
     if ( addRulesAfter?.length ) { optionsAfter.addRules = addRulesAfter; }
@@ -122,7 +133,7 @@ export const dnr = {
         if ( optionsAfter === undefined ) { return; }
         return nativeDNR.updateSessionRules(optionsAfter);
     },
-    async setAllowAllRules(id, allowed, notAllowed, reverse) {
+    async setAllowAllRules(id, allowed, notAllowed, reverse, priority) {
         const beforeRules = await this.getDynamicRules({ ruleIds: [ id+0 ] });
         const addRules = [];
         if ( reverse || allowed.length || notAllowed.length ) {
@@ -130,7 +141,7 @@ export const dnr = {
                 id: id+0,
                 action: { type: 'allow' },
                 condition: { urlFilter: '*' },
-                priority: 1000000,
+                priority,
             };
             if ( allowed.length ) {
                 rule0.condition.domains = allowed;
