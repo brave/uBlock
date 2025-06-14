@@ -20,7 +20,7 @@
     "description": "appears as tab name in dashboard"
   },
   "developPageName": {
-    "message": "Desenvolver",
+    "message": "Programação",
     "description": "appears as tab name in dashboard. Inspired from 'Develop' menu in Safari, see https://developer.apple.com/documentation/safari-developer-tools/develop-menu"
   },
   "aboutPageName": {
@@ -288,12 +288,36 @@
     "description": "A button to navigate to the blocked page"
   },
   "zapperTipEnter": {
-    "message": "Entrar no modo \"element zapper\"",
+    "message": "Entrar no modo de remoção rápida de elemento",
     "description": "Tooltip for the button used to enter zapper mode"
   },
   "zapperTipQuit": {
-    "message": "Sair do modo \"element zapper\"",
+    "message": "Sair do modo de remoção rápida de elemento",
     "description": "Tooltip for the button used to exit zapper mode"
+  },
+  "developDropdownLabel": {
+    "message": "View:",
+    "description": "A label of a dropdown list"
+  },
+  "developOptionFilteringModeDetails": {
+    "message": "Filtering mode details",
+    "description": "An option in a dropdown list"
+  },
+  "developOptionCustomDnrRules": {
+    "message": "Custom DNR rules",
+    "description": "An option in a dropdown list"
+  },
+  "developOptionDnrRulesOf": {
+    "message": "DNR rules of …",
+    "description": "A section header in a dropdown list"
+  },
+  "developOptionDynamicRuleset": {
+    "message": "Dynamic ruleset",
+    "description": "An option in a dropdown list"
+  },
+  "developOptionSessionRuleset": {
+    "message": "Session ruleset",
+    "description": "An option in a dropdown list"
   },
   "saveButton": {
     "message": "Guardar",
@@ -311,8 +335,8 @@
     "message": "Exportar…",
     "description": "Text for buttons used to export content"
   },
-  "dnrRulesSummary": {
-    "message": "Insira as suas próprias regras de DNR  abaixo. <b>Não adicione conteúdo de fontes não confiáveis.</b>",
+  "dnrRulesWarning": {
+    "message": "Do not add content from untrusted sources",
     "description": "Short description of the DNR rules editor pane"
   },
   "dnrRulesCountInfo": {

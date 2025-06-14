@@ -24,10 +24,10 @@ import {
     MODE_OPTIMAL,
     getDefaultFilteringMode,
     getFilteringMode,
-    getTrustedSites,
+    getFilteringModeDetails,
     setDefaultFilteringMode,
     setFilteringMode,
-    setTrustedSites,
+    setFilteringModeDetails,
     syncWithBrowserPermissions,
 } from './mode-manager.js';
 
@@ -53,6 +53,8 @@ import {
 import {
     enableRulesets,
     excludeFromStrictBlock,
+    getEffectiveDynamicRules,
+    getEffectiveSessionRules,
     getEffectiveUserRules,
     getEnabledRulesetsDetails,
     getRulesetDetails,
@@ -140,6 +142,7 @@ async function onPermissionsAdded(permissions) {
 function setDeveloperMode(state) {
     rulesetConfig.developerMode = state === true;
     toggleDeveloperMode(rulesetConfig.developerMode);
+    broadcastMessage({ developerMode: rulesetConfig.developerMode });
     return Promise.all([
         updateUserRules(),
         saveRulesetConfig(),
@@ -218,11 +221,10 @@ function onMessage(request, sender, callback) {
         return true;
     }
 
-    case 'getOptionsPageData': {
+    case 'getOptionsPageData':
         Promise.all([
             hasBroadHostPermissions(),
             getDefaultFilteringMode(),
-            getTrustedSites(),
             getRulesetDetails(),
             dnr.getEnabledRulesets(),
             getAdminRulesets(),
@@ -231,7 +233,6 @@ function onMessage(request, sender, callback) {
             const [
                 hasOmnipotence,
                 defaultFilteringMode,
-                trustedSites,
                 rulesetDetails,
                 enabledRulesets,
                 adminRulesets,
@@ -240,7 +241,6 @@ function onMessage(request, sender, callback) {
             callback({
                 hasOmnipotence,
                 defaultFilteringMode,
-                trustedSites: Array.from(trustedSites),
                 enabledRulesets,
                 adminRulesets,
                 maxNumberOfEnabledRulesets: dnr.MAX_NUMBER_OF_ENABLED_STATIC_RULESETS,
@@ -257,7 +257,12 @@ function onMessage(request, sender, callback) {
             process.firstRun = false;
         });
         return true;
-    }
+
+    case 'getRulesetDetails':
+        getRulesetDetails().then(rulesetDetails => {
+            callback(Array.from(rulesetDetails.values()));
+        });
+        return true;
 
     case 'setAutoReload':
         rulesetConfig.autoReload = request.state && true || false;
@@ -352,7 +357,7 @@ function onMessage(request, sender, callback) {
         return true;
     }
 
-    case 'setDefaultFilteringMode': {
+    case 'setDefaultFilteringMode':
         getDefaultFilteringMode().then(beforeLevel =>
             setDefaultFilteringMode(request.level).then(afterLevel =>
                 ({ beforeLevel, afterLevel })
@@ -364,19 +369,21 @@ function onMessage(request, sender, callback) {
             callback(afterLevel);
         });
         return true;
-    }
 
-    case 'setTrustedSites':
-        setTrustedSites(request.hostnames).then(( ) => {
+    case 'getFilteringModeDetails':
+        getFilteringModeDetails(true).then(details => {
+            callback(details);
+        });
+        return true;
+
+    case 'setFilteringModeDetails':
+        setFilteringModeDetails(request.modes).then(( ) => {
             registerInjectables();
-            return Promise.all([
-                getDefaultFilteringMode(),
-                getTrustedSites(),
-            ]);
-        }).then(results => {
-            callback({
-                defaultFilteringMode: results[0],
-                trustedSites: Array.from(results[1]),
+            getDefaultFilteringMode().then(defaultFilteringMode => {
+                broadcastMessage({ defaultFilteringMode });
+            });
+            getFilteringModeDetails(true).then(details => {
+                callback(details);
             });
         });
         return true;
@@ -400,6 +407,18 @@ function onMessage(request, sender, callback) {
             url: `/matched-rules.html?tab=${request.tabId}`,
         });
         break;
+
+    case 'getEffectiveDynamicRules':
+        getEffectiveDynamicRules().then(result => {
+            callback(result);
+        });
+        return true;
+
+    case 'getEffectiveSessionRules':
+        getEffectiveSessionRules().then(result => {
+            callback(result);
+        });
+        return true;
 
     case 'getEffectiveUserRules':
         getEffectiveUserRules().then(result => {
