@@ -1195,6 +1195,22 @@
     "message": "被封鎖的網頁想要重新導向至其他網站。如果您選擇繼續，則會直接前往：{{url}}",
     "description": "Text warning about an incoming redirect"
   },
+  "docblockedReasonLabel": {
+    "message": "理由：",
+    "description": "The label which prepend the actual reason why a page was blocked"
+  },
+  "docblockedReasonMalicious": {
+    "message": "惡意程式碼",
+    "description": "An actual reason why a page was blocked"
+  },
+  "docblockedReasonTracker": {
+    "message": "追蹤器",
+    "description": "An actual reason why a page was blocked"
+  },
+  "docblockedReasonDisreputable": {
+    "message": "聲名狼藉",
+    "description": "An actual reason why a page was blocked"
+  },
   "cloudPush": {
     "message": "匯出至雲端儲存空間",
     "description": "tooltip"

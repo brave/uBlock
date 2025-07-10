@@ -1195,6 +1195,22 @@
     "message": "Zablokowana strona chce przekierować na inną witrynę. Jeśli zdecydujesz się kontynuować, przejdziesz bezpośrednio do: {{url}}",
     "description": "Text warning about an incoming redirect"
   },
+  "docblockedReasonLabel": {
+    "message": "Powód:",
+    "description": "The label which prepend the actual reason why a page was blocked"
+  },
+  "docblockedReasonMalicious": {
+    "message": "złośliwa",
+    "description": "An actual reason why a page was blocked"
+  },
+  "docblockedReasonTracker": {
+    "message": "śledząca",
+    "description": "An actual reason why a page was blocked"
+  },
+  "docblockedReasonDisreputable": {
+    "message": "podejrzana",
+    "description": "An actual reason why a page was blocked"
+  },
   "cloudPush": {
     "message": "Eksportuj do chmury",
     "description": "tooltip"

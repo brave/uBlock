@@ -35,6 +35,10 @@
     "message": "рэжым фільтравання",
     "description": "Label in the popup panel for the current filtering mode"
   },
+  "popupLocalToolsLabel": {
+    "message": "On this website",
+    "description": "Label in the popup panel for the local tools section"
+  },
   "popupTipReport": {
     "message": "Паведаміць пра праблему на гэтым вэб-сайце",
     "description": "Tooltip used for the 'chat' icon in the panel"
@@ -244,7 +248,7 @@
     "description": "Label for a checkbox in the options page"
   },
   "developerModeLegend": {
-    "message": "Enables access to features suitable for technical users.",
+    "message": "Забяспечвае доступ да функцый, прыдатным для тэхнічных карыстальнікаў.",
     "description": "Short description for a checkbox in the options page"
   },
   "findListsPlaceholder": {
@@ -295,6 +299,38 @@
     "message": "Выйсці з рэжыму імгненнага хавання элементаў",
     "description": "Tooltip for the button used to exit zapper mode"
   },
+  "pickerTipEnter": {
+    "message": "Create a custom filter",
+    "description": "Label for the menu entry to create cosmetic filters"
+  },
+  "unpickerTipEnter": {
+    "message": "Remove a custom filter",
+    "description": "Label for the menu entry to delete cosmetic filters"
+  },
+  "developDropdownLabel": {
+    "message": "Выгляд",
+    "description": "A label of a dropdown list"
+  },
+  "developOptionFilteringModeDetails": {
+    "message": "Падрабязныя звесткі аб рэжыме фільтрацыі",
+    "description": "An option in a dropdown list"
+  },
+  "developOptionCustomDnrRules": {
+    "message": "Уласныя правілы DNR",
+    "description": "An option in a dropdown list"
+  },
+  "developOptionDnrRulesOf": {
+    "message": "Правілы у DNR",
+    "description": "A section header in a dropdown list"
+  },
+  "developOptionDynamicRuleset": {
+    "message": "Дынамічны набор правілаў",
+    "description": "An option in a dropdown list"
+  },
+  "developOptionSessionRuleset": {
+    "message": "Набор правілаў сеансу",
+    "description": "An option in a dropdown list"
+  },
   "saveButton": {
     "message": "Захаваць",
     "description": "Text for buttons used to save changes"
@@ -311,12 +347,32 @@
     "message": "Экспартаваць…",
     "description": "Text for buttons used to export content"
   },
-  "dnrRulesSummary": {
-    "message": "Enter your own DNR rules below. <b>Do not add content from untrusted sources.</b>",
+  "dnrRulesWarning": {
+    "message": "Не дадавайце кантэнт з ненадзейных крыніц",
     "description": "Short description of the DNR rules editor pane"
   },
   "dnrRulesCountInfo": {
-    "message": "Number of registered rules: {count}",
+    "message": "Колькасць зарэгістраваных правілаў: {count}",
     "description": "Short sentence to report the number of currently registered DNR rules"
+  },
+  "pickerSliderLabel": {
+    "message": "Move the slider to select the best match",
+    "description": "Label to describe the purpose of the slider"
+  },
+  "pickerPick": {
+    "message": "Pick",
+    "description": "Text for the button to re-enter element-picking mode"
+  },
+  "pickerPreview": {
+    "message": "Preview",
+    "description": "Text for the button to activate preview mode"
+  },
+  "pickerCreate": {
+    "message": "Create",
+    "description": "Text for the button to create the filter"
+  },
+  "unpickerUsage": {
+    "message": "Select a filter below to highlight matching elements in the webpage. Click the trash can to remove a filter.",
+    "description": "Summary description on how to use the tool to remove custom filters"
   }
 }

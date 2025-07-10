@@ -17,6 +17,9 @@
   "commands": {
     "enter-zapper-mode": {
       "description": "__MSG_zapperTipEnter__"
+    },
+    "enter-picker-mode": {
+      "description": "__MSG_pickerTipEnter__"
     }
   },
   "declarative_net_request": {
@@ -61,6 +64,22 @@
     {
       "resources": [
         "zapper-ui.html"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    },
+    {
+      "resources": [
+        "picker-ui.html"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    },
+    {
+      "resources": [
+        "unpicker-ui.html"
       ],
       "matches": [
         "<all_urls>"

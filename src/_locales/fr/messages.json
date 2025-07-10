@@ -1195,6 +1195,22 @@
     "message": "La page bloquée souhaite rediriger vers un autre site. Si vous choisissez de continuer, vous vous rendrez à l'adresse suivante : {{url}}",
     "description": "Text warning about an incoming redirect"
   },
+  "docblockedReasonLabel": {
+    "message": "Motif du blocage :",
+    "description": "The label which prepend the actual reason why a page was blocked"
+  },
+  "docblockedReasonMalicious": {
+    "message": "Malveillant",
+    "description": "An actual reason why a page was blocked"
+  },
+  "docblockedReasonTracker": {
+    "message": "Pisteur",
+    "description": "An actual reason why a page was blocked"
+  },
+  "docblockedReasonDisreputable": {
+    "message": "Douteux",
+    "description": "An actual reason why a page was blocked"
+  },
   "cloudPush": {
     "message": "Exporter vers le stockage dans le nuage",
     "description": "tooltip"

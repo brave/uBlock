@@ -1195,6 +1195,22 @@
     "message": "Den blockerade sidan vill omdirigera dig till en annan webbplats. Om du väljer att fortsätta skickas du direkt till: {{url}}",
     "description": "Text warning about an incoming redirect"
   },
+  "docblockedReasonLabel": {
+    "message": "Anledning:",
+    "description": "The label which prepend the actual reason why a page was blocked"
+  },
+  "docblockedReasonMalicious": {
+    "message": "Illvillig",
+    "description": "An actual reason why a page was blocked"
+  },
+  "docblockedReasonTracker": {
+    "message": "Spårare",
+    "description": "An actual reason why a page was blocked"
+  },
+  "docblockedReasonDisreputable": {
+    "message": "Vanhedrande",
+    "description": "An actual reason why a page was blocked"
+  },
   "cloudPush": {
     "message": "Exportera till molnlagring",
     "description": "tooltip"

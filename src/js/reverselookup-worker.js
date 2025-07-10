@@ -73,9 +73,10 @@ const fromNetFilter = function(details) {
                 continue;
             }
             lists.push({
-                assetKey: assetKey,
+                assetKey,
                 title: entry.title,
-                supportURL: entry.supportURL
+                supportURL: entry.supportURL,
+                reason: entry.reason,
             });
             break;
         }
@@ -163,7 +164,7 @@ const fromExtendedFilter = function(details) {
     const regexTargetMatchesURL = target => {
         const pathPos = target.indexOf('\\/');
         if ( pathPos === -1 ) {
-            return regexTargetMatchesHostname(target.slice(1, -1));
+            return regexTargetMatchesHostname(target);
         }
         return regexTargetMatchesHostname(`${target.slice(1, pathPos)}$`) &&
             (new RegExp(`^${target.slice(pathPos, -1)}`)).test(pathname);

@@ -1084,7 +1084,7 @@
     "description": "English: Reset to default settings..."
   },
   "aboutRestoreDataConfirm": {
-    "message": "Všetky vaše nastavenia budú prepísané pomocou dáta zálohovaných dňa {{time}} a uBlock sa reštartne.\n\nPrepísať všetky existujúce nastavenia pomocou zálohovaných dát?",
+    "message": "Všetky vaše nastavenia budú prepísané dátami zálohovanými {{time}} a uBlock sa reštartuje.\n\nPrepísať všetky existujúce nastavenia pomocou zálohovaných dát?",
     "description": "Message asking user to confirm restore"
   },
   "aboutRestoreDataError": {
@@ -1194,6 +1194,22 @@
   "docblockedRedirectPrompt": {
     "message": "Zablokovaná stránka chce presmerovať na inú stránku. Ak sa rozhodnete pokračovať, prejdete priamo na: {{url}}",
     "description": "Text warning about an incoming redirect"
+  },
+  "docblockedReasonLabel": {
+    "message": "Dôvod:",
+    "description": "The label which prepend the actual reason why a page was blocked"
+  },
+  "docblockedReasonMalicious": {
+    "message": "Škodlivé",
+    "description": "An actual reason why a page was blocked"
+  },
+  "docblockedReasonTracker": {
+    "message": "Sledovač",
+    "description": "An actual reason why a page was blocked"
+  },
+  "docblockedReasonDisreputable": {
+    "message": "Pochybné",
+    "description": "An actual reason why a page was blocked"
   },
   "cloudPush": {
     "message": "Exportovať do cloudového úložiska",

@@ -1195,6 +1195,22 @@
     "message": "Faqja e bllokuar do t'ju drejtojë në një uebsajt tjetër. Në rast se vijoni do të shkoni te: {{url}}",
     "description": "Text warning about an incoming redirect"
   },
+  "docblockedReasonLabel": {
+    "message": "Arsye:",
+    "description": "The label which prepend the actual reason why a page was blocked"
+  },
+  "docblockedReasonMalicious": {
+    "message": "Me qëllim të keq",
+    "description": "An actual reason why a page was blocked"
+  },
+  "docblockedReasonTracker": {
+    "message": "Gjurmues",
+    "description": "An actual reason why a page was blocked"
+  },
+  "docblockedReasonDisreputable": {
+    "message": "I pandershëm",
+    "description": "An actual reason why a page was blocked"
+  },
   "cloudPush": {
     "message": "Eksportoni në renë informatike",
     "description": "tooltip"

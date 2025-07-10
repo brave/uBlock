@@ -35,6 +35,10 @@
     "message": "過濾模式",
     "description": "Label in the popup panel for the current filtering mode"
   },
+  "popupLocalToolsLabel": {
+    "message": "在此網站上",
+    "description": "Label in the popup panel for the local tools section"
+  },
   "popupTipReport": {
     "message": "回報此網站的問題",
     "description": "Tooltip used for the 'chat' icon in the panel"
@@ -295,6 +299,38 @@
     "message": "離開元素臨時移除模式",
     "description": "Tooltip for the button used to exit zapper mode"
   },
+  "pickerTipEnter": {
+    "message": "建立自訂過濾器",
+    "description": "Label for the menu entry to create cosmetic filters"
+  },
+  "unpickerTipEnter": {
+    "message": "移除自訂過濾器",
+    "description": "Label for the menu entry to delete cosmetic filters"
+  },
+  "developDropdownLabel": {
+    "message": "檢視：",
+    "description": "A label of a dropdown list"
+  },
+  "developOptionFilteringModeDetails": {
+    "message": "過濾模式詳細資訊",
+    "description": "An option in a dropdown list"
+  },
+  "developOptionCustomDnrRules": {
+    "message": "自訂 DNR 規則",
+    "description": "An option in a dropdown list"
+  },
+  "developOptionDnrRulesOf": {
+    "message": "DNR 規則……",
+    "description": "A section header in a dropdown list"
+  },
+  "developOptionDynamicRuleset": {
+    "message": "動態規則集",
+    "description": "An option in a dropdown list"
+  },
+  "developOptionSessionRuleset": {
+    "message": "工作階段規則集",
+    "description": "An option in a dropdown list"
+  },
   "saveButton": {
     "message": "儲存",
     "description": "Text for buttons used to save changes"
@@ -311,12 +347,32 @@
     "message": "匯出…",
     "description": "Text for buttons used to export content"
   },
-  "dnrRulesSummary": {
-    "message": "請在下方輸入您的 DNR 規則。<b>請勿新增來自不受信任來源的內容。</b>",
+  "dnrRulesWarning": {
+    "message": "切勿新增來自不受信任來源的內容",
     "description": "Short description of the DNR rules editor pane"
   },
   "dnrRulesCountInfo": {
     "message": "已登錄規則數：{count}",
     "description": "Short sentence to report the number of currently registered DNR rules"
+  },
+  "pickerSliderLabel": {
+    "message": "移動滑桿以選取最佳符合",
+    "description": "Label to describe the purpose of the slider"
+  },
+  "pickerPick": {
+    "message": "挑選",
+    "description": "Text for the button to re-enter element-picking mode"
+  },
+  "pickerPreview": {
+    "message": "預覽",
+    "description": "Text for the button to activate preview mode"
+  },
+  "pickerCreate": {
+    "message": "建立",
+    "description": "Text for the button to create the filter"
+  },
+  "unpickerUsage": {
+    "message": "選取下方的過濾器，突顯網頁中符合條件的元素。按一下回收桶可移除過濾器",
+    "description": "Summary description on how to use the tool to remove custom filters"
   }
 }

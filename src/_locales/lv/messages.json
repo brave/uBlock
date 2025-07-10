@@ -1195,6 +1195,22 @@
     "message": "Aizturētā lapa veic pārvirzīšanu uz citu vietni. Ja izvēlēsies turpināt, nonāksi uzreiz šeit: {{url}}",
     "description": "Text warning about an incoming redirect"
   },
+  "docblockedReasonLabel": {
+    "message": "Iemesls:",
+    "description": "The label which prepend the actual reason why a page was blocked"
+  },
+  "docblockedReasonMalicious": {
+    "message": "Ļaunprātīgas darbības",
+    "description": "An actual reason why a page was blocked"
+  },
+  "docblockedReasonTracker": {
+    "message": "Izsekotājs",
+    "description": "An actual reason why a page was blocked"
+  },
+  "docblockedReasonDisreputable": {
+    "message": "Slikta slava",
+    "description": "An actual reason why a page was blocked"
+  },
   "cloudPush": {
     "message": "Eksports uz mākoņdatu glabātuvi",
     "description": "tooltip"

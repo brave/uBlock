@@ -1172,7 +1172,7 @@
     "description": "English: Close this window"
   },
   "docblockedDontWarn": {
-    "message": "Znova mě nevarujte ohladně této stránky",
+    "message": "Nevarujte mě znovu o této stránce",
     "description": "Label for checkbox in document-blocked page"
   },
   "docblockedProceed": {
@@ -1194,6 +1194,22 @@
   "docblockedRedirectPrompt": {
     "message": "Zablokovaná stránka vás chce přesměrovat na jiný web. Pokud se rozhodnete pokračovat, přejdete přímo na: {{url}}",
     "description": "Text warning about an incoming redirect"
+  },
+  "docblockedReasonLabel": {
+    "message": "Důvod:",
+    "description": "The label which prepend the actual reason why a page was blocked"
+  },
+  "docblockedReasonMalicious": {
+    "message": "Zlomyslný",
+    "description": "An actual reason why a page was blocked"
+  },
+  "docblockedReasonTracker": {
+    "message": "Sledovač",
+    "description": "An actual reason why a page was blocked"
+  },
+  "docblockedReasonDisreputable": {
+    "message": "Nereputabilní",
+    "description": "An actual reason why a page was blocked"
   },
   "cloudPush": {
     "message": "Exportovat do cloudového úložiště",

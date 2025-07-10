@@ -1195,6 +1195,22 @@
     "message": "A blokkolt oldal egy másik webhelyre akarja átirányítani. Ha a folytatást választja, akkor közvetlenül ide fog navigálni: {{url}}",
     "description": "Text warning about an incoming redirect"
   },
+  "docblockedReasonLabel": {
+    "message": "Ok:",
+    "description": "The label which prepend the actual reason why a page was blocked"
+  },
+  "docblockedReasonMalicious": {
+    "message": "Káros",
+    "description": "An actual reason why a page was blocked"
+  },
+  "docblockedReasonTracker": {
+    "message": "Nyomkövető",
+    "description": "An actual reason why a page was blocked"
+  },
+  "docblockedReasonDisreputable": {
+    "message": "Rossz hírnevű",
+    "description": "An actual reason why a page was blocked"
+  },
   "cloudPush": {
     "message": "Exportálás a felhőszolgáltatásba",
     "description": "tooltip"

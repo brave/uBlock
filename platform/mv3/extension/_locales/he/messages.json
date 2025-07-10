@@ -35,6 +35,10 @@
     "message": "מצב מסנן",
     "description": "Label in the popup panel for the current filtering mode"
   },
+  "popupLocalToolsLabel": {
+    "message": "באתר זה",
+    "description": "Label in the popup panel for the local tools section"
+  },
   "popupTipReport": {
     "message": "דווח על בעיה באתר זה",
     "description": "Tooltip used for the 'chat' icon in the panel"
@@ -288,12 +292,44 @@
     "description": "A button to navigate to the blocked page"
   },
   "zapperTipEnter": {
-    "message": "Enter element zapper mode",
+    "message": "Remove an element",
     "description": "Tooltip for the button used to enter zapper mode"
   },
   "zapperTipQuit": {
     "message": "Exit element zapper mode",
     "description": "Tooltip for the button used to exit zapper mode"
+  },
+  "pickerTipEnter": {
+    "message": "יצירת מסנן מותאם אישית",
+    "description": "Label for the menu entry to create cosmetic filters"
+  },
+  "unpickerTipEnter": {
+    "message": "מחיקת מסנן מותאם אישית",
+    "description": "Label for the menu entry to delete cosmetic filters"
+  },
+  "developDropdownLabel": {
+    "message": "הצג",
+    "description": "A label of a dropdown list"
+  },
+  "developOptionFilteringModeDetails": {
+    "message": "פרטי מצב סינון",
+    "description": "An option in a dropdown list"
+  },
+  "developOptionCustomDnrRules": {
+    "message": "חוקי DNR אישיים",
+    "description": "An option in a dropdown list"
+  },
+  "developOptionDnrRulesOf": {
+    "message": "חוקי DNR של...",
+    "description": "A section header in a dropdown list"
+  },
+  "developOptionDynamicRuleset": {
+    "message": "קבוצת חוקים דינמיים",
+    "description": "An option in a dropdown list"
+  },
+  "developOptionSessionRuleset": {
+    "message": "קבוצת חוקי מפגש (session)",
+    "description": "An option in a dropdown list"
   },
   "saveButton": {
     "message": "שמירה",
@@ -311,12 +347,32 @@
     "message": "ייצוא…",
     "description": "Text for buttons used to export content"
   },
-  "dnrRulesSummary": {
-    "message": "הכניסו את חוקי ה DNR שלכם למטה.  <b>אל תכניסו תוכן ממקורות לא בטוחים.</b>",
+  "dnrRulesWarning": {
+    "message": "אל תוסיפו תוכן ממקורות לא מהיימנים",
     "description": "Short description of the DNR rules editor pane"
   },
   "dnrRulesCountInfo": {
     "message": "מספר החוקים שנרשמו: {count}",
     "description": "Short sentence to report the number of currently registered DNR rules"
+  },
+  "pickerSliderLabel": {
+    "message": "הזיזו את המחוג לבחירת ההתאמה הטובה ביותר",
+    "description": "Label to describe the purpose of the slider"
+  },
+  "pickerPick": {
+    "message": "בחירה",
+    "description": "Text for the button to re-enter element-picking mode"
+  },
+  "pickerPreview": {
+    "message": "תצוגה מקדימה",
+    "description": "Text for the button to activate preview mode"
+  },
+  "pickerCreate": {
+    "message": "יצירה",
+    "description": "Text for the button to create the filter"
+  },
+  "unpickerUsage": {
+    "message": "בחרו את המסנן למטה להצגת הרכיבים התואמים בדף האינטרנט. לחצו על פח האשפה למחיקת המסנן.",
+    "description": "Summary description on how to use the tool to remove custom filters"
   }
 }

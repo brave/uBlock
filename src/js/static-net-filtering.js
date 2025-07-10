@@ -300,9 +300,8 @@ const $httpHeaders = {
     },
     lookup(name) {
         if ( this.parsed.size === 0 ) {
-            for ( let i = 0, n = this.headers.length; i < n; i++ ) {
-                const { name, value } = this.headers[i];
-                this.parsed.set(name, value);
+            for ( const { name, value } of this.headers ) {
+                this.parsed.set(name.toLowerCase(), value);
             }
         }
         return this.parsed.get(name);
@@ -411,6 +410,9 @@ class LogData {
         }
         this.raw = raw;
         this.regex = logData.regex.join('');
+        if ( logData.reason ) {
+            this.reason = logData.reason;
+        }
     }
     isUntokenized() {
         return this.tokenHash === NO_TOKEN_HASH;
@@ -3113,7 +3115,7 @@ class FilterMessage {
     static compile(details) {
         return [
             FilterMessage.fid,
-            encodeURIComponent(details.optionValues.get('message')),
+            encodeURIComponent(details.optionValues.get('reason')),
         ];
     }
 
@@ -3127,11 +3129,11 @@ class FilterMessage {
     }
 
     static logData(idata, details) {
-        const msg = bidiTrie.extractString(
-                filterData[idata+1],
-                filterData[idata+2]
+        const reason = decodeURIComponent(
+            bidiTrie.extractString(filterData[idata+1], filterData[idata+2])
         );
-        details.options.push(`message=${decodeURIComponent(msg)}`);
+        details.reason = reason;
+        details.options.push(`reason=${reason}`);
     }
 }
 
@@ -3612,10 +3614,6 @@ class FilterCompiler {
             this.optionValues.set('ipaddress', parser.getNetOptionValue(id) || '');
             this.optionUnitBits |= IPADDRESS_BIT;
             break;
-        case sfp.NODE_TYPE_NET_OPTION_NAME_MESSAGE:
-            this.optionValues.set('message', parser.getNetOptionValue(id));
-            this.optionUnitBits |= MESSAGE_BIT;
-            break;
         case sfp.NODE_TYPE_NET_OPTION_NAME_METHOD:
             this.processMethodOption(parser.getNetOptionValue(id));
             this.optionUnitBits |= METHOD_BIT;
@@ -3630,6 +3628,10 @@ class FilterCompiler {
                 return false;
             }
             this.optionUnitBits |= MODIFY_BIT;
+            break;
+        case sfp.NODE_TYPE_NET_OPTION_NAME_REASON:
+            this.optionValues.set('reason', parser.getNetOptionValue(id));
+            this.optionUnitBits |= MESSAGE_BIT;
             break;
         case sfp.NODE_TYPE_NET_OPTION_NAME_REDIRECT: {
             const actualId = this.action === ALLOW_REALM
@@ -3737,9 +3739,9 @@ class FilterCompiler {
             case sfp.NODE_TYPE_NET_OPTION_NAME_FROM:
             case sfp.NODE_TYPE_NET_OPTION_NAME_HEADER:
             case sfp.NODE_TYPE_NET_OPTION_NAME_IPADDRESS:
-            case sfp.NODE_TYPE_NET_OPTION_NAME_MESSAGE:
             case sfp.NODE_TYPE_NET_OPTION_NAME_METHOD:
             case sfp.NODE_TYPE_NET_OPTION_NAME_PERMISSIONS:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_REASON:
             case sfp.NODE_TYPE_NET_OPTION_NAME_REDIRECT:
             case sfp.NODE_TYPE_NET_OPTION_NAME_REDIRECTRULE:
             case sfp.NODE_TYPE_NET_OPTION_NAME_REMOVEPARAM:
@@ -4525,6 +4527,7 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
     const realms = new Map([
         [ BLOCK_REALM, { type: 'block', priority: 10 } ],
         [ ALLOW_REALM, { type: 'allow', priority: 30 } ],
+        [ BLOCK_REALM | IMPORTANT_REALM, { type: 'block', priority: 10 } ],
         [ REDIRECT_REALM, { type: 'redirect', priority: 11 } ],
         [ REMOVEPARAM_REALM, { type: 'removeparam', priority: 0 } ],
         [ CSP_REALM, { type: 'csp', priority: 0 } ],
@@ -4532,7 +4535,7 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
         [ URLTRANSFORM_REALM, { type: 'uritransform', priority: 0 } ],
         [ HEADERS_REALM, { type: 'block', priority: 10 } ],
         [ HEADERS_REALM | ALLOW_REALM, { type: 'allow', priority: 30 } ],
-        [ HEADERS_REALM | IMPORTANT_REALM, { type: 'allow', priority: 40 } ],
+        [ HEADERS_REALM | IMPORTANT_REALM, { type: 'allow', priority: 10 } ],
         [ URLSKIP_REALM, { type: 'urlskip', priority: 0 } ],
     ]);
     const partyness = new Map([
@@ -4556,6 +4559,7 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
         'other',
     ]);
     const ruleset = [];
+    const seen = new Set();
     for ( const [ realmBits, realmDetails ] of realms ) {
         for ( const [ partyBits, partyName ] of partyness ) {
             for ( const typeName in typeNameToTypeValue ) {
@@ -4579,12 +4583,16 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
                             rule.condition = rule.condition || {};
                             rule.condition.resourceTypes = [ typeName ];
                         }
+                        const hash = JSON.stringify(rule);
+                        if ( seen.has(hash) ) { continue; }
+                        seen.add(hash);
                         ruleset.push(rule);
                     }
                 }
             }
         }
     }
+    seen.clear();
 
     // Adjust `important` priority
     for ( const rule of ruleset ) {
@@ -4700,7 +4708,7 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
             if ( token !== '' ) {
                 const match = /:(\d+)$/.exec(token);
                 if ( match !== null ) {
-                    rule.priority += Math.min(rule.priority + parseInt(match[1], 10), 9);
+                    rule.priority += Math.min(parseInt(match[1], 10), 8);
                     token = token.slice(0, match.index);
                 }
             }
@@ -5417,6 +5425,7 @@ StaticNetFilteringEngine.prototype.matchHeaders = function(fctxt, headers) {
     $requestMethodBit = fctxt.method || 0;
     $requestTypeValue = (typeBits & TYPE_REALM) >>> TYPE_REALM_OFFSET;
     $requestAddress = fctxt.getIPAddress();
+    $isBlockImportant = false;
     $httpHeaders.init(headers);
 
     let r = 0;

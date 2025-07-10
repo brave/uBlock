@@ -624,7 +624,7 @@
     "description": "English: a sort option for list of rules."
   },
   "rulesSortByDestination": {
-    "message": "Destinaţia",
+    "message": "Destinație",
     "description": "English: a sort option for list of rules."
   },
   "whitelistPrompt": {
@@ -1194,6 +1194,22 @@
   "docblockedRedirectPrompt": {
     "message": "Pagina blocată dorește să redirecționeze către un alt site. Dacă alegeți să continuați, veți naviga direct către: {{url}}",
     "description": "Text warning about an incoming redirect"
+  },
+  "docblockedReasonLabel": {
+    "message": "Reason:",
+    "description": "The label which prepend the actual reason why a page was blocked"
+  },
+  "docblockedReasonMalicious": {
+    "message": "Malicious",
+    "description": "An actual reason why a page was blocked"
+  },
+  "docblockedReasonTracker": {
+    "message": "Tracker",
+    "description": "An actual reason why a page was blocked"
+  },
+  "docblockedReasonDisreputable": {
+    "message": "Disreputable",
+    "description": "An actual reason why a page was blocked"
   },
   "cloudPush": {
     "message": "Exportă către stocarea în cloud",

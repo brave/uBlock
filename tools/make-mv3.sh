@@ -74,15 +74,19 @@ else
 fi
 
 echo "*** uBOLite.mv3: Copying common files"
-cp -R "$UBO_DIR"/src/css/fonts/* "$UBOL_DIR"/css/fonts/
+cp -R "$UBO_DIR"/src/css/fonts/Inter "$UBOL_DIR"/css/fonts/
 cp "$UBO_DIR"/src/css/themes/default.css "$UBOL_DIR"/css/
 cp "$UBO_DIR"/src/css/common.css "$UBOL_DIR"/css/
 cp "$UBO_DIR"/src/css/dashboard-common.css "$UBOL_DIR"/css/
 cp "$UBO_DIR"/src/css/fa-icons.css "$UBOL_DIR"/css/
 
+cp "$UBO_DIR"/src/js/arglist-parser.js "$UBOL_DIR"/js/
 cp "$UBO_DIR"/src/js/dom.js "$UBOL_DIR"/js/
 cp "$UBO_DIR"/src/js/fa-icons.js "$UBOL_DIR"/js/
 cp "$UBO_DIR"/src/js/i18n.js "$UBOL_DIR"/js/
+cp "$UBO_DIR"/src/js/jsonpath.js "$UBOL_DIR"/js/
+cp "$UBO_DIR"/src/js/redirect-resources.js "$UBOL_DIR"/js/
+cp "$UBO_DIR"/src/js/static-filtering-parser.js "$UBOL_DIR"/js/
 cp "$UBO_DIR"/src/js/urlskip.js "$UBOL_DIR"/js/
 cp "$UBO_DIR"/src/lib/punycode.js "$UBOL_DIR"/js/
 
@@ -107,8 +111,12 @@ cp platform/mv3/extension/lib/codemirror/* \
     "$UBOL_DIR"/lib/codemirror/ 2>/dev/null || :
 cp platform/mv3/extension/lib/codemirror/codemirror-ubol/dist/cm6.bundle.ubol.min.js \
     "$UBOL_DIR"/lib/codemirror/
-cp platform/mv3/extension/lib/codemirror/codemirror-ubol/LICENSE \
+cp platform/mv3/extension/lib/codemirror/codemirror.LICENSE \
     "$UBOL_DIR"/lib/codemirror/
+cp platform/mv3/extension/lib/codemirror/codemirror-ubol/LICENSE \
+    "$UBOL_DIR"/lib/codemirror/codemirror-quickstart.LICENSE
+mkdir -p "$UBOL_DIR"/lib/csstree
+cp "$UBO_DIR"/src/lib/csstree/* "$UBOL_DIR"/lib/csstree/
 
 echo "*** uBOLite.mv3: Generating rulesets"
 UBOL_BUILD_DIR=$(mktemp -d)
@@ -122,6 +130,8 @@ cp -R "$UBO_DIR"/src/js/resources "$UBOL_BUILD_DIR"/js/
 cp -R platform/mv3/scriptlets "$UBOL_BUILD_DIR"/
 mkdir -p "$UBOL_BUILD_DIR"/web_accessible_resources
 cp "$UBO_DIR"/src/web_accessible_resources/* "$UBOL_BUILD_DIR"/web_accessible_resources/
+cp -R platform/mv3/"$PLATFORM" "$UBOL_BUILD_DIR"/
+
 cd "$UBOL_BUILD_DIR"
 node --no-warnings make-rulesets.js output="$UBOL_DIR" platform="$PLATFORM"
 if [ -n "$BEFORE" ]; then

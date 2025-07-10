@@ -1195,6 +1195,22 @@
     "message": "被屏蔽的网页想重定向到另一个网站。如果您选择继续，将直接导航到：{{url}}",
     "description": "Text warning about an incoming redirect"
   },
+  "docblockedReasonLabel": {
+    "message": "原因：",
+    "description": "The label which prepend the actual reason why a page was blocked"
+  },
+  "docblockedReasonMalicious": {
+    "message": "恶意网站",
+    "description": "An actual reason why a page was blocked"
+  },
+  "docblockedReasonTracker": {
+    "message": "跟踪器",
+    "description": "An actual reason why a page was blocked"
+  },
+  "docblockedReasonDisreputable": {
+    "message": "不受信任",
+    "description": "An actual reason why a page was blocked"
+  },
   "cloudPush": {
     "message": "导出到云端储存",
     "description": "tooltip"

@@ -31,20 +31,27 @@ import { registerScriptlet } from './base.js';
 import { safeSelf } from './safe-self.js';
 
 /******************************************************************************/
+/******************************************************************************/
 
-function jsonEditFn(trusted, jsonq = '') {
+function editOutboundObjectFn(
+    trusted = false,
+    propChain = '',
+    jsonq = '',
+) {
+    if ( propChain === '' ) { return; }
     const safe = safeSelf();
     const logPrefix = safe.makeLogPrefix(
-        `${trusted ? 'trusted-' : ''}json-edit`,
+        `${trusted ? 'trusted-' : ''}edit-outbound-object`,
+        propChain,
         jsonq
     );
     const jsonp = JSONPath.create(jsonq);
     if ( jsonp.valid === false || jsonp.value !== undefined && trusted !== true ) {
         return safe.uboLog(logPrefix, 'Bad JSONPath query');
     }
-    proxyApplyFn('JSON.parse', function(context) {
+    proxyApplyFn(propChain, function(context) {
         const obj = context.reflect();
-        if ( jsonp.apply(obj) !== 0 ) { return obj; }
+        if ( jsonp.apply(obj) === 0 ) { return obj; }
         safe.uboLog(logPrefix, 'Edited');
         if ( safe.logLevel > 1 ) {
             safe.uboLog(logPrefix, `After edit:\n${safe.JSON_stringify(obj, null, 2)}`);
@@ -52,8 +59,8 @@ function jsonEditFn(trusted, jsonq = '') {
         return obj;
     });
 }
-registerScriptlet(jsonEditFn, {
-    name: 'json-edit.fn',
+registerScriptlet(editOutboundObjectFn, {
+    name: 'edit-outbound-object.fn',
     dependencies: [
         JSONPath,
         proxyApplyFn,
@@ -61,6 +68,60 @@ registerScriptlet(jsonEditFn, {
     ],
 });
 
+/******************************************************************************/
+/**
+ * @scriptlet edit-outbound-object-.js
+ * 
+ * @description
+ * Prune properties from an object returned by a specific method.
+ * Properties can only be removed.
+ * 
+ * @param propChain
+ * Property chain of the method to trap.
+ * 
+ * @param jsonq
+ * A uBO-flavored JSONPath query.
+ * 
+ * */
+
+function editOutboundObject(propChain = '', jsonq = '') {
+    editOutboundObjectFn(false, propChain, jsonq);
+}
+registerScriptlet(editOutboundObject, {
+    name: 'edit-outbound-object.js',
+    dependencies: [
+        editOutboundObjectFn,
+    ],
+});
+
+/******************************************************************************/
+/**
+ * @scriptlet trusted-edit-outbound-object.js
+ * 
+ * @description
+ * Edit properties of an object returned by a specific method.
+ * Properties can be assigned new values.
+ * 
+  * @param propChain
+ * Property chain of the method to trap.
+ * 
+* @param jsonq
+ * A uBO-flavored JSONPath query.
+ * 
+ * */
+
+function trustedEditOutboundObject(propChain = '', jsonq = '') {
+    editOutboundObjectFn(true, propChain, jsonq);
+}
+registerScriptlet(trustedEditOutboundObject, {
+    name: 'trusted-edit-outbound-object.js',
+    requiresTrust: true,
+    dependencies: [
+        editOutboundObjectFn,
+    ],
+});
+
+/******************************************************************************/
 /******************************************************************************/
 /**
  * @scriptlet json-edit.js
@@ -75,12 +136,12 @@ registerScriptlet(jsonEditFn, {
  * */
 
 function jsonEdit(jsonq = '') {
-    jsonEditFn(false, jsonq);
+    editOutboundObjectFn(false, 'JSON.parse', jsonq);
 }
 registerScriptlet(jsonEdit, {
     name: 'json-edit.js',
     dependencies: [
-        jsonEditFn,
+        editOutboundObjectFn,
     ],
 });
 
@@ -98,13 +159,138 @@ registerScriptlet(jsonEdit, {
  * */
 
 function trustedJsonEdit(jsonq = '') {
-    jsonEditFn(true, jsonq);
+    editOutboundObjectFn(true, 'JSON.parse', jsonq);
 }
 registerScriptlet(trustedJsonEdit, {
     name: 'trusted-json-edit.js',
     requiresTrust: true,
     dependencies: [
-        jsonEditFn,
+        editOutboundObjectFn,
+    ],
+});
+
+/******************************************************************************/
+/******************************************************************************/
+
+function editInboundObjectFn(
+    trusted = false,
+    propChain = '',
+    argPosRaw = '',
+    jsonq = '',
+) {
+    if ( propChain === '' ) { return; }
+    const safe = safeSelf();
+    const logPrefix = safe.makeLogPrefix(
+        `${trusted ? 'trusted-' : ''}edit-inbound-object`,
+        propChain,
+        jsonq
+    );
+    const jsonp = JSONPath.create(jsonq);
+    if ( jsonp.valid === false || jsonp.value !== undefined && trusted !== true ) {
+        return safe.uboLog(logPrefix, 'Bad JSONPath query');
+    }
+    const argPos = parseInt(argPosRaw, 10);
+    if ( isNaN(argPos) ) { return; }
+    const getArgPos = args => {
+        if ( argPos >= 0 ) {
+            if ( args.length <= argPos ) { return; }
+            return argPos;
+        }
+        if ( args.length < -argPos ) { return; }
+        return args.length + argPos;
+    };
+    const editObj = obj => {
+        let clone;
+        try {
+            clone = safe.JSON_parse(safe.JSON_stringify(obj));
+        } catch {
+        }
+        if ( typeof clone !== 'object' || clone === null ) { return; }
+        if ( jsonp.apply(clone) === 0 ) { return; }
+        safe.uboLog(logPrefix, 'Edited');
+        if ( safe.logLevel > 1 ) {
+            safe.uboLog(logPrefix, `After edit:\n${safe.JSON_stringify(clone, null, 2)}`);
+        }
+        return clone;
+    };
+    proxyApplyFn(propChain, function(context) {
+        const i = getArgPos(context.args);
+        if ( i !== undefined ) {
+            const obj = editObj(context.args[i]);
+            if ( obj ) {
+                context.args[i] = obj;
+            }
+        }
+        return context.reflect();
+    });
+}
+registerScriptlet(editInboundObjectFn, {
+    name: 'edit-inbound-object.fn',
+    dependencies: [
+        JSONPath,
+        proxyApplyFn,
+        safeSelf,
+    ],
+});
+
+/******************************************************************************/
+/**
+ * @scriptlet edit-inbound-object.js
+ * 
+ * @description
+ * Prune properties from an object passed as argument to a specific method.
+ * Properties can only be removed.
+ * 
+ * @param propChain
+ * Property chain of the method to trap.
+ * 
+ * @param argPos
+ * 0-based position of the argument. Use negative integer for position relative
+ * to the end.
+ * 
+ * @param jsonq
+ * A uBO-flavored JSONPath query.
+ * 
+ * */
+
+function editInboundObject(propChain = '', argPos = '', jsonq = '') {
+    editInboundObjectFn(false, propChain, argPos, jsonq);
+}
+registerScriptlet(editInboundObject, {
+    name: 'edit-inbound-object.js',
+    dependencies: [
+        editInboundObjectFn,
+    ],
+});
+
+/******************************************************************************/
+/**
+ * @scriptlet trusted-edit-inbound-object.js
+ * 
+ * @description
+ * Edit properties of an object passed as argument to a specific method.
+ * Properties can be assigned new values.
+ * 
+ * @param propChain
+ * Property chain of the method to trap.
+ * 
+ * @param argPos
+ * 0-based position of the argument. Use negative integer for position relative
+ * to the end.
+ * 
+ * @param jsonq
+ * A uBO-flavored JSONPath query.
+ * 
+ * */
+
+function trustedEditInboundObject(propChain = '', argPos = '', jsonq = '') {
+    editInboundObjectFn(true, propChain, argPos, jsonq);
+}
+registerScriptlet(trustedEditInboundObject, {
+    name: 'trusted-edit-inbound-object.js',
+    requiresTrust: true,
+    dependencies: [
+        editInboundObjectFn,
     ],
 });
 
@@ -242,6 +428,124 @@ registerScriptlet(trustedJsonEditXhrResponse, {
 /******************************************************************************/
 /******************************************************************************/
 
+function jsonEditXhrRequestFn(trusted, jsonq = '') {
+    const safe = safeSelf();
+    const logPrefix = safe.makeLogPrefix(
+        `${trusted ? 'trusted-' : ''}json-edit-xhr-request`,
+        jsonq
+    );
+    const xhrInstances = new WeakMap();
+    const jsonp = JSONPath.create(jsonq);
+    if ( jsonp.valid === false || jsonp.value !== undefined && trusted !== true ) {
+        return safe.uboLog(logPrefix, 'Bad JSONPath query');
+    }
+    const extraArgs = safe.getExtraArgs(Array.from(arguments), 2);
+    const propNeedles = parsePropertiesToMatchFn(extraArgs.propsToMatch, 'url');
+    self.XMLHttpRequest = class extends self.XMLHttpRequest {
+        open(method, url, ...args) {
+            const xhrDetails = { method, url };
+            const matched = propNeedles.size === 0 ||
+                matchObjectPropertiesFn(propNeedles, xhrDetails);
+            if ( matched ) {
+                if ( safe.logLevel > 1 && Array.isArray(matched) ) {
+                    safe.uboLog(logPrefix, `Matched "propsToMatch":\n\t${matched.join('\n\t')}`);
+                }
+                xhrInstances.set(this, xhrDetails);
+            }
+            return super.open(method, url, ...args);
+        }
+        send(body) {
+            const xhrDetails = xhrInstances.get(this);
+            if ( xhrDetails ) {
+                body = this.#filterBody(body) || body;
+            }
+            super.send(body);
+        }
+        #filterBody(body) {
+            if ( typeof body !== 'string' ) { return; }
+            let data;
+            try { data = safe.JSON_parse(body); }
+            catch { }
+            if ( data instanceof Object === false ) { return; }
+            const n = jsonp.apply(data);
+            if ( n === 0 ) { return; }
+            body = safe.JSON_stringify(data);
+            safe.uboLog(logPrefix, 'Edited');
+            if ( safe.logLevel > 1 ) {
+                safe.uboLog(logPrefix, `After edit:\n${body}`);
+            }
+            return body;
+        }
+    };
+}
+registerScriptlet(jsonEditXhrRequestFn, {
+    name: 'json-edit-xhr-request.fn',
+    dependencies: [
+        JSONPath,
+        matchObjectPropertiesFn,
+        parsePropertiesToMatchFn,
+        safeSelf,
+    ],
+});
+
+/******************************************************************************/
+/**
+ * @scriptlet json-edit-xhr-request.js
+ * 
+ * @description
+ * Edit the object sent as the body in a XHR instance.
+ * Properties can only be removed.
+ * 
+ * @param jsonq
+ * A uBO-flavored JSONPath query.
+ * 
+ * @param [propsToMatch, value]
+ * An optional vararg detailing the arguments to match when xhr.open() is
+ * called.
+ * 
+ * */
+
+function jsonEditXhrRequest(jsonq = '', ...args) {
+    jsonEditXhrRequestFn(false, jsonq, ...args);
+}
+registerScriptlet(jsonEditXhrRequest, {
+    name: 'json-edit-xhr-request.js',
+    dependencies: [
+        jsonEditXhrRequestFn,
+    ],
+});
+
+/******************************************************************************/
+/**
+ * @scriptlet trusted-json-edit-xhr-request.js
+ * 
+ * @description
+ * Edit the object sent as the body in a XHR instance.
+ * Properties can be assigned new values.
+ * 
+ * @param jsonq
+ * A uBO-flavored JSONPath query.
+ * 
+ * @param [propsToMatch, value]
+ * An optional vararg detailing the arguments to match when xhr.open() is
+ * called.
+ * 
+ * */
+
+function trustedJsonEditXhrRequest(jsonq = '', ...args) {
+    jsonEditXhrRequestFn(true, jsonq, ...args);
+}
+registerScriptlet(trustedJsonEditXhrRequest, {
+    name: 'trusted-json-edit-xhr-request.js',
+    requiresTrust: true,
+    dependencies: [
+        jsonEditXhrRequestFn,
+    ],
+});
+
+/******************************************************************************/
+/******************************************************************************/
+
 function jsonEditFetchResponseFn(trusted, jsonq = '') {
     const safe = safeSelf();
     const logPrefix = safe.makeLogPrefix(
@@ -366,6 +670,131 @@ registerScriptlet(trustedJsonEditFetchResponse, {
     requiresTrust: true,
     dependencies: [
         jsonEditFetchResponseFn,
+    ],
+});
+
+/******************************************************************************/
+/******************************************************************************/
+
+function jsonEditFetchRequestFn(trusted, jsonq = '') {
+    const safe = safeSelf();
+    const logPrefix = safe.makeLogPrefix(
+        `${trusted ? 'trusted-' : ''}json-edit-fetch-request`,
+        jsonq
+    );
+    const jsonp = JSONPath.create(jsonq);
+    if ( jsonp.valid === false || jsonp.value !== undefined && trusted !== true ) {
+        return safe.uboLog(logPrefix, 'Bad JSONPath query');
+    }
+    const extraArgs = safe.getExtraArgs(Array.from(arguments), 2);
+    const propNeedles = parsePropertiesToMatchFn(extraArgs.propsToMatch, 'url');
+    const filterBody = body => {
+        if ( typeof body !== 'string' ) { return; }
+        let data;
+        try { data = safe.JSON_parse(body); }
+        catch { }
+        if ( data instanceof Object === false ) { return; }
+        const n = jsonp.apply(data);
+        if ( n === 0 ) { return; }
+        return safe.JSON_stringify(data);
+    }
+    const proxyHandler = context => {
+        const args = context.callArgs;
+        const [ resource, options ] = args;
+        const bodyBefore = options?.body;
+        if ( Boolean(bodyBefore) === false ) { return context.reflect(); }
+        const bodyAfter = filterBody(bodyBefore);
+        if ( bodyAfter === undefined || bodyAfter === bodyBefore ) {
+            return context.reflect();
+        }
+        if ( propNeedles.size !== 0 ) {
+            const objs = [
+                resource instanceof Object ? resource : { url: `${resource}` }
+            ];
+            if ( objs[0] instanceof Request ) {
+                try {
+                    objs[0] = safe.Request_clone.call(objs[0]);
+                } catch(ex) {
+                    safe.uboErr(logPrefix, 'Error:', ex);
+                }
+            }
+            const matched = matchObjectPropertiesFn(propNeedles, ...objs);
+            if ( matched === undefined ) { return context.reflect(); }
+            if ( safe.logLevel > 1 ) {
+                safe.uboLog(logPrefix, `Matched "propsToMatch":\n\t${matched.join('\n\t')}`);
+            }
+        }
+        safe.uboLog(logPrefix, 'Edited');
+        if ( safe.logLevel > 1 ) {
+            safe.uboLog(logPrefix, `After edit:\n${bodyAfter}`);
+        }
+        options.body = bodyAfter;
+        return context.reflect();
+    };
+    proxyApplyFn('fetch', proxyHandler);
+    proxyApplyFn('Request', proxyHandler);
+}
+registerScriptlet(jsonEditFetchRequestFn, {
+    name: 'json-edit-fetch-request.fn',
+    dependencies: [
+        JSONPath,
+        matchObjectPropertiesFn,
+        parsePropertiesToMatchFn,
+        proxyApplyFn,
+        safeSelf,
+    ],
+});
+
+/******************************************************************************/
+/**
+ * @scriptlet json-edit-fetch-request.js
+ * 
+ * @description
+ * Edit the request body sent through the fetch API.
+ * Properties can only be removed.
+ * 
+ * @param jsonq
+ * A uBO-flavored JSONPath query.
+ * 
+ * @param [propsToMatch, value]
+ * An optional vararg detailing the arguments to match when fetch() is called.
+ * 
+ * */
+
+function jsonEditFetchRequest(jsonq = '', ...args) {
+    jsonEditFetchRequestFn(false, jsonq, ...args);
+}
+registerScriptlet(jsonEditFetchRequest, {
+    name: 'json-edit-fetch-request.js',
+    dependencies: [
+        jsonEditFetchRequestFn,
+    ],
+});
+
+/******************************************************************************/
+/**
+ * @scriptlet trusted-json-edit-fetch-request.js
+ * 
+ * @description
+ * Edit the request body sent through the fetch API.
+ * Properties can be assigned new values.
+ * 
+ * @param jsonq
+ * A uBO-flavored JSONPath query.
+ * 
+ * @param [propsToMatch, value]
+ * An optional vararg detailing the arguments to match when fetch() is called.
+ * 
+ * */
+
+function trustedJsonEditFetchRequest(jsonq = '', ...args) {
+    jsonEditFetchRequestFn(true, jsonq, ...args);
+}
+registerScriptlet(trustedJsonEditFetchRequest, {
+    name: 'trusted-json-edit-fetch-request.js',
+    requiresTrust: true,
+    dependencies: [
+        jsonEditFetchRequestFn,
     ],
 });
 

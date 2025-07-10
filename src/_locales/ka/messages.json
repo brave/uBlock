@@ -536,7 +536,7 @@
     "description": "used as a tooltip for error icon beside a list"
   },
   "1pTrustWarning": {
-    "message": "ფილტრების არიდება არასანდო წყაროებიდან.",
+    "message": "ნუ დაამატებთ ფილტრებს არასანდო წყაროებიდან.",
     "description": "Warning against copy-pasting filters from random sources"
   },
   "1pEnableMyFiltersLabel": {
@@ -1194,6 +1194,22 @@
   "docblockedRedirectPrompt": {
     "message": "ეს შეზღუდული გვერდი ცდილობს სხვა საიტზე გადაყვანას. თუ განაგრძობთ, პირდაპირ გაიხსნება: {{url}}",
     "description": "Text warning about an incoming redirect"
+  },
+  "docblockedReasonLabel": {
+    "message": "მიზეზი:",
+    "description": "The label which prepend the actual reason why a page was blocked"
+  },
+  "docblockedReasonMalicious": {
+    "message": "მავნებელი",
+    "description": "An actual reason why a page was blocked"
+  },
+  "docblockedReasonTracker": {
+    "message": "მეთვალყურე",
+    "description": "An actual reason why a page was blocked"
+  },
+  "docblockedReasonDisreputable": {
+    "message": "სახელგატეხილი",
+    "description": "An actual reason why a page was blocked"
   },
   "cloudPush": {
     "message": "ღრუბლოვან საცავში შენახვა",

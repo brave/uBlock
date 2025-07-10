@@ -35,8 +35,12 @@
     "message": "Način filtriranja",
     "description": "Label in the popup panel for the current filtering mode"
   },
+  "popupLocalToolsLabel": {
+    "message": " Na ovoj web stranici",
+    "description": "Label in the popup panel for the local tools section"
+  },
   "popupTipReport": {
-    "message": "Prijavite problem na ovoj web stranici",
+    "message": "Prijavi problem",
     "description": "Tooltip used for the 'chat' icon in the panel"
   },
   "popupTipDashboard": {
@@ -288,12 +292,44 @@
     "description": "A button to navigate to the blocked page"
   },
   "zapperTipEnter": {
-    "message": "Ulaz u način rada uklanjanja elementa",
+    "message": "Ukloni element",
     "description": "Tooltip for the button used to enter zapper mode"
   },
   "zapperTipQuit": {
     "message": "Zatvori način rada uklanjanja elementa",
     "description": "Tooltip for the button used to exit zapper mode"
+  },
+  "pickerTipEnter": {
+    "message": "Napravi prilagođeni filter",
+    "description": "Label for the menu entry to create cosmetic filters"
+  },
+  "unpickerTipEnter": {
+    "message": "Ukloni prilagođeni filter",
+    "description": "Label for the menu entry to delete cosmetic filters"
+  },
+  "developDropdownLabel": {
+    "message": "Pregled:",
+    "description": "A label of a dropdown list"
+  },
+  "developOptionFilteringModeDetails": {
+    "message": "Detalji načina filtriranja",
+    "description": "An option in a dropdown list"
+  },
+  "developOptionCustomDnrRules": {
+    "message": "Prilagođena pravila DNR-a",
+    "description": "An option in a dropdown list"
+  },
+  "developOptionDnrRulesOf": {
+    "message": "DNR pravila …",
+    "description": "A section header in a dropdown list"
+  },
+  "developOptionDynamicRuleset": {
+    "message": "Dinamički skup pravila",
+    "description": "An option in a dropdown list"
+  },
+  "developOptionSessionRuleset": {
+    "message": "Skup pravila sesije",
+    "description": "An option in a dropdown list"
   },
   "saveButton": {
     "message": "Spremi",
@@ -311,12 +347,32 @@
     "message": "Izvoz...",
     "description": "Text for buttons used to export content"
   },
-  "dnrRulesSummary": {
-    "message": "Unesite svoja DNR pravila u nastavku. <b>Nemojte dodavati sadržaj iz nepouzdanih izvora.</b>",
+  "dnrRulesWarning": {
+    "message": "Ne dodavajte sadržaj iz nepouzdanih izvora",
     "description": "Short description of the DNR rules editor pane"
   },
   "dnrRulesCountInfo": {
     "message": "Broj registriranih pravila: {count}",
     "description": "Short sentence to report the number of currently registered DNR rules"
+  },
+  "pickerSliderLabel": {
+    "message": "Pomaknite klizač za odabir najboljeg podudaranja",
+    "description": "Label to describe the purpose of the slider"
+  },
+  "pickerPick": {
+    "message": "Odaberi",
+    "description": "Text for the button to re-enter element-picking mode"
+  },
+  "pickerPreview": {
+    "message": "Pregled",
+    "description": "Text for the button to activate preview mode"
+  },
+  "pickerCreate": {
+    "message": "Napravi",
+    "description": "Text for the button to create the filter"
+  },
+  "unpickerUsage": {
+    "message": "Odaberite filter u nastavku kako biste istaknuli odgovarajuće elemente na web stranici. Kliknite koš za smeće kako biste uklonili filter.",
+    "description": "Summary description on how to use the tool to remove custom filters"
   }
 }
