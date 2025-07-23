@@ -21,8 +21,6 @@
 
 
 export const webext = self.browser;
-export const INITIATOR_DOMAINS = 'domains';
-export const EXCLUDED_INITIATOR_DOMAINS = 'excludedDomains';
 
 /******************************************************************************/
 
@@ -86,6 +84,27 @@ const isSameRules = (a, b) => {
 
 /******************************************************************************/
 
+export function normalizeDNRRules(rules, ruleIds) {
+    if ( Array.isArray(rules) === false ) { return rules; }
+    const selectedRules = Array.isArray(ruleIds)
+        ? rules.filter(rule => ruleIds.includes(rule.id))
+        : rules;
+    selectedRules.forEach(rule => {
+        const { condition } = rule;
+        if ( Array.isArray(condition.domains) ) {
+            condition.initiatorDomains = condition.domains;
+            delete condition.domains;
+        }
+        if ( Array.isArray(condition.excludedDomains) ) {
+            condition.excludedInitiatorDomains = condition.excludedDomains;
+            delete condition.excludedDomains;
+        }
+    });
+    return selectedRules;
+}
+
+/******************************************************************************/
+
 export const dnr = {
     DYNAMIC_RULESET_ID: '_dynamic',
     MAX_NUMBER_OF_ENABLED_STATIC_RULESETS: nativeDNR.MAX_NUMBER_OF_ENABLED_STATIC_RULESETS,
@@ -97,8 +116,7 @@ export const dnr = {
         return new Promise(resolve => {
             nativeDNR.getDynamicRules(rules => {
                 if ( Array.isArray(rules) === false ) { return resolve([]); }
-                if ( Array.isArray(ruleIds) === false ) { return resolve(rules); }
-                return resolve(rules.filter(rule => ruleIds.includes(rule.id)));
+                return resolve(normalizeDNRRules(rules, ruleIds));
             });
         });
     },
@@ -112,8 +130,7 @@ export const dnr = {
         return new Promise(resolve => {
             nativeDNR.getSessionRules(rules => {
                 if ( Array.isArray(rules) === false ) { return resolve([]); }
-                if ( Array.isArray(ruleIds) === false ) { return resolve(rules); }
-                return resolve(rules.filter(rule => ruleIds.includes(rule.id)));
+                return resolve(normalizeDNRRules(rules, ruleIds));
             });
         });
     },
