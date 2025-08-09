@@ -37,7 +37,8 @@ import {
     injectCustomFilters,
     removeCustomFilter,
     selectorsFromCustomFilters,
-    uninjectCustomFilters,
+    startCustomFilters,
+    terminateCustomFilters,
 } from './filter-manager.js';
 
 import {
@@ -199,6 +200,20 @@ function onMessage(request, sender, callback) {
         return false;
     }
 
+    case 'startCustomFilters':
+        if ( frameId === false ) { return false; }
+        startCustomFilters(tabId, frameId).then(( ) => {
+            callback();
+        });
+        return true;
+
+    case 'terminateCustomFilters':
+        if ( frameId === false ) { return false; }
+        terminateCustomFilters(tabId, frameId).then(( ) => {
+            callback();
+        });
+        return true;
+
     case 'injectCustomFilters':
         if ( frameId === false ) { return false; }
         injectCustomFilters(tabId, frameId, request.hostname).then(selectors => {
@@ -206,17 +221,11 @@ function onMessage(request, sender, callback) {
         });
         return true;
 
-    case 'uninjectCustomFilters':
-        if ( frameId === false ) { return false; }
-        uninjectCustomFilters(tabId, frameId, request.hostname).then(( ) => {
-            callback();
-        });
-        return true;
-
     case 'injectCSSProceduralAPI':
         browser.scripting.executeScript({
             files: [ '/js/scripting/css-procedural-api.js' ],
             target: { tabId, frameIds: [ frameId ] },
+            injectImmediately: true,
         }).catch(reason => {
             console.log(reason);
         }).then(( ) => {
@@ -239,15 +248,18 @@ function onMessage(request, sender, callback) {
     switch ( request.what ) {
 
     case 'applyRulesets': {
-        enableRulesets(request.enabledRulesets).then(( ) => {
-            rulesetConfig.enabledRulesets = request.enabledRulesets;
-            return saveRulesetConfig();
-        }).then(( ) => {
-            registerInjectables();
-            callback();
-            return dnr.getEnabledRulesets();
-        }).then(enabledRulesets => {
-            broadcastMessage({ enabledRulesets });
+        enableRulesets(request.enabledRulesets).then(result => {
+            if ( result === undefined || result.error ) {
+                callback(result);
+                return;
+            }
+            rulesetConfig.enabledRulesets = result.enabledRulesets;
+            return saveRulesetConfig().then(( ) => {
+                return registerInjectables();
+            }).then(( ) => {
+                callback(result);
+                broadcastMessage({ enabledRulesets: result.enabledRulesets });
+            });
         });
         return true;
     }
@@ -503,7 +515,11 @@ function onCommand(command, tab) {
     case 'enter-picker-mode': {
         if ( browser.scripting === undefined ) { return; }
         browser.scripting.executeScript({
-            files: [ '/js/scripting/tool-overlay.js', '/js/scripting/picker.js' ],
+            files: [
+                '/js/scripting/css-procedural-api.js',
+                '/js/scripting/tool-overlay.js',
+                '/js/scripting/picker.js',
+            ],
             target: { tabId: tab.id },
         });
         break;
@@ -534,7 +550,7 @@ async function startSession() {
     const rulesetsUpdated = await enableRulesets(rulesetConfig.enabledRulesets);
 
     // We need to update the regex rules only when ruleset version changes.
-    if ( rulesetsUpdated === false ) {
+    if ( rulesetsUpdated === undefined ) {
         if ( isNewVersion ) {
             updateDynamicRules();
         } else {
