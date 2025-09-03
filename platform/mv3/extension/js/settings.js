@@ -222,10 +222,8 @@ listen.onmessage = ev => {
     }
 
     if ( message.enabledRulesets !== undefined ) {
-        if ( hashFromIterable(message.enabledRulesets) !== hashFromIterable(local.enabledRulesets) ) {
-            local.enabledRulesets = message.enabledRulesets;
-            render = true;
-        }
+        local.enabledRulesets = message.enabledRulesets;
+        render = true;
     }
 
     if ( render === false ) { return; }
@@ -244,13 +242,14 @@ sendMessage({
         renderAdminRules();
         renderFilterLists(cachedRulesetData);
         renderWidgets();
-        dom.cl.remove(dom.body, 'loading');
     } catch(reason) {
         console.error(reason);
+    } finally {
+        dom.cl.remove(dom.body, 'loading');
     }
     listen();
 }).catch(reason => {
-    console.trace(reason);
+    console.error(reason);
 });
 
 /******************************************************************************/

@@ -233,7 +233,7 @@ dom.on('#gotoReport', 'click', ev => {
     }
     if ( url === undefined ) { return; }
     const reportURL = new URL(runtime.getURL('/report.html'));
-    reportURL.searchParams.set('url', url.href);
+    reportURL.searchParams.set('url', tabURL.href);
     reportURL.searchParams.set('mode', popupPanelData.level);
     sendMessage({
         what: 'gotoURL',
@@ -340,8 +340,6 @@ async function init() {
 
     dom.cl.toggle('#gotoUnpicker', 'enabled', popupPanelData.hasCustomFilters);
 
-    dom.cl.remove(dom.body, 'loading');
-
     return true;
 }
 
@@ -350,6 +348,8 @@ async function tryInit() {
         await init();
     } catch {
         setTimeout(tryInit, 100);
+    } finally {
+        dom.cl.remove(dom.body, 'loading');
     }
 }
 

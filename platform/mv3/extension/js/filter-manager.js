@@ -34,6 +34,12 @@ import {
     subtractHostnameIters,
 } from './utils.js';
 
+import { ubolErr } from './debug.js';
+
+/******************************************************************************/
+
+const perSitePendingIO = new Map();
+
 /******************************************************************************/
 
 export async function selectorsFromCustomFilters(hostname) {
@@ -79,7 +85,7 @@ export function startCustomFilters(tabId, frameId) {
         target: { tabId, frameIds: [ frameId ] },
         injectImmediately: true,
     }).catch(reason => {
-        console.log(reason);
+        ubolErr(`startCustomFilters/${reason}`);
     })
 }
 
@@ -89,7 +95,7 @@ export function terminateCustomFilters(tabId, frameId) {
         target: { tabId, frameIds: [ frameId ] },
         injectImmediately: true,
     }).catch(reason => {
-        console.log(reason);
+        ubolErr(`terminateCustomFilters/${reason}`);
     })
 }
 
@@ -107,7 +113,7 @@ export async function injectCustomFilters(tabId, frameId, hostname) {
                 origin: 'USER',
                 target: { tabId, frameIds: [ frameId ] },
             }).catch(reason => {
-                console.log(reason);
+                ubolErr(`injectCustomFilters/insertCSS/${reason}`);
             })
         );
     }
@@ -119,7 +125,7 @@ export async function injectCustomFilters(tabId, frameId, hostname) {
                 target: { tabId, frameIds: [ frameId ] },
                 injectImmediately: true,
             }).catch(reason => {
-                console.log(reason);
+                ubolErr(`injectCustomFilters/executeScript/${reason}`);
             })
         );
     }
@@ -130,6 +136,9 @@ export async function injectCustomFilters(tabId, frameId, hostname) {
 /******************************************************************************/
 
 export async function registerCustomFilters(context) {
+    if ( perSitePendingIO.size !== 0 ) {
+        await Promise.all(Array.from(perSitePendingIO.values()));
+    }
     const siteKeys = await getAllCustomFilterKeys();
     if ( siteKeys.length === 0 ) { return; }
 
@@ -166,6 +175,20 @@ export async function registerCustomFilters(context) {
 /******************************************************************************/
 
 export async function addCustomFilter(hostname, selector) {
+    const pending = perSitePendingIO.get(hostname);
+    const promise = pending
+        ? pending.then(( ) => addCustomFilterByHostname(hostname, selector))
+        : addCustomFilterByHostname(hostname, selector);
+    perSitePendingIO.set(hostname, promise);
+    promise.then(( ) => {
+        if ( promise !== perSitePendingIO.get(hostname) ) { return; }
+        perSitePendingIO.delete(hostname);
+    });
+    return promise;
+}
+
+async function addCustomFilterByHostname(hostname, selector) {
+    if ( hostname === '' ) { return false; }
     const key = `site.${hostname}`;
     const selectors = await localRead(key) || [];
     if ( selectors.includes(selector) ) { return false; }
@@ -178,14 +201,45 @@ export async function addCustomFilter(hostname, selector) {
 /******************************************************************************/
 
 export async function removeCustomFilter(hostname, selector) {
+    const promises = [];
+    let hn = hostname;
+    while ( hn !== '' ) {
+        promises.push(removeCustomFilterByHostname(hn, selector));
+        const pos = hn.indexOf('.');
+        if ( pos === -1 ) { break; }
+        hn = hn.slice(pos + 1);
+    }
+    const results = await Promise.all(promises);
+    return results.some(a => a);
+}
+
+async function removeCustomFilterByHostname(hostname, selector) {
+    const pending = perSitePendingIO.get(hostname);
     const key = `site.${hostname}`;
+    const promise = pending
+        ? pending.then(( ) => removeCustomFilterByKey(key, selector))
+        : removeCustomFilterByKey(key, selector);
+    perSitePendingIO.set(hostname, promise);
+    promise.then(( ) => {
+        if ( promise !== perSitePendingIO.get(hostname) ) { return; }
+        perSitePendingIO.delete(hostname);
+    });
+    return promise;
+}
+
+async function removeCustomFilterByKey(key, selector) {
     const selectors = await localRead(key);
     if ( selectors === undefined ) { return false; }
-    const i = selectors.indexOf(selector);
-    if ( i === -1 ) { return false; }
+    let i = selectors.indexOf(selector);
+    if ( i === -1 ) {
+        i = selectors.indexOf(`0${selector}`);
+        if ( i === -1 ) { return false; }
+    }
     selectors.splice(i, 1);
-    await selectors.length !== 0
-        ? localWrite(key, selectors)
-        : localRemove(key);
+    if ( selectors.length !== 0 ) {
+        await localWrite(key, selectors);
+    } else {
+        await localRemove(key);
+    }
     return true;
 }
