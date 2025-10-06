@@ -22,6 +22,7 @@
 import {
     MODE_BASIC,
     MODE_OPTIMAL,
+    defaultFilteringModes,
     getDefaultFilteringMode,
     getFilteringMode,
     getFilteringModeDetails,
@@ -32,11 +33,13 @@ import {
 } from './mode-manager.js';
 
 import {
-    addCustomFilter,
+    addCustomFilters,
+    customFiltersFromHostname,
+    getAllCustomFilters,
     hasCustomFilters,
     injectCustomFilters,
-    removeCustomFilter,
-    selectorsFromCustomFilters,
+    removeAllCustomFilters,
+    removeCustomFilters,
     startCustomFilters,
     terminateCustomFilters,
 } from './filter-manager.js';
@@ -62,8 +65,17 @@ import {
 } from './ext.js';
 
 import {
+    defaultConfig,
+    loadRulesetConfig,
+    process,
+    rulesetConfig,
+    saveRulesetConfig,
+} from './config.js';
+
+import {
     enableRulesets,
     excludeFromStrictBlock,
+    getDefaultRulesetsFromEnv,
     getEffectiveDynamicRules,
     getEffectiveSessionRules,
     getEffectiveUserRules,
@@ -76,6 +88,7 @@ import {
 } from './ruleset-manager.js';
 
 import {
+    getConsoleOutput,
     getMatchedRules,
     isSideloaded,
     toggleDeveloperMode,
@@ -83,15 +96,7 @@ import {
     ubolLog,
 } from './debug.js';
 
-import {
-    loadRulesetConfig,
-    process,
-    rulesetConfig,
-    saveRulesetConfig,
-} from './config.js';
-
 import { dnr } from './ext-compat.js';
-import { getTroubleshootingInfo } from './troubleshooting.js';
 import { registerInjectables } from './scripting-manager.js';
 import { toggleToolbarIcon } from './action.js';
 
@@ -107,18 +112,6 @@ let pendingPermissionRequest;
 
 function getCurrentVersion() {
     return runtime.getManifest().version;
-}
-
-// The goal is just to be able to find out whether a specific version is older
-// than another one.
-
-function intFromVersion(version) {
-    const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(version);
-    if ( match === null ) { return 0; }
-    const year = parseInt(match[1], 10);
-    const monthday = parseInt(match[2], 10);
-    const min = parseInt(match[3], 10);
-    return (year - 2022) * (1232 * 2400) + monthday * 2400 + min;
 }
 
 /******************************************************************************/
@@ -282,6 +275,19 @@ function onMessage(request, sender, callback) {
         return true;
     }
 
+    case 'getDefaultConfig':
+        getDefaultRulesetsFromEnv().then(rulesets => {
+            callback({
+                autoReload: defaultConfig.autoReload,
+                developerMode: defaultConfig.developerMode,
+                showBlockedCount: defaultConfig.showBlockedCount,
+                strictBlockMode: defaultConfig.strictBlockMode,
+                rulesets,
+                filteringModes: Object.assign(defaultFilteringModes),
+            });
+        });
+        return true;
+
     case 'getOptionsPageData':
         Promise.all([
             hasBroadHostPermissions(),
@@ -316,6 +322,12 @@ function onMessage(request, sender, callback) {
                 disabledFeatures,
             });
             process.firstRun = false;
+        });
+        return true;
+
+    case 'getEnabledRulesets':
+        dnr.getEnabledRulesets().then(rulesets => {
+            callback(rulesets);
         });
         return true;
 
@@ -487,8 +499,8 @@ function onMessage(request, sender, callback) {
         });
         return true;
 
-    case 'addCustomFilter':
-        addCustomFilter(request.hostname, request.selector).then(modified => {
+    case 'addCustomFilters':
+        addCustomFilters(request.hostname, request.selectors).then(modified => {
             if ( modified !== true ) { return; }
             return registerInjectables();
         }).then(( ) => {
@@ -496,8 +508,8 @@ function onMessage(request, sender, callback) {
         })
         return true;
 
-    case 'removeCustomFilter':
-        removeCustomFilter(request.hostname, request.selector).then(modified => {
+    case 'removeCustomFilters':
+        removeCustomFilters(request.hostname, request.selectors).then(modified => {
             if ( modified !== true ) { return; }
             return registerInjectables();
         }).then(( ) => {
@@ -505,17 +517,30 @@ function onMessage(request, sender, callback) {
         });
         return true;
 
-    case 'selectorsFromCustomFilters':
-        selectorsFromCustomFilters(request.hostname).then(selectors => {
+    case 'removeAllCustomFilters':
+        removeAllCustomFilters(request.hostname).then(modified => {
+            if ( modified !== true ) { return; }
+            return registerInjectables();
+        }).then(( ) => {
+            callback();
+        });
+        return true;
+
+    case 'customFiltersFromHostname':
+        customFiltersFromHostname(request.hostname).then(selectors => {
             callback(selectors);
         });
         return true;
 
-    case 'getTroubleshootingInfo':
-        getTroubleshootingInfo(request.siteMode).then(info => {
-            callback(info);
+    case 'getAllCustomFilters':
+        getAllCustomFilters().then(data => {
+            callback(data);
         });
         return true;
+
+    case 'getConsoleOutput':
+        callback(getConsoleOutput());
+        break;
 
     default:
         break;
@@ -566,13 +591,6 @@ async function startSession() {
     // obsolete ruleset to remove.
     if ( isNewVersion ) {
         ubolLog(`Version change: ${rulesetConfig.version} => ${currentVersion}`);
-        // https://github.com/uBlockOrigin/uBOL-home/issues/428#issuecomment-3172663563
-        if ( webextFlavor === 'safari' && rulesetConfig.strictBlockMode ) {
-            const before = intFromVersion(rulesetConfig.version);
-            if ( before <= intFromVersion('2025.804.2359') ) {
-                rulesetConfig.strictBlockMode = false;
-            }
-        }
         rulesetConfig.version = currentVersion;
         await patchDefaultRulesets();
         saveRulesetConfig();

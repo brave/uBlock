@@ -1,3 +1,30 @@
+- [Improve `href-sanitizer` scriptlet](https://github.com/gorhill/uBlock/commit/a43d1d8c42)
+- [Fix `editInboundObjectFn` utility scriptlet](https://github.com/gorhill/uBlock/commit/d376adaae8)
+- [Improve `trusted-replace-argument` scriptlet](https://github.com/gorhill/uBlock/commit/52bc354bce)
+- [Add ability to test against regex in JSONPath expressions](https://github.com/gorhill/uBlock/commit/f36d2b8496)
+- [Improve `proxy-apply` utility scriptlet](https://github.com/gorhill/uBlock/commit/dd4f764920)
+- [Fix `removeparam` for multiple query parameters with same name](https://github.com/gorhill/uBlock/commit/3e5ea3b03f)
+- [Improve `trusted-click-element` scriptlet](https://github.com/gorhill/uBlock/commit/9aa91ba111)
+- [Improve `google-ima` shim](https://github.com/gorhill/uBlock/commit/8de47f250d)
+- [Add back a uBO-specific version of "CERT.PL's Warning List"](https://github.com/gorhill/uBlock/commit/87dddb7d78)
+
+----------
+
+# 1.66.4
+
+- [Fix potential  infinite loop when scanning for `$` anchor](https://github.com/gorhill/uBlock/commit/889c0eb208)
+- [Allow generic exception for `replace=` option](https://github.com/gorhill/uBlock/commit/52dba4116e)
+
+----------
+
+# 1.66.2
+
+- [Fix version snafu](https://github.com/gorhill/uBlock/commit/50cb780107)
+
+----------
+
+# 1.66.0
+
 - [Improve `prevent-fetch` scriptlet](https://github.com/gorhill/uBlock/commit/d2bce26e7d)
 - [Add support to strict-block from `ipaddress=` option](https://github.com/gorhill/uBlock/commit/6327aae56c)
 - [Improve rendering with high-contrast theme](https://github.com/gorhill/uBlock/commit/5d7e5ee3a0) (fix suggested by @emv33)

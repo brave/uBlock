@@ -24,6 +24,7 @@ import {
     localRead, localRemove, localWrite,
     runtime,
     sessionRead, sessionRemove, sessionWrite,
+    webextFlavor,
 } from './ext.js';
 
 import {
@@ -74,12 +75,11 @@ function getRulesetDetails() {
     if ( getRulesetDetails.rulesetDetailsPromise !== undefined ) {
         return getRulesetDetails.rulesetDetailsPromise;
     }
-    getRulesetDetails.rulesetDetailsPromise = fetchJSON('/rulesets/ruleset-details').then(entries => {
-        const rulesMap = new Map(
-            entries.map(entry => [ entry.id, entry ])
-        );
-        return rulesMap;
-    });
+    getRulesetDetails.rulesetDetailsPromise =
+        fetchJSON('/rulesets/ruleset-details').then(entries => {
+            const rulesMap = new Map(entries.map(entry => [ entry.id, entry ]));
+            return rulesMap;
+        });
     return getRulesetDetails.rulesetDetailsPromise;
 }
 
@@ -236,6 +236,11 @@ async function updateStrictBlockRules(currentRules, addRules, removeRuleIds) {
     }
 
     if ( rulesetConfig.strictBlockMode === false ) { return; }
+
+    // https://github.com/uBlockOrigin/uBOL-home/issues/428#issuecomment-3172663563
+    // https://bugs.webkit.org/show_bug.cgi?id=298199
+    // https://developer.apple.com/forums/thread/756214
+    if ( webextFlavor === 'safari' ) { return; }
 
     const [
         hasOmnipotence,
@@ -404,7 +409,7 @@ async function filteringModesToDNR(modes) {
 
 /******************************************************************************/
 
-async function defaultRulesetsFromEnv() {
+export async function getDefaultRulesetsFromEnv() {
     const dropCountry = lang => {
         const pos = lang.indexOf('-');
         if ( pos === -1 ) { return lang; }
@@ -460,7 +465,7 @@ async function patchDefaultRulesets() {
         staticRulesetIds,
     ] = await Promise.all([
         localRead('defaultRulesetIds'),
-        defaultRulesetsFromEnv(),
+        getDefaultRulesetsFromEnv(),
         getStaticRulesets().then(r => r.map(a => a.id)),
     ]);
     const toAdd = [];

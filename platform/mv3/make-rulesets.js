@@ -467,11 +467,21 @@ function toStrictBlockRule(rule, out) {
     };
     if ( condition.requestDomains ) {
         strictBlockRule.condition.requestDomains ??= [];
-        strictBlockRule.condition.requestDomains.push(...condition.requestDomains);
+        strictBlockRule.condition.requestDomains = Array.from(
+            new Set([
+                ...strictBlockRule.condition.requestDomains,
+                ...condition.requestDomains,
+            ])
+        );
     }
     if ( condition.excludedRequestDomains ) {
         strictBlockRule.condition.excludedRequestDomains ??= [];
-        strictBlockRule.condition.excludedRequestDomains.push(...condition.excludedRequestDomains);
+        strictBlockRule.condition.excludedRequestDomains = Array.from(
+            new Set([
+                ...strictBlockRule.condition.excludedRequestDomains,
+                ...condition.excludedRequestDomains,
+            ])
+        );
     }
     out.set(regexFilter, strictBlockRule);
 }
@@ -747,7 +757,7 @@ const hashFromStr = (type, s) => {
     for ( let i = 0; i < len; i += step ) {
         hash = (hash << 5) + hash ^ s.charCodeAt(i);
     }
-    return hash & 0xFFFFFF;
+    return hash & 0xFFF;
 };
 
 /******************************************************************************/
