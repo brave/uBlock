@@ -5,8 +5,12 @@ on:
     - cron: "0 * * * *"
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   check-for-changes:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     env:
       FILES_TO_CHECK: "assets/assets.json|src/web_accessible_resources/|src/js/resources/|src/js/redirect-resources.js"
@@ -28,6 +32,8 @@ jobs:
         if: steps.check-for-changes.outputs.changes-present == 'false'
         run: echo "No changes needed to be synchronised"
   sync:
+    permissions:
+      contents: write
     if: ${{ needs.check-for-changes.outputs.changes == 'true' }}
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -42,6 +48,8 @@ jobs:
           git remote add github "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git"
           git push -u github mirror
   create-pr:
+    permissions:
+      pull-requests: write
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     needs: sync
@@ -51,6 +59,8 @@ jobs:
         run: |
           gh pr create --title "Fork Sync: Update from parent repository" --body "This PR was automatically created by a GitHub Action triggered by a cron schedule. Please review the changes and merge if appropriate." --base master --head mirror --repo ${GITHUB_REPOSITORY} || true
   update-pr:
+    permissions:
+      pull-requests: write
     needs: create-pr
     runs-on: ubuntu-latest
     env:
