@@ -43,6 +43,8 @@
         }).filter(a => a !== undefined);
     })();
 
+    isolatedAPI.topHostname = hostnameStack.at(-1)?.hnparts.join('.') ?? '';
+
     const forEachHostname = (entry, callback, details) => {
         const hnparts = entry.hnparts;
         const hnpartslen = hnparts.length;
@@ -74,7 +76,41 @@
         }
     };
 
-    isolatedAPI.binarySearch = (sorted, target) => {
+})(self.isolatedAPI);
+
+
+(api => {
+    if ( typeof api === 'object' ) { return; }
+
+    const cosmeticAPI = self.cosmeticAPI = {};
+    const { isolatedAPI } = self;
+    const { topHostname } = isolatedAPI;
+    const thisHostname = document.location.hostname || '';
+
+    const sessionRead = async function(key) {
+        try {
+            const bin = await chrome.storage.session.get(key);
+            return bin?.[key] ?? undefined;
+        } catch {
+        }
+    };
+
+    const sessionWrite = function(key, data) {
+        try {
+            chrome.storage.session.set({ [key]: data });
+        } catch {
+        }
+    };
+
+    const localRead = async function(key) {
+        try {
+            const bin = await chrome.storage.local.get(key);
+            return bin?.[key] ?? undefined;
+        } catch {
+        }
+    };
+
+    const binarySearch = (sorted, target) => {
         let l = 0, i = 0, d = 0;
         let r = sorted.length;
         let candidate;
@@ -95,7 +131,90 @@
         return -1;
     };
 
-})(self.isolatedAPI);
+    const lookupHostname = (hostname, data) => {
+        const listref = binarySearch(data.hostnames, hostname);
+        if ( listref === -1 ) { return; }
+        const ilist = data.selectorListRefs[listref];
+        const list = JSON.parse(`[${data.selectorLists[ilist]}]`);
+        const { result } = data;
+        for ( const iselector of list ) {
+            if ( iselector >= 0 ) {
+                result.selectors.add(data.selectors[iselector]);
+            } else {
+                result.exceptions.add(data.selectors[~iselector]);
+            }
+        }
+    };
+
+    const selectorsFromRuleset = async (realm, rulesetId, result) => {
+        const data = await localRead(`css.${realm}.${rulesetId}`);
+        if ( typeof data !== 'object' || data === null ) { return; }
+        data.result = result;
+        isolatedAPI.forEachHostname(lookupHostname, data);
+    };
+
+    const fillCache = async function(realm, rulesetIds) {
+        const selectors = new Set();
+        const exceptions = new Set();
+        const result = { selectors, exceptions };
+        const [ filteringModeDetails ] = await Promise.all([
+            localRead('filteringModeDetails'),
+            ...rulesetIds.map(a => selectorsFromRuleset(realm, a, result)),
+        ]);
+        const skip = filteringModeDetails?.none.some(a => {
+            if ( topHostname.endsWith(a) === false ) { return false; }
+            const n = a.length;
+            return topHostname.length === n || topHostname.at(-n-1) === '.';
+        });
+        for ( const selector of exceptions ) {
+            selectors.delete(selector);
+        }
+        if ( skip ) {
+            selectors.clear();
+        }
+        cacheEntry[realm.charAt(0)] = Array.from(selectors).map(a =>
+            a.startsWith('{') ? JSON.parse(a) : a
+        );
+    };
+
+    const readCache = async ( ) => {
+        cacheEntry = await sessionRead(cacheKey) || {};
+    };
+
+    const cacheKey =
+        `cache.css.${thisHostname || ''}${topHostname !== thisHostname ? `/${topHostname}` : ''}`;
+    let clientCount = 0;
+    let cacheEntry;
+
+    cosmeticAPI.getSelectors = async function(realm, rulesetIds) {
+        clientCount += 1;
+        const slot = realm.charAt(0);
+        if ( cacheEntry === undefined ) {
+            cacheEntry = readCache();
+        }
+        if ( cacheEntry instanceof Promise ) {
+            await cacheEntry;
+        }
+        if ( cacheEntry[slot] === undefined ) {
+            cacheEntry[slot] = fillCache(realm, rulesetIds);
+        }
+        if ( cacheEntry[slot] instanceof Promise ) {
+            await cacheEntry[slot];
+        }
+        return cacheEntry[slot];
+    };
+
+    cosmeticAPI.release = function() {
+        clientCount -= 1;
+        if ( clientCount !== 0 ) { return; }
+        self.cosmeticAPI = undefined;
+        const now = Math.round(Date.now() / 15000);
+        const since = now - (cacheEntry.t || 0);
+        if ( since <= 1 ) { return; }
+        cacheEntry.t = now;
+        sessionWrite(cacheKey, cacheEntry);
+    };
+})(self.cosmeticAPI);
 
 /******************************************************************************/
 
