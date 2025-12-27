@@ -897,11 +897,11 @@
   },
   "supportOpenButton": {
     "message": "Aç",
-    "description": "Text for button which open an external webpage in Support pane"
+    "description": "Text for button which open an external web page in Support pane"
   },
   "supportReportSpecificButton": {
     "message": "Yeni hesabat yaradın",
-    "description": "Text for button which open an external webpage in Support pane"
+    "description": "Text for button which open an external web page in Support pane"
   },
   "supportFindSpecificButton": {
     "message": "Oxşar hesabat tap",
@@ -954,10 +954,6 @@
   "supportS5P1": {
     "message": "Aşağıdaki könüllülər sizə probleminizi aradan qaldırmağa çalışırkən faydalı ola biləcək texniki məlumatdır.",
     "description": "First paragraph of 'Troubleshooting Information' section in Support pane"
-  },
-  "supportS5P2": {
-    "message": "<b>Vacib:</b> Gizli və həssas ola biləcək məlumatlar defolt olaraq qısaldılır. Qısaldılmış məlumatlar, bir problemi aradan qaldırmağı çətinləşdirə bilər.",
-    "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
   },
   "supportS6H": {
     "message": "Filter problemini bildir",
@@ -1018,14 +1014,6 @@
   "supportS6Checkbox1": {
     "message": "Veb-səhifəni uyğun olmayan (“NSFW”) olaraq işarələ (<a href=\"https://wikipedia.org/wiki/Not_safe_for_work\">“Not Safe For Work”</a>)",
     "description": "A checkbox to use for NSFW sites"
-  },
-  "supportRedact": {
-    "message": "Redact",
-    "description": "Text for 'Redact' button"
-  },
-  "supportUnredact": {
-    "message": "Unredact",
-    "description": "Text for 'Unredact' button"
   },
   "aboutPrivacyPolicy": {
     "message": "Məxfilik siyasəti",
@@ -1098,10 +1086,6 @@
   "errorCantConnectTo": {
     "message": "Şəbəkə xətası: {{msg}}",
     "description": "English: Network error: {{msg}}"
-  },
-  "subscriberConfirm": {
-    "message": "uBlock₀: Aşağıdakı URL ünvanı fərdi filtr siyahılarınıza əlavə edilsin?\n\nAdı: \"{{title}}\"\nURL ünvanı: {{url}}",
-    "description": "No longer used"
   },
   "subscribeButton": {
     "message": "Abunə ol",
