@@ -249,7 +249,7 @@ body section[data-pane="filters"] .hostnames {
 body section[data-pane="filters"] .hostnames:empty {
     display: none;
     }
-body.busy section[data-pane="filters"] .hostnames {
+body.readonly section[data-pane="filters"] .hostnames {
     pointer-events: none;
     }
 section[data-pane="filters"] ul {
@@ -346,4 +346,16 @@ section[data-pane="filters"] aside p {
     .filteringModeCard > div:nth-of-type(2) {
         justify-content: flex-start;
     }
+}
+
+body.busy section[data-pane="busy"]  > div {
+    justify-content: center;
+    display: flex;
+    align-items: stretch;
+}
+body.busy section[data-pane="busy"] .fa-icon {
+    animation: spin 1s steps(8) infinite;
+    fill: var(--surface-3);
+    font-size: 4em;
+    margin: 2em;
 }

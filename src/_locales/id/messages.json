@@ -897,11 +897,11 @@
   },
   "supportOpenButton": {
     "message": "Buka",
-    "description": "Text for button which open an external webpage in Support pane"
+    "description": "Text for button which open an external web page in Support pane"
   },
   "supportReportSpecificButton": {
     "message": "Buat laporan baru di Github",
-    "description": "Text for button which open an external webpage in Support pane"
+    "description": "Text for button which open an external web page in Support pane"
   },
   "supportFindSpecificButton": {
     "message": "Temukan laporan serupa di Github",
@@ -954,10 +954,6 @@
   "supportS5P1": {
     "message": "Di bawah ini adalah informasi teknis yang mungkin berguna saat sukarelawan berusaha membantu memecahkan masalah Anda.",
     "description": "First paragraph of 'Troubleshooting Information' section in Support pane"
-  },
-  "supportS5P2": {
-    "message": "<b>Penting:</b> Informasi yang sifatnya privat dan sensitif disensor secara bawaan. Informasi yang disensor mungkin akan membuat proses memecahkan masalah semakin sulit.",
-    "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
   },
   "supportS6H": {
     "message": "Laporkan masalah filter",
@@ -1018,14 +1014,6 @@
   "supportS6Checkbox1": {
     "message": "Beri label halaman web sebagai “TAUSB” (<a href=\"https://wikipedia.org/wiki/Not_safe_for_work\">“Tidak Aman Untuk Saat Bekerja”</a>)",
     "description": "A checkbox to use for NSFW sites"
-  },
-  "supportRedact": {
-    "message": "Sensor",
-    "description": "Text for 'Redact' button"
-  },
-  "supportUnredact": {
-    "message": "Batal sensor",
-    "description": "Text for 'Unredact' button"
   },
   "aboutPrivacyPolicy": {
     "message": "Kebijakan privasi",
@@ -1098,10 +1086,6 @@
   "errorCantConnectTo": {
     "message": "Galat jaringan: {{msg}}",
     "description": "English: Network error: {{msg}}"
-  },
-  "subscriberConfirm": {
-    "message": "Tambah URL berikut ke ke daftar filter khusus Anda?\n\nJudul: \"{{title}}\"\nURL: {{url}}",
-    "description": "No longer used"
   },
   "subscribeButton": {
     "message": "Berlangganan",

@@ -897,11 +897,11 @@
   },
   "supportOpenButton": {
     "message": "Otevřít",
-    "description": "Text for button which open an external webpage in Support pane"
+    "description": "Text for button which open an external web page in Support pane"
   },
   "supportReportSpecificButton": {
     "message": "Vytvořit nové hlášení",
-    "description": "Text for button which open an external webpage in Support pane"
+    "description": "Text for button which open an external web page in Support pane"
   },
   "supportFindSpecificButton": {
     "message": "Vyhledat podobná hlášení",
@@ -954,10 +954,6 @@
   "supportS5P1": {
     "message": "Níže jsou technické informace, které mohou být užitečné, když vám dobrovolníci pomáhají vyřešit nějaký problém.",
     "description": "First paragraph of 'Troubleshooting Information' section in Support pane"
-  },
-  "supportS5P2": {
-    "message": "<b>Důležité:</b> Potenciálně soukromé nebo citlivé informace jsou ve výchozím nastavení redigovány. Redigované informace mohou ztížit řešení problému.",
-    "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
   },
   "supportS6H": {
     "message": "Nahlásit problém s filtrem",
@@ -1018,14 +1014,6 @@
   "supportS6Checkbox1": {
     "message": "Označit webovou stránku jako “NSFW” (<a href=\"https://cs.wikipedia.org/wiki/Not_safe_for_work\">“Není bezpečné pro práci”</a>)",
     "description": "A checkbox to use for NSFW sites"
-  },
-  "supportRedact": {
-    "message": "Upravit",
-    "description": "Text for 'Redact' button"
-  },
-  "supportUnredact": {
-    "message": "Odstranit",
-    "description": "Text for 'Unredact' button"
   },
   "aboutPrivacyPolicy": {
     "message": "Ochrana soukromí",
@@ -1098,10 +1086,6 @@
   "errorCantConnectTo": {
     "message": "Chyba sítě: {{msg}}",
     "description": "English: Network error: {{msg}}"
-  },
-  "subscriberConfirm": {
-    "message": "uBlock₀: Přidat následující URL adresu do seznamů vlastních filtrů?\n\nNázev: „{{title}}“\nURL: {{url}}",
-    "description": "No longer used"
   },
   "subscribeButton": {
     "message": "Odebírat",

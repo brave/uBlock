@@ -33,6 +33,7 @@ import {
 
 import { execSync } from 'node:child_process';
 import fs from 'fs/promises';
+import { literalStrFromRegex } from './js/regex-analyzer.js';
 import path from 'path';
 import process from 'process';
 import redirectResourcesMap from './js/redirect-resources.js';
@@ -110,6 +111,8 @@ const logProgress = text => {
     process?.stdout?.cursorTo?.(0);
     process?.stdout?.write?.(text.length > 120 ? `${text.slice(0, 119)}… ` : `${text} `);
 };
+
+const isHnRegexOrPath = hn => hn.includes('/');
 
 /******************************************************************************/
 
@@ -828,7 +831,24 @@ async function processCosmeticFilters(assetDetails, realm, mapin) {
     // Collate all distinct selectors
     const allSelectors = new Map();
     const allHostnames = new Map();
+    const allRegexesOrPaths = new Map();
     let hasEntities = false;
+
+    const storeHostnameSelectorPair = (hn, iSelector) => {
+        if ( isHnRegexOrPath(hn) ) {
+            if ( allRegexesOrPaths.has(hn) === false ) {
+                allRegexesOrPaths.set(hn, new Set());
+            }
+            allRegexesOrPaths.get(hn).add(iSelector);
+        } else {
+            if ( allHostnames.has(hn) === false ) {
+                allHostnames.set(hn, new Set());
+            }
+            allHostnames.get(hn).add(iSelector);
+            hasEntities ||= hn.endsWith('.*');
+        }
+    };
+
     for ( const [ selector, details ] of mapin ) {
         if ( details.rejected ) { continue; }
         if ( allSelectors.has(selector) === false ) {
@@ -837,30 +857,30 @@ async function processCosmeticFilters(assetDetails, realm, mapin) {
         const iSelector = allSelectors.get(selector);
         if ( details.matches ) {
             for ( const hn of details.matches ) {
-                if ( allHostnames.has(hn) === false ) {
-                    allHostnames.set(hn, new Set());
-                }
-                allHostnames.get(hn).add(iSelector);
-                hasEntities ||= hn.endsWith('.*');
+                storeHostnameSelectorPair(hn, iSelector);
             }
         }
         if ( details.excludeMatches ) {
             for ( const hn of details.excludeMatches ) {
-                if ( allHostnames.has(hn) === false ) {
-                    allHostnames.set(hn, new Set());
-                }
-                allHostnames.get(hn).add(~iSelector);
-                hasEntities ||= hn.endsWith('.*');
+                storeHostnameSelectorPair(hn, ~iSelector);
             }
         }
     }
     const allSelectorLists = new Map();
-    for ( const [ hn, selectorSet ] of allHostnames ) {
+
+    const ilistFromSelectorSet = selectorSet => {
         const list = JSON.stringify(Array.from(selectorSet).sort()).slice(1, -1);
         if ( allSelectorLists.has(list) === false ) {
             allSelectorLists.set(list, allSelectorLists.size);
         }
-        allHostnames.set(hn, allSelectorLists.get(list));
+        return allSelectorLists.get(list);
+    };
+
+    for ( const [ hn, selectorSet ] of allHostnames ) {
+        allHostnames.set(hn, ilistFromSelectorSet(selectorSet));
+    }
+    for ( const [ regexOrPath, selectorSet ] of allRegexesOrPaths ) {
+        allRegexesOrPaths.set(regexOrPath, ilistFromSelectorSet(selectorSet));
     }
 
     const sortedHostnames = Array.from(allHostnames.keys()).toSorted((a, b) => {
@@ -869,14 +889,20 @@ async function processCosmeticFilters(assetDetails, realm, mapin) {
         return a < b ? -1 : 1;
     });
 
-    const data = JSON.stringify({
+    const data = {
         selectors: Array.from(allSelectors.keys()),
         selectorLists: Array.from(allSelectorLists.keys()),
         selectorListRefs: sortedHostnames.map(a => allHostnames.get(a)),
         hostnames: sortedHostnames,
         hasEntities,
-    });
-    writeFile(`${scriptletDir}/${realm}/${assetDetails.id}.json`, data);
+        fromRegexes: Array.from(allRegexesOrPaths)
+            .filter(a => a[0].startsWith('/') && a[0].endsWith('/'))
+            .map(a => {
+                const restr = a[0].slice(1,-1);
+                return [ literalStrFromRegex(restr).slice(0,8), restr, a[1] ]
+            }).flat(),
+    };
+    writeFile(`${scriptletDir}/${realm}/${assetDetails.id}.json`, JSON.stringify(data));
 
     // The cosmetic filters will be injected programmatically as content
     // script and the decisions to activate the cosmetic filters will be
@@ -890,7 +916,7 @@ async function processCosmeticFilters(assetDetails, realm, mapin) {
 
     log(`CSS-${realm}: ${allSelectors.size} distinct filters for ${allHostnames.size} distinct hostnames`);
 
-    return sortedHostnames.length;
+    return sortedHostnames.length + allRegexesOrPaths.size;
 }
 
 /******************************************************************************/
@@ -898,8 +924,6 @@ async function processCosmeticFilters(assetDetails, realm, mapin) {
 async function processScriptletFilters(assetDetails, mapin) {
     if ( mapin === undefined ) { return 0; }
     if ( mapin.size === 0 ) { return 0; }
-
-    makeScriptlet.init();
 
     for ( const details of mapin.values() ) {
         makeScriptlet.compile(assetDetails, details);

@@ -897,11 +897,11 @@
   },
   "supportOpenButton": {
     "message": "Hap",
-    "description": "Text for button which open an external webpage in Support pane"
+    "description": "Text for button which open an external web page in Support pane"
   },
   "supportReportSpecificButton": {
     "message": "Krijoj raport të ri në GitHub",
-    "description": "Text for button which open an external webpage in Support pane"
+    "description": "Text for button which open an external web page in Support pane"
   },
   "supportFindSpecificButton": {
     "message": "Gjej raporte të ngjashme në GitHub",
@@ -954,10 +954,6 @@
   "supportS5P1": {
     "message": "Informacioni teknik i mëposhtëm u shërben personave të cilët përpiqen të zgjidhin problemin që keni.",
     "description": "First paragraph of 'Troubleshooting Information' section in Support pane"
-  },
-  "supportS5P2": {
-    "message": "<b>Kujdes:</b> Informacionet me sfond privat dhe delikat censurohen automatikisht. Informacioni i censuruar mund ta vështirësojë zgjidhjen e problemit.",
-    "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
   },
   "supportS6H": {
     "message": "Raportoni problemet me filtrat",
@@ -1018,14 +1014,6 @@
   "supportS6Checkbox1": {
     "message": "Etiketoj faqen si “NSFW” (<a href=\"https://wikipedia.org/wiki/Not_safe_for_work\">“E papërshtatshme për punë”</a>)",
     "description": "A checkbox to use for NSFW sites"
-  },
-  "supportRedact": {
-    "message": "Censuroj",
-    "description": "Text for 'Redact' button"
-  },
-  "supportUnredact": {
-    "message": "Nuk censuroj",
-    "description": "Text for 'Unredact' button"
   },
   "aboutPrivacyPolicy": {
     "message": "Politika e privatësisë",
@@ -1098,10 +1086,6 @@
   "errorCantConnectTo": {
     "message": "Problem me rrjetin kompjuterik: {{msg}}",
     "description": "English: Network error: {{msg}}"
-  },
-  "subscriberConfirm": {
-    "message": "Do e shtoni adresën në listën e personalizuar të filtrave?\n\nTitulli: \"{{title}}\"\nURL: {{url}}",
-    "description": "No longer used"
   },
   "subscribeButton": {
     "message": "Abonohem",

@@ -12,7 +12,7 @@
     "description": "English: uBlock₀ — Dashboard"
   },
   "dashboardUnsavedWarning": {
-    "message": "Waarschuwing! Niet-opgeslagen wijzigingen",
+    "message": "Waarschuwing: niet-opgeslagen wijzigingen!",
     "description": "A warning in the dashboard when navigating away from unsaved changes"
   },
   "dashboardUnsavedWarningStay": {
@@ -897,11 +897,11 @@
   },
   "supportOpenButton": {
     "message": "Openen",
-    "description": "Text for button which open an external webpage in Support pane"
+    "description": "Text for button which open an external web page in Support pane"
   },
   "supportReportSpecificButton": {
     "message": "Nieuwe melding op GitHub maken",
-    "description": "Text for button which open an external webpage in Support pane"
+    "description": "Text for button which open an external web page in Support pane"
   },
   "supportFindSpecificButton": {
     "message": "Soortgelijke meldingen op GitHub zoeken",
@@ -954,10 +954,6 @@
   "supportS5P1": {
     "message": "Hieronder bevindt zich technische informatie die handig kan zijn wanneer vrijwilligers u proberen te helpen bij het oplossen van een probleem.",
     "description": "First paragraph of 'Troubleshooting Information' section in Support pane"
-  },
-  "supportS5P2": {
-    "message": "<b>Belangrijk:</b> mogelijk gevoelige of privégegevens worden standaard geredigeerd. Geredigeerde gegevens kunnen het oplossen van een probleem bemoeilijken.",
-    "description": "Second paragraph of 'Troubleshooting Information' section in Support pane"
   },
   "supportS6H": {
     "message": "Een filterprobleem melden",
@@ -1016,16 +1012,8 @@
     "description": "An entry in the widget used to select the type of issue"
   },
   "supportS6Checkbox1": {
-    "message": "De webpagina labelen als ‘NSFW’ (<a href=\"https://nl.wikipedia.org/wiki/NSFW\">‘Not Safe For Work’</a>)",
+    "message": "De webpagina labelen als ‘NSFW’ (<a href=\"https://wikipedia.org/wiki/Not_safe_for_work\">‘Not Safe For Work’</a>)",
     "description": "A checkbox to use for NSFW sites"
-  },
-  "supportRedact": {
-    "message": "Redigeren",
-    "description": "Text for 'Redact' button"
-  },
-  "supportUnredact": {
-    "message": "Redigeren ongedaan maken",
-    "description": "Text for 'Unredact' button"
   },
   "aboutPrivacyPolicy": {
     "message": "Privacybeleid",
@@ -1099,10 +1087,6 @@
     "message": "Netwerkfout: {{msg}}",
     "description": "English: Network error: {{msg}}"
   },
-  "subscriberConfirm": {
-    "message": "De volgende URL aan uw lijsten met aangepaste filters toevoegen?\n\nTitel: ‘{{title}}’\nURL: {{url}}",
-    "description": "No longer used"
-  },
   "subscribeButton": {
     "message": "Abonneren",
     "description": "For the button used to subscribe to a filter list"
@@ -1152,7 +1136,7 @@
     "description": "Used in the strict-blocking page"
   },
   "docblockedPrompt2": {
-    "message": "vanwege het volgende filter:",
+    "message": "Dit is gebeurd vanwege het volgende filter:",
     "description": "Used in the strict-blocking page"
   },
   "docblockedNoParamsPrompt": {

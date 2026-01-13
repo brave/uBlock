@@ -4528,14 +4528,14 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
         [ ALLOW_REALM, { type: 'allow', priority: 30 } ],
         [ BLOCK_REALM | IMPORTANT_REALM, { type: 'block', priority: 10 } ],
         [ REDIRECT_REALM, { type: 'redirect', priority: 11 } ],
-        [ REMOVEPARAM_REALM, { type: 'removeparam', priority: 0 } ],
-        [ CSP_REALM, { type: 'csp', priority: 0 } ],
-        [ PERMISSIONS_REALM, { type: 'permissions', priority: 0 } ],
-        [ URLTRANSFORM_REALM, { type: 'uritransform', priority: 0 } ],
+        [ REMOVEPARAM_REALM, { type: 'removeparam', priority: 1 } ],
+        [ CSP_REALM, { type: 'csp', priority: 1 } ],
+        [ PERMISSIONS_REALM, { type: 'permissions', priority: 1 } ],
+        [ URLTRANSFORM_REALM, { type: 'uritransform', priority: 1 } ],
         [ HEADERS_REALM, { type: 'block', priority: 10 } ],
         [ HEADERS_REALM | ALLOW_REALM, { type: 'allow', priority: 30 } ],
         [ HEADERS_REALM | IMPORTANT_REALM, { type: 'allow', priority: 10 } ],
-        [ URLSKIP_REALM, { type: 'urlskip', priority: 0 } ],
+        [ URLSKIP_REALM, { type: 'urlskip', priority: 1 } ],
     ]);
     const partyness = new Map([
         [ ANYPARTY_REALM, '' ],
@@ -4598,10 +4598,7 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
     // - https://github.com/uBlockOrigin/uAssets/issues/29451#issuecomment-3150181993
     for ( const rule of ruleset ) {
         if ( rule.__important !== true ) { continue; }
-        if ( rule.priority === undefined ) {
-            if ( rule.__modifierType !== 'removeparam' ) { continue; }
-            rule.priority ||= 0;
-        }
+        rule.priority ??= 0;
         rule.priority += 30;
     }
 
@@ -4732,19 +4729,20 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
         }
         case 'removeparam': {
             rule.action.type = 'redirect';
-            if ( rule.__modifierValue === '|' ) {
-                rule.__modifierValue = '';
+            let paramName = rule.__modifierValue;
+            if ( paramName === '|' ) {
+                paramName = '';
             }
-            if ( rule.__modifierValue !== '' ) {
+            if ( paramName !== '' ) {
                 rule.action.redirect = {
                     transform: {
                         queryTransform: {
-                            removeParams: [ rule.__modifierValue ]
+                            removeParams: [ paramName ]
                         }
                     }
                 };
-                if ( /^~?\/.+\/$/.test(rule.__modifierValue) ) {
-                    dnrAddRuleError(rule, `Unsupported regex-based removeParam: ${rule.__modifierValue}`);
+                if ( /^~?\/.+\/$/.test(paramName) ) {
+                    dnrAddRuleError(rule, `Unsupported regex-based removeParam: ${paramName}`);
                 }
             } else {
                 rule.action.redirect = {
@@ -4766,15 +4764,13 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
                     ];
                 }
             }
-            // https://github.com/uBlockOrigin/uBOL-home/issues/140
-            //   Mitigate until DNR API flaw is addressed by browser vendors
-            let priority = rule.priority || 1;
-            if ( rule.condition.urlFilter !== undefined ) { priority += 1; }
-            if ( rule.condition.regexFilter !== undefined ) { priority += 1; }
-            if ( rule.condition.initiatorDomains !== undefined ) { priority += 1; }
-            if ( rule.condition.requestDomains !== undefined ) { priority += 1; }
-            if ( priority !== 1 ) {
-                rule.priority = priority;
+            // https://github.com/uBlockOrigin/uBOL-home/discussions/575
+            if ( rule.condition.urlFilter === undefined ) {
+                if ( rule.condition.regexFilter === undefined ) {
+                    if ( paramName !== '' ) {
+                        rule.condition.urlFilter = `^${paramName}=`;
+                    }
+                }
             }
             if ( rule.__modifierAction === ALLOW_REALM ) {
                 dnrAddRuleError(rule, `Unsupported removeparam exception: ${rule.__modifierValue}`);
@@ -4835,6 +4831,12 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
                 rule.condition.excludedRequestDomains.push(...notDomains);
             }
         }
+    }
+
+    // Default priority is 1, remove priority if 1 or less.
+    for ( const rule of ruleset ) {
+        if ( rule.priority > 1 ) { continue; }
+        rule.priority = undefined;
     }
 
     return {
