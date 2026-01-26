@@ -36,7 +36,7 @@ import { ubolErr, ubolLog } from './debug.js';
 import { dnr } from './ext-compat.js';
 import { fetchJSON } from './fetch.js';
 import { getAdminRulesets } from './admin.js';
-import { hasBroadHostPermissions } from './utils.js';
+import { hasBroadHostPermissions } from './ext-utils.js';
 import { rulesFromText } from './dnr-parser.js';
 
 /******************************************************************************/
@@ -352,7 +352,7 @@ async function updateSessionRules() {
     let ruleId = 1;
     for ( const rule of addRulesUnfiltered ) {
         rule.id = ruleId++;
-        if ( Boolean(rule?.condition.regexFilter) === false ) { continue; }
+        if ( Boolean(rule.condition.regexFilter) === false ) { continue; }
         regexCount += 1;
         if ( regexCount < maxRegexCount ) { continue; }
         rule.id = 0;

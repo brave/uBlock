@@ -55,8 +55,6 @@ import {
 
 import {
     broadcastMessage,
-    gotoURL,
-    hasBroadHostPermissions,
     hostnameFromMatch,
     hostnamesFromMatches,
 } from './utils.js';
@@ -100,6 +98,11 @@ import {
     ubolErr,
     ubolLog,
 } from './debug.js';
+
+import {
+    gotoURL,
+    hasBroadHostPermissions,
+} from './ext-utils.js';
 
 import { dnr } from './ext-compat.js';
 import { toggleToolbarIcon } from './action.js';
@@ -399,6 +402,10 @@ function onMessage(request, sender, callback) {
         });
         return true;
 
+    case 'getShowBlockedCount':
+        callback(rulesetConfig.showBlockedCount);
+        break;
+
     case 'setShowBlockedCount':
         rulesetConfig.showBlockedCount = request.state && true || false;
         if ( canShowBlockedCount ) {
@@ -592,6 +599,12 @@ function onMessage(request, sender, callback) {
         });
         return true;
 
+    case 'getRegisteredContentScripts':
+        scrmgr.getRegisteredContentScripts().then(ids => {
+            callback(ids);
+        });
+        return true;
+
     case 'getConsoleOutput':
         callback(getConsoleOutput());
         break;
@@ -662,12 +675,13 @@ async function startSession() {
     }
 
     // Permissions may have been removed while the extension was disabled
-    await syncWithBrowserPermissions();
+    const permissionsUpdated = await syncWithBrowserPermissions();
 
-    // Unsure whether the browser remembers correctly registered css/scripts
-    // after we quit the browser. For now uBOL will check unconditionally at
-    // launch time whether content css/scripts are properly registered.
-    registerInjectables();
+    const shouldInject = isNewVersion || permissionsUpdated ||
+        isSideloaded && rulesetConfig.developerMode;
+    if ( shouldInject ) {
+        registerInjectables();
+    }
 
     // Cosmetic filtering-related content scripts cache fitlering data in
     // session storage.
