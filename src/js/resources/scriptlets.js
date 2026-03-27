@@ -31,6 +31,7 @@ import './prevent-addeventlistener.js';
 import './prevent-dialog.js';
 import './prevent-fetch.js';
 import './prevent-innerHTML.js';
+import './prevent-navigation.js';
 import './prevent-settimeout.js';
 import './prevent-xhr.js';
 import './replace-argument.js';
@@ -1828,7 +1829,7 @@ function trustedClickElement(
             const pos2 = s2.indexOf('=');
             const key = pos2 !== -1 ? s2.slice(0, pos2).trim() : s2;
             const value = pos2 !== -1 ? s2.slice(pos2+1).trim() : '';
-            out.re = new RegExp(`^${this.escapeRegexChars(key)}=${this.escapeRegexChars(value)}`);
+            out.re = new RegExp(`^${safe.escapeRegexChars(key)}=${safe.escapeRegexChars(value)}`);
             return out;
         }).filter(details => details !== undefined);
         const allCookies = assertions.some(o => o.type === 'cookie')
