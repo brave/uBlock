@@ -220,7 +220,7 @@
     "description": "Tooltip when hovering the top-most cell of the global-rules column."
   },
   "popupTipLocalRules": {
-    "message": "로컬 규칙: 이 열은 현재 사이트만 적용되는 규칙 열 입니다.\n로컬 규칙은 공용 규칙보다 우선권을 가지고 있습니다.",
+    "message": "로컬 규칙: 이 열은 현재 사이트만 적용되는 규칙 열 입니다.",
     "description": "Tooltip when hovering the top-most cell of the local-rules column."
   },
   "popupTipSaveRules": {
@@ -900,7 +900,7 @@
     "description": "Text for button which open an external web page in Support pane"
   },
   "supportReportSpecificButton": {
-    "message": "새 신고 생성",
+    "message": "GitHub에서 새 신고 생성",
     "description": "Text for button which open an external web page in Support pane"
   },
   "supportFindSpecificButton": {
@@ -1072,7 +1072,7 @@
     "description": "English: Reset to default settings..."
   },
   "aboutRestoreDataConfirm": {
-    "message": "모든 설정은 {{time}}에 백업된 데이터에 덮어씌워지며, uBlock₀이 재시작됩니다.\n\n모든 존재하는 설정을 백업 데이터로 덮어씌우시겠습니까?",
+    "message": "모든 설정은 {{time}}에 백업된 데이터에 덮어씌워지며, uBlock₀이 재시작됩니다.\n\n백업된 데이터로 기존의 모든 설정을 덮어쓰시겠습니까?",
     "description": "Message asking user to confirm restore"
   },
   "aboutRestoreDataError": {

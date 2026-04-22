@@ -19,7 +19,7 @@
     Home: https://github.com/gorhill/uBlock
 */
 
-import * as makeScriptlet from './make-scriptlets.js';
+import * as makeScriptlet from './js/make-scriptlets.js';
 import * as sfp from './js/static-filtering-parser.js';
 
 import {
@@ -37,7 +37,7 @@ import { literalStrFromRegex } from './js/regex-analyzer.js';
 import path from 'path';
 import process from 'process';
 import redirectResourcesMap from './js/redirect-resources.js';
-import { safeReplace } from './safe-replace.js';
+import { safeReplace } from './js/safe-replace.js';
 
 /******************************************************************************/
 
@@ -242,23 +242,29 @@ rePatternFromUrlFilter.restrHostnameAnchor2 = '^[^:]+://([^:/]+)?';
 /******************************************************************************/
 
 async function fetchList(assetDetails) {
+    // Mind commit if present
+    const effectiveURL = url => {
+        return assetDetails.commit
+            ? url.replace('{commit}',  assetDetails.commit)
+            : url;
+    };
     // Remember fetched URLs
     const fetchedURLs = new Set();
 
     // Fetch list and expand `!#include` directives
-    let parts = assetDetails.urls.map(url => ({ url }));
+    let parts = assetDetails.urls.map(url => ({ url: effectiveURL(url) }));
     while (  parts.every(v => typeof v === 'string') === false ) {
         const newParts = [];
         for ( const part of parts ) {
             if ( typeof part === 'string' ) {
-                newParts.push(part);
+                newParts.push(effectiveURL(part));
                 continue;
             }
-            if ( fetchedURLs.has(part.url) ) {
+            if ( fetchedURLs.has(effectiveURL(part.url)) ) {
                 newParts.push('');
                 continue;
             }
-            fetchedURLs.add(part.url);
+            fetchedURLs.add(effectiveURL(part.url));
             if (
                 assetDetails.trusted ||
                 part.url.startsWith('https://ublockorigin.github.io/uAssets/filters/')
@@ -266,7 +272,7 @@ async function fetchList(assetDetails) {
                 newParts.push(`!#trusted on ${secret}`);
             }
             newParts.push(
-                fetchText(part.url, cacheDir).then(details => {
+                fetchText(effectiveURL(part.url), cacheDir).then(details => {
                     const { url, error } = details;
                     if ( error !== undefined ) { return details; }
                     const content = details.content.trim();
@@ -969,19 +975,32 @@ async function processScriptletFilters(assetDetails, mapin) {
     if ( mapin === undefined ) { return 0; }
     if ( mapin.size === 0 ) { return 0; }
 
+    const { id } = assetDetails;
     for ( const details of mapin.values() ) {
-        makeScriptlet.compile(assetDetails, details);
+        makeScriptlet.compile(id, details);
     }
-    const stats = await makeScriptlet.commit(
-        assetDetails.id,
-        `${scriptletDir}/scriptlet`,
-        writeFile
+    const template = await fs.readFile(
+        './scriptlets/scriptlet.template.js',
+        { encoding: 'utf8' }
     );
-    if ( stats.length !== 0 ) {
-        scriptletStats.set(assetDetails.id, stats);
+    const result = makeScriptlet.commit(id, template);
+    const stats = {};
+    let count = 0;
+    if ( result.MAIN ) {
+        writeFile(`${scriptletDir}/scriptlet/main/${id}.js`, result.MAIN.code);
+        stats.MAIN = result.MAIN.hostnames;
+        count += result.MAIN.hostnames.length;
+    }
+    if ( result.ISOLATED ) {
+        writeFile(`${scriptletDir}/scriptlet/isolated/${id}.js`, result.ISOLATED.code);
+        stats.ISOLATED = result.ISOLATED.hostnames;
+        count += result.ISOLATED.hostnames.length;
+    }
+    if ( count !== 0 ) {
+        scriptletStats.set(id, stats);
     }
     makeScriptlet.reset();
-    return stats.length;
+    return count;
 }
 
 /******************************************************************************/
