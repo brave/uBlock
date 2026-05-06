@@ -23,34 +23,59 @@
 
 /******************************************************************************/
 
-const docURL = new URL(document.baseURI);
-const details = await chrome.runtime.sendMessage({
-    what: 'injectCustomFilters',
-    hostname: docURL.hostname,
-}).catch(( ) => {
-});
+async function uBOL_cssUserActivate() {
+    if ( self.customFilters ) { return; }
 
-if ( details?.proceduralSelectors?.length ) {
-    if ( self.ProceduralFiltererAPI ) {
+    const docURL = new URL(document.baseURI);
+
+    const details = await chrome.runtime.sendMessage({
+        what: 'injectCustomFilters',
+        hostname: docURL.hostname,
+    }).catch(( ) => {
+    });
+    self.customFilters = details;
+    if ( Boolean(details) === false ) { return; }
+
+    if ( details?.proceduralSelectors?.length ) {
+        if ( self.ProceduralFiltererAPI === undefined ) {
+            self.ProceduralFiltererAPI = chrome.runtime.sendMessage({
+                what: 'injectCSSProceduralAPI'
+            }).catch(( ) => {
+            });
+        }
+        await self.ProceduralFiltererAPI;
         self.customProceduralFiltererAPI = new self.ProceduralFiltererAPI();
-        self.customProceduralFiltererAPI.addSelectors(
-            details.proceduralSelectors.map(a => JSON.parse(a))
-        );
+        const selectors = details.proceduralSelectors.map(a => JSON.parse(a));
+        const declaratives = selectors.filter(a => a.cssable);
+        if ( declaratives.length !== 0 ) {
+            self.customProceduralFiltererAPI.addDeclaratives(declaratives);
+        }
+        const procedurals = selectors.filter(a => !a.cssable);
+        if ( procedurals.length !== 0 ) {
+            self.customProceduralFiltererAPI.addProcedurals(procedurals);
+        }
+    }
+
+    if ( details?.plainSelectors?.length ) {
+        const selectors = details.plainSelectors;
+        self.cssAPI.insert(`${selectors.join(',\n')}{display:none!important;}`);
     }
 }
 
-if ( details?.plainSelectors?.length ) {
-    const selectors = details.plainSelectors;
-    self.addEventListener('pageshow', ( ) => {
-        chrome.runtime.sendMessage({
-            what: 'insertCSS',
-            css: `${selectors.join(',\n')}{display:none!important;}`,
-        }).catch(( ) => {
-        });
-    });
+async function uBOL_cssUserStart() {
+    if ( self.cssUserPendingOp === undefined ) {
+        self.cssUserPendingOp = Promise.resolve();
+    }
+    self.cssUserPendingOp = self.cssUserPendingOp.then(uBOL_cssUserActivate);
+    await self.cssUserPendingOp;
+    if ( Boolean(self.customFilters) === false ) { return; }
+    self.removeEventListener('pagereveal', uBOL_cssUserStart);
 }
 
-self.customFilters = details;
+await uBOL_cssUserStart();
+
+if ( self.customFilters ) { return; }
+self.addEventListener('pagereveal', uBOL_cssUserStart);
 
 /******************************************************************************/
 

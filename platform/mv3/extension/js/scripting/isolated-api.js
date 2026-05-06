@@ -27,53 +27,77 @@
 
     const isolatedAPI = self.isolatedAPI = {};
 
-    const hostnameStack = (( ) => {
-        const docloc = document.location;
-        const origins = [ docloc.origin ];
-        if ( docloc.ancestorOrigins ) {
-            origins.push(...docloc.ancestorOrigins);
-        }
-        return origins.map((origin, i) => {
-            const beg = origin.lastIndexOf('://');
-            if ( beg === -1 ) { return; }
-            const hn1 = origin.slice(beg+3)
-            const end = hn1.indexOf(':');
-            const hn2 = end === -1 ? hn1 : hn1.slice(0, end);
-            return { hnparts: hn2.split('.'), i };
-        }).filter(a => a !== undefined);
-    })();
+    isolatedAPI.contexts = {
+        entries: [],
+        compute() {
+            const docloc = document.location;
+            const origins = [ docloc.origin ];
+            if ( docloc.ancestorOrigins ) {
+                origins.push(...docloc.ancestorOrigins);
+            }
+            this.entries = origins.map((origin, i) => {
+                const beg = origin.indexOf('://');
+                if ( beg === -1 ) { return; }
+                const hn1 = origin.slice(beg+3)
+                const end = hn1.indexOf(':');
+                const hn2 = end === -1 ? hn1 : hn1.slice(0, end);
+                const hnParts = hn2.split('.');
+                if ( hn2.length === 0 ) { return; }
+                const hns = [];
+                for ( let i = 0; i < hnParts.length; i++ ) {
+                    hns.push(`${hnParts.slice(i).join('.')}`);
+                }
+                return { hns, i };
+            }).filter(a => a !== undefined);
+        },
+        get topHostname() {
+            if ( this.entries.length === 0 ) { this.compute(); }
+            return this.entries.at(-1).hns[0];
+        },
+        get hostnames() {
+            if ( this.entries.length === 0 ) { this.compute(); }
+            return this.entries[0].hns;
+        },
+        get entities() {
+            if ( this.entries.length === 0 ) { this.compute(); }
+            if ( this.entries[0].ens === undefined ) {
+                const ens = [];
+                const hnparts =  this.entries[0].hns[0].split('.');
+                const n = hnparts.length - 1;
+                for ( let i = 0; i < n; i++ ) {
+                    for ( let j = n; j > i; j-- ) {
+                        ens.push(`${hnparts.slice(i,j).join('.')}.*`);
+                    }
+                }
+                ens.sort((a, b) => {
+                    const d = b.length - a.length;
+                    if ( d !== 0 ) { return d; }
+                    return a > b ? -1 : 1;
+                });
+                this.entries[0].ens = ens;
+            }
+            return this.entries[0].ens;
+        },
+    };
 
-    isolatedAPI.topHostname = hostnameStack.at(-1)?.hnparts.join('.') ?? '';
-
-    const forEachHostname = (entry, callback, details) => {
-        const hnparts = entry.hnparts;
-        const hnpartslen = hnparts.length;
-        if ( hnpartslen === 0 ) { return; }
-        for ( let i = 0; i < hnpartslen; i++ ) {
-            const r = callback(`${hnparts.slice(i).join('.')}`, details);
-            if ( r !== undefined ) { return r; }
-        }
-        if ( details?.hasEntities !== true ) { return; }
-        const n = hnpartslen - 1;
-        for ( let i = 0; i < n; i++ ) {
-            for ( let j = n; j > i; j-- ) {
-                const r = callback(`${hnparts.slice(i,j).join('.')}.*`, details);
-                if ( r !== undefined ) { return r; }
+    isolatedAPI.binarySearch = (haystack, needle, r) => {
+        let l = 0, i = 0, d = 0, candidate;
+        r = r >= 0 ? r : haystack.length;
+        while ( l < r ) {
+            i = l + r >>> 1;
+            candidate = haystack[i];
+            d = needle.length - candidate.length;
+            if ( d === 0 ) {
+                if ( needle === candidate ) { return i; }
+                d = needle < candidate ? -1 : 1;
+            }
+            if ( d < 0 ) {
+                r = i;
+            } else {
+                l = i + 1;
             }
         }
-    };
-
-    isolatedAPI.forEachHostname = (callback, details) => {
-        if ( hostnameStack.length === 0 ) { return; }
-        return forEachHostname(hostnameStack[0], callback, details);
-    };
-
-    isolatedAPI.forEachHostnameAncestors = (callback, details) => {
-        for ( const entry of hostnameStack ) {
-            if ( entry.i === 0 ) { continue; }
-            const r = forEachHostname(entry, callback, details);
-            if ( r !== undefined ) { return r; }
-        }
+        return ~i;
     };
 
 })(self.isolatedAPI);
@@ -84,7 +108,7 @@
 
     const cosmeticAPI = self.cosmeticAPI = {};
     const { isolatedAPI } = self;
-    const { topHostname } = isolatedAPI;
+    const topHostname = isolatedAPI.contexts.topHostname;
     const thisHostname = document.location.hostname || '';
 
     const sessionRead = async function(key) {
@@ -110,27 +134,6 @@
         }
     };
 
-    const binarySearch = (sorted, target) => {
-        let l = 0, i = 0, d = 0;
-        let r = sorted.length;
-        let candidate;
-        while ( l < r ) {
-            i = l + r >>> 1;
-            candidate = sorted[i];
-            d = target.length - candidate.length;
-            if ( d === 0 ) {
-                if ( target === candidate ) { return i; }
-                d = target < candidate ? -1 : 1;
-            }
-            if ( d < 0 ) {
-                r = i;
-            } else {
-                l = i + 1;
-            }
-        }
-        return -1;
-    };
-
     const selectorsFromListIndex = (data, ilist) => {
         const list = JSON.parse(`[${data.selectorLists[ilist]}]`);
         const { result } = data;
@@ -143,19 +146,15 @@
         }
     };
 
-    const lookupHostname = (hostname, data) => {
-        const listref = binarySearch(data.hostnames, hostname);
-        if ( listref !== -1 ) {
-            selectorsFromListIndex(data, data.selectorListRefs[listref]);
-        }
-        const { regexes } = data;
-        for ( let i = 0, n = regexes.length; i < n; i += 3 ) {
-            if ( hostname.includes(regexes[i+0]) === false ) { continue; }
-            if ( typeof regexes[i+1] === 'string' ) {
-                regexes[i+1] = new RegExp(regexes[i+1]);
+    const selectorsFromHostnames = (haystack, needles, data) => {
+        let listref = -1;
+        for ( const needle of needles ) {
+            listref = isolatedAPI.binarySearch(haystack, needle, listref);
+            if ( listref >= 0 ) {
+                selectorsFromListIndex(data, data.selectorListRefs[listref]);
+            } else {
+                listref = ~listref;
             }
-            if ( regexes[i+1].test(hostname) === false ) { continue; }
-            selectorsFromListIndex(data, regexes[i+2]);
         }
     };
 
@@ -163,7 +162,19 @@
         const data = await localRead(`css.${realm}.${rulesetId}`);
         if ( typeof data !== 'object' || data === null ) { return; }
         data.result = result;
-        isolatedAPI.forEachHostname(lookupHostname, data);
+        selectorsFromHostnames(data.hostnames, isolatedAPI.contexts.hostnames, data);
+        if ( data.hasEntities ) {
+            selectorsFromHostnames(data.hostnames, isolatedAPI.contexts.entities, data);
+        }
+        const { regexes } = data;
+        for ( let i = 0, n = regexes.length; i < n; i += 3 ) {
+            if ( thisHostname.includes(regexes[i+0]) === false ) { continue; }
+            if ( typeof regexes[i+1] === 'string' ) {
+                regexes[i+1] = new RegExp(regexes[i+1]);
+            }
+            if ( regexes[i+1].test(thisHostname) === false ) { continue; }
+            selectorsFromListIndex(data, regexes[i+2]);
+        }
     };
 
     const fillCache = async function(realm, rulesetIds) {
@@ -195,7 +206,7 @@
     };
 
     const cacheKey =
-        `cache.css.${thisHostname || ''}${topHostname !== thisHostname ? `/${topHostname}` : ''}`;
+        `cache.css.${topHostname !== thisHostname ? `${topHostname}/` : ''}${thisHostname || ''}`;
     let clientCount = 0;
     let cacheEntry;
 

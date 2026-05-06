@@ -21,7 +21,6 @@
 
 import * as sfp from './static-filtering-parser.js';
 
-import { domainFromHostname, hostnameFromNetworkURL } from './uri-utils.js';
 import { dropTask, queueTask } from './tasks.js';
 import { isRE2, toHeaderPattern, tokenizableStrFromRegex } from './regex-analyzer.js';
 
@@ -29,6 +28,7 @@ import BidiTrieContainer from './biditrie.js';
 import { CompiledListReader } from './static-filtering-io.js';
 import { FilteringContext } from './filtering-context.js';
 import HNTrieContainer from './hntrie.js';
+import { domainFromHostname } from './uri-utils.js';
 import { urlSkip } from './urlskip.js';
 
 /******************************************************************************/
@@ -241,42 +241,67 @@ let $requestURLRaw = '';
 let $requestHostname = '';
 let $requestAddress = '';
 let $docHostname = '';
-let $docDomain = '';
+let $topHostname = '';
 let $tokenBeg = 0;
 let $patternMatchLeft = 0;
 let $patternMatchRight = 0;
 let $isBlockImportant = false;
 
-const $docEntity = {
-    entity: '',
-    last: '',
-    compute() {
-        if ( this.last !== $docHostname ) {
-            this.last = $docHostname;
-            const pos = $docDomain.indexOf('.');
-            this.entity = pos !== -1
-                ? `${$docHostname.slice(0, pos - $docDomain.length)}.*`
+class HostnameDetails {
+    #cache = new Map();
+    #mru = [];
+    #lookup(hostname) {
+        const details = this.#cache.get(hostname) ?? { hostname };
+        if ( details.domain === undefined ) {
+            if ( this.#cache.size === 8 ) {
+                this.#cache.delete(this.#mru.pop());
+            }
+            this.#mru.unshift(hostname);
+            this.#cache.set(hostname, details);
+        } else if ( this.#mru[0] !== hostname ) {
+            const pos = this.#mru.indexOf(hostname);
+            this.#mru.splice(pos, 1);
+            this.#mru.unshift(hostname);
+        }
+        return details;
+    }
+    get hostname() { return ''; }
+    get domain() {
+        const details = this.#lookup(this.hostname);
+        if ( details.domain === undefined ) {
+            details.domain = domainFromHostname(details.hostname);
+        }
+        return details.domain;
+    }
+    get entity() {
+        const details = this.#lookup(this.hostname);
+        if ( details.entity === undefined ) {
+            if ( details.domain === undefined ) {
+                details.domain = domainFromHostname(details.hostname);
+            }
+            const pos = details.domain.indexOf('.');
+            details.entity = pos !== -1
+                ? `${details.hostname.slice(0, pos - details.domain.length)}.*`
                 : '';
         }
-        return this.entity;
-    },
-};
+        return details.entity;
+    }
+}
 
-const $requestEntity = {
-    entity: '',
-    last: '',
-    compute() {
-        if ( this.last !== $requestHostname ) {
-            this.last = $requestHostname;
-            const requestDomain = domainFromHostname($requestHostname);
-            const pos = requestDomain.indexOf('.');
-            this.entity = pos !== -1
-                ? `${$requestHostname.slice(0, pos - requestDomain.length)}.*`
-                : '';
-        }
-        return this.entity;
-    },
-};
+class DocDetails extends HostnameDetails {
+    get hostname() { return $docHostname; }
+}
+const $docDetails = new DocDetails();
+
+class RequestDetails extends HostnameDetails {
+    get hostname() { return $requestHostname; }
+}
+const $requestDetails = new RequestDetails();
+
+class TopDetails extends HostnameDetails {
+    get hostname() { return $topHostname; }
+}
+const $topDetails = new TopDetails();
 
 const $httpHeaders = {
     init(...headers) {
@@ -299,6 +324,18 @@ const $httpHeaders = {
     },
     headers: [],
     parsed: new Map(),
+};
+
+const resetRegisters = (fctxt, typeBits) => {
+    $requestURL = urlTokenizer.setURL(fctxt.url);
+    $requestURLRaw = fctxt.url;
+    $requestHostname = fctxt.getHostname();
+    $requestMethodBit = fctxt.method || 0;
+    $requestTypeValue = (typeBits & TYPE_REALM) >>> TYPE_REALM_OFFSET;
+    $requestAddress = fctxt.getIPAddress();
+    $docHostname = fctxt.getDocHostname();
+    $topHostname = fctxt.getTabHostname();
+    $isBlockImportant = false;
 };
 
 /******************************************************************************/
@@ -357,12 +394,14 @@ class LogData {
         const denyallow = [];
         const fromDomains = [];
         const toDomains = [];
+        const topDomains = [];
         const logData = {
             pattern,
             regex,
             denyallow,
             fromDomains,
             toDomains,
+            topDomains,
             options,
             isRegex: false,
         };
@@ -395,6 +434,9 @@ class LogData {
         }
         if ( toDomains.length !== 0 ) {
             options.push(`to=${toDomains.join('|')}`);
+        }
+        if ( topDomains.length !== 0 ) {
+            options.push(`top=${topDomains.join('|')}`);
         }
         if ( options.length !== 0 ) {
             raw += '$' + options.join(',');
@@ -1785,7 +1827,7 @@ class FilterDomainRegexHit {
 
 /******************************************************************************/
 
-// Implement the following filter option:
+// Implements the following filter option:
 // - domain=
 // - from=
 
@@ -1830,13 +1872,13 @@ class FilterFromDomainMiss extends FilterFromDomainHit {
 
 class FilterFromEntityHit extends FilterFromDomainHit {
     static getMatchTarget() {
-        return $docEntity.compute();
+        return $docDetails.entity;
     }
 }
 
 class FilterFromEntityMiss extends FilterFromDomainMiss {
     static getMatchTarget() {
-        return $docEntity.compute();
+        return $docDetails.entity;
     }
 }
 
@@ -1848,7 +1890,7 @@ class FilterFromDomainHitSet extends FilterDomainHitSet {
     static getMatchTarget(which) {
         return (which & 0b01) !== 0
             ? $docHostname
-            : $docEntity.compute();
+            : $docDetails.entity;
     }
 
     static get dnrConditionName() {
@@ -1935,7 +1977,7 @@ const compileFromDomainOpt = (...args) => {
 
 /******************************************************************************/
 
-// Implement the following filter option:
+// Implements the following filter option:
 // - to=
 
 class FilterToDomainHit extends FilterDomainHit {
@@ -1971,13 +2013,13 @@ class FilterToDomainMiss extends FilterToDomainHit {
 
 class FilterToEntityHit extends FilterToDomainHit {
     static getMatchTarget() {
-        return $requestEntity.compute();
+        return $requestDetails.entity;
     }
 }
 
 class FilterToEntityMiss extends FilterToDomainMiss {
     static getMatchTarget() {
-        return $requestEntity.compute();
+        return $requestDetails.entity;
     }
 }
 
@@ -1985,7 +2027,7 @@ class FilterToDomainHitSet extends FilterDomainHitSet {
     static getMatchTarget(which) {
         return (which & 0b01) !== 0
             ? $requestHostname
-            : $requestEntity.compute();
+            : $requestDetails.entity;
     }
 
     static get dnrConditionName() {
@@ -2064,6 +2106,141 @@ const toOptClasses = [
 
 const compileToDomainOpt = (...args) => {
     return compileDomainOpt(toOptClasses, ...args);
+};
+
+/******************************************************************************/
+
+// Implements the following filter option:
+// - top=
+// https://github.com/uBlockOrigin/uBlock-issues/issues/3151
+// https://github.com/uBlockOrigin/uAssets/issues/17807#issuecomment-1806971916
+
+class FilterTopDomainHit extends FilterDomainHit {
+    static getMatchTarget() {
+        return $topHostname;
+    }
+
+    static get dnrConditionName() {
+        return 'topDomains';
+    }
+
+    static logData(idata, details) {
+        details.topDomains.push(this.getDomainOpt(idata));
+    }
+}
+Object.defineProperty(FilterTopDomainHit, 'hntrieContainer', {
+    value: origHNTrieContainer
+});
+
+class FilterTopDomainMiss extends FilterTopDomainHit {
+    static get dnrConditionName() {
+        return 'excludedTopDomains';
+    }
+
+    static match(idata) {
+        return super.match(idata) === false;
+    }
+
+    static logData(idata, details) {
+        details.topDomains.push(`~${this.getDomainOpt(idata)}`);
+    }
+}
+
+class FilterTopEntityHit extends FilterTopDomainHit {
+    static getMatchTarget() {
+        return $topDetails.entity;
+    }
+}
+
+class FilterTopEntityMiss extends FilterTopDomainMiss {
+    static getMatchTarget() {
+        return $topDetails.entity;
+    }
+}
+
+class FilterTopDomainHitSet extends FilterDomainHitSet {
+    static getMatchTarget(which) {
+        return (which & 0b01) !== 0
+            ? $topHostname
+            : $topDetails.entity;
+    }
+
+    static get dnrConditionName() {
+        return 'topDomains';
+    }
+
+    static logData(idata, details) {
+        details.topDomains.push(this.getDomainOpt(idata));
+    }
+}
+Object.defineProperty(FilterTopDomainHitSet, 'hntrieContainer', {
+    value: origHNTrieContainer
+});
+
+class FilterTopDomainMissSet extends FilterTopDomainHitSet {
+    static match(idata) {
+        return super.match(idata) === false;
+    }
+
+    static get dnrConditionName() {
+        return 'excludedTopDomains';
+    }
+
+    static logData(idata, details) {
+        details.topDomains.push('~' + this.getDomainOpt(idata).replace(/\|/g, '|~'));
+    }
+}
+
+class FilterTopRegexHit extends FilterDomainRegexHit {
+    static getMatchTarget() {
+        return $topHostname;
+    }
+
+    static get dnrConditionName() {
+        return 'topDomains';
+    }
+
+    static logData(idata, details) {
+        details.topDomains.push(`${this.getDomainOpt(idata)}`);
+    }
+}
+
+class FilterTopRegexMiss extends FilterTopRegexHit {
+    static match(idata) {
+        return super.match(idata) === false;
+    }
+
+    static get dnrConditionName() {
+        return 'excludedTopDomains';
+    }
+
+    static logData(idata, details) {
+        details.topDomains.push(`~${this.getDomainOpt(idata)}`);
+    }
+}
+
+registerFilterClass(FilterTopDomainHit);
+registerFilterClass(FilterTopDomainMiss);
+registerFilterClass(FilterTopEntityHit);
+registerFilterClass(FilterTopEntityMiss);
+registerFilterClass(FilterTopDomainHitSet);
+registerFilterClass(FilterTopDomainMissSet);
+registerFilterClass(FilterTopRegexHit);
+registerFilterClass(FilterTopRegexMiss);
+
+const topOptClasses = [
+    FilterTopDomainHit,
+    FilterTopEntityHit,
+    FilterTopDomainHitSet,
+    FilterTopRegexHit,
+    FilterTopDomainMiss,
+    FilterTopEntityMiss,
+    FilterTopDomainMissSet,
+    FilterTopRegexMiss,
+];
+
+const compileTopDomainOpt = (...args) => {
+    return compileDomainOpt(topOptClasses, ...args);
 };
 
 /******************************************************************************/
@@ -2876,7 +3053,6 @@ registerFilterClass(FilterBucketIfRegexHits);
 /******************************************************************************/
 
 class FilterStrictParty {
-    // TODO: disregard `www.`?
     static match(idata) {
         return ($requestHostname === $docHostname) === (filterData[idata+1] === 0);
     }
@@ -3681,6 +3857,16 @@ class FilterCompiler {
             this.optionUnitBits |= TO_BIT;
             break;
         }
+        case sfp.NODE_TYPE_NET_OPTION_NAME_TOP: {
+            const iter = parser.getNetFilterTopOptionIterator();
+            const list = [];
+            const value = this.processHostnameList(iter, list);
+            if ( value === '' ) { return false; }
+            this.optionValues.set('top', value);
+            this.optionValues.set('topList', list);
+            this.optionUnitBits |= TOP_BIT;
+            break;
+        }
         default:
             break;
         }
@@ -3776,6 +3962,7 @@ class FilterCompiler {
             case sfp.NODE_TYPE_NET_OPTION_NAME_REQUESTHEADER:
             case sfp.NODE_TYPE_NET_OPTION_NAME_RESPONSEHEADER:
             case sfp.NODE_TYPE_NET_OPTION_NAME_TO:
+            case sfp.NODE_TYPE_NET_OPTION_NAME_TOP:
             case sfp.NODE_TYPE_NET_OPTION_NAME_URLSKIP:
             case sfp.NODE_TYPE_NET_OPTION_NAME_URLTRANSFORM:
                 if ( this.processOptionWithValue(parser, type) === false ) {
@@ -4135,6 +4322,15 @@ class FilterCompiler {
             );
         }
 
+        // Top origin
+        if ( (this.optionUnitBits & TOP_BIT) !== 0 ) {
+            compileTopDomainOpt(
+                this.optionValues.get('topList'),
+                units.length !== 0 && patternClass.isSlow === true,
+                units
+            );
+        }
+
         // Deny-allow
         if ( (this.optionUnitBits & DENYALLOW_BIT) !== 0 ) {
             units.push(FilterDenyAllow.compile(this));
@@ -4255,17 +4451,18 @@ class FilterCompiler {
 }
 
 // These are to quickly test whether a filter is composite
-const FROM_BIT         = 0b00000000001;
-const TO_BIT           = 0b00000000010;
-const DENYALLOW_BIT    = 0b00000000100;
-const HEADER_BIT       = 0b00000001000;
-const STRICT_PARTY_BIT = 0b00000010000;
-const MODIFY_BIT       = 0b00000100000;
-const NOT_TYPE_BIT     = 0b00001000000;
-const IMPORTANT_BIT    = 0b00010000000;
-const METHOD_BIT       = 0b00100000000;
-const IPADDRESS_BIT    = 0b01000000000;
-const MESSAGE_BIT      = 0b10000000000
+const FROM_BIT         = 0b0_0000_0000_0001;
+const TO_BIT           = 0b0_0000_0000_0010;
+const TOP_BIT          = 0b0_0000_0000_0100;
+const DENYALLOW_BIT    = 0b0_0000_0000_1000;
+const HEADER_BIT       = 0b0_0000_0001_0000;
+const STRICT_PARTY_BIT = 0b0_0000_0010_0000;
+const MODIFY_BIT       = 0b0_0000_0100_0000;
+const NOT_TYPE_BIT     = 0b0_0000_1000_0000;
+const IMPORTANT_BIT    = 0b0_0001_0000_0000;
+const METHOD_BIT       = 0b0_0010_0000_0000;
+const IPADDRESS_BIT    = 0b0_0100_0000_0000;
+const MESSAGE_BIT      = 0b0_1000_0000_0000;
 
 FilterCompiler.prototype.FILTER_OK          = 0;
 FilterCompiler.prototype.FILTER_INVALID     = 1;
@@ -4682,7 +4879,7 @@ StaticNetFilteringEngine.prototype.dnrFromCompiled = function(op, context, ...ar
     const isUnsupportedDomain = hn => hn.endsWith('.*') || hn.startsWith('/');
     for ( const rule of ruleset ) {
         if ( rule.condition === undefined ) { continue; }
-        for ( const prop of [ 'Initiator', 'Request' ] ) {
+        for ( const prop of [ 'Initiator', 'Request', 'Top' ] ) {
             const hitProp = `${prop.toLowerCase()}Domains`;
             if ( Array.isArray(rule.condition[hitProp]) ) {
                 if ( rule.condition[hitProp].some(hn => isUnsupportedDomain(hn)) ) {
@@ -5077,14 +5274,7 @@ StaticNetFilteringEngine.prototype.matchAndFetchModifiers = function(
 
     const typeBits = typeNameToTypeValue[fctxt.type] || otherTypeBitValue;
 
-    $requestURL = urlTokenizer.setURL(fctxt.url);
-    $requestURLRaw = fctxt.url;
-    $docHostname = fctxt.getDocHostname();
-    $docDomain = fctxt.getDocDomain();
-    $requestHostname = fctxt.getHostname();
-    $requestMethodBit = fctxt.method || 0;
-    $requestTypeValue = (typeBits & TYPE_REALM) >>> TYPE_REALM_OFFSET;
-    $requestAddress = fctxt.getIPAddress();
+    resetRegisters(fctxt, typeBits);
 
     const modifierType = modifierTypeFromName.get(modifierName);
     const modifierBits = modifierBitsFromType.get(modifierType);
@@ -5362,47 +5552,6 @@ StaticNetFilteringEngine.prototype.realmMatchString = function(
 
 /******************************************************************************/
 
-// Specialized handler
-
-// https://github.com/gorhill/uBlock/issues/1477
-//   Special case: blocking-generichide filter ALWAYS exists, it is implicit --
-//   thus we always first check for exception filters, then for important block
-//   filter if and only if there was a hit on an exception filter.
-// https://github.com/gorhill/uBlock/issues/2103
-//   User may want to override `generichide` exception filters.
-// https://www.reddit.com/r/uBlockOrigin/comments/d6vxzj/
-//   Add support for `specifichide`.
-
-StaticNetFilteringEngine.prototype.matchRequestReverse = function(type, url) {
-    const typeBits = typeNameToTypeValue[type] | 0x80000000;
-
-    // Prime tokenizer: we get a normalized URL in return.
-    $requestURL = urlTokenizer.setURL(url);
-    $requestURLRaw = url;
-    $requestMethodBit = 0;
-    $requestTypeValue = (typeBits & TYPE_REALM) >>> TYPE_REALM_OFFSET;
-    $requestAddress = '';
-    $isBlockImportant = false;
-    this.$filterUnit = 0;
-
-    // These registers will be used by various filters
-    $docHostname = $requestHostname = hostnameFromNetworkURL(url);
-    $docDomain = domainFromHostname($docHostname);
-
-    // Exception filters
-    if ( this.realmMatchString(ALLOW_REALM, typeBits, FIRSTPARTY_REALM) ) {
-        // Important block filters.
-        if ( this.realmMatchString(BLOCKIMPORTANT_REALM, typeBits, FIRSTPARTY_REALM) ) {
-            return 1;
-        }
-        return 2;
-    }
-    return 0;
-
-};
-
-/******************************************************************************/
-
 // https://github.com/chrisaljoudi/uBlock/issues/116
 //   Some type of requests are exceptional, they need custom handling,
 //   not the generic handling.
@@ -5439,19 +5588,9 @@ StaticNetFilteringEngine.prototype.matchRequest = function(fctxt, modifiers = 0)
 
     const partyBits = fctxt.is3rdPartyToDoc() ? THIRDPARTY_REALM : FIRSTPARTY_REALM;
 
-    // Prime tokenizer: we get a normalized URL in return.
-    $requestURL = urlTokenizer.setURL(fctxt.url);
-    $requestURLRaw = fctxt.url;
-    this.$filterUnit = 0;
+    resetRegisters(fctxt, typeBits);
 
-    // These registers will be used by various filters
-    $docHostname = fctxt.getDocHostname();
-    $docDomain = fctxt.getDocDomain();
-    $requestHostname = fctxt.getHostname();
-    $requestMethodBit = fctxt.method || 0;
-    $requestTypeValue = (typeBits & TYPE_REALM) >>> TYPE_REALM_OFFSET;
-    $requestAddress = fctxt.getIPAddress();
-    $isBlockImportant = false;
+    this.$filterUnit = 0;
 
     // Evaluate block realm before allow realm, and allow realm before
     // block-important realm, i.e. by order of likelihood of a match.
@@ -5475,20 +5614,11 @@ StaticNetFilteringEngine.prototype.matchHeaders = function(fctxt, ...headers) {
     const typeBits = typeNameToTypeValue[fctxt.type] || otherTypeBitValue;
     const partyBits = fctxt.is3rdPartyToDoc() ? THIRDPARTY_REALM : FIRSTPARTY_REALM;
 
-    // Prime tokenizer: we get a normalized URL in return.
-    $requestURL = urlTokenizer.setURL(fctxt.url);
-    $requestURLRaw = fctxt.url;
-    this.$filterUnit = 0;
+    resetRegisters(fctxt, typeBits);
 
-    // These registers will be used by various filters
-    $docHostname = fctxt.getDocHostname();
-    $docDomain = fctxt.getDocDomain();
-    $requestHostname = fctxt.getHostname();
-    $requestMethodBit = fctxt.method || 0;
-    $requestTypeValue = (typeBits & TYPE_REALM) >>> TYPE_REALM_OFFSET;
-    $requestAddress = fctxt.getIPAddress();
-    $isBlockImportant = false;
     $httpHeaders.init(...headers);
+
+    this.$filterUnit = 0;
 
     let r = 0;
     if ( this.realmMatchString(HEADERS_REALM | BLOCK_REALM, typeBits, partyBits) ) {

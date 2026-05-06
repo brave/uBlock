@@ -1,6 +1,10 @@
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+    }
+@keyframes copied {
+    from { opacity: 0; }
+    to { opacity: 1; }
     }
 
 :root {
@@ -278,11 +282,15 @@ section[data-pane="filters"] li [contenteditable] {
 section[data-pane="filters"] li [contenteditable]:focus {
     background-color: var(--surface-0);
     }
-section[data-pane="filters"] li .fa-icon {
+section[data-pane="filters"] li > div span.fa-icon {
     align-self: baseline;
     font-size: calc(var(--font-size) + 2px);
-    padding: 0 0.5em;
+    padding-inline: 0.3em;
     top: 2px;
+    }
+section[data-pane="filters"] li > div span.remove,
+section[data-pane="filters"] li > div span.undo {
+    padding-inline-end: 0.5em;
     }
 section[data-pane="filters"] li.selector:not(:first-of-type) {
     border-top: 1px dotted var(--border-1);
@@ -291,10 +299,14 @@ section[data-pane="filters"] li.removed > div [contenteditable] {
     color: red;
     text-decoration-line: line-through;
     }
+section[data-pane="filters"] li.removed > div span.copy,
 section[data-pane="filters"] li.removed > div span.remove,
 section[data-pane="filters"] li:not(.removed) > div span.undo {
     display: none;
     }
+section[data-pane="filters"] li > div span.copy.copied {
+    animation: copied 1s ease-out;
+}
 section[data-pane="filters"] span[contenteditable]:empty:not(:focus)::before {
     color: gray;
     content: '\2026';

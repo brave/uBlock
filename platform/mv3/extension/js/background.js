@@ -57,6 +57,7 @@ import {
     broadcastMessage,
     hostnameFromMatch,
     hostnamesFromMatches,
+    intFromVersion,
 } from './utils.js';
 
 import {
@@ -576,6 +577,24 @@ function onMessage(request, sender, callback) {
         })
         return true;
 
+    case 'addManyCustomFilters': {
+        const promises = [];
+        for ( const [ hostname, selectors ] of request.entries ) {
+            if ( typeof hostname !== 'string' ) { continue; }
+            if ( hostname === '' ) { continue; }
+            if ( Array.isArray(selectors) === false ) { continue; }
+            if ( selectors.length === 0 ) { continue; }
+            promises.push(addCustomFilters(hostname, selectors));
+        }
+        Promise.all(promises).then(results => {
+            if ( results.some(a => a) === false ) { return; }
+            return registerInjectables();
+        }).then(( ) => {
+            callback();
+        });
+        return true;
+    }
+
     case 'removeCustomFilters':
         removeCustomFilters(request.hostname, request.selectors).then(modified => {
             if ( modified !== true ) { return; }
@@ -664,10 +683,34 @@ async function startSession() {
     // The default rulesets may have changed, find out new ruleset to enable,
     // obsolete ruleset to remove.
     if ( isNewVersion ) {
+        const previousVersion = rulesetConfig.version;
         ubolLog(`Version change: ${rulesetConfig.version} => ${currentVersion}`);
         rulesetConfig.version = currentVersion;
         await patchDefaultRulesets();
         saveRulesetConfig();
+        // https://github.com/uBlockOrigin/uBOL-home/issues/670
+        if ( intFromVersion(previousVersion) <= intFromVersion('2026.423.0000') ) {
+            const promises = [];
+            const customFilters = await getAllCustomFilters();
+            for ( const [ hostname, selectors ] of customFilters ) {
+                let modified = false;
+                for ( let i = 0; i < selectors.length; i++ ) {
+                    const selector = selectors[i];
+                    if ( selector.startsWith('0') === false ) { continue; }
+                    selectors[i] = selector.slice(1);
+                    modified = true;
+                }
+                if ( modified === false ) { continue; }
+                promises.push(
+                    removeAllCustomFilters(hostname).then(( ) =>
+                        addCustomFilters(hostname, selectors)
+                    )
+                );
+            }
+            if ( promises.length !== 0 ) {
+                await Promise.all(promises);
+            }
+        }
     }
 
     const rulesetsUpdated = await enableRulesets(rulesetConfig.enabledRulesets);

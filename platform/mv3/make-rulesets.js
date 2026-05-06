@@ -381,7 +381,16 @@ function pruneHostnameArray(hostnames) {
  * */
 
 function toJSONRuleset(ruleset) {
-    const nodupProps = [ 'domains', 'excludedDomains', 'requestDomains', 'excludedRequestDomains', 'initiatorDomains', 'excludedInitiatorDomains' ];
+    const nodupProps = [
+        'domains',
+        'excludedDomains',
+        'requestDomains',
+        'excludedRequestDomains',
+        'initiatorDomains',
+        'excludedInitiatorDomains',
+        'topDomains',
+        'excludedTopDomains',
+    ];
     for ( const { condition } of ruleset ) {
         if ( condition === undefined ) { continue; }
         for ( const prop of nodupProps ) {
@@ -724,47 +733,45 @@ async function processGenericCosmeticFilters(
         exceptionList.filter(a => a.key !== undefined).map(a => a.selector)
     );
 
-    const genericSelectorMap = new Map();
+    const lowlyGenericMap = new Map();
+    const highlyGenericList = [];
     if ( selectorList ) {
         for ( const { key, selector } of selectorList ) {
             if ( key === undefined ) { continue; }
             if ( exceptionSet.has(selector) ) { continue; }
             const type = key.charCodeAt(0);
             const hash = hashFromStr(type, key.slice(1));
-            const selectors = genericSelectorMap.get(hash);
-            if ( selectors === undefined ) {
-                genericSelectorMap.set(hash, selector)
+            if ( lowlyGenericMap.has(hash) ) {
+                lowlyGenericMap.set(hash, `${lowlyGenericMap.get(hash)},\n${selector}`);
             } else {
-                genericSelectorMap.set(hash, `${selectors},\n${selector}`)
+                lowlyGenericMap.set(hash, selector);
             }
         }
+        selectorList
+            .filter(a => a.key === undefined)
+            .forEach(a => highlyGenericList.push(a.selector));
     }
 
     // Specific exceptions
-    const genericExceptionSieve = new Set();
-    const genericExceptionMap = new Map();
+    const exceptionMap = new Map();
     if ( declarativeMap ) {
         for ( const [ exception, details ] of declarativeMap ) {
             if ( details.rejected ) { continue; }
-            if ( details.key === undefined ) { continue; }
             if ( details.matches !== undefined ) { continue; }
             if ( details.excludeMatches === undefined ) { continue; }
-            const type = details.key.charCodeAt(0);
-            const hash = hashFromStr(type, details.key.slice(1));
-            genericExceptionSieve.add(hash);
             for ( const hn of details.excludeMatches ) {
-                const exceptions = genericExceptionMap.get(hn);
+                const exceptions = exceptionMap.get(hn);
                 if ( exceptions === undefined ) {
-                    genericExceptionMap.set(hn, exception);
+                    exceptionMap.set(hn, exception);
                 } else {
-                    genericExceptionMap.set(hn, `${exceptions}\n${exception}`);
+                    exceptionMap.set(hn, `${exceptions}\n${exception}`);
                 }
             }
         }
     }
 
-    if ( genericSelectorMap.size === 0 ) {
-        if ( genericExceptionMap.size === 0 ) { return 0; }
+    if ( lowlyGenericMap.size === 0 && highlyGenericList.length === 0 ) {
+        if ( exceptionMap.size === 0 ) { return 0; }
     }
 
     const originalScriptletMap = await loadAllSourceScriptlets();
@@ -773,26 +780,38 @@ async function processGenericCosmeticFilters(
         assetDetails.id
     );
     patchedScriptlet = safeReplace(patchedScriptlet,
-        /\bself\.\$genericSelectorMap\$/,
-        `${JSON.stringify(genericSelectorMap, scriptletJsonReplacer)}`
+        /\bself\.\$lowlyGeneric\$/,
+        `/* ${lowlyGenericMap.size} */${JSON.stringify(lowlyGenericMap, scriptletJsonReplacer)}`
     );
     patchedScriptlet = safeReplace(patchedScriptlet,
-        /\bself\.\$genericExceptionSieve\$/,
-        `${JSON.stringify(genericExceptionSieve, scriptletJsonReplacer)}`
+        /\bself\.\$highlyGeneric\$/,
+        `/* ${highlyGenericList.length} */${JSON.stringify(highlyGenericList.join(',\n'))}`
+    );
+    const sortedExceptionList = Array.from(exceptionMap).sort((a, b) =>
+        hostnameCompare(a[0], b[0])
     );
     patchedScriptlet = safeReplace(patchedScriptlet,
-        /\bself\.\$genericExceptionMap\$/,
-        `${JSON.stringify(genericExceptionMap, scriptletJsonReplacer)}`
+        /\bself\.\$exceptions\$/,
+        `/* ${sortedExceptionList.length} */${JSON.stringify(sortedExceptionList.map(a => a[1]), scriptletJsonReplacer)}`
+    );
+    patchedScriptlet = safeReplace(patchedScriptlet,
+        /\bself\.\$hostnames\$/,
+        `/* ${sortedExceptionList.length} */${JSON.stringify(sortedExceptionList.map(a => a[0]), scriptletJsonReplacer)}`
+    );
+    patchedScriptlet = safeReplace(patchedScriptlet,
+        /\bself\.\$hasEntities\$/,
+        `${JSON.stringify(sortedExceptionList.some(a => a[0].endsWith('.*')))}`
     );
 
     writeFile(`${scriptletDir}/generic/${assetDetails.id}.js`,
         patchedScriptlet
     );
 
-    log(`CSS-generic: ${genericExceptionSieve.size} specific CSS exceptions`);
-    log(`CSS-generic: ${genericSelectorMap.size} plain CSS selectors`);
+    log(`CSS-generic-low: ${lowlyGenericMap.size} plain CSS selectors`);
+    log(`CSS-generic-high: ${highlyGenericList.length} plain CSS selectors`);
+    log(`CSS-generic: ${exceptionMap.size} specific CSS exceptions`);
 
-    return genericSelectorMap.size + genericExceptionSieve.size;
+    return lowlyGenericMap.size + highlyGenericList.length + exceptionMap.size;
 }
 
 const hashFromStr = (type, s) => {
@@ -802,57 +821,8 @@ const hashFromStr = (type, s) => {
     for ( let i = 0; i < len; i += step ) {
         hash = (hash << 5) + hash ^ s.charCodeAt(i);
     }
-    return hash & 0xFFF;
+    return hash & 0xFFFF;
 };
-
-/******************************************************************************/
-
-async function processGenericHighCosmeticFilters(
-    assetDetails,
-    genericSelectorList,
-    genericExceptionList
-) {
-    if ( genericSelectorList === undefined ) { return 0; }
-    const genericSelectorSet = new Set(
-        genericSelectorList
-            .filter(a => a.key === undefined)
-            .map(a => a.selector)
-    );
-    // https://github.com/uBlockOrigin/uBOL-home/issues/365
-    if ( genericExceptionList ) {
-        for ( const entry of genericExceptionList ) {
-            if ( entry.key !== undefined ) { continue; }
-            globalHighlyGenericExceptionSet.add(entry.selector);
-        }
-    }
-    for ( const selector of globalHighlyGenericExceptionSet ) {
-        if ( genericSelectorSet.has(selector) === false ) { continue; }
-        genericSelectorSet.delete(selector);
-        log(`\tRemoving excepted highly generic filter ##${selector}`);
-    }
-    if ( genericSelectorSet.size === 0 ) { return 0; }
-    const selectorLists = Array.from(genericSelectorSet).sort().join(',\n');
-    const originalScriptletMap = await loadAllSourceScriptlets();
-
-    let patchedScriptlet = originalScriptletMap.get('css-generichigh').replace(
-        '$rulesetId$',
-        assetDetails.id
-    );
-    patchedScriptlet = safeReplace(patchedScriptlet,
-        /\$selectorList\$/,
-        selectorLists
-    );
-
-    writeFile(`${scriptletDir}/generichigh/${assetDetails.id}.css`,
-        patchedScriptlet
-    );
-
-    log(`CSS-generic-high: ${genericSelectorSet.size} plain CSS selectors`);
-
-    return genericSelectorSet.size;
-}
-
-const globalHighlyGenericExceptionSet = new Set();
 
 /******************************************************************************/
 
@@ -1206,11 +1176,6 @@ async function rulesetFromURLs(assetDetails) {
         results.genericCosmeticExceptions,
         declarativeCosmetic
     );
-    const genericHighCosmeticStats = await processGenericHighCosmeticFilters(
-        assetDetails,
-        results.genericCosmeticFilters,
-        results.genericCosmeticExceptions,
-    );
     const specificCosmeticStats = await processCosmeticFilters(
         assetDetails,
         'specific',
@@ -1252,7 +1217,6 @@ async function rulesetFromURLs(assetDetails) {
         },
         css: {
             generic: genericCosmeticStats,
-            generichigh: genericHighCosmeticStats,
             specific: specificCosmeticStats,
             procedural: proceduralStats,
         },

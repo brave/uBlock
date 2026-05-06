@@ -188,6 +188,7 @@ const uBOStaticFilteringMode = (( ) => {
         case sfp.NODE_TYPE_NET_OPTION_NAME_SCRIPT:
         case sfp.NODE_TYPE_NET_OPTION_NAME_SHIDE:
         case sfp.NODE_TYPE_NET_OPTION_NAME_TO:
+        case sfp.NODE_TYPE_NET_OPTION_NAME_TOP:
         case sfp.NODE_TYPE_NET_OPTION_NAME_URLTRANSFORM:
         case sfp.NODE_TYPE_NET_OPTION_NAME_XHR:
         case sfp.NODE_TYPE_NET_OPTION_NAME_WEBRTC:
@@ -534,7 +535,7 @@ function initHints() {
                 matchRight[0]
             );
         }
-        if ( /^(domain|from)=/.test(matchLeft[0]) ) {
+        if ( /^(domain|from|top)=/.test(matchLeft[0]) ) {
             return getOriginHints(cursor, line);
         }
     };

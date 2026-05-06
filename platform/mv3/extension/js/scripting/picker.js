@@ -257,7 +257,7 @@ async function previewSelector(selector) {
         if ( self.pickerProceduralFilteringAPI === undefined ) {
             self.pickerProceduralFilteringAPI = new self.ProceduralFiltererAPI();
         }
-        self.pickerProceduralFilteringAPI.addSelectors([ JSON.parse(selector) ]);
+        self.pickerProceduralFilteringAPI.addProcedurals([ JSON.parse(selector) ]);
         return;
     }
     previewedCSS = `${selector}{display:none!important;}`;
