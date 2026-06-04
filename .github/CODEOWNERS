@@ -2,3 +2,6 @@ assets/assets.json @thypon
 assets/resources/scriptlets.js @thypon
 web_accessible_resources/* @thypon
 js/redirect-resources.js @thypon
+js/jsonpath.js @thypon
+js/arglist-parser.js @thypon
+js/urlskip.js @thypon
