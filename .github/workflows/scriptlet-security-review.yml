@@ -1,0 +1,79 @@
+name: Scriptlet security review
+
+# Reviews pull requests that touch security-sensitive code which is injected
+# into, or runs against, web pages: scriptlets, web-accessible resources, the
+# redirect/url-skip/jsonpath/arglist helpers, the in-page UI scriptlets, and the
+# MV3 content scripts. An LLM inspects the diff and decides whether the changes
+# could be malware or otherwise misaligned with uBlock Origin's sole purpose of
+# blocking unwanted content in the browser. This is the same family of files the
+# upstream sync watches (see sync-from-fork.yml), plus the project's own
+# page-context code.
+#
+# Keep the `paths` list below in sync with WATCHED in
+# tools/scriptlet-security-review.mjs.
+#
+# Uses the `pull_request` trigger: secrets (ANTHROPIC_API_KEY) are not exposed to
+# pull requests from forks, so for fork PRs the review skips with a notice and a
+# maintainer must review the scriptlet changes manually. Same-repo branches —
+# including the automatically created `mirror` sync PR — are reviewed normally.
+on:
+  pull_request:
+    paths:
+      - 'assets/assets.json'
+      - 'src/web_accessible_resources/**'
+      - 'src/js/resources/**'
+      - 'src/js/scriptlets/**'
+      - 'src/js/redirect-resources.js'
+      - 'src/js/jsonpath.js'
+      - 'src/js/arglist-parser.js'
+      - 'src/js/urlskip.js'
+      - 'platform/mv3/extension/js/scripting/**'
+
+permissions: {}
+
+jobs:
+  review:
+    permissions:
+      contents: read
+      pull-requests: write
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Collect pull request diff
+        run: gh pr diff "$PR_NUMBER" --patch > "$RUNNER_TEMP/pr.patch"
+
+      - name: Review scriptlet changes
+        id: review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PATCH_FILE: ${{ runner.temp }}/pr.patch
+          REPORT_FILE: ${{ runner.temp }}/review-report.md
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: node tools/scriptlet-security-review.mjs
+
+      - name: Post review comment
+        if: steps.review.outputs.failed == 'true'
+        env:
+          REPORT_FILE: ${{ runner.temp }}/review-report.md
+        run: |
+          # Upsert by marker so we only ever edit this gate's own comment, never
+          # another bot's (e.g. brave/pull-merge posts on the same mirror PR).
+          marker='<!-- scriptlet-security-review -->'
+          id=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" \
+            --jq ".[] | select(.body | startswith(\"$marker\")) | .id" | tail -n1)
+          if [ -n "$id" ]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" \
+              -f body="$(cat "$REPORT_FILE")" > /dev/null
+          else
+            gh pr comment "$PR_NUMBER" --body-file "$REPORT_FILE"
+          fi
+
+      - name: Fail when flagged or review could not complete
+        if: steps.review.outputs.failed == 'true'
+        run: |
+          echo "::error::Scriptlet security review verdict: ${{ steps.review.outputs.verdict }} — see the PR comment for details."
+          exit 1
