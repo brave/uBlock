@@ -1,38 +1,32 @@
 name: Scriptlet security review
 
 # Reviews pull requests that touch security-sensitive code which is injected
-# into, or runs against, web pages: scriptlets, web-accessible resources, the
-# redirect/url-skip/jsonpath/arglist helpers, the in-page UI scriptlets, and the
-# MV3 content scripts. An LLM inspects the diff and decides whether the changes
+# into, or runs against, web pages (scriptlets, web-accessible resources, the
+# redirect/url-skip/jsonpath/arglist helpers, the in-page UI scriptlets, the MV3
+# content scripts). An LLM inspects the diff and decides whether the changes
 # could be malware or otherwise misaligned with uBlock Origin's sole purpose of
-# blocking unwanted content in the browser. This is the same family of files the
-# upstream sync watches (see sync-from-fork.yml), plus the project's own
-# page-context code.
+# blocking unwanted content in the browser.
 #
-# Keep the `paths` list below in sync with WATCHED in
-# tools/scriptlet-security-review.mjs.
+# Runs on every PR to master (no `paths` filter) so that, when required by
+# branch protection, it always reports a status check — a path-filtered workflow
+# would leave the required check pending forever on PRs that touch no watched
+# file. The script (tools/scriptlet-security-review.mjs) is the single source of
+# truth for which files are security-sensitive: it filters the diff to its
+# WATCHED list and fast-passes (no API call) when nothing relevant changed.
 #
-# Uses the `pull_request` trigger: secrets (ANTHROPIC_API_KEY) are not exposed to
-# pull requests from forks, so for fork PRs the review skips with a notice and a
-# maintainer must review the scriptlet changes manually. Same-repo branches —
+# Secrets (ANTHROPIC_API_KEY) are not exposed to PRs from forks, so fork PRs skip
+# with a notice and a maintainer must review manually. Same-repo branches —
 # including the automatically created `mirror` sync PR — are reviewed normally.
 on:
   pull_request:
-    paths:
-      - 'assets/assets.json'
-      - 'src/web_accessible_resources/**'
-      - 'src/js/resources/**'
-      - 'src/js/scriptlets/**'
-      - 'src/js/redirect-resources.js'
-      - 'src/js/jsonpath.js'
-      - 'src/js/arglist-parser.js'
-      - 'src/js/urlskip.js'
-      - 'platform/mv3/extension/js/scripting/**'
+    branches:
+      - master
 
 permissions: {}
 
 jobs:
-  review:
+  # Job name doubles as the required status-check context in branch protection.
+  scriptlet-security-review:
     permissions:
       contents: read
       pull-requests: write
@@ -42,6 +36,11 @@ jobs:
       PR_NUMBER: ${{ github.event.pull_request.number }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          # Run the trusted review script from the PR's base (master), never the
+          # PR's own tree — this job runs with secrets on the same-repo sync PR,
+          # and the diff itself is fetched separately via `gh pr diff` as data.
+          ref: ${{ github.event.pull_request.base.sha }}
 
       - name: Collect pull request diff
         run: gh pr diff "$PR_NUMBER" --patch > "$RUNNER_TEMP/pr.patch"

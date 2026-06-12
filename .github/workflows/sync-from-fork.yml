@@ -49,13 +49,18 @@ jobs:
           git push -u github mirror
   create-pr:
     permissions:
-      pull-requests: write
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      contents: read
     needs: sync
     runs-on: ubuntu-latest
     steps:
       - name: Create PR
+        env:
+          # Use a PAT, not GITHUB_TOKEN, so opening the PR triggers pull_request
+          # workflows — notably the required scriptlet security review check that
+          # branch protection enforces before merge. A PR opened by GITHUB_TOKEN
+          # does not trigger any further workflow runs. The PAT needs Contents:
+          # Read and Pull requests: Read & write on this repository.
+          GITHUB_TOKEN: ${{ secrets.SYNC_PR_TOKEN }}
         run: |
           gh pr create --title "Fork Sync: Update from parent repository" --body "This PR was automatically created by a GitHub Action triggered by a cron schedule. Please review the changes and merge if appropriate." --base master --head mirror --repo ${GITHUB_REPOSITORY} || true
   update-pr:
