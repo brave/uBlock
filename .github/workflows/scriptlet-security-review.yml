@@ -15,7 +15,7 @@ name: Scriptlet security review
 # or privacy impact pass; an empty diff passes without an API call.
 #
 # Secrets (ANTHROPIC_API_KEY) are not exposed to PRs from forks, so fork PRs skip
-# with a notice and a maintainer must review manually. Same-repo branches —
+# (visible in the workflow logs) and a maintainer must review manually. Same-repo branches —
 # including the automatically created `mirror` sync PR — are reviewed normally.
 on:
   pull_request:
