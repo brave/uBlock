@@ -117,6 +117,12 @@ async function main() {
             throw new Error('The model response was truncated (max_tokens reached).');
         }
         verdict = parseVerdict(extractText(resp));
+        if ( verdict.verdict === 'pass' ) {
+            const risk = verdict.risk || 'none';
+            if ( verdict.findings.length !== 0 || (risk !== 'none' && risk !== 'low') ) {
+                throw new Error('Model response was inconsistent (pass with findings or elevated risk).');
+            }
+        }
     } catch (err) {
         writeReport(renderError(files, err.message));
         finish('error');
