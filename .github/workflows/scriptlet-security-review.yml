@@ -1,18 +1,18 @@
 name: Scriptlet security review
 
-# Reviews pull requests that touch security-sensitive code which is injected
-# into, or runs against, web pages (scriptlets, web-accessible resources, the
-# redirect/url-skip/jsonpath/arglist helpers, the in-page UI scriptlets, the MV3
-# content scripts). An LLM inspects the diff and decides whether the changes
-# could be malware or otherwise misaligned with uBlock Origin's sole purpose of
-# blocking unwanted content in the browser.
+# Reviews pull requests for changes that could be malware or otherwise
+# misaligned with uBlock Origin's sole purpose of blocking unwanted content in
+# the browser. The primary concern is code that runs in or against web pages
+# (scriptlets, injected resources, content scripts), but the whole diff is
+# reviewed — see below.
 #
 # Runs on every PR to master (no `paths` filter) so that, when required by
 # branch protection, it always reports a status check — a path-filtered workflow
-# would leave the required check pending forever on PRs that touch no watched
-# file. The script (tools/scriptlet-security-review.mjs) is the single source of
-# truth for which files are security-sensitive: it filters the diff to its
-# WATCHED list and fast-passes (no API call) when nothing relevant changed.
+# would leave the required check pending forever on PRs that touch no matching
+# file. The script (tools/scriptlet-security-review.mjs) reviews the whole diff;
+# there is no hardcoded list of security-sensitive paths to maintain, and a
+# payload cannot hide in a file such a list would omit. Diffs with no security
+# or privacy impact pass; an empty diff passes without an API call.
 #
 # Secrets (ANTHROPIC_API_KEY) are not exposed to PRs from forks, so fork PRs skip
 # with a notice and a maintainer must review manually. Same-repo branches —
@@ -45,7 +45,7 @@ jobs:
       - name: Collect pull request diff
         run: gh pr diff "$PR_NUMBER" --patch > "$RUNNER_TEMP/pr.patch"
 
-      - name: Review scriptlet changes
+      - name: Run security review
         id: review
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
