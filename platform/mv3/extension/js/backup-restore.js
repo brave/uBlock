@@ -20,6 +20,12 @@
 */
 
 import {
+    addImportedLists,
+    getImportedLists,
+    removeImportedLists,
+} from './imported-lists.js';
+
+import {
     localRead, localRemove, localWrite,
     runtime,
     sendMessage,
@@ -59,14 +65,8 @@ export async function backupToObject(currentConfig) {
     }
     out.filteringModes = await sendMessage({ what: 'getFilteringModeDetails' });
     const customFilters = await sendMessage({ what: 'getAllCustomFilters' });
-    const filters = [];
-    for ( const [ hostname, selectors ] of customFilters ) {
-        for ( const selector of selectors ) {
-            filters.push(`${hostname}##${selector}`);
-        }
-    }
-    if ( filters.length !== 0 ) {
-        out.cosmeticFilters = filters;
+    if ( customFilters.length !== 0 ) {
+        out.customFilters = customFilters;
     }
     const dnrRules = await localRead('userDnrRules');
     if ( typeof dnrRules === 'string' && dnrRules.length !== 0 ) {
@@ -100,14 +100,32 @@ export async function restoreFromObject(targetConfig) {
         state: targetConfig.strictBlockMode ?? defaultConfig.strictBlockMode
     });
 
-    const enabledRulesets = new Set(defaultConfig.rulesets);
+    const enabledRulesets = defaultConfig.rulesets;
     for ( const entry of targetConfig.rulesets || [] ) {
         const id = entry.slice(1);
         if ( entry.startsWith('+') ) {
-            enabledRulesets.add(id);
+            if ( enabledRulesets.includes(id) ) { continue; }
+            enabledRulesets.push(id);
         } else if ( entry.startsWith('-') ) {
-            enabledRulesets.delete(id);
+            const i = enabledRulesets.indexOf(id);
+            if ( i === -1 ) { continue; }
+            enabledRulesets.splice(i, 1);
         }
+    }
+    const importedLists = await getImportedLists();
+    const importedListIds = importedLists.map(a => a.id);
+    const reImport = /^[a-z-]+:\/\//;
+    const importedListsToAdd = enabledRulesets.filter(a =>
+        reImport.test(a) && importedListIds.includes(a) === false
+    );
+    const importedListsToRemove = importedListIds.filter(a =>
+        enabledRulesets.includes(a) === false
+    );
+    if ( importedListsToRemove.length ) {
+        await removeImportedLists(importedListsToRemove);
+    }
+    if ( importedListsToAdd.length ) {
+        await addImportedLists(importedListsToAdd);
     }
     await sendMessage({
         what: 'applyRulesets',
@@ -120,27 +138,34 @@ export async function restoreFromObject(targetConfig) {
     });
 
     await sendMessage({ what: 'removeAllCustomFilters', hostname: '*' });
-    const hostnameMap = new Map();
-    for ( const line of targetConfig.cosmeticFilters ?? [] ) {
-        const i = line.indexOf('##');
-        if ( i === -1 ) { continue; }
-        const hostname = line.slice(0, i);
-        if ( hostname === '' ) { continue; }
-        const selector = line.slice(i+2);
-        if ( selector === '' ) { continue; }
-        const selectors = hostnameMap.get(hostname) || [];
-        if ( selectors.length === 0 ) {
-            hostnameMap.set(hostname, selectors)
+    const cosmeticFilters = targetConfig.cosmeticFilters;
+    if ( Array.isArray(cosmeticFilters) ) {
+        const hostnameMap = new Map();
+        for ( const line of cosmeticFilters ) {
+            const i = line.indexOf('##');
+            if ( i === -1 ) { continue; }
+            const hostname = line.slice(0, i);
+            if ( hostname === '' ) { continue; }
+            const selector = line.slice(i+2);
+            if ( selector === '' ) { continue; }
+            const selectors = hostnameMap.get(hostname) || [];
+            if ( selectors.length === 0 ) {
+                hostnameMap.set(hostname, selectors)
+            }
+            selectors.push(selector);
         }
-        selectors.push(selector);
+        if ( hostnameMap.size !== 0 ) {
+            await sendMessage({ what: 'addManyCustomFilters',
+                entries: Array.from(hostnameMap),
+            });
+        }
     }
-    const promises = [];
-    for ( const [ hostname, selectors ] of hostnameMap ) {
-        promises.push(
-            sendMessage({ what: 'addCustomFilters', hostname, selectors })
-        );
+    const customFilters = targetConfig.customFilters;
+    if ( Array.isArray(customFilters) ) {
+        await sendMessage({ what: 'addManyCustomFilters',
+            entries: customFilters,
+        });
     }
-    await Promise.all(promises);
 
     const dnrRules = targetConfig.dnrRules ?? [];
     if ( dnrRules.length !== 0 ) {

@@ -100,6 +100,8 @@ function discardUnsupportedRules(ruleset) {
     const isValidRule = rule => {
         const { action, condition } = rule;
         if ( action.type === 'modifyHeaders' ) { return false; }
+        if ( Array.isArray(condition.topDomains) ) { return false; }
+        if ( Array.isArray(condition.excludedTopDomains) ) { return false; }
         if ( Array.isArray(condition.responseHeaders) ) { return false; }
         if ( Array.isArray(condition.requestHeaders) ) { return false; }
         return true;

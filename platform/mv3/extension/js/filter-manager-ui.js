@@ -96,12 +96,12 @@ async function removeSelectorsFromHostname(node) {
         qsa$(hostnameNode, 'li.selector.removed:not([data-ugly=""])')
     ).map(a => a.dataset.ugly);
     if ( selectors.length === 0 ) { return; }
-    dom.cl.add(dom.body, 'readonly');
-    updateContentEditability();
+    dom.cl.add(dom.body, 'committing');
+    updateContentEditability(false);
     await sendMessage({ what: 'removeCustomFilters', hostname, selectors });
     await debounceRenderCustomFilters();
-    dom.cl.remove(dom.body, 'readonly');
-    updateContentEditability();
+    updateContentEditability(true);
+    dom.cl.remove(dom.body, 'committing');
 }
 
 async function unremoveSelectorsFromHostname(node) {
@@ -111,12 +111,12 @@ async function unremoveSelectorsFromHostname(node) {
     if ( hostname === undefined ) { return; }
     const selectors = selectorsFromNode(hostnameNode);
     if ( selectors.length === 0 ) { return; }
-    dom.cl.add(dom.body, 'readonly');
-    updateContentEditability();
+    dom.cl.add(dom.body, 'committing');
+    updateContentEditability(false);
     await sendMessage({ what: 'addCustomFilters', hostname, selectors });
     await debounceRenderCustomFilters();
-    dom.cl.remove(dom.body, 'readonly');
-    updateContentEditability();
+    updateContentEditability(true);
+    dom.cl.remove(dom.body, 'committing');
 }
 
 /******************************************************************************/
@@ -225,8 +225,9 @@ debounceRenderCustomFilters.debouncer = undefined;
 
 /******************************************************************************/
 
-function updateContentEditability() {
-    if ( dom.cl.has(dom.body, 'readonly') ) {
+function updateContentEditability(readWrite) {
+    dom.cl.toggle(dom.body, 'readonly', readWrite === false);
+    if ( readWrite === false ) {
         dom.attr('section[data-pane="filters"] [contenteditable]', 'contenteditable', 'false');
         return;
     }
@@ -267,25 +268,30 @@ async function validateSelector(target, selector) {
 /******************************************************************************/
 
 async function onHostnameChanged(target, before, after) {
+    const hostnameNode = target.closest('li.hostname');
+    if ( hostnameNode === null ) { return; }
+    if ( before === '' ) {
+        const succeeded = await importFromText(after);
+        if ( succeeded ) {
+            return debounceRenderCustomFilters();
+        }
+    }
+
+    after = after.replace('\n', '');
+
     const uglyAfter = punycode.toASCII(after);
     if ( isValidHostname(uglyAfter) === false ) {
         target.textContent = before;
         return;
     }
 
-    const hostnameNode = target.closest('li.hostname');
-    if ( hostnameNode === null ) { return; }
-
-    dom.cl.add(dom.body, 'readonly');
-    updateContentEditability();
-
+    dom.cl.add(dom.body, 'committing');
     // Remove old hostname from storage
     if ( hostnameNode.dataset.ugly ) {
         await sendMessage({ what: 'removeAllCustomFilters',
             hostname: hostnameNode.dataset.ugly,
         });
     }
-
     // Add selectors under new hostname to storage
     hostnameNode.dataset.ugly = uglyAfter;
     hostnameNode.dataset.pretty = after;
@@ -293,13 +299,13 @@ async function onHostnameChanged(target, before, after) {
         hostname: hostnameFromNode(target),
         selectors: selectorsFromNode(target),
     });
-
     await debounceRenderCustomFilters();
-    dom.cl.remove(dom.body, 'readonly');
-    updateContentEditability();
+    dom.cl.remove(dom.body, 'committing');
 }
 
 async function onSelectorChanged(target, before, after) {
+    after = after.replace('\n', '');
+
     const selectorNode = target.closest('li.selector');
     if ( selectorNode === null ) { return; }
 
@@ -310,17 +316,13 @@ async function onSelectorChanged(target, before, after) {
         return;
     }
 
-    dom.cl.add(dom.body, 'readonly');
-    updateContentEditability();
-
+    dom.cl.add(dom.body, 'committing');
     const hostname = hostnameFromNode(target);
-
     // Remove old selector from storage
     await sendMessage({ what: 'removeCustomFilters',
         hostname,
         selectors: [ selectorNode.dataset.ugly ],
     });
-
     // Add new selector to storage
     selectorNode.dataset.ugly = ugly;
     selectorNode.dataset.pretty = pretty;
@@ -328,18 +330,16 @@ async function onSelectorChanged(target, before, after) {
         hostname,
         selectors: [ ugly ],
     });
-
     await debounceRenderCustomFilters();
-    dom.cl.remove(dom.body, 'readonly');
-    updateContentEditability();
+    dom.cl.remove(dom.body, 'committing');
 }
 
-function onTextChanged(target) {
+async function onTextChanged(target) {
     const itemNode = target.closest('[data-pretty]');
     if ( itemNode === null ) { return; }
     dom.cl.remove(itemNode, 'error');
     const before = itemNode.dataset.pretty;
-    const after = target.textContent.trim().replace('\n', '');
+    const after = target.textContent.trim();
     if ( after !== target.textContent ) {
         target.textContent = after;
     }
@@ -348,11 +348,16 @@ function onTextChanged(target) {
         target.textContent = before;
         return;
     }
+
+    updateContentEditability(false);
+
     if ( target.matches('.hostname') ) {
-        onHostnameChanged(target, before, after);
+        await onHostnameChanged(target, before, after);
     } else if ( target.matches('.selector') ) {
-        onSelectorChanged(target, before, after);
+        await onSelectorChanged(target, before, after);
     }
+
+    updateContentEditability(true);
 }
 
 /******************************************************************************/
@@ -388,19 +393,52 @@ function validateEdit(ev) {
     if ( itemNode === null ) { return; }
     const after = target.textContent.trim().replace('\n', '');
     if ( after === '' ) { return; }
+    const before = itemNode.dataset.ugly;
     if ( target.matches('.selector') ) {
         validateSelector(target, after).then(({ pretty }) => {
             if ( focusedEditableContent !== target ) { return; }
             dom.cl.toggle(itemNode, 'error', after !== '' && Boolean(pretty) === false);
         });
     } else if ( target.matches('.hostname') ) {
-        dom.cl.toggle(itemNode, 'error', isValidHostname(punycode.toASCII(after)) === false);
+        dom.cl.toggle(itemNode, 'error',
+            before !== '' && isValidHostname(punycode.toASCII(after)) === false
+        );
     }
 }
 
 let focusedEditableContent = null;
 
 /******************************************************************************/
+
+function onCopyClicked(ev) {
+    const { target } = ev;
+    const selectorNode = target.closest('li.selector:not(.removed):not([data-ugly=""])');
+    const hostnameNode = target.closest('li.hostname:not(.removed):not([data-ugly=""])');
+    const hostname = hostnameFromNode(hostnameNode);
+    if ( Boolean(hostname) === false ) { return; }
+    const selectorNodes = [];
+    let copyNode;
+    if ( selectorNode ) {
+        selectorNodes.push(selectorNode);
+        copyNode = selectorNode;
+    } else {
+        selectorNodes.push(...qsa$(hostnameNode, 'li.selector:not(.removed):not([data-ugly=""])'));
+        copyNode = hostnameNode;
+    }
+    const text = [];
+    for ( const node of selectorNodes ) {
+        const selector = node.dataset.pretty;
+        if ( Boolean(selector) === false ) { continue; }
+        text.push(`${hostname}##${selector}`);
+    }
+    if ( text.length === 0 ) { return; }
+    text.push('\n');
+    const item = new ClipboardItem({ 'text/plain': text.join('\n') });
+    navigator.clipboard.write([ item ]);
+    const copyNodes = qsa$(copyNode, '.copy');
+    dom.cl.add(copyNodes, 'copied');
+    self.setTimeout(( ) => { dom.cl.remove(copyNodes, 'copied'); }, 1000);
+}
 
 function onTrashClicked(ev) {
     const { target } = ev;
@@ -474,10 +512,9 @@ async function importFromText(text) {
         }
     }
 
-    if ( hostnameToSelectorsMap.size === 0 ) { return; }
+    if ( hostnameToSelectorsMap.size === 0 ) { return false; }
 
-    dom.cl.add(dom.body, 'readonly');
-    updateContentEditability();
+    updateContentEditability(false);
 
     const promises = [];
     for ( const [ hostname, selectors ] of hostnameToSelectorsMap ) {
@@ -489,10 +526,11 @@ async function importFromText(text) {
         );
     }
     await Promise.all(promises);
-
     await debounceRenderCustomFilters();
-    dom.cl.remove(dom.body, 'readonly');
-    updateContentEditability();
+
+    updateContentEditability(true);
+
+    return true;
 }
 
 /******************************************************************************/
@@ -532,7 +570,8 @@ function importFromFile() {
 function exportToFile() {
     const lines = [];
     for ( const hostnameNode of qsa$('.hostnames li.hostname') ) {
-        const hostname = punycode.toUnicode(hostnameFromNode(hostnameNode));
+        const hostname = punycode.toUnicode(hostnameFromNode(hostnameNode) || '');
+        if ( hostname === '' ) { continue; }
         const selectors = selectorsFromNode(hostnameNode);
         for ( const selector of selectors ) {
             lines.push(`${hostname}##${toPrettySelector(selector)}`);
@@ -551,12 +590,36 @@ function exportToFile() {
 
 /******************************************************************************/
 
+async function startsSandboxEditor() {
+    if ( startsSandboxEditor.editor ) { return; }
+
+    const { FilterEditor } = await import('./filter-editor.js');
+
+    const SandboxFilterEditor = class extends FilterEditor {
+        async saveContent() {
+            if ( this.contentChanged() === false ) { return; }
+            await sendMessage({ what: 'setSandboxFilters', text:  this.getContent() });
+            await super.saveContent();
+        }
+        async loadContent() {
+            const text = await sendMessage({ what: 'getSandboxFilters' });
+            await super.loadContent(text);
+        }
+    }
+
+    startsSandboxEditor.editor = new SandboxFilterEditor(qs$('#sandboxEditor .cm-container'));
+    await startsSandboxEditor.editor.loadContent();
+}
+
+/******************************************************************************/
+
 async function start() {
     renderCustomFilters();
 
     dom.on(dataContainer, 'focusin', 'section[data-pane="filters"] [contenteditable]', startEdit);
     dom.on(dataContainer, 'focusout', 'section[data-pane="filters"] [contenteditable]', endEdit);
     dom.on(dataContainer, 'input', 'section[data-pane="filters"] [contenteditable]', commitEdit);
+    dom.on(dataContainer, 'click', 'section[data-pane="filters"] .copy', onCopyClicked);
     dom.on(dataContainer, 'click', 'section[data-pane="filters"] .remove', onTrashClicked);
     dom.on(dataContainer, 'click', 'section[data-pane="filters"] .undo', onUndoClicked);
     dom.on('section[data-pane="filters"] [data-i18n="addButton"]', 'click', importFromTextarea);
@@ -564,11 +627,14 @@ async function start() {
     dom.on('section[data-pane="filters"] [data-i18n="exportButton"]', 'click', exportToFile);
 
     browser.storage.local.onChanged.addListener((changes, area) => {
+        if ( dom.cl.has(dom.body, 'committing') ) { return; }
         if ( area !== undefined && area !== 'local' ) { return; }
         if ( Object.keys(changes).some(a => a.startsWith('site.')) ) {
             debounceRenderCustomFilters();
         }
     });
+
+    dom.onFirstShown(startsSandboxEditor, qs$('section[data-pane="filters"] aside#sandboxEditor'));
 }
 
 /******************************************************************************/

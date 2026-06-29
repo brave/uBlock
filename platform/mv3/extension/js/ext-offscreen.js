@@ -1,7 +1,7 @@
 /*******************************************************************************
 
     uBlock Origin Lite - a comprehensive, MV3-compliant content blocker
-    Copyright (C) 2014-present Raymond Hill
+    Copyright (C) 2026-present Raymond Hill
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,8 +19,18 @@
     Home: https://github.com/gorhill/uBlock
 */
 
-/* $rulesetId$ */
+// Chromium supports the offscreen API natively
 
-$selectorList$ {
-    display: none !important;
+export const supportsOffscreenDocument = chrome.offscreen !== undefined;
+
+export async function createOffscreenDocument(path) {
+    return chrome.offscreen.createDocument({
+        url: path,
+        reasons: [ 'WORKERS' ],
+        justification: 'To compile custom & imported filters in a modular way from service worker (service workers do not allow dynamic module import)',
+    });
+}
+
+export async function closeOffscreenDocument() {
+    return chrome.offscreen.closeDocument();
 }

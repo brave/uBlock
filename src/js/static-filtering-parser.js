@@ -192,6 +192,7 @@ export const NODE_TYPE_NET_OPTION_NAME_REQUESTHEADER  = iota++;
 export const NODE_TYPE_NET_OPTION_NAME_SCRIPT         = iota++;
 export const NODE_TYPE_NET_OPTION_NAME_SHIDE          = iota++;
 export const NODE_TYPE_NET_OPTION_NAME_TO             = iota++;
+export const NODE_TYPE_NET_OPTION_NAME_TOP            = iota++;
 export const NODE_TYPE_NET_OPTION_NAME_URLSKIP        = iota++;
 export const NODE_TYPE_NET_OPTION_NAME_URLTRANSFORM   = iota++;
 export const NODE_TYPE_NET_OPTION_NAME_XHR            = iota++;
@@ -281,6 +282,7 @@ export const nodeTypeFromOptionName = new Map([
     [ 'shide', NODE_TYPE_NET_OPTION_NAME_SHIDE ],
     /* synonym */ [ 'specifichide', NODE_TYPE_NET_OPTION_NAME_SHIDE ],
     [ 'to', NODE_TYPE_NET_OPTION_NAME_TO ],
+    [ 'top', NODE_TYPE_NET_OPTION_NAME_TOP ],
     [ 'urlskip', NODE_TYPE_NET_OPTION_NAME_URLSKIP ],
     [ 'uritransform', NODE_TYPE_NET_OPTION_NAME_URLTRANSFORM ],
     [ 'xhr', NODE_TYPE_NET_OPTION_NAME_XHR ],
@@ -582,6 +584,7 @@ const astTemplates = {
                     type: NODE_TYPE_EXT_PATTERN_COSMETIC,
                     beg: 0,
                     end: 0,
+                    register: true,
                 }],
             }],
         }],
@@ -1330,6 +1333,7 @@ export class AstFilterParser {
             case NODE_TYPE_NET_OPTION_NAME_FROM:
             case NODE_TYPE_NET_OPTION_NAME_METHOD:
             case NODE_TYPE_NET_OPTION_NAME_TO:
+            case NODE_TYPE_NET_OPTION_NAME_TOP:
                 realBad = isNegated || hasValue === false;
                 break;
             case NODE_TYPE_NET_OPTION_NAME_GENERICBLOCK:
@@ -1516,18 +1520,20 @@ export class AstFilterParser {
 
     indexOfNetAnchor(s) {
         const end = s.length;
-        if ( end === 0 ) { return end; }
+        if ( end === 0 ) { return 0; }
         let j = s.lastIndexOf('$');
         if ( j === -1 ) { return end; }
-        if ( (j+1) === end ) { return end; }
+        let htmlFilteringRule = false;
         for (;;) {
-            const before = s.charAt(j-1);
-            if ( before === '$' ) { return -1; }
+            if ( s.charCodeAt(j-1) === 0x24 /* $ */ ) {
+                htmlFilteringRule = true;
+            }
             if ( this.reNetOptionTokens.test(s.slice(j+1)) ) { return j; }
             if ( j === 0 ) { break; }
             j = s.lastIndexOf('$', j-1);
             if ( j === -1 ) { break; }
         }
+        if ( htmlFilteringRule ) { return -1; } 
         return end;
     }
 
@@ -2055,6 +2061,7 @@ export class AstFilterParser {
             break;
         case NODE_TYPE_NET_OPTION_NAME_FROM:
         case NODE_TYPE_NET_OPTION_NAME_TO:
+        case NODE_TYPE_NET_OPTION_NAME_TOP:
             this.linkDown(next, this.parseDomainList(next, '|', DOMAIN_FROM_FROMTO_LIST));
             break;
         default:
@@ -2932,6 +2939,12 @@ export class AstFilterParser {
         );
     }
 
+    getNetFilterTopOptionIterator() {
+        return this.getDomainListIterator(
+            this.getBranchFromType(NODE_TYPE_NET_OPTION_NAME_TOP)
+        );
+    }
+
     getNetFilterToOptionIterator() {
         return this.getDomainListIterator(
             this.getBranchFromType(NODE_TYPE_NET_OPTION_NAME_TO)
@@ -3195,6 +3208,7 @@ export const netOptionTokenDescriptors = new Map([
     [ 'shide', { } ],
     /* synonym */ [ 'specifichide', { } ],
     [ 'to', { mustAssign: true } ],
+    [ 'top', { mustAssign: true } ],
     [ 'urlskip', { mustAssign: true } ],
     [ 'uritransform', { mustAssign: true } ],
     [ 'xhr', { canNegate: true } ],

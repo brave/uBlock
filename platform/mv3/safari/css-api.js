@@ -35,7 +35,7 @@
         },
     };
 
-    self.addEventListener('pageshow', ( ) => {
+    self.addEventListener('pagereveal', ( ) => {
         chrome.runtime.sendMessage({
             what: 'insertCSS',
             css: Array.from(inserted).join('\n'),

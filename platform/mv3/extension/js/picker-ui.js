@@ -197,12 +197,12 @@ function updateElementCount(details) {
     if ( error ) {
         span.textContent = 'Error';
         span.setAttribute('title', error);
+        dom.attr('#create', 'disabled', '');
     } else {
         span.textContent = count;
         span.removeAttribute('title');
+        dom.attr('#create', 'disabled', null);
     }
-    const disabled = Boolean(count) === false ? '' : null;
-    dom.attr('#create', 'disabled', disabled);
     updatePreview();
 }
 
