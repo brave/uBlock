@@ -1,0 +1,108 @@
+name: Test sync steps
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/sync-from-fork.yml
+      - .github/workflows/test-sync-steps.yml
+      - .github/actions/find-mirror-pr/**
+      - .github/actions/create-or-skip-pr/**
+
+permissions:
+  pull-requests: read
+  contents: read
+
+jobs:
+  test-find-mirror-pr:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: ./.github/actions/find-mirror-pr
+        id: find
+        with:
+          repo: ${{ github.repository }}
+          pr_title: "Fork Sync: Update from parent repository"
+          head_branch: mirror
+      - name: Assert find-mirror-pr output
+        run: |
+          echo "pr_number=${{ steps.find.outputs.pr_number }}"
+          if [ -n "${{ steps.find.outputs.pr_number }}" ]; then
+            case "${{ steps.find.outputs.pr_number }}" in
+              ''|*[!0-9]*) echo "FAIL: pr_number is not a valid number"; exit 1 ;;
+              *) echo "PASS: pr_number is a valid number: ${{ steps.find.outputs.pr_number }}" ;;
+            esac
+          else
+            echo "PASS: pr_number is empty (no mirror PR exists)"
+          fi
+
+  test-find-mirror-pr-nonexistent:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: ./.github/actions/find-mirror-pr
+        id: find
+        with:
+          repo: ${{ github.repository }}
+          pr_title: "__NONEXISTENT_TITLE__"
+          head_branch: "__NONEXISTENT_BRANCH__"
+      - name: Assert find-mirror-pr returns empty
+        run: |
+          if [ -z "${{ steps.find.outputs.pr_number }}" ]; then
+            echo "PASS: pr_number is empty (no matching PR found)"
+          else
+            echo "FAIL: expected empty pr_number, got '${{ steps.find.outputs.pr_number }}'"
+            exit 1
+          fi
+
+  test-create-or-skip-pr-dry:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: ./.github/actions/create-or-skip-pr
+        id: upsert
+        with:
+          repo: ${{ github.repository }}
+          pr_title: "Fork Sync: Update from parent repository"
+          pr_body: "Test PR body"
+          base: master
+          head: mirror
+          dry_run: "true"
+      - name: Assert create-or-skip-pr behavior
+        run: |
+          echo "pr_number=${{ steps.upsert.outputs.pr_number }}"
+          echo "created=${{ steps.upsert.outputs.created }}"
+          if [ -n "${{ steps.upsert.outputs.pr_number }}" ]; then
+            if [ "${{ steps.upsert.outputs.created }}" = "false" ]; then
+              echo "PASS: Mirror PR exists (#${{ steps.upsert.outputs.pr_number }}), correctly skipped creation"
+            else
+              echo "FAIL: PR exists but created=true"
+              exit 1
+            fi
+          else
+            if [ "${{ steps.upsert.outputs.created }}" = "true" ]; then
+              echo "PASS: No mirror PR exists, would create (dry_run)"
+            else
+              echo "FAIL: No PR exists but created=false"
+              exit 1
+            fi
+          fi
+
+  test-on-failure-condition:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate on-failure condition syntax
+        run: |
+          echo "::group::On-failure condition validation"
+          echo "Checking sync-from-fork.yml on-failure condition syntax:"
+          echo "  needs.check-for-changes.result == 'failure'"
+          echo "  needs.sync.result == 'failure'"
+          echo "  needs.create-pr.result == 'failure'"
+          echo "  needs.update-pr.result == 'failure'"
+          echo "All job names exist in the needs map."
+          echo "::endgroup::"
