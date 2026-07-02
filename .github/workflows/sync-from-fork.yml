@@ -29,7 +29,7 @@ jobs:
       - name: Show files
         run: cat updatedfiles.txt
       - name: Have files changed
-        if: steps.check-for-changes.outputs.changes-present == 'false'
+        if: steps.git-check.outputs.changes-present == 'false'
         run: echo "No changes needed to be synchronised"
   sync:
     permissions:
@@ -57,7 +57,12 @@ jobs:
     steps:
       - name: Create PR
         run: |
-          gh pr create --title "Fork Sync: Update from parent repository" --body "This PR was automatically created by a GitHub Action triggered by a cron schedule. Please review the changes and merge if appropriate." --base master --head mirror --repo ${GITHUB_REPOSITORY} || true
+          existing=$(gh pr list --repo "${GITHUB_REPOSITORY}" --json number,title,headRefName --jq '.[] | select(.title=="Fork Sync: Update from parent repository" and .headRefName=="mirror") | .number')
+          if [ -n "$existing" ]; then
+            echo "PR already exists (#$existing), skipping creation"
+          else
+            gh pr create --title "Fork Sync: Update from parent repository" --body "This PR was automatically created by a GitHub Action triggered by a cron schedule. Please review the changes and merge if appropriate." --base master --head mirror --repo "${GITHUB_REPOSITORY}"
+          fi
   update-pr:
     permissions:
       pull-requests: write
@@ -68,7 +73,9 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Set PR Number to env
-        run: echo "PR_NUMBER=`gh pr list | grep 'Fork Sync' | awk {'print $1'}`" >> $GITHUB_ENV
+        run: |
+          PR_NUMBER=$(gh pr list --repo "${GITHUB_REPOSITORY}" --json number,title,headRefName --jq '.[] | select(.title=="Fork Sync: Update from parent repository" and .headRefName=="mirror") | .number')
+          echo "PR_NUMBER=${PR_NUMBER}" >> "$GITHUB_ENV"
       - name: Run puLL-Merge
         uses: brave/pull-merge@main
         with:
@@ -77,12 +84,12 @@ jobs:
           prnum: ${{ env.PR_NUMBER }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          include_diff: true
-          filterdiff_args: --include=**/assets/assets.json --include=**/src/web_accessible_resources/* --include=**/src/js/resources/* --include=**/src/js/redirect-resources.js --include=**/src/js/jsonpath.js --include=**/src/js/arglist-parser.js --include=**/src/js/urlskip.js
+          debug: "true"
   on-failure:
     runs-on: ubuntu-latest
-    if: ${{ always() && (needs.sync.result == 'failure' || needs.create-pr.result == 'failure' || needs.update-pr.result == 'failure') }}
+    if: ${{ always() && (needs.check-for-changes.result == 'failure' || needs.sync.result == 'failure' || needs.create-pr.result == 'failure' || needs.update-pr.result == 'failure') }}
     needs:
+      - check-for-changes
       - sync
       - create-pr
       - update-pr
