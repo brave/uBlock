@@ -1,0 +1,27 @@
+name: Find mirror PR
+description: Find existing mirror PR by title and head branch
+
+inputs:
+  repo:
+    description: Repository in owner/repo format
+    required: true
+  pr_title:
+    description: PR title to match
+    required: true
+  head_branch:
+    description: Head branch name to match
+    required: true
+
+outputs:
+  pr_number:
+    description: PR number if found, empty string otherwise
+    value: ${{ steps.find.outputs.pr_number }}
+
+runs:
+  using: composite
+  steps:
+    - id: find
+      shell: bash
+      run: |
+        pr_number=$(gh pr list --repo "${{ inputs.repo }}" --json number,title,headRefName --jq '.[] | select(.title=="${{ inputs.pr_title }}" and .headRefName=="${{ inputs.head_branch }}") | .number')
+        echo "pr_number=${pr_number}" >> "$GITHUB_OUTPUT"

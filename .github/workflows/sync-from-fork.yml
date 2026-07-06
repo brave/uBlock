@@ -55,14 +55,14 @@ jobs:
     needs: sync
     runs-on: ubuntu-latest
     steps:
-      - name: Create PR
-        run: |
-          existing=$(gh pr list --repo "${GITHUB_REPOSITORY}" --json number,title,headRefName --jq '.[] | select(.title=="Fork Sync: Update from parent repository" and .headRefName=="mirror") | .number')
-          if [ -n "$existing" ]; then
-            echo "PR already exists (#$existing), skipping creation"
-          else
-            gh pr create --title "Fork Sync: Update from parent repository" --body "This PR was automatically created by a GitHub Action triggered by a cron schedule. Please review the changes and merge if appropriate." --base master --head mirror --repo "${GITHUB_REPOSITORY}"
-          fi
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: ./.github/actions/create-or-skip-pr
+        with:
+          repo: ${{ github.repository }}
+          pr_title: "Fork Sync: Update from parent repository"
+          pr_body: "This PR was automatically created by a GitHub Action triggered by a cron schedule. Please review the changes and merge if appropriate."
+          base: master
+          head: mirror
   update-pr:
     permissions:
       pull-requests: write
@@ -72,16 +72,18 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - name: Set PR Number to env
-        run: |
-          PR_NUMBER=$(gh pr list --repo "${GITHUB_REPOSITORY}" --json number,title,headRefName --jq '.[] | select(.title=="Fork Sync: Update from parent repository" and .headRefName=="mirror") | .number')
-          echo "PR_NUMBER=${PR_NUMBER}" >> "$GITHUB_ENV"
+      - uses: ./.github/actions/find-mirror-pr
+        id: find-pr
+        with:
+          repo: ${{ github.repository }}
+          pr_title: "Fork Sync: Update from parent repository"
+          head_branch: mirror
       - name: Run puLL-Merge
         uses: brave/pull-merge@main
         with:
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
-          prnum: ${{ env.PR_NUMBER }}
+          prnum: ${{ steps.find-pr.outputs.pr_number }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           debug: "true"

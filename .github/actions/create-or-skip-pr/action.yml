@@ -1,0 +1,56 @@
+name: Create or skip mirror PR
+description: Idempotently create a mirror PR — skip if one already exists
+
+inputs:
+  repo:
+    description: Repository in owner/repo format
+    required: true
+  pr_title:
+    description: PR title
+    required: true
+  pr_body:
+    description: PR body
+    required: true
+  base:
+    description: Base branch
+    required: true
+  head:
+    description: Head branch
+    required: true
+  dry_run:
+    description: If "true", skip actual PR creation (for testing)
+    required: false
+    default: "false"
+
+outputs:
+  pr_number:
+    description: PR number (existing or newly created)
+    value: ${{ steps.upsert.outputs.pr_number }}
+  created:
+    description: '"true" if PR was created, "false" if it already existed'
+    value: ${{ steps.upsert.outputs.created }}
+
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/find-mirror-pr
+      id: find
+      with:
+        repo: ${{ inputs.repo }}
+        pr_title: ${{ inputs.pr_title }}
+        head_branch: ${{ inputs.head }}
+    - id: upsert
+      shell: bash
+      run: |
+        if [ -n "${{ steps.find.outputs.pr_number }}" ]; then
+          echo "pr_number=${{ steps.find.outputs.pr_number }}" >> "$GITHUB_OUTPUT"
+          echo "created=false" >> "$GITHUB_OUTPUT"
+        elif [ "${{ inputs.dry_run }}" = "true" ]; then
+          echo "pr_number=" >> "$GITHUB_OUTPUT"
+          echo "created=true" >> "$GITHUB_OUTPUT"
+        else
+          url=$(gh pr create --title "${{ inputs.pr_title }}" --body "${{ inputs.pr_body }}" --base "${{ inputs.base }}" --head "${{ inputs.head }}" --repo "${{ inputs.repo }}")
+          new_pr=$(echo "$url" | sed 's|.*/||')
+          echo "pr_number=${new_pr}" >> "$GITHUB_OUTPUT"
+          echo "created=true" >> "$GITHUB_OUTPUT"
+        fi
