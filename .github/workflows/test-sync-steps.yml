@@ -7,6 +7,7 @@ on:
       - .github/workflows/test-sync-steps.yml
       - .github/actions/find-mirror-pr/**
       - .github/actions/create-or-skip-pr/**
+      - .github/braveCheckImports.js
 
 permissions:
   pull-requests: read
@@ -100,9 +101,20 @@ jobs:
         run: |
           echo "::group::On-failure condition validation"
           echo "Checking sync-from-fork.yml on-failure condition syntax:"
+          echo "  needs.check-imports.result == 'failure'"
           echo "  needs.check-for-changes.result == 'failure'"
           echo "  needs.sync.result == 'failure'"
           echo "  needs.create-pr.result == 'failure'"
           echo "  needs.update-pr.result == 'failure'"
           echo "All job names exist in the needs map."
           echo "::endgroup::"
+
+  test-check-imports:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Install patchutils
+        run: sudo apt-get update && sudo apt-get install -y patchutils
+      - name: Run import checker (no network, no secrets)
+        run: sudo unshare -n node .github/braveCheckImports.js
+

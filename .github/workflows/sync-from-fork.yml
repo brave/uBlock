@@ -47,12 +47,33 @@ jobs:
           git checkout -b mirror
           git remote add github "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git"
           git push -u github mirror
+  check-imports:
+    permissions: {}
+    needs: sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: mirror
+          fetch-depth: 0
+      - name: Block if .github/pull-merge.json changed on mirror
+        run: |
+          git fetch origin master:refs/remotes/origin/master
+          if git diff --name-only origin/master..HEAD -- .github/pull-merge.json | grep -q .; then
+            echo "::error::.github/pull-merge.json modified by upstream sync — refusing to auto-merge."
+            exit 1
+          fi
+      - name: Install patchutils
+        run: sudo apt-get update && sudo apt-get install -y patchutils
+      - name: Run import checker (no network, no secrets)
+        run: sudo unshare -n node .github/braveCheckImports.js
   create-pr:
     permissions:
       pull-requests: write
+    if: ${{ needs.sync.result == 'success' && needs.check-imports.result == 'success' }}
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    needs: sync
+    needs: [sync, check-imports]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -89,9 +110,10 @@ jobs:
           debug: "true"
   on-failure:
     runs-on: ubuntu-latest
-    if: ${{ always() && (needs.check-for-changes.result == 'failure' || needs.sync.result == 'failure' || needs.create-pr.result == 'failure' || needs.update-pr.result == 'failure') }}
+    if: ${{ always() && (needs.check-for-changes.result == 'failure' || needs.check-imports.result == 'failure' || needs.sync.result == 'failure' || needs.create-pr.result == 'failure' || needs.update-pr.result == 'failure') }}
     needs:
       - check-for-changes
+      - check-imports
       - sync
       - create-pr
       - update-pr
