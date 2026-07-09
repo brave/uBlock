@@ -66,7 +66,9 @@ jobs:
       - name: Install patchutils
         run: sudo apt-get update && sudo apt-get install -y patchutils
       - name: Run import checker (no network, no secrets)
-        run: sudo unshare -n node .github/braveCheckImports.js
+        run: |
+          git checkout origin/master -- .github/braveCheckImports.js .github/pull-merge.json
+          sudo unshare -n node .github/braveCheckImports.js
   create-pr:
     permissions:
       pull-requests: write
