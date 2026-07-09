@@ -59,7 +59,7 @@ jobs:
       - name: Block if .github/pull-merge.json changed on mirror
         run: |
           git fetch origin master:refs/remotes/origin/master
-          if git diff --name-only origin/master..HEAD -- .github/pull-merge.json | grep -q .; then
+          if git diff --name-only --diff-filter=AM origin/master..HEAD -- .github/pull-merge.json | grep -q .; then
             echo "::error::.github/pull-merge.json modified by upstream sync — refusing to auto-merge."
             exit 1
           fi
