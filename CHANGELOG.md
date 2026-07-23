@@ -1,3 +1,6 @@
+- [[logger] Preserve whitespace characters](https://github.com/gorhill/uBlock/commit/ef981d09b5)
+- [Improve `proxy-apply` utility scriptlet](https://github.com/gorhill/uBlock/commit/be3bb05fce)
+- [Improve `abort-current-script` scriptlet](https://github.com/gorhill/uBlock/commit/84e4bd7659)
 - [Improve `prevent-addEventListener` scriptlet](https://github.com/gorhill/uBlock/commit/89fe40d73f)
 - [Add shim for `piano-analytics.js`](https://github.com/gorhill/uBlock/commit/5dab3cbd24)
 - [Improve `trusted-click-element` scriptlet](https://github.com/gorhill/uBlock/commit/bdd39fe606)
