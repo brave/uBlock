@@ -1,9 +1,8 @@
 name: Check upstream release merged
 
 on:
-  schedule:
-    # Daily at 08:00 UTC. * is special in YAML, so the string is quoted.
-    - cron: "0 8 * * *"
+  # schedule:
+  #   - cron: "0 8 * * *"
   workflow_dispatch:
 
 permissions: {}
