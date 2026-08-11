@@ -1,8 +1,8 @@
 name: Check upstream release merged
 
 on:
-  # schedule:
-  #   - cron: "0 8 * * *"
+  schedule:
+    - cron: "0 8 * * *"
   workflow_dispatch:
 
 permissions: {}
@@ -48,7 +48,7 @@ jobs:
           echo "Latest stable uBO release: $tag (merged=$merged)" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Notify Slack if not merged
-        if: always()
+        if: steps.check.outputs.merged == 'false'
         uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
