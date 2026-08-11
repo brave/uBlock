@@ -1,0 +1,61 @@
+name: Check upstream release merged
+
+on:
+  schedule:
+    # Daily at 08:00 UTC. * is special in YAML, so the string is quoted.
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  check-release-merged:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      UPSTREAM_URL: "https://github.com/gorhill/uBlock.git"
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Fetch upstream master and tags
+        run: |
+          git remote add upstream "${UPSTREAM_URL}"
+          git fetch --quiet --tags upstream master
+
+      - name: Check if latest stable release is merged into master
+        id: check
+        run: |
+          # Latest stable release (releases/latest ignores pre-releases and drafts).
+          tag=$(gh api repos/gorhill/uBlock/releases/latest --jq '.tag_name')
+
+          # Some release tags are cut on a side commit; test the newest
+          # on-upstream-master commit the release builds on. brave merges
+          # upstream via real merge commits, so those SHAs live on master.
+          base=$(git merge-base "$tag" upstream/master)
+
+          if git merge-base --is-ancestor "$base" HEAD; then
+            merged=true
+          else
+            merged=false
+          fi
+
+          echo "tag=$tag"       >> "$GITHUB_OUTPUT"
+          echo "merged=$merged" >> "$GITHUB_OUTPUT"
+          echo "Latest stable uBO release: $tag (merged=$merged)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Notify Slack if not merged
+        if: steps.check.outputs.merged == 'false'
+        uses: 8398a7/action-slack@28ba43ae48961b90635b50953d216767a6bea486 # v3.16.2
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
+          status: custom
+          custom_payload: |
+            {
+              text: "uBO release ${{ steps.check.outputs.tag }} is not yet merged into ${{ github.repository }} master. See https://github.com/gorhill/uBlock/releases/tag/${{ steps.check.outputs.tag }}"
+            }
