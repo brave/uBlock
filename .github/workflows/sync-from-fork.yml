@@ -127,3 +127,4 @@ jobs:
           author_name: "Github Actions"
           status: failure
           fields: repo,message,commit,author,eventName,ref,workflow,pullRequest
+          text: "<!subteam^${{ secrets.UBO_SYNC_REVIEWERS_SLACK_GROUP_ID }}> Sync from fork failed for ${{ github.repository }}. Check the failed run and re-run or fix as needed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
