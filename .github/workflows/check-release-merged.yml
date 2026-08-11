@@ -49,12 +49,9 @@ jobs:
 
       - name: Notify Slack if not merged
         if: steps.check.outputs.merged == 'false'
-        uses: 8398a7/action-slack@28ba43ae48961b90635b50953d216767a6bea486 # v3.16.2
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
         with:
-          status: custom
-          custom_payload: |
-            {
-              text: "uBO release ${{ steps.check.outputs.tag }} is not yet merged into ${{ github.repository }} master. See https://github.com/gorhill/uBlock/releases/tag/${{ steps.check.outputs.tag }}"
-            }
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "uBO release ${{ steps.check.outputs.tag }} is not yet merged into ${{ github.repository }} master. See https://github.com/gorhill/uBlock/releases/tag/${{ steps.check.outputs.tag }}"
