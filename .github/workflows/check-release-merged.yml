@@ -54,4 +54,4 @@ jobs:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            text: "uBO release ${{ steps.check.outputs.tag }} is not yet merged into ${{ github.repository }} master. See https://github.com/gorhill/uBlock/releases/tag/${{ steps.check.outputs.tag }}"
+            text: "<!subteam^${{ secrets.UBO_SYNC_REVIEWERS_SLACK_GROUP_ID }}> uBO release ${{ steps.check.outputs.tag }} is not yet merged into ${{ github.repository }} master. See https://github.com/gorhill/uBlock/releases/tag/${{ steps.check.outputs.tag }}"
