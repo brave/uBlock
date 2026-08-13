@@ -120,6 +120,16 @@ jobs:
       - create-pr
       - update-pr
     steps:
+      - name: Identify failed job
+        id: failed
+        run: |
+          if [ "${{ needs.check-for-changes.result }}" = "failure" ]; then job=check-for-changes
+          elif [ "${{ needs.sync.result }}" = "failure" ]; then job=sync
+          elif [ "${{ needs.check-imports.result }}" = "failure" ]; then job=check-imports
+          elif [ "${{ needs.create-pr.result }}" = "failure" ]; then job=create-pr
+          elif [ "${{ needs.update-pr.result }}" = "failure" ]; then job=update-pr
+          fi
+          echo "job=$job" >> "$GITHUB_OUTPUT"
       - uses: 8398a7/action-slack@28ba43ae48961b90635b50953d216767a6bea486 # v3.16.2
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -127,3 +137,4 @@ jobs:
           author_name: "Github Actions"
           status: failure
           fields: repo,message,commit,author,eventName,ref,workflow,pullRequest
+          text: "<!subteam^${{ secrets.UBO_SYNC_REVIEWERS_SLACK_GROUP_ID }}> Sync from fork failed for ${{ github.repository }} (failed job: ${{ steps.failed.outputs.job }}). Check the failed run and re-run or fix as needed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
