@@ -8,6 +8,7 @@ on:
       - .github/actions/find-mirror-pr/**
       - .github/actions/create-or-skip-pr/**
       - .github/braveCheckImports.js
+      - .github/sync_mirror.sh
 
 permissions:
   pull-requests: read
@@ -117,4 +118,75 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y patchutils
       - name: Run import checker (no network, no secrets)
         run: sudo unshare -n node .github/braveCheckImports.js
+
+  test-sync-sanitize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Exercise sync_mirror.sh sanitize against temp repos
+        run: |
+          set -euo pipefail
+          ROOT="$(mktemp -d)"
+          UPSTREAM="${ROOT}/upstream"
+          ORIGIN="${ROOT}/origin.git"
+          WORK="${ROOT}/work"
+
+          # Bare origin (push target).
+          git init --bare -b mirror "$ORIGIN"
+
+          # Seed upstream: base commit with .github/workflows/w.yml + code.txt.
+          git init -b master "$UPSTREAM"
+          git -C "$UPSTREAM" config user.email t@t
+          git -C "$UPSTREAM" config user.name t
+          mkdir -p "$UPSTREAM/.github/workflows"
+          printf 'name: w\non: push\njobs:\n  b:\n    runs-on: ubuntu-latest\n    steps: [{run: echo hi}]\n' > "$UPSTREAM/.github/workflows/w.yml"
+          printf 'base\n' > "$UPSTREAM/code.txt"
+          git -C "$UPSTREAM" add -A
+          git -C "$UPSTREAM" commit -m "base: add workflow + code"
+
+          # Bootstrap origin/mirror from upstream base.
+          git -C "$UPSTREAM" remote add origin "$ORIGIN"
+          git -C "$UPSTREAM" push origin master:mirror
+
+          # New upstream commit: modify BOTH .github/workflows/w.yml and code.txt.
+          printf 'name: w2\non: push\njobs:\n  b:\n    runs-on: ubuntu-latest\n    steps: [{run: echo bye}]\n' > "$UPSTREAM/.github/workflows/w.yml"
+          printf 'base\nnew-upstream-change\n' > "$UPSTREAM/code.txt"
+          git -C "$UPSTREAM" add -A
+          git -C "$UPSTREAM" commit -m "upstream: edit workflow + code"
+
+          # Run the script from a separate working clone (like CI does).
+          git clone "$UPSTREAM" "$WORK"
+          git -C "$WORK" remote set-url origin "$ORIGIN"
+
+          # Copy the script under test into $WORK so it runs against the temp
+          # remotes, not the brave/uBlock checkout's real `upstream` remote.
+          mkdir -p "$WORK/.github"
+          cp .github/sync_mirror.sh "$WORK/.github/sync_mirror.sh"
+
+          pushd "$WORK" >/dev/null
+          REMOTE_UPSTREAM=upstream REMOTE_ORIGIN=origin \
+            UPSTREAM_URL="$UPSTREAM" ORIGIN_URL="$ORIGIN" \
+            BRANCH_SRC=master BRANCH_MIRROR=mirror SANITIZE=1 \
+            bash .github/sync_mirror.sh
+          popd >/dev/null
+
+          # Verify pushed mirror: code change present, workflow change absent.
+          git clone "$ORIGIN" "${WORK}-verify"
+          pushd "${WORK}-verify" >/dev/null
+          if ! grep -q 'new-upstream-change' code.txt; then
+            echo "FAIL: code.txt change missing from mirror"; exit 1
+          fi
+          if ! grep -q '^name: w$' .github/workflows/w.yml; then
+            echo "FAIL: upstream workflow change leaked into mirror"; exit 1
+          fi
+          # Mirror tip must be a descendant of the bootstrap commit, and the
+          # new upstream commit must NOT be reachable verbatim (it was amended).
+          base_sha="$(git rev-parse HEAD~1 || true)"
+          if git log --format=%H | grep -q "$(git -C "$UPSTREAM" rev-parse master)"; then
+            echo "FAIL: unsanitized upstream commit reachable from mirror"; exit 1
+          fi
+          popd >/dev/null
+
+          echo "PASS: sanitize strips .github/ changes, preserves code changes."
+
 
