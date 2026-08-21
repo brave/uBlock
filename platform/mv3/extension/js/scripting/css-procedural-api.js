@@ -29,8 +29,6 @@ if ( self.ProceduralFiltererAPI !== undefined ) {
 
 /******************************************************************************/
 
-const chrome = self.chrome ?? self.browser;
-
 const nonVisualElements = {
     head: true,
     link: true,
@@ -197,23 +195,15 @@ class PSelectorMatchesMediaTask extends PSelectorTask {
 class PSelectorMatchesPathTask extends PSelectorTask {
     constructor(filterer, task) {
         super();
-        this.filterer = filterer;
         this.needle = regexFromString(
             task[1].replace(/\P{ASCII}/gu, s => encodeURIComponent(s))
         );
-        if ( PSelectorMatchesPathTask.#listener ) { return; }
-        PSelectorMatchesPathTask.#listener = true;
-        if ( Boolean(self.navigation) === false ) { return; }
-        self.navigation.addEventListener('navigate', ( ) => {
-            this.filterer.uBOL_DOMChanged();
-        });
     }
     transpose(node, output) {
         if ( this.needle.test(self.location.pathname + self.location.search) ) {
             output.push(node);
         }
     }
-    static #listener;
 }
 
 /******************************************************************************/
