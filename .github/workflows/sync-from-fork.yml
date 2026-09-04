@@ -2,7 +2,7 @@ name: Sync from fork
 on:
   schedule:
     # * is a special character in YAML so you have to quote this string
-    - cron: "0 * * * *"
+    - cron: "0 */3 * * *"
   workflow_dispatch:
 
 permissions: {}
@@ -40,13 +40,24 @@ jobs:
     needs: check-for-changes
     runs-on: ubuntu-latest
     steps:
-      - name: Create mirror branch
-        run: |
-          git clone "https://github.com/gorhill/${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}"
-          cd ${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}
-          git checkout -b mirror
-          git remote add github "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git"
-          git push -u github mirror
+      # Checkout the ref the workflow ran on (schedule -> default branch,
+      # workflow_dispatch -> the dispatched branch), so sync_mirror.sh comes
+      # from the same ref as the workflow definition.
+      # Full history: sync_mirror.sh runs merge-base/rev-list across
+      # upstream/master and origin/master, which needs complete ancestry.
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - name: Sync mirror (sanitize .github/ from upstream commits)
+        env:
+          REMOTE_UPSTREAM: upstream
+          REMOTE_ORIGIN: origin
+          UPSTREAM_URL: https://github.com/gorhill/uBlock.git
+          ORIGIN_URL: https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/${{ github.repository }}.git
+          BRANCH_SRC: master
+          BRANCH_MIRROR: mirror
+          SANITIZE: "1"
+        run: bash .github/sync_mirror.sh
   check-imports:
     permissions: {}
     needs: sync
