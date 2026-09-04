@@ -40,13 +40,15 @@ jobs:
     needs: check-for-changes
     runs-on: ubuntu-latest
     steps:
-      - name: Clone Brave fork (provides .github/sync_mirror.sh)
-        run: |
-          git clone "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git" repo
-          cd repo
-          git remote add upstream https://github.com/gorhill/uBlock.git
+      # Checkout the ref the workflow ran on (schedule -> default branch,
+      # workflow_dispatch -> the dispatched branch), so sync_mirror.sh comes
+      # from the same ref as the workflow definition.
+      # Full history: sync_mirror.sh runs merge-base/rev-list across
+      # upstream/master and origin/master, which needs complete ancestry.
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
       - name: Sync mirror (sanitize .github/ from upstream commits)
-        working-directory: repo
         env:
           REMOTE_UPSTREAM: upstream
           REMOTE_ORIGIN: origin

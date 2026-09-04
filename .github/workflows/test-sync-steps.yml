@@ -123,70 +123,240 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - name: Exercise sync_mirror.sh sanitize against temp repos
+      - name: Exercise sync_mirror.sh per-commit sanitize against temp repos
         run: |
-          set -euo pipefail
+          # NOTE: no pipefail here: `producer | grep -q` lets the producer die
+          # of SIGPIPE (exit 141) on match, which pipefail would turn into a
+          # spurious failure (and a false-pass inside `if` conditions).
+          set -eu
           ROOT="$(mktemp -d)"
           UPSTREAM="${ROOT}/upstream"
           ORIGIN="${ROOT}/origin.git"
           WORK="${ROOT}/work"
 
-          # Bare origin (push target).
-          git init --bare -b mirror "$ORIGIN"
+          # Bare origin (push target). master = Brave master; no mirror yet.
+          git init --bare -q "$ORIGIN"
 
-          # Seed upstream: base commit with .github/workflows/w.yml + code.txt.
-          git init -b master "$UPSTREAM"
+          # Seed upstream: base commit with .github (workflow + nested file) and code files.
+          git init -q -b master "$UPSTREAM"
           git -C "$UPSTREAM" config user.email t@t
           git -C "$UPSTREAM" config user.name t
-          mkdir -p "$UPSTREAM/.github/workflows"
+          mkdir -p "$UPSTREAM/.github/workflows" "$UPSTREAM/.github/nested/deep"
           printf 'name: w\non: push\njobs:\n  b:\n    runs-on: ubuntu-latest\n    steps: [{run: echo hi}]\n' > "$UPSTREAM/.github/workflows/w.yml"
+          printf 'nested\n' > "$UPSTREAM/.github/nested/deep/file.txt"
           printf 'base\n' > "$UPSTREAM/code.txt"
+          printf 'to-be-deleted\n' > "$UPSTREAM/code2.txt"
           git -C "$UPSTREAM" add -A
-          git -C "$UPSTREAM" commit -m "base: add workflow + code"
+          git -C "$UPSTREAM" commit -qm "base: add workflow + code"
 
-          # Bootstrap origin/mirror from upstream base.
+          # Seed origin master from upstream base (mimics brave master state).
           git -C "$UPSTREAM" remote add origin "$ORIGIN"
-          git -C "$UPSTREAM" push origin master:mirror
+          git -C "$UPSTREAM" push -q origin master:master
+          BASE="$(git -C "$UPSTREAM" rev-parse master)"
 
-          # New upstream commit: modify BOTH .github/workflows/w.yml and code.txt.
+          # Upstream commit 2: touch BOTH .github (modify, add, delete at multiple depths) AND code files.
           printf 'name: w2\non: push\njobs:\n  b:\n    runs-on: ubuntu-latest\n    steps: [{run: echo bye}]\n' > "$UPSTREAM/.github/workflows/w.yml"
+          printf 'brand new workflow\n' > "$UPSTREAM/.github/workflows/new.yml"
+          rm "$UPSTREAM/.github/nested/deep/file.txt"
           printf 'base\nnew-upstream-change\n' > "$UPSTREAM/code.txt"
           git -C "$UPSTREAM" add -A
-          git -C "$UPSTREAM" commit -m "upstream: edit workflow + code"
+          GIT_AUTHOR_DATE='2026-01-02T03:04:05+00:00' git -C "$UPSTREAM" commit -qm "upstream: edit workflow + code"
+          C2="$(git -C "$UPSTREAM" rev-parse master)"
+          C2_DATE="$(git -C "$UPSTREAM" log -1 --format=%aI master)"
+
+          # Upstream commit 3: code-only.
+          printf 'base\nnew-upstream-change\nmore\n' > "$UPSTREAM/code.txt"
+          git -C "$UPSTREAM" add -A
+          GIT_AUTHOR_DATE='2026-01-03T03:04:05+00:00' git -C "$UPSTREAM" commit -qm "upstream: more code"
+          C3="$(git -C "$UPSTREAM" rev-parse master)"
 
           # Run the script from a separate working clone (like CI does).
-          git clone "$UPSTREAM" "$WORK"
+          git clone -q "$UPSTREAM" "$WORK"
           git -C "$WORK" remote set-url origin "$ORIGIN"
+          git -C "$WORK" remote add upstream "$UPSTREAM"
 
-          # Copy the script under test into $WORK so it runs against the temp
-          # remotes, not the brave/uBlock checkout's real `upstream` remote.
-          mkdir -p "$WORK/.github"
-          cp .github/sync_mirror.sh "$WORK/.github/sync_mirror.sh"
+          cp "${GITHUB_WORKSPACE:-$PWD}/.github/sync_mirror.sh" "$WORK/sync_mirror.sh"
 
-          pushd "$WORK" >/dev/null
-          REMOTE_UPSTREAM=upstream REMOTE_ORIGIN=origin \
+          run_sync() { (cd "$WORK" && env REMOTE_UPSTREAM=upstream REMOTE_ORIGIN=origin \
             UPSTREAM_URL="$UPSTREAM" ORIGIN_URL="$ORIGIN" \
-            BRANCH_SRC=master BRANCH_MIRROR=mirror SANITIZE=1 \
-            bash .github/sync_mirror.sh
-          popd >/dev/null
+            BRANCH_SRC=master BRANCH_MIRROR=mirror \
+            UP_SLUG=gorhill/uBlock SANITIZE="${SANITIZE:-1}" \
+            bash sync_mirror.sh) > "${ROOT}/last.log" 2>&1 \
+            || { cat "${ROOT}/last.log"; exit 1; }; }
 
-          # Verify pushed mirror: code change present, workflow change absent.
-          git clone "$ORIGIN" "${WORK}-verify"
-          pushd "${WORK}-verify" >/dev/null
-          if ! grep -q 'new-upstream-change' code.txt; then
-            echo "FAIL: code.txt change missing from mirror"; exit 1
-          fi
-          if ! grep -q '^name: w$' .github/workflows/w.yml; then
-            echo "FAIL: upstream workflow change leaked into mirror"; exit 1
-          fi
-          # Mirror tip must be a descendant of the bootstrap commit, and the
-          # new upstream commit must NOT be reachable verbatim (it was amended).
-          base_sha="$(git rev-parse HEAD~1 || true)"
-          if git log --format=%H | grep -q "$(git -C "$UPSTREAM" rev-parse master)"; then
+          # Verify-clone helpers: refresh local mirror ref, assert .github untouched.
+          sync_verify() {
+            cd "$V"
+            git fetch -q origin mirror && git checkout -q mirror && git reset -q --hard FETCH_HEAD
+          }
+          assert_github_untouched() {
+            local base="${1:-$BASE}"
+            if git diff --name-only "${base}"..mirror -- .github/ | grep -q .; then
+              echo "FAIL: mirror sync commits modify .github/"; exit 1
+            fi
+          }
+          assert_no_commit_touches_github() {
+            local base="$1"
+            while IFS= read -r c; do
+              if git diff-tree -r --no-commit-id --name-only "$c" | grep -q '^\.github/'; then
+                echo "FAIL: sanitized commit $c touches .github/"; exit 1
+              fi
+            done < <(git rev-list --no-merges "${base}"..mirror)
+          }
+          assert_non_github_matches_upstream() {
+            git -C "$V" fetch -q upstream
+            if git -C "$V" diff --name-only upstream/master mirror -- ':(exclude).github' | grep -q .; then
+              echo "FAIL: non-.github tree differs from upstream"; git -C "$V" diff --name-status upstream/master mirror -- ':(exclude).github'; exit 1
+            fi
+          }
+
+          # --- 1. Bootstrap run (no mirror on origin yet): per-commit replay
+          # rooted at the current master tip. ---
+          run_sync
+          git clone -q -c user.email=t@t -c user.name=t "$ORIGIN" "${WORK}-verify"
+          V="${WORK}-verify"
+          git -C "$V" remote add upstream "$UPSTREAM"
+          sync_verify
+          test "$(git rev-list --count "${BASE}"..mirror)" = "2"
+          test "$(git rev-parse 'mirror~2')" = "$BASE"   # chain rooted at master tip (mirror~1 = c2', mirror~2 = master tip)
+          # Subjects, author identity and author dates preserved per commit.
+          test "$(git log --format=%s -1 mirror)" = "upstream: more code"
+          test "$(git log --format=%s -1 mirror~1)" = "upstream: edit workflow + code"
+          test "$(git log --format=%an -1 mirror)" = "t"
+          test "$(git log --format=%aI -1 mirror~1)" = "$C2_DATE"
+          # Upstream trailer links to the exact source commits.
+          git log --format=%B mirror | grep -q "Upstream: gorhill/uBlock@${C2}"
+          git log --format=%B mirror | grep -q "Upstream: gorhill/uBlock@${C3}"
+          # Non-.github content matches upstream exactly; .github untouched.
+          assert_non_github_matches_upstream
+          assert_github_untouched
+          assert_no_commit_touches_github "$BASE"
+          grep -q '^name: w$' .github/workflows/w.yml
+          test ! -e .github/workflows/new.yml
+          test -e .github/nested/deep/file.txt
+          # Original upstream commits must not leak into the mirror.
+          if git merge-base --is-ancestor "$C2" mirror; then
             echo "FAIL: unsanitized upstream commit reachable from mirror"; exit 1
           fi
-          popd >/dev/null
+          echo "SCENARIO 1 (bootstrap, per-commit replay): PASS"
+          cd "$ROOT"
 
-          echo "PASS: sanitize strips .github/ changes, preserves code changes."
+          # --- 2. Upstream .github-only change -> empty sanitized commit, kept. ---
+          printf 'workflow-only change\n' >> "$UPSTREAM/.github/workflows/w.yml"
+          git -C "$UPSTREAM" add -A
+          GIT_AUTHOR_DATE='2026-01-04T03:04:05+00:00' git -C "$UPSTREAM" commit -qm "upstream: workflow-only"
+          C4="$(git -C "$UPSTREAM" rev-parse master)"
+          PRE2="$(git -C "$V" rev-parse mirror)"
+          run_sync
+          sync_verify
+          test "$(git rev-list --count "${BASE}"..mirror)" = "3"
+          test "$(git rev-parse 'mirror~1')" = "$PRE2"   # appended, not rewritten
+          test "$(git rev-parse 'mirror^{tree}')" = "$(git rev-parse 'mirror~1^{tree}')"
+          test "$(git log --format=%s -1 mirror)" = "upstream: workflow-only"
+          git log --format=%B mirror | grep -q "Upstream: gorhill/uBlock@${C4}"
+          test "$(git ls-remote "$ORIGIN" refs/heads/mirror | awk '{print $1}')" != "$PRE2"
+          assert_github_untouched
+          assert_no_commit_touches_github "$BASE"
+          echo "SCENARIO 2 (.github-only -> kept empty commit): PASS"
+          cd "$ROOT"
 
+          # --- 3. Incremental run + idempotent re-run. ---
+          PRE3="$(git -C "$V" rev-parse mirror)"
+          printf 'base\nnew-upstream-change\nmore\nthird\n' > "$UPSTREAM/code.txt"
+          rm "$UPSTREAM/code2.txt"
+          git -C "$UPSTREAM" add -A
+          GIT_AUTHOR_DATE='2026-01-05T03:04:05+00:00' git -C "$UPSTREAM" commit -qm "upstream: third, delete code2"
+          C5="$(git -C "$UPSTREAM" rev-parse master)"
+          C5_DATE="$(git -C "$UPSTREAM" log -1 --format=%aI master)"
+          run_sync
+          sync_verify
+          test "$(git rev-list --count "${BASE}"..mirror)" = "4"
+          test "$(git rev-parse 'mirror~1')" = "$PRE3"   # appended, not rewritten
+          grep -q 'third' code.txt
+          test ! -e code2.txt
+          test "$(git log --format=%aI -1 mirror)" = "$C5_DATE"
+          assert_github_untouched
+          assert_no_commit_touches_github "$BASE"
+          # Fork Sync PR must merge cleanly: 3-way merge of mirror into master.
+          if ! git -C "$V" merge-tree --write-tree "$BASE" mirror >/dev/null 2>&1; then
+            echo "FAIL: mirror does not merge cleanly into master"; exit 1
+          fi
+          # Re-run with no new upstream commits: deterministic replay, no push.
+          run_sync
+          grep -q "Nothing to push" "${ROOT}/last.log"
+          test "$(git ls-remote "$ORIGIN" refs/heads/mirror | awk '{print $1}')" = "$(git -C "$V" rev-parse mirror)"
+          echo "SCENARIO 3 (incremental + idempotent re-run): PASS"
+          cd "$ROOT"
 
+          # --- 4. Master already contains an upstream commit (old sync
+          # merges shipped rebased copies): patch-id equivalence must skip it
+          # and re-root the chain at the moved master tip; the resulting
+          # Fork Sync PR must still merge cleanly. ---
+          printf 'feature\n' > "$UPSTREAM/feature.txt"
+          git -C "$UPSTREAM" add -A
+          GIT_AUTHOR_DATE='2026-01-06T03:04:05+00:00' git -C "$UPSTREAM" commit -qm "upstream: feature file"
+          C7="$(git -C "$UPSTREAM" rev-parse master)"
+          # Master side: absorb C7 via an old-sync-style copy (same parent
+          # tree and diff as C7 -> same patch-id, different SHA lineage), push
+          # master. M_ROOT re-roots master's line so upstream originals stay
+          # out of its ancestry (only patch-id equivalence can match them).
+          git -C "$WORK" fetch -q upstream
+          C7_PARENT="$(git -C "$WORK" rev-parse "${C7}^")"
+          C7_PTREE="$(git -C "$WORK" rev-parse "${C7_PARENT}^{tree}")"
+          M_ROOT="$(GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t git -C "$WORK" commit-tree "$C7_PTREE" -p "$BASE" -m 'master: old sync copies')"
+          M2="$(GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t git -C "$WORK" commit-tree "$(git -C "$WORK" rev-parse "${C7}^{tree}")" -p "$M_ROOT" -m 'master: old sync copy of feature')"
+          git -C "$WORK" push -q "$ORIGIN" "$M2:refs/heads/master"
+          # Upstream moves past C7 (C8's tree contains C7's change).
+          printf 'fifth\n' >> "$UPSTREAM/code.txt"
+          git -C "$UPSTREAM" add -A
+          GIT_AUTHOR_DATE='2026-01-07T03:04:05+00:00' git -C "$UPSTREAM" commit -qm "upstream: fifth"
+          C8="$(git -C "$UPSTREAM" rev-parse master)"
+          run_sync
+          sync_verify
+          git -C "$V" fetch -q origin master
+          # Chain re-rooted at the new master tip; C7 skipped (already on master).
+          test "$(git rev-list --count "${M2}"..mirror)" = "5"   # C2,C3,C4(empty),C5,C8
+          test "$(git rev-parse 'mirror~5')" = "$M2"
+          test "$(git log --format=%s -1 mirror)" = "upstream: fifth"
+          git log --format=%B mirror | grep -q "Upstream: gorhill/uBlock@${C8}"
+          if git log --format=%B mirror | grep -q "Upstream: gorhill/uBlock@${C7}"; then
+            echo "FAIL: upstream commit already on master was replayed"; exit 1
+          fi
+          test -e feature.txt   # delivered via C8's tree, no duplicate replay
+          assert_github_untouched "$M2"
+          assert_no_commit_touches_github "$M2"
+          if ! git -C "$V" merge-tree --write-tree "$M2" mirror >/dev/null 2>&1; then
+            echo "FAIL: mirror does not merge cleanly into moved master"; exit 1
+          fi
+          echo "SCENARIO 4 (patch-id skip of master-absorbed commit): PASS"
+          cd "$ROOT"
+
+          # --- 5. Self-healing: deleted mirror is recreated deterministically. ---
+          GOOD_TIP="$(git -C "$V" rev-parse mirror)"
+          git -C "$WORK" push -q origin --delete mirror
+          printf 'base\nnew-upstream-change\nmore\nthird\nfifth\nsixth\n' > "$UPSTREAM/code.txt"
+          git -C "$UPSTREAM" add -A
+          GIT_AUTHOR_DATE='2026-01-08T03:04:05+00:00' git -C "$UPSTREAM" commit -qm "upstream: sixth"
+          C9="$(git -C "$UPSTREAM" rev-parse master)"
+          run_sync
+          test -n "$(git ls-remote "$ORIGIN" refs/heads/mirror)"
+          sync_verify
+          test "$(git rev-list --count "${M2}"..mirror)" = "6"
+          grep -q 'sixth' code.txt
+          # Deterministic replay: the pre-deletion tip is an ancestor again.
+          if ! git merge-base --is-ancestor "$GOOD_TIP" mirror; then
+            echo "FAIL: recreated mirror diverges from deterministic replay"; exit 1
+          fi
+          git log --format=%B mirror | grep -q "Upstream: gorhill/uBlock@${C9}"
+          assert_non_github_matches_upstream
+          assert_github_untouched "$M2"
+          assert_no_commit_touches_github "$M2"
+          echo "SCENARIO 5 (self-heal recreate): PASS"
+          cd "$ROOT"
+
+          # --- 6. SANITIZE=0 break-glass: verbatim upstream push. ---
+          SANITIZE=0 run_sync
+          test "$(git ls-remote "$ORIGIN" refs/heads/mirror | awk '{print $1}')" = "$C9"
+          echo "SCENARIO 6 (SANITIZE=0 break-glass): PASS"
+
+          echo "ALL SCENARIOS PASS"
