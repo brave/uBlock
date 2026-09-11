@@ -384,7 +384,7 @@
     "description": "An option in a dropdown list"
   },
   "developOptionDnrRulesOf": {
-    "message": "Правила на DNR за ...",
+    "message": "Правила на DNR за …",
     "description": "A section header in a dropdown list"
   },
   "developOptionDynamicRuleset": {

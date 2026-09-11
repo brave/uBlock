@@ -36,7 +36,7 @@
     "description": "Link to privacy policy on GitHub (English)"
   },
   "aboutDocumentation": {
-    "message": "Documentation",
+    "message": "Documentație",
     "description": "Link to documentation in About pane"
   },
   "popupFilteringModeLabel": {
@@ -116,7 +116,7 @@
     "description": "Placeholder text which describes the purpose of the textarea widget"
   },
   "userScriptsInfo": {
-    "message": "Pentru a aplica filtrele cosmetice sau de tip scriptlet din listele importate, trebuie să îi acorzi uBO Lite permisiunea de a rula scripturi de utilizator. Deschide pagina de extensii a browserului tău (<code>chrome://extensions</code> în Chrome sau <code>about:addons</code> în Firefox), deschide detaliile uBO Lite și activează opțiunea <b>Permite scripturile de utilizator</b> (numite și „scripturi de la terți neverificate”).",
+    "message": "Deschide pagina de extensii a browserului tău (<code>chrome://extensions</code> în Chrome sau <code>about:addons</code> în Firefox), deschide detaliile uBO Lite și activează opțiunea <b>Permite scripturile de utilizator</b> (numite și „scripturi de la terți neverificate”).",
     "description": "A notice to inform user on how to enable 'user scripts' permission"
   },
   "aboutChangelog": {

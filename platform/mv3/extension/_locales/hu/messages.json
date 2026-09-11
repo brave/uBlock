@@ -116,7 +116,7 @@
     "description": "Placeholder text which describes the purpose of the textarea widget"
   },
   "userScriptsInfo": {
-    "message": "Az importált listákból származó kozmetikai szűrők alkalmazásához engedélyezni kell az uBO Lite számára, hogy felhasználói parancsfájlokat futtatsson. Nyissa meg a böngészőkiegészítők vagy bővítmények oldalát (<code>chrome://extensions</code> a Chrome-ban vagy <code>about:addons</code> a Firefoxban), nyissa meg a <b>uBO Lite</b> részleteit, és kapcsolja be a <b>Felhasználói parancsfájlok engedélyezése</b> lehetőséget (más néven „nem ellenőrzött külső parancsfájlok”).",
+    "message": "Nyissa meg a böngészőkiegészítők vagy bővítmények oldalát (<code>chrome://extensions</code> a Chrome-ban vagy <code>about:addons</code> a Firefoxban), nyissa meg a <b>uBO Lite</b> részleteit, és kapcsolja be a <b>Felhasználói parancsfájlok engedélyezése</b> lehetőséget (más néven „nem ellenőrzött külső parancsfájlok”).",
     "description": "A notice to inform user on how to enable 'user scripts' permission"
   },
   "aboutChangelog": {

@@ -116,7 +116,7 @@
     "description": "Placeholder text which describes the purpose of the textarea widget"
   },
   "userScriptsInfo": {
-    "message": "Ilufiltrite või scriplet filtrite kasutamiseks imporditud nimekirjast pead lubama uBO Lite'il käivitada kasutajaskripte. Ava veebilehitseja laiendite lehekülg (<code>chrome://extensions</code> Chrome'is või <code>about:addons</code> Firefoxis), ava <b>uBO Lite</b>'i andmed ja luba <b>Luba kasutajaskriptid</b> (tuntud ka kui „kinnitamata muu osapoole skriptid“).",
+    "message": "Ava veebilehitseja laiendite lehekülg (<code>chrome://extensions</code> Chrome'is või <code>about:addons</code> Firefoxis), ava <b>uBO Lite</b>'i andmed ja luba <b>Luba kasutajaskriptid</b> (tuntud ka kui „kinnitamata muu osapoole skriptid“).",
     "description": "A notice to inform user on how to enable 'user scripts' permission"
   },
   "aboutChangelog": {

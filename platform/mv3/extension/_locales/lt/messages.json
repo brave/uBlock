@@ -116,7 +116,7 @@
     "description": "Placeholder text which describes the purpose of the textarea widget"
   },
   "userScriptsInfo": {
-    "message": "Kad galėtumėte taikyti kosmetinius ar scenarijų filtrus iš importuotų sąrašų, turite suteikti uBO Lite leidimą vykdyti vartotojo scenarijus. Atidarykite naršyklės plėtinių puslapį (<code>chrome://extensions</code> sistemoje Chrome arba <code>about:addons</code> sistemoje Firefox), atidarykite <b>uBO Lite</b> išsamią informaciją ir įjunkite <b>Leisti vartotojo scenarijus</b> (taip pat vadinama „nepatikrintais trečiųjų šalių scenarijais“).",
+    "message": "Atidarykite naršyklės plėtinių puslapį (<code>chrome://extensions</code> sistemoje Chrome arba <code>about:addons</code> sistemoje Firefox), atidarykite <b>uBO Lite</b> išsamią informaciją ir įjunkite <b>Leisti vartotojo scenarijus</b> (taip pat vadinama „nepatikrintais trečiųjų šalių scenarijais“).",
     "description": "A notice to inform user on how to enable 'user scripts' permission"
   },
   "aboutChangelog": {

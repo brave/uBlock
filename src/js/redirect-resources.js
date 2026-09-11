@@ -99,6 +99,11 @@ export default new Map([
         alias: 'google-ima3',                       /* adguard compatibility */
         data: 'text',
     } ],
+    [ 'google-ima-dai.js', {
+        alias: 'google-ima3-dai',                   /* adguard compatibility */
+        data: 'text',
+        requiresTrust: true,
+    } ],
     [ 'googlesyndication_adsbygoogle.js', {
         alias: [
             'googlesyndication.com/adsbygoogle.js',

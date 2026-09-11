@@ -12,7 +12,7 @@
     "description": "English: uBlock₀ — Dashboard"
   },
   "dashboardUnsavedWarning": {
-    "message": "Pozor! Spremembe niso shranjene.",
+    "message": "Pozor: spremembe niso shranjene!",
     "description": "A warning in the dashboard when navigating away from unsaved changes"
   },
   "dashboardUnsavedWarningStay": {
@@ -508,7 +508,7 @@
     "description": "Filter lists section name"
   },
   "3pImport": {
-    "message": "Uvozi …",
+    "message": "Uvozi…",
     "description": "The label for the checkbox used to import external filter lists"
   },
   "3pExternalListsHint": {
@@ -528,7 +528,7 @@
     "description": "used as a tooltip for the clock icon beside a list"
   },
   "3pUpdating": {
-    "message": "Posodabljanje …",
+    "message": "Posodabljanje…",
     "description": "used as a tooltip for the spinner icon beside a list"
   },
   "3pNetworkError": {
@@ -552,7 +552,7 @@
     "description": "Button in the 'My filters' pane"
   },
   "1pExport": {
-    "message": "Izvozi …",
+    "message": "Izvozi…",
     "description": "Button in the 'My filters' pane"
   },
   "1pExportFilename": {
@@ -592,11 +592,11 @@
     "description": "Will discard manually-edited content and exit manual-edit mode"
   },
   "rulesImport": {
-    "message": "Uvozi iz datoteke …",
+    "message": "Uvozi iz datoteke…",
     "description": ""
   },
   "rulesExport": {
-    "message": "Izvozi v datoteko …",
+    "message": "Izvozi v datoteko…",
     "description": "Button in the 'My rules' pane"
   },
   "rulesDefaultFileName": {
@@ -628,7 +628,7 @@
     "description": "English: a sort option for list of rules."
   },
   "whitelistPrompt": {
-    "message": "Vaš seznam gostiteljskih naslovov, za katere želite, da je uBlock₀ izklopljen. En vnos na vrstico. Neveljavna gostiteljska imena bodo brez opozoril ignorirana.",
+    "message": "Vaš seznam gostiteljskih naslovov, za katere želite, da je uBlock Origin izklopljen. En vnos na vrstico.",
     "description": "A concise description of the 'Trusted sites' pane."
   },
   "whitelistImport": {
@@ -976,7 +976,7 @@
     "description": "Label for the URL of the page"
   },
   "supportS6Select1": {
-    "message": "Spletna stran …",
+    "message": "Spletna stran…",
     "description": "Label for widget to select type of issue"
   },
   "supportS6Select1Option0": {
@@ -1240,7 +1240,7 @@
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuSubscribeToList": {
-    "message": "Naroči se na seznam filtrov …",
+    "message": "Naroči se na seznam filtrov…",
     "description": "An entry in the browser's contextual menu"
   },
   "contextMenuTemporarilyAllowLargeMediaElements": {

@@ -900,11 +900,11 @@
     "description": "Text for button which open an external web page in Support pane"
   },
   "supportReportSpecificButton": {
-    "message": "Նոր զեկույց ստեղծել",
+    "message": "Նոր զեկույց ստեղծել GitHub-ում",
     "description": "Text for button which open an external web page in Support pane"
   },
   "supportFindSpecificButton": {
-    "message": "Գտնել նման զեկույցներ",
+    "message": "Գտնել նման զեկույցներ GitHub-ում",
     "description": "A clickable link in the filter issue reporter section"
   },
   "supportS1H": {

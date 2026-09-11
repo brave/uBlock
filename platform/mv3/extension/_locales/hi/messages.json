@@ -116,7 +116,7 @@
     "description": "Placeholder text which describes the purpose of the textarea widget"
   },
   "userScriptsInfo": {
-    "message": "आयातित सूचियों से कॉस्मेटिक या स्क्रिप्टलेट फ़िल्टर लागू करने के लिए, आपको uBO Lite को उपयोगकर्ता स्क्रिप्ट चलाने की अनुमति देनी होगी। अपने ब्राउज़र का एक्सटेंशन पेज खोलें (Chrome में <code>chrome://extensions</code> या Firefox में <code>about:addons</code>), <b>uBO Lite</b> विवरण खोलें, और <b>उपयोगकर्ता स्क्रिप्ट की अनुमति दें</b> (जिसे \"असत्यापित तृतीय-पक्ष स्क्रिप्ट\" भी कहा जाता है) को चालू करें।",
+    "message": "अपने ब्राउज़र का एक्सटेंशन पेज खोलें (Chrome में <code>chrome://extensions</code> या Firefox में <code>about:addons</code>), <b>uBO Lite</b> विवरण खोलें, और <b>उपयोगकर्ता स्क्रिप्ट की अनुमति दें</b> (जिसे \"असत्यापित तृतीय-पक्ष स्क्रिप्ट\" भी कहा जाता है) को चालू करें।",
     "description": "A notice to inform user on how to enable 'user scripts' permission"
   },
   "aboutChangelog": {

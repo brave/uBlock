@@ -36,7 +36,7 @@
     "description": "Link to privacy policy on GitHub (English)"
   },
   "aboutDocumentation": {
-    "message": "Documentation",
+    "message": "Дакументацыя",
     "description": "Link to documentation in About pane"
   },
   "popupFilteringModeLabel": {
@@ -116,7 +116,7 @@
     "description": "Placeholder text which describes the purpose of the textarea widget"
   },
   "userScriptsInfo": {
-    "message": "Каб прымяніць касметычныя фільтры або фільтры скрыптлетаў да імпартаваных спісаў, вы павінны даць uBO Lite дазвол на запуск карыстальніцкіх скрыптоў. Адкрыйце старонку пашырэнняў вашага браўзера (<code>chrome://extensions</code> у Chrome або <code>about:addons</code> у Firefox), адкрыйце падрабязнасці <b>uBO Lite</b> і ўключыце <b>Дазволіць карыстальніцкія скрыпты</b> (таксама вядомыя як «неправераныя староннія скрыпты»).",
+    "message": "Адкрыйце старонку пашырэнняў вашага браўзера (<code>chrome://extensions</code> у Chrome або <code>about:addons</code> у Firefox), адкрыйце падрабязнасці <b>uBO Lite</b> і ўключыце <b>Дазволіць карыстальніцкія скрыпты</b> (таксама вядомыя як «неправераныя староннія скрыпты»).",
     "description": "A notice to inform user on how to enable 'user scripts' permission"
   },
   "aboutChangelog": {
@@ -384,7 +384,7 @@
     "description": "An option in a dropdown list"
   },
   "developOptionDnrRulesOf": {
-    "message": "Правілы у DNR",
+    "message": "Правілы у DNR …",
     "description": "A section header in a dropdown list"
   },
   "developOptionDynamicRuleset": {

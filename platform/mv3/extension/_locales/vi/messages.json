@@ -116,7 +116,7 @@
     "description": "Placeholder text which describes the purpose of the textarea widget"
   },
   "userScriptsInfo": {
-    "message": "Để áp dụng các bộ lọc giao diện hoặc tập lệnh từ danh sách đã nhập, bạn phải cấp quyền cho uBO Lite chạy các tập lệnh người dùng. Mở trang tiện ích mở rộng của trình duyệt (<code>chrome://extensions</code> trong Chrome hoặc <code>about:addons</code> trong Firefox), mở chi tiết <b>uBO Lite</b> và bật <b>Cho phép tập lệnh người dùng</b> (còn được gọi là “tập lệnh của bên thứ ba chưa được xác minh”).",
+    "message": "Mở trang tiện ích mở rộng của trình duyệt (<code>chrome://extensions</code> trong Chrome hoặc <code>about:addons</code> trong Firefox), mở chi tiết <b>uBO Lite</b> và bật <b>Cho phép tập lệnh người dùng</b> (còn được gọi là “tập lệnh của bên thứ ba chưa được xác minh”).",
     "description": "A notice to inform user on how to enable 'user scripts' permission"
   },
   "aboutChangelog": {

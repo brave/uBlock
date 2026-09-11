@@ -36,7 +36,7 @@
     "description": "Link to privacy policy on GitHub (English)"
   },
   "aboutDocumentation": {
-    "message": "Documentation",
+    "message": "Dokumentasjon",
     "description": "Link to documentation in About pane"
   },
   "popupFilteringModeLabel": {
@@ -92,11 +92,11 @@
     "description": "Header for a ruleset section in 'Filter lists pane'"
   },
   "3pGroupImported": {
-    "message": "Imported lists",
+    "message": "Importerte lister",
     "description": "Header for a ruleset section in 'Filter lists pane'"
   },
   "customListImportLabel": {
-    "message": "Add filter list…",
+    "message": "Legg til filterlister…",
     "description": "Text label heading the import area of custom filter lists"
   },
   "customListImportPlaceholder": {
@@ -280,7 +280,7 @@
     "description": "Short description for a checkbox in the options page"
   },
   "enablePopupBlockLabel": {
-    "message": "Aktiver popup blokkering",
+    "message": "Aktiver popup-blokkering",
     "description": "Label for a checkbox in the options page"
   },
   "enablePopupBlockLegend": {
@@ -408,11 +408,11 @@
     "description": "Text for buttons used to add content"
   },
   "importAndAppendButton": {
-    "message": "Importer og legg til...",
+    "message": "Importer og legg til…",
     "description": "Text for buttons used to import and append content"
   },
   "exportButton": {
-    "message": "Eksporter...",
+    "message": "Eksporter…",
     "description": "Text for buttons used to export content"
   },
   "backupButton": {

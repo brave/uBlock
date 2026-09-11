@@ -116,7 +116,7 @@
     "description": "Placeholder text which describes the purpose of the textarea widget"
   },
   "userScriptsInfo": {
-    "message": "برای اعمال فیلترهای ظاهری یا اسکریپتلت از لیست‌های وارد شده، باید به uBO Lite اجازه اجرای اسکریپت‌های کاربر را بدهید. صفحه افزونه‌های مرورگر خود را باز کنید (<code>chrome://extensions</code> در کروم یا <code>about:addons</code> در فایرفاکس)، جزئیات <b>uBO Lite</b> را باز کنید و گزینه <b>اجازه به اسکریپت‌های کاربر</b> (که به عنوان \"اسکریپت‌های شخص ثالث تایید نشده\" نیز شناخته می‌شود) را فعال کنید.",
+    "message": "صفحه افزونه‌های مرورگر خود را باز کنید (<code>chrome://extensions</code> در کروم یا <code>about:addons</code> در فایرفاکس)، جزئیات <b>uBO Lite</b> را باز کنید و گزینه <b>اجازه به اسکریپت‌های کاربر</b> (که به عنوان \"اسکریپت‌های شخص ثالث تایید نشده\" نیز شناخته می‌شود) را فعال کنید.",
     "description": "A notice to inform user on how to enable 'user scripts' permission"
   },
   "aboutChangelog": {

@@ -116,7 +116,7 @@
     "description": "Placeholder text which describes the purpose of the textarea widget"
   },
   "userScriptsInfo": {
-    "message": "درآمد شدہ فہرستوں سے کاسمیٹک یا اسکرپٹلیٹ فلٹرز کو نافذ کرنے کے لیے، آپ کو uBO Lite کو صارف اسکرپٹس چلانے کی اجازت دینی ہوگی۔ اپنے براؤزر کے ایکسٹینشنز پیج (<code>chrome://extensions</code> Chrome میں یا <code>about:addons</code> Firefox میں) کو کھولیں، <b>uBO Lite</b> کی تفصیلات کھولیں، اور <b>Allow user scripts</b> کو آن کریں (جسے “unverified third-party scripts” بھی کہا جاتا ہے)۔",
+    "message": "اپنے براؤزر کے ایکسٹینشنز پیج (<code>chrome://extensions</code> Chrome میں یا <code>about:addons</code> Firefox میں) کو کھولیں، <b>uBO Lite</b> کی تفصیلات کھولیں، اور <b>Allow user scripts</b> کو آن کریں (جسے “unverified third-party scripts” بھی کہا جاتا ہے)۔",
     "description": "A notice to inform user on how to enable 'user scripts' permission"
   },
   "aboutChangelog": {

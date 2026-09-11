@@ -116,7 +116,7 @@
     "description": "Placeholder text which describes the purpose of the textarea widget"
   },
   "userScriptsInfo": {
-    "message": "దిగుమతి చేసిన జాబితాల నుండి కాస్మెటిక్ లేదా స్క్రిప్ట్‌లెట్ ఫిల్టర్లను అమలు చేయడానికి, మీరు uBO Liteకి యూజర్ స్క్రిప్ట్‌లను అమలు చేసే అనుమతిని ఇవ్వాలి. మీ బ్రౌజర్ యొక్క ఎక్స్‌టెన్షన్ పేజీని తెరవండి (<code>chrome://extensions</code> Chromeలో లేదా <code>about:addons</code> Firefoxలో), <b>uBO Lite</b> వివరాలను తెరవండి, మరియు <b>Allow user scripts</b> (లేదా “unverified third-party scripts” అని కూడా పిలుస్తారు) టోగుల్ చేయండి.",
+    "message": "మీ బ్రౌజర్ యొక్క ఎక్స్‌టెన్షన్ పేజీని తెరవండి (<code>chrome://extensions</code> Chromeలో లేదా <code>about:addons</code> Firefoxలో), <b>uBO Lite</b> వివరాలను తెరవండి, మరియు <b>Allow user scripts</b> (లేదా “unverified third-party scripts” అని కూడా పిలుస్తారు) టోగుల్ చేయండి.",
     "description": "A notice to inform user on how to enable 'user scripts' permission"
   },
   "aboutChangelog": {

@@ -116,7 +116,7 @@
     "description": "Placeholder text which describes the purpose of the textarea widget"
   },
   "userScriptsInfo": {
-    "message": "Ili kutekeleza vichujio vya urembo au scriptlet kutoka kwenye orodha zilizoingizwa, lazima uipe uBO Lite ruhusa ya kuendesha hati za mtumiaji. Fungua ukurasa wa viendelezi vya kivinjari chako (<code>chrome://extensions</code> kwenye Chrome au <code>about:addons</code> kwenye Firefox), fungua maelezo ya <b>uBO Lite</b>, na washa <b>Ruhusu hati za mtumiaji</b> (pia hujulikana kama \"hati zisizoidhinishwa za watu wengine\").",
+    "message": "Fungua ukurasa wa viendelezi vya kivinjari chako (<code>chrome://extensions</code> kwenye Chrome au <code>about:addons</code> kwenye Firefox), fungua maelezo ya <b>uBO Lite</b>, na washa <b>Ruhusu hati za mtumiaji</b> (pia hujulikana kama \"hati zisizoidhinishwa za watu wengine\").",
     "description": "A notice to inform user on how to enable 'user scripts' permission"
   },
   "aboutChangelog": {

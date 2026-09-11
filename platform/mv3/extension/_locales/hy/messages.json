@@ -116,7 +116,7 @@
     "description": "Placeholder text which describes the purpose of the textarea widget"
   },
   "userScriptsInfo": {
-    "message": "Ներմուծված ցանկերից կոսմետիկ կամ սկրիպտլետ զտիչները կիրառելու համար դուք պետք է uBO Lite-ին թույլատրեք գործարկել օգտատիրոջ սկրիպտները։ Բացեք ձեր դիտարկչի ընդլայնումների էջը (<code>chrome://extensions</code> Chrome-ում կամ <code>about:addons</code> Firefox-ում), բացեք <b>uBO Lite</b>-ի մանրամասները և միացրեք <b>Թույլատրել օգտատիրոջ սկրիպտները</b> (նաև կոչվում է “չստուգված երրորդ կողմի սկրիպտներ”)։",
+    "message": "Բացեք ձեր դիտարկչի ընդլայնումների էջը (<code>chrome://extensions</code> Chrome-ում կամ <code>about:addons</code> Firefox-ում), բացեք <b>uBO Lite</b>-ի մանրամասները և միացրեք <b>Թույլատրել օգտատիրոջ սկրիպտները</b> (նաև կոչվում է “չստուգված երրորդ կողմի սկրիպտներ”)։",
     "description": "A notice to inform user on how to enable 'user scripts' permission"
   },
   "aboutChangelog": {
@@ -164,7 +164,7 @@
     "description": "A paragraph in the filter issue reporter section"
   },
   "supportFindSpecificButton": {
-    "message": "Գտնել նմանատիպ հաղորդումներ GitHub-ում",
+    "message": "Գտնել նման զեկույցներ GitHub-ում",
     "description": "A clickable link in the filter issue reporter section"
   },
   "supportS6URL": {
@@ -212,7 +212,7 @@
     "description": "A checkbox to use for NSFW sites"
   },
   "supportReportSpecificButton": {
-    "message": "Ստեղծել նոր հաղորդում GitHub-ում",
+    "message": "Նոր զեկույց ստեղծել GitHub-ում",
     "description": "Text for button which opens an external web page in Support pane"
   },
   "defaultFilteringModeSectionLabel": {

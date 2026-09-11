@@ -130,6 +130,7 @@ import {
     updateCompiledFilters,
 } from './compiled-filters.js';
 
+import { deferredTasks } from './deferred-tasks.js';
 import { dnr } from './ext-compat.js';
 import { setPopupBlockMode } from './prevent-popup.js';
 import { supportsOffscreenDocument } from './ext-offscreen.js';
@@ -238,21 +239,22 @@ async function applyRulesets(rulesets) {
     const result = await enableRulesets(rulesets);
     const stockUpdated = result.stockUpdated ?? false;
     const importedUpdated = result.importedUpdated ?? false;
-    if ( (stockUpdated || importedUpdated) === false ) { return; }
-    rulesetConfig.enabledRulesets = result.enabledRulesets;
-    await saveRulesetConfig();
-    const promises = [];
-    if ( importedUpdated ) {
-        promises.push(
-            updateCompiledFilters().then(( ) =>
-                Promise.all([ registerUserScripts(), updateUserRules() ])
-            )
-        );
+    if ( stockUpdated || importedUpdated ) {
+        rulesetConfig.enabledRulesets = result.enabledRulesets;
+        await saveRulesetConfig();
+        const promises = [];
+        if ( importedUpdated ) {
+            promises.push(
+                updateCompiledFilters().then(( ) =>
+                    Promise.all([ registerUserScripts(), updateUserRules() ])
+                )
+            );
+        }
+        if ( stockUpdated ) {
+            promises.push(registerContentScripts());
+        }
+        await Promise.all(promises);
     }
-    if ( stockUpdated ) {
-        promises.push(registerContentScripts());
-    }
-    await Promise.all(promises);
     broadcastMessage({ enabledRulesets: rulesetConfig.enabledRulesets });
 }
 
@@ -264,6 +266,25 @@ async function setDeveloperMode(state) {
     broadcastMessage({ developerMode: rulesetConfig.developerMode });
     await saveRulesetConfig();
     return rulesetConfig.developerMode;
+}
+
+/******************************************************************************/
+
+async function processDeferredTasks() {
+    if ( deferredTasks.size === 0 ) { return; }
+    const promises = [];
+    if ( deferredTasks.has('registerContentScripts') ) {
+        promises.push(registerContentScripts());
+    }
+    if ( deferredTasks.has('registerUserScripts') ) {
+        promises.push(registerUserScripts());
+    }
+    if ( deferredTasks.has('updateUserRules') ) {
+        promises.push(updateUserRules());
+    }
+    deferredTasks.clear();
+    if ( promises.length === 0 ) { return; }
+    return Promise.all(promises);
 }
 
 /******************************************************************************/
@@ -767,25 +788,20 @@ async function startSession() {
     // "When an extension updates, content scripts are cleared"
     // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/userScripts#extension_updates
     // "User scripts are cleared when an extension updates"
-    const promises = [];
     const shouldInject = isNewVersion || permissionsUpdated ||
         isSideloaded && rulesetConfig.developerMode;
     if ( shouldInject || stockUpdated ) {
-        promises.push(registerContentScripts());
+        deferredTasks.add('registerContentScripts');
     }
     if ( importedUpdated ) {
-        promises.push(
-            updateCompiledFilters().then(( ) =>
-                Promise.all([ registerUserScripts(), updateUserRules() ])
-            )
-        );
+        await updateCompiledFilters();
+        deferredTasks.add('registerUserScripts');
+        deferredTasks.add('updateUserRules');
     } else if ( shouldInject ) {
-        promises.push(registerUserScripts(), updateUserRules());
+        deferredTasks.add('registerUserScripts');
+        deferredTasks.add('updateUserRules');
     } else if ( userScriptsChanged ) {
-        promises.push(registerUserScripts());
-    }
-    if ( promises.length ) {
-        await Promise.all(promises);
+        deferredTasks.add('registerUserScripts');
     }
 
     // Cosmetic filtering-related content scripts cache fitlering data in
@@ -807,11 +823,13 @@ async function startSession() {
         if ( enableOptimal === false ) {
             const afterLevel = await setDefaultFilteringMode(MODE_BASIC);
             if ( afterLevel === MODE_BASIC ) {
-                await registerContentScripts();
+                deferredTasks.add('registerContentScripts');
                 process.firstRun = false;
             }
         }
     }
+
+    await processDeferredTasks();
 
     // Required to ensure up to date properties are available when needed
     adminReadEx('disabledFeatures').then(items => {

@@ -116,7 +116,7 @@
     "description": "Placeholder text which describes the purpose of the textarea widget"
   },
   "userScriptsInfo": {
-    "message": "Импортталған тізімдерден алынған көрнекілік немесе скрипт сүзгілерін қолдану үшін сіз uBO Lite-ке пайдаланушы скрипттерін іске қосу рұқсатын беруіңіз керек. Браузеріңіздің кеңейтулер бетін ашыңыз (<code>chrome://extensions</code> Chrome-да немесе <code>about:addons</code> Firefox-та), <b>uBO Lite</b> мәліметтерін ашып, <b>Пайдаланушы скрипттеріне рұқсат ету</b> (сонымен қатар “расталмаған үшінші тарап скрипттері” деп аталады) қосқышын қосыңыз.",
+    "message": "Браузеріңіздің кеңейтулер бетін ашыңыз (<code>chrome://extensions</code> Chrome-да немесе <code>about:addons</code> Firefox-та), <b>uBO Lite</b> мәліметтерін ашып, <b>Пайдаланушы скрипттеріне рұқсат ету</b> (сонымен қатар “расталмаған үшінші тарап скрипттері” деп аталады) қосқышын қосыңыз.",
     "description": "A notice to inform user on how to enable 'user scripts' permission"
   },
   "aboutChangelog": {

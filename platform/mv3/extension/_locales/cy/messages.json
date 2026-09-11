@@ -116,7 +116,7 @@
     "description": "Placeholder text which describes the purpose of the textarea widget"
   },
   "userScriptsInfo": {
-    "message": "I orfodi hidlau cosmetig neu sgriptlet o restrau wedi'u mewnforio, rhaid i chi roi caniatâd i uBO Lite redeg sgriptiau defnyddiwr. Agorwch dudalen estyniadau eich porwr (<code>chrome://extensions</code> yn Chrome neu <code>about:addons</code> yn Firefox), agorwch fanylion <b>uBO Lite</b>, a throwch <b>Caniatáu sgriptiau defnyddiwr</b> ymlaen (a elwir hefyd yn “sgriptiau trydydd parti heb eu gwirio”).",
+    "message": "Agorwch dudalen estyniadau eich porwr (<code>chrome://extensions</code> yn Chrome neu <code>about:addons</code> yn Firefox), agorwch fanylion <b>uBO Lite</b>, a throwch <b>Caniatáu sgriptiau defnyddiwr</b> ymlaen (a elwir hefyd yn “sgriptiau trydydd parti heb eu gwirio”).",
     "description": "A notice to inform user on how to enable 'user scripts' permission"
   },
   "aboutChangelog": {
