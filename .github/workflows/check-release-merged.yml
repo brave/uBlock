@@ -14,30 +14,26 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ github.token }}
-      UPSTREAM_URL: "https://github.com/gorhill/uBlock.git"
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Fetch upstream master and tags
-        run: |
-          git remote add upstream "${UPSTREAM_URL}"
-          git fetch --quiet --tags upstream master
-
-      - name: Check if latest stable release is merged into master
+      - name: Check if latest stable release version is covered by our fork's dist/version file
         id: check
         run: |
           # Latest stable release (releases/latest ignores pre-releases and drafts).
           tag=$(gh api repos/gorhill/uBlock/releases/latest --jq '.tag_name')
 
-          # Some release tags are cut on a side commit; test the newest
-          # on-upstream-master commit the release builds on. brave merges
-          # upstream via real merge commits, so those SHAs live on master.
-          base=$(git merge-base "$tag" upstream/master)
+          # upstream uses 2-, 3-, and even 4-segment version numbers. The last
+          # segments are often for pre-release builds. We consider only
+          # `major.minor` for now.
+          ours=$(head -n1 dist/version | grep -oE '^[0-9]+\.[0-9]+')
+          theirs=$(echo "$tag" | grep -oE '^[0-9]+\.[0-9]+')
 
-          if git merge-base --is-ancestor "$base" HEAD; then
+          # Up to date if our version sorts >= the latest upstream version.
+          if [ "$(printf '%s\n%s\n' "$theirs" "$ours" | sort -V | head -n1)" = "$theirs" ]; then
             merged=true
           else
             merged=false
@@ -45,7 +41,7 @@ jobs:
 
           echo "tag=$tag"       >> "$GITHUB_OUTPUT"
           echo "merged=$merged" >> "$GITHUB_OUTPUT"
-          echo "Latest stable uBO release: $tag (merged=$merged)" >> "$GITHUB_STEP_SUMMARY"
+          echo "Latest stable uBO release: $tag (ours=$ours, merged=$merged)" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Notify Slack if not merged
         if: steps.check.outputs.merged == 'false'
