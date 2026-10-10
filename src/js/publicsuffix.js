@@ -1,7 +1,7 @@
 /*******************************************************************************
 
-    uBlock Origin Lite - a comprehensive, MV3-compliant content blocker
-    Copyright (C) 2025-present Raymond Hill
+    uBlock Origin - a comprehensive, efficient content blocker
+    Copyright (C) 2026-present Raymond Hill
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,22 +19,18 @@
     Home: https://github.com/gorhill/uBlock
 */
 
-/* global chrome */
+/******************************************************************************/
 
-(api => {
-    if ( typeof api === 'object' ) { return; }
-    self.cssAPI = {
-        insert(css, immediate = false) {
-            if ( immediate ) {
-                const sheet = new CSSStyleSheet();
-                sheet.replaceSync(css);
-                document.adoptedStyleSheets.push(sheet);
-            }
-            chrome.runtime.sendMessage({
-                what: 'insertCSS',
-                css,
-            }).catch(( ) => {
-            });
-        },
-    };
-})(self.cssAPI);
+const publicSuffix = globalThis.browser?.publicSuffix;
+
+export default publicSuffix ? {
+    getDomain(hostname) {
+        try {
+            return publicSuffix.getDomain(hostname, { allowUnknownSuffix: true }) ?? ''
+        } catch {
+        };
+        return '';
+    },
+} : await import('../lib/publicsuffixlist/publicsuffixlist.js').then(module =>
+    module['default']
+);

@@ -104,15 +104,10 @@ export class StaticExtFilteringHostnameDB {
             const { isRegex, hn, pn } = extractSubTargets(target);
             this.#matcherSlots.push({ isRegex, hn, pn, iList: 0 });
             this.#matcherMap.set(target, iMatcher);
-            if ( isRegex === false ) {
-                const iMatcherList = this.#hostnameToMatcherListMap.get(hn) ?? 0;
-                this.#hostnameToMatcherListMap.set(hn, this.#linkedLists.length);
-                this.#linkedLists.push(iMatcher, iMatcherList);
-            } else {
-                const iMatcherList = this.#hostnameToMatcherListMap.get('') ?? 0;
-                this.#hostnameToMatcherListMap.set('', this.#linkedLists.length);
-                this.#linkedLists.push(iMatcher, iMatcherList);
-            }
+            const key = isRegex ? '' : hn;
+            const iMatcherList = this.#hostnameToMatcherListMap.get(key) ?? 0;
+            this.#hostnameToMatcherListMap.set(key, this.#linkedLists.length);
+            this.#linkedLists.push(iMatcher, iMatcherList);
         }
         const matcher = this.#matcherSlots[iMatcher];
         const iList = matcher.iList;
@@ -185,6 +180,41 @@ export class StaticExtFilteringHostnameDB {
             }
             iMatchList = this.#linkedLists[iMatchList+1];
         }
+    }
+
+    retrieveAll() {
+        const out = new Map();
+        const processList = (hn, iList, out) => {
+            for ( ; iList !== 0; iList = this.#linkedLists[iList+1] ) {
+                const s = this.#strSlots[this.#linkedLists[iList+0]];
+                const exception = s.charCodeAt(0) === 0x2D /* - */;
+                const selector = s.slice(1);
+                const details = out.get(selector) ?? {};
+                if ( details.initialized === undefined ) {
+                    details.initialized = true;
+                    out.set(selector, details);
+                }
+                if ( exception ) {
+                    details.excludeMatches ??= [];
+                    details.excludeMatches.push(hn);
+                    continue;
+                }
+                details.matches ??= [];
+                if ( details.matches.includes('*') ) { continue; }
+                if ( hn === '*' ) {
+                    details.matches = [ '*' ];
+                } else {
+                    details.matches.push(hn);
+                }
+            }
+        };
+        for ( const [ hn, iList ] of this.#hostnameToStringListMap ) {
+            processList(hn !== '' ? hn : '*', iList, out);
+        }
+        for ( const [ hn, iSlot ] of this.#matcherMap ) {
+            processList(hn, this.#matcherSlots[iSlot].iList, out);
+        }
+        return out;
     }
 
     #matcherTest(matcher, hn, pn) {
