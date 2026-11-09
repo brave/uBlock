@@ -64,7 +64,7 @@
     "description": "Label to be used to hide popup panel sections"
   },
   "popupNoWebsite": {
-    "message": "not a website",
+    "message": "не вэб-сайт",
     "description": "Used when popup panel is opened for a local web page"
   },
   "3pGroupDefault": {
@@ -380,7 +380,7 @@
     "description": "A label of a dropdown list"
   },
   "developOptionFilteringModeDetails": {
-    "message": "Падрабязныя звесткі аб рэжыме фільтрацыі",
+    "message": "Падрабязныя звесткі аб рэжыме фільтравання",
     "description": "An option in a dropdown list"
   },
   "developOptionCustomDnrRules": {
