@@ -3377,7 +3377,7 @@ export class ExtSelectorCompiler {
         this.abpProceduralOpReplacer = /:-abp-(?:[a-z]+)\(/g;
         this.nativeCssHas = instanceOptions.nativeCssHas === true;
         // https://www.w3.org/TR/css-syntax-3/#typedef-ident-token
-        this.reInvalidIdentifier = /^\d|\*/;
+        this.reInvalidIdentifier = /^\d/;
         this.error = undefined;
     }
 
@@ -3749,7 +3749,7 @@ export class ExtSelectorCompiler {
             case 'TypeSelector': {
                 const s = this.astSerializePart(part);
                 if ( s === undefined ) { return; }
-                if ( s === '*' && out.length !== 0 ) {
+                if ( out.length !== 0 ) {
                     const before = out[out.length-1];
                     if ( before.endsWith(' ') === false ) { return; }
                 }
