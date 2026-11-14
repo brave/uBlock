@@ -3377,7 +3377,7 @@ export class ExtSelectorCompiler {
         this.abpProceduralOpReplacer = /:-abp-(?:[a-z]+)\(/g;
         this.nativeCssHas = instanceOptions.nativeCssHas === true;
         // https://www.w3.org/TR/css-syntax-3/#typedef-ident-token
-        this.reInvalidIdentifier = /^\d/;
+        this.reInvalidIdentifier = /^\d|\*/;
         this.error = undefined;
     }
 
