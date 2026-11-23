@@ -21,8 +21,10 @@
 
 /******************************************************************************/
 
+import * as fc from './filtering-context.js';
+import * as frameManager from './vapi-contexts.js';
+
 import {
-    domainFromHostname,
     hostnameFromURI,
     isNetworkURI,
 } from './uri-utils.js';
@@ -38,7 +40,6 @@ import logger from './logger.js';
 import { orphanizeString } from './text-utils.js';
 import { redirectEngine } from './redirect-engine.js';
 import staticNetFilteringEngine from './static-net-filtering.js';
-import webext from './webext.js';
 import µb from './background.js';
 
 /*******************************************************************************
@@ -177,104 +178,6 @@ const NetFilteringResultCache = class {
 
 /******************************************************************************/
 
-// Frame stores are used solely to associate a URL with a frame id.
-
-const FrameStore = class {
-    constructor(frameURL, parentId) {
-        this.init(frameURL, parentId);
-    }
-
-    init(frameURL, parentId) {
-        this.t0 = Date.now();
-        this.parentId = parentId;
-        this.exceptCname = undefined;
-        this.clickToLoad = false;
-        this.rawURL = frameURL;
-        if ( frameURL !== undefined ) {
-            this.hostname = hostnameFromURI(frameURL);
-            this.domain = domainFromHostname(this.hostname) || this.hostname;
-        }
-        // Evaluated on-demand
-        // - 0b01: specific cosmetic filtering
-        // - 0b10: generic cosmetic filtering
-        this._cosmeticFilteringBits = undefined;
-        return this;
-    }
-
-    dispose() {
-        this.rawURL = this.hostname = this.domain = '';
-        if ( FrameStore.junkyard.length < FrameStore.junkyardMax ) {
-            FrameStore.junkyard.push(this);
-        }
-        return null;
-    }
-
-    updateURL(url) {
-        if ( typeof url !== 'string' ) { return; }
-        this.rawURL = url;
-        this.hostname = hostnameFromURI(url);
-        this.domain = domainFromHostname(this.hostname) || this.hostname;
-        this._cosmeticFilteringBits = undefined;
-    }
-
-    getCosmeticFilteringBits(tabId) {
-        if ( this._cosmeticFilteringBits !== undefined ) {
-            return this._cosmeticFilteringBits;
-        }
-        this._cosmeticFilteringBits = 0b11;
-        const fctxt = µb.filteringContext
-            .duplicate()
-            .fromTabId(tabId)
-            .setURL(this.rawURL)
-            .setDocOriginFromURL(this.rawURL)
-            .setMethod('')
-            .setRealm('network')
-        {
-            fctxt.setType('specifichide');
-            const result = staticNetFilteringEngine.matchRequest(fctxt, 0b11);
-            if ( result !== 0 && logger.enabled ) {
-                fctxt.setFilter(staticNetFilteringEngine.toLogData())
-                    .toLogger();
-            }
-            if ( result === 2 ) {
-                this._cosmeticFilteringBits &= ~0b01;
-            }
-        }
-        {
-            fctxt.setType('generichide');
-            const result = staticNetFilteringEngine.matchRequest(fctxt, 0b11);
-            if ( result !== 0 && logger.enabled ) {
-                fctxt.setFilter(staticNetFilteringEngine.toLogData())
-                    .toLogger();
-            }
-            if ( result === 2 ) {
-                this._cosmeticFilteringBits &= ~0b10;
-            }
-        }
-        return this._cosmeticFilteringBits;
-    }
-
-    shouldApplySpecificCosmeticFilters(tabId) {
-        return (this.getCosmeticFilteringBits(tabId) & 0b01) !== 0;
-    }
-
-    shouldApplyGenericCosmeticFilters(tabId) {
-        return (this.getCosmeticFilteringBits(tabId) & 0b10) !== 0;
-    }
-
-    static factory(frameURL, parentId = -1) {
-        const FS = FrameStore;
-        if ( FS.junkyard.length !== 0 ) {
-            return FS.junkyard.pop().init(frameURL, parentId);
-        }
-        return new FS(frameURL, parentId);
-    }
-    static junkyard = [];
-    static junkyardMax = 50;
-};
-
-/******************************************************************************/
-
 const CountDetails = class {
     constructor() {
         this.allowed = { any: 0, frame: 0, script: 0 };
@@ -298,6 +201,7 @@ const HostnameDetails = class {
         this.init(hostname);
     }
     init(hostname) {
+        this.pristine = true;
         this.hostname = hostname;
         this.cname = vAPI.net.canonicalNameFromHostname(hostname);
         this.counts.reset();
@@ -336,15 +240,9 @@ const HostnameDetailsMap = class extends Map {
 const PageStore = class {
     constructor(tabId, details) {
         this.extraData = new Map();
-        this.journal = [];
-        this.journalLastCommitted = this.journalLastUncommitted = -1;
-        this.journalLastUncommittedOrigin = undefined;
         this.netFilteringCache = NetFilteringResultCache.factory();
         this.hostnameDetailsMap = new HostnameDetailsMap();
         this.counts = new CountDetails();
-        this.journalTimer = vAPI.defer.create(( ) => {
-            this.journalProcess();
-        });
         this.largeMediaTimer = vAPI.defer.create(( ) => {
             this.injectLargeMediaElementScriptlet();
         });
@@ -352,13 +250,7 @@ const PageStore = class {
     }
 
     static factory(tabId, details) {
-        let entry = PageStore.junkyard.pop();
-        if ( entry === undefined ) {
-            entry = new PageStore(tabId, details);
-        } else {
-            entry.init(tabId, details);
-        }
-        return entry;
+        return new PageStore(tabId, details);
     }
 
     // https://github.com/gorhill/uBlock/issues/3201
@@ -366,7 +258,8 @@ const PageStore = class {
     //   to the logger.
 
     init(tabId, details) {
-        const tabContext = µb.tabContextManager.mustLookup(tabId);
+        const topURL = frameManager.getTopURL(tabId);
+        const topHostname = hostnameFromURI(topURL);
         this.tabId = tabId;
 
         // If we are navigating from-to same site, remember whether large
@@ -374,14 +267,14 @@ const PageStore = class {
         const now = Date.now();
         if ( typeof this.allowLargeMediaElementsUntil !== 'number' ) {
             this.allowLargeMediaElementsUntil = now;
-        } else if ( tabContext.rootHostname !== this.tabHostname ) {
+        } else if ( topHostname !== this.tabHostname ) {
             if ( this.tabHostname.endsWith('about-scheme') === false ) {
                 this.allowLargeMediaElementsUntil = now;
             }
         }
 
-        this.tabHostname = tabContext.rootHostname;
-        this.rawURL = tabContext.rawURL;
+        this.tabHostname = topHostname;
+        this.rawURL = topURL;
         this.hostnameDetailsMap.reset();
         this.contentLastModified = 0;
         this.logData = undefined;
@@ -393,15 +286,11 @@ const PageStore = class {
         this.extraData.clear();
 
         this.frameAddCount = 0;
-        this.frames = new Map();
-        this.setFrameURL({ url: tabContext.rawURL });
+        this.clickedToLoad = new Set();
 
         if ( this.titleFromDetails(details) === false ) {
-            this.title = tabContext.rawURL;
+            this.title = topURL;
         }
-
-        // Evaluated on-demand
-        this._noCosmeticFiltering = undefined;
 
         // Remember if the webpage was potentially improperly filtered, for
         // reporting purpose.
@@ -414,8 +303,9 @@ const PageStore = class {
         // When force refreshing a page, the page store data needs to be reset.
 
         // If the hostname changes, we can't merely just update the context.
-        const tabContext = µb.tabContextManager.mustLookup(this.tabId);
-        if ( tabContext.rootHostname !== this.tabHostname ) {
+        const topURL = frameManager.getTopURL(this.tabId);
+        const topHostname = hostnameFromURI(topURL);
+        if ( topHostname !== this.tabHostname ) {
             context = '';
         }
 
@@ -428,37 +318,15 @@ const PageStore = class {
         if ( context === 'tabUpdated' ) {
             // As part of https://github.com/chrisaljoudi/uBlock/issues/405
             // URL changed, force a re-evaluation of filtering switch
-            this.rawURL = tabContext.rawURL;
-            this.setFrameURL({ url: this.rawURL });
+            this.rawURL = topURL;
             this.titleFromDetails(details);
             return this;
         }
 
         // A new page is completely reloaded from scratch, reset all.
         this.largeMediaTimer.off();
-        this.disposeFrameStores();
         this.init(this.tabId, details);
         return this;
-    }
-
-    dispose() {
-        this.tabHostname = '';
-        this.title = '';
-        this.rawURL = '';
-        this.hostnameDetailsMap.dispose();
-        this.netFilteringCache.empty();
-        this.allowLargeMediaElementsUntil = Date.now();
-        this.allowLargeMediaElementsRegex = undefined;
-        this.largeMediaTimer.off();
-        this.disposeFrameStores();
-        this.journalTimer.off();
-        this.journal = [];
-        this.journalLastUncommittedOrigin = undefined;
-        this.journalLastCommitted = this.journalLastUncommitted = -1;
-        if ( PageStore.junkyard.length < PageStore.junkyardMax ) {
-            PageStore.junkyard.push(this);
-        }
-        return null;
     }
 
     titleFromDetails(details) {
@@ -472,107 +340,12 @@ const PageStore = class {
         return true;
     }
 
-    disposeFrameStores() {
-        for ( const frameStore of this.frames.values() ) {
-            frameStore.dispose();
-        }
-        this.frames.clear();
-    }
-
-    getFrameStore(frameId) {
-        return this.frames.get(frameId) || null;
-    }
-
-    // https://github.com/uBlockOrigin/uBlock-issues/issues/1858
-    //   Mind that setFrameURL() can be called from navigation event handlers.
-    setFrameURL(details) {
-        let { frameId, url, parentFrameId } = details;
-        if ( frameId === undefined ) { frameId = 0; }
-        if ( parentFrameId === undefined ) { parentFrameId = -1; }
-        let frameStore = this.frames.get(frameId);
-        if ( frameStore !== undefined ) {
-            if ( url === frameStore.rawURL ) {
-                frameStore.parentId = parentFrameId;
-            } else {
-                frameStore.init(url, parentFrameId);
-            }
-            return frameStore;
-        }
-        frameStore = FrameStore.factory(url, parentFrameId);
-        this.frames.set(frameId, frameStore);
-        this.frameAddCount += 1;
-        if ( url.startsWith('about:') ) {
-            frameStore.updateURL(this.getEffectiveFrameURL({ frameId }));
-        }
-        if ( (this.frameAddCount & 0b111111) === 0 ) {
-            this.pruneFrames();
-        }
-        return frameStore;
-    }
-
-    getEffectiveFrameURL(sender) {
-        let { frameId } = sender;
-        for (;;) {
-            const frameStore = this.getFrameStore(frameId);
-            if ( frameStore === null ) { break; }
-            if ( frameStore.rawURL.startsWith('about:') === false ) {
-                return frameStore.rawURL;
-            }
-            frameId = frameStore.parentId;
-            if ( frameId === -1 ) { break; }
-        }
-        return sender.frameURL;
-    }
-
-    getFrameAncestorDetails(frameId) {
-        if ( frameId === 0 ) { return []; }
-        const out = [];
-        for (;;) {
-            const frameStore = this.getFrameStore(frameId);
-            if ( frameStore === null ) { break; }
-            const { domain, hostname } = frameStore;
-            if ( hostname !== undefined ) {
-                out.push({ domain, hostname });
-            }
-            frameId = frameStore.parentId;
-        }
-        return out.slice(1);
-    }
-
-    // There is no event to tell us a specific subframe has been removed from
-    // the main document. The code below will remove subframes which are no
-    // longer present in the root document. Removing obsolete subframes is
-    // not a critical task, so this is executed just once on a while, to avoid
-    // bloated dictionary of subframes.
-    // A TTL is used to avoid race conditions when new iframes are added
-    // through the webRequest API but still not yet visible through the
-    // webNavigation API.
-    async pruneFrames() {
-        let entries;
-        try {
-            entries = await webext.webNavigation.getAllFrames({
-                tabId: this.tabId
-            });
-        } catch {
-        }
-        if ( Array.isArray(entries) === false ) { return; }
-        const toKeep = new Set();
-        for ( const { frameId } of entries ) {
-            toKeep.add(frameId);
-        }
-        const obsolete = Date.now() - 60000;
-        for ( const [ frameId, { t0 } ] of this.frames ) {
-            if ( toKeep.has(frameId) || t0 >= obsolete ) { continue; }
-            this.frames.delete(frameId);
-        }
-    }
-
     isTrusted() {
         return this.isNotTrusted() === false;
     }
 
     isNotTrusted() {
-        return µb.tabContextManager.mustLookup(this.tabId).isNotTrusted();
+        return µb.isTrustedSite(this.rawURL) !== true;
     }
 
     toggleTrustedStatus(url, scope, state) {
@@ -581,46 +354,53 @@ const PageStore = class {
         this.netFilteringCache.empty();
     }
 
-    shouldApplyCosmeticFilters(frameId = 0) {
-        if ( this._noCosmeticFiltering === undefined ) {
-            this._noCosmeticFiltering = this.isTrusted();
-            if ( this._noCosmeticFiltering === false ) {
-                this._noCosmeticFiltering = sessionSwitches.evaluateZ(
-                    'no-cosmetic-filtering',
-                    this.tabHostname
-                ) === true;
-                if ( this._noCosmeticFiltering && logger.enabled ) {
-                    µb.filteringContext
-                        .duplicate()
-                        .fromTabId(this.tabId)
-                        .setURL(this.rawURL)
-                        .setRealm('cosmetic')
-                        .setType('dom')
-                        .setFilter(sessionSwitches.toLogData())
-                        .toLogger();
-                }
+    getCosmeticFiltering(frameId = 0) {
+        if ( this.isTrusted() ) {
+            return { specific: false, generic: false };
+        }
+        const hnSwitch = sessionSwitches.evaluateZ('no-cosmetic-filtering',
+            this.tabHostname
+        );
+        if ( hnSwitch ) {
+            if ( logger.enabled ) {
+                µb.filteringContext
+                    .duplicate()
+                    .fromTabId(this.tabId)
+                    .setURL(this.rawURL)
+                    .setRealm('cosmetic')
+                    .setType('dom')
+                    .setFilter(sessionSwitches.toLogData())
+                    .toLogger();
+            }
+            return { specific: false, generic: false };
+        }
+        const out = { specific: true, generic: true };
+        const frameURL = frameManager.getEffectiveURL(this.tabId, frameId);
+        if ( Boolean(frameURL) === false ) { return out; }
+        const fctxt = µb.filteringContext
+            .duplicate()
+            .fromTabId(this.tabId)
+            .setURL(frameURL)
+            .setDocOriginFromURL(frameURL)
+            .setMethod('')
+            .setRealm('network');
+        fctxt.setType('specifichide');
+        let result = staticNetFilteringEngine.matchRequest(fctxt, 0b11);
+        if ( result !== 0 ) {
+            out.specific = result !== 2;
+            if ( logger.enabled ) {
+                fctxt.setFilter(staticNetFilteringEngine.toLogData()).toLogger();
             }
         }
-        if ( this._noCosmeticFiltering ) { return false; }
-        if ( frameId === -1 ) { return true; }
-        // Cosmetic filtering can be effectively disabled when both specific
-        // and generic cosmetic filters are disabled.
-        return this.shouldApplySpecificCosmeticFilters(frameId) ||
-               this.shouldApplyGenericCosmeticFilters(frameId);
-    }
-
-    shouldApplySpecificCosmeticFilters(frameId) {
-        if ( this.shouldApplyCosmeticFilters(-1) === false ) { return false; }
-        const frameStore = this.getFrameStore(frameId);
-        if ( frameStore === null ) { return false; }
-        return frameStore.shouldApplySpecificCosmeticFilters(this.tabId);
-    }
-
-    shouldApplyGenericCosmeticFilters(frameId) {
-        if ( this.shouldApplyCosmeticFilters(-1) === false ) { return false; }
-        const frameStore = this.getFrameStore(frameId);
-        if ( frameStore === null ) { return false; }
-        return frameStore.shouldApplyGenericCosmeticFilters(this.tabId);
+        fctxt.setType('generichide');
+        result = staticNetFilteringEngine.matchRequest(fctxt, 0b11);
+        if ( result !== 0 ) {
+            out.generic = result !== 2;
+            if ( logger.enabled ) {
+                fctxt.setFilter(staticNetFilteringEngine.toLogData()).toLogger();
+            }
+        }
+        return out;
     }
 
     // https://github.com/gorhill/uBlock/issues/2105
@@ -670,91 +450,35 @@ const PageStore = class {
     journalAddRequest(fctxt, result) {
         const hostname = fctxt.getHostname();
         if ( hostname === '' ) { return; }
-        this.journal.push(hostname, result, fctxt.itype);
-        this.journalTimer.on(µb.hiddenSettings.requestJournalProcessPeriod);
-    }
-
-    journalAddRootFrame(type, url) {
-        if ( type === 'committed' ) {
-            this.journalLastCommitted = this.journal.length;
-            if (
-                this.journalLastUncommitted !== -1 &&
-                this.journalLastUncommitted < this.journalLastCommitted &&
-                this.journalLastUncommittedOrigin === hostnameFromURI(url)
-            ) {
-                this.journalLastCommitted = this.journalLastUncommitted;
-            }
-        } else if ( type === 'uncommitted' ) {
-            const newOrigin = hostnameFromURI(url);
-            if (
-                this.journalLastUncommitted === -1 ||
-                this.journalLastUncommittedOrigin !== newOrigin
-            ) {
-                this.journalLastUncommitted = this.journal.length;
-                this.journalLastUncommittedOrigin = newOrigin;
-            }
+        const hnDetails = this.hostnameDetailsMap.get(hostname) ??
+            HostnameDetails.factory(hostname);
+        if ( hnDetails.pristine ) {
+            this.hostnameDetailsMap.set(hostname, hnDetails);
+            hnDetails.pristine = false;
         }
-        this.journalTimer.offon(µb.hiddenSettings.requestJournalProcessPeriod);
-    }
-
-    journalProcess() {
-        this.journalTimer.off();
-
-        const journal = this.journal;
-        const pivot = Math.max(0, this.journalLastCommitted);
-        const now = Date.now();
-        const { SCRIPT, SUB_FRAME, OBJECT } = µb.FilteringContext;
-        let aggregateAllowed = 0;
-        let aggregateBlocked = 0;
-
-        // Everything after pivot originates from current page.
-        for ( let i = pivot; i < journal.length; i += 3 ) {
-            const hostname = journal[i+0];
-            let hnDetails = this.hostnameDetailsMap.get(hostname);
-            if ( hnDetails === undefined ) {
-                hnDetails = HostnameDetails.factory(hostname);
-                this.hostnameDetailsMap.set(hostname, hnDetails);
-                this.contentLastModified = now;
-            }
-            const blocked = journal[i+1] === 1;
-            const itype = journal[i+2];
-            if ( itype === SCRIPT ) {
-                hnDetails.counts.inc(blocked, 'script');
-                this.counts.inc(blocked, 'script');
-            } else if ( itype === SUB_FRAME || itype === OBJECT ) {
-                hnDetails.counts.inc(blocked, 'frame');
-                this.counts.inc(blocked, 'frame');
-            } else {
-                hnDetails.counts.inc(blocked);
-                this.counts.inc(blocked);
-            }
-            if ( blocked ) {
-                aggregateBlocked += 1;
-            } else {
-                aggregateAllowed += 1;
-            }
+        const blocked = result === 1;
+        const { itype } = fctxt;
+        if ( itype === fc.SCRIPT ) {
+            hnDetails.counts.inc(blocked, 'script');
+            this.counts.inc(blocked, 'script');
+        } else if ( itype === fc.SUB_FRAME || itype === fc.OBJECT ) {
+            hnDetails.counts.inc(blocked, 'frame');
+            this.counts.inc(blocked, 'frame');
+        } else {
+            hnDetails.counts.inc(blocked);
+            this.counts.inc(blocked);
         }
-        this.journalLastUncommitted = this.journalLastCommitted = -1;
-
-        // https://github.com/chrisaljoudi/uBlock/issues/905#issuecomment-76543649
-        //   No point updating the badge if it's not being displayed.
-        if ( aggregateBlocked !== 0 && µb.userSettings.showIconBadge ) {
-            µb.updateToolbarIcon(this.tabId, 0x02);
+        this.contentLastModified = Date.now();
+        if ( blocked === false ) {
+            return µb.incrementRequestStats(0, 1);
         }
-
-        // Everything before pivot does not originate from current page -- we
-        // still need to bump global blocked/allowed counts.
-        for ( let i = 0; i < pivot; i += 3 ) {
-            if ( journal[i+1] === 1 ) {
-                aggregateBlocked += 1;
-            } else {
-                aggregateAllowed += 1;
-            }
-        }
-        if ( aggregateAllowed || aggregateBlocked ) {
-            µb.incrementRequestStats(aggregateBlocked, aggregateAllowed);
-        }
-        journal.length = 0;
+        µb.incrementRequestStats(1, 0);
+        if ( µb.userSettings.showIconBadge !== true ) { return; }
+        if ( this.badgeTimer ) { return; }
+        this.badgeTimer = self.requestAnimationFrame(( ) => {
+            this.badgeTimer = undefined;
+            µb.updateToolbarIcon(fctxt.tabId, 0b0010);
+        });
     }
 
     filterRequest(fctxt) {
@@ -764,21 +488,21 @@ const PageStore = class {
         if ( this.isTrusted(fctxt) ) { return 0; }
 
         if (
-            fctxt.itype === fctxt.CSP_REPORT &&
+            fctxt.itype === fc.CSP_REPORT &&
             this.filterCSPReport(fctxt) === 1
         ) {
             return 1;
         }
 
         if (
-            (fctxt.itype & fctxt.FONT_ANY) !== 0 &&
+            (fctxt.itype & fc.FONT_ANY) !== 0 &&
             this.filterFont(fctxt) === 1 )
         {
             return 1;
         }
 
         if (
-            fctxt.itype === fctxt.SCRIPT &&
+            fctxt.itype === fc.SCRIPT &&
             this.filterScripting(fctxt, false) === 1
         ) {
             return 1;
@@ -846,8 +570,7 @@ const PageStore = class {
         // Click-to-load?
         // When frameId is not -1, the resource is always sub_frame.
         if ( result === 1 && fctxt.frameId !== -1 ) {
-            const frameStore = this.getFrameStore(fctxt.frameId);
-            if ( frameStore !== null && frameStore.clickToLoad ) {
+            if ( this.clickedToLoad.has(fctxt.frameId) ) {
                 result = 2;
                 if ( loggerEnabled ) {
                     fctxt.pushFilter({
@@ -865,7 +588,7 @@ const PageStore = class {
         //   Redirect blocked request?
         // https://github.com/uBlockOrigin/uBlock-issues/issues/760
         //   Redirect non-blocked request?
-        if ( (fctxt.itype & fctxt.INLINE_ANY) === 0 ) {
+        if ( (fctxt.itype & fc.INLINE_ANY) === 0 ) {
             if ( result === 1 ) {
                 this.redirectBlockedRequest(fctxt);
             } else {
@@ -990,7 +713,7 @@ const PageStore = class {
     }
 
     filterFont(fctxt) {
-        if ( fctxt.itype === fctxt.FONT ) {
+        if ( fctxt.itype === fc.FONT ) {
             this.remoteFontCount += 1;
         }
         if (
@@ -1027,7 +750,7 @@ const PageStore = class {
             return 0;
         }
         // XHR-based streaming is never blocked but we want to prevent autoplay
-        if ( fctxt.itype === fctxt.XMLHTTPREQUEST ) {
+        if ( fctxt.itype === fc.XMLHTTPREQUEST ) {
             const ctype = headers.contentType;
             if ( ctype.startsWith('audio/') || ctype.startsWith('video/') ) {
                 this.largeMediaTimer.on(500);
@@ -1035,7 +758,7 @@ const PageStore = class {
             return 0;
         }
         if ( Date.now() < this.allowLargeMediaElementsUntil ) {
-            if ( fctxt.itype === fctxt.MEDIA ) {
+            if ( fctxt.itype === fc.MEDIA ) {
                 const sources = this.allowLargeMediaElementsRegex instanceof RegExp
                     ? [ this.allowLargeMediaElementsRegex.source ]
                     : [];
@@ -1053,7 +776,7 @@ const PageStore = class {
             return 0;
         }
         // Regardless of whether a media is blocked, we want to prevent autoplay
-        if ( fctxt.itype === fctxt.MEDIA ) {
+        if ( fctxt.itype === fc.MEDIA ) {
             this.largeMediaTimer.on(500);
         }
         const size = headers.contentLength;
@@ -1070,42 +793,17 @@ const PageStore = class {
     }
 
     clickToLoad(frameId, frameURL) {
-        let frameStore = this.getFrameStore(frameId);
-        if ( frameStore === null ) {
-            frameStore = this.setFrameURL({ frameId, url: frameURL });
-        }
-        this.netFilteringCache.forgetResult(
-            this.tabHostname,
-            'sub_frame',
-            frameURL
-        );
-        frameStore.clickToLoad = true;
+        this.netFilteringCache.forgetResult(this.tabHostname, 'sub_frame', frameURL);
+        this.clickedToLoad.add(frameId);
     }
 
     shouldExceptCname(fctxt) {
-        let exceptCname;
-        let frameStore;
-        if ( fctxt.docId !== undefined ) {
-            frameStore = this.getFrameStore(fctxt.docId);
-            if ( frameStore instanceof Object ) {
-                exceptCname = frameStore.exceptCname;
-            }
-        }
-        if ( exceptCname === undefined ) {
-            fctxt.setType('cname');
-            fctxt.setURL(
-                frameStore instanceof Object
-                    ? frameStore.rawURL
-                    : fctxt.getDocOrigin()
-            );
-            const result = staticNetFilteringEngine.matchRequest(fctxt, 0b11);
-            exceptCname = result === 2
-                ? staticNetFilteringEngine.toLogData()
-                : false;
-            if ( frameStore instanceof Object ) {
-                frameStore.exceptCname = exceptCname;
-            }
-        }
+        fctxt.setType('cname');
+        fctxt.setURL(fctxt.getDocOrigin());
+        const result = staticNetFilteringEngine.matchRequest(fctxt, 0b11);
+        const exceptCname = result === 2
+            ? staticNetFilteringEngine.toLogData()
+            : false;
         if ( exceptCname === false ) { return false; }
         if ( exceptCname instanceof Object ) {
             fctxt.setFilter(exceptCname);
@@ -1114,7 +812,7 @@ const PageStore = class {
     }
 
     getBlockedResources(request, response) {
-        const normalURL = µb.normalizeTabURL(this.tabId, request.frameURL);
+        const normalURL = µb.normalizeTabURL(request.frameURL, this.tabId);
         const resources = request.resources;
         const fctxt = µb.filteringContext;
         fctxt.fromTabId(this.tabId)
@@ -1137,28 +835,24 @@ const PageStore = class {
     }
 
     cacheableResults = new Set([
-        µb.FilteringContext.SUB_FRAME
+        fc.SUB_FRAME
     ]);
 
     collapsibleResources = new Set([
-        µb.FilteringContext.IMAGE,
-        µb.FilteringContext.MEDIA,
-        µb.FilteringContext.OBJECT,
-        µb.FilteringContext.SUB_FRAME,
+        fc.IMAGE,
+        fc.MEDIA,
+        fc.OBJECT,
+        fc.SUB_FRAME,
     ]);
 
     urlSkippableResources = new Set([
-        µb.FilteringContext.IMAGE,
-        µb.FilteringContext.MAIN_FRAME,
-        µb.FilteringContext.MEDIA,
-        µb.FilteringContext.OBJECT,
-        µb.FilteringContext.OTHER,
-        µb.FilteringContext.SUB_FRAME,
+        fc.IMAGE,
+        fc.MAIN_FRAME,
+        fc.MEDIA,
+        fc.OBJECT,
+        fc.OTHER,
+        fc.SUB_FRAME,
     ]);
-
-    // To mitigate memory churning
-    static junkyard = [];
-    static junkyardMax = 10;
 };
 
 /******************************************************************************/

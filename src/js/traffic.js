@@ -24,6 +24,7 @@
 /******************************************************************************/
 
 import * as fc from  './filtering-context.js';
+import * as frameManager from './vapi-contexts.js';
 import * as sfp from './static-filtering-parser.js';
 import {
     sessionFirewall,
@@ -73,12 +74,14 @@ function onBeforeRequest(details) {
     // Lookup the page store associated with this tab id.
     let pageStore = µb.pageStoreFromTabId(tabId);
     if ( pageStore === null ) {
-        const tabContext = µb.tabContextManager.mustLookup(tabId);
-        if ( tabContext.tabId < 0 ) {
+        const url = frameManager.getTopURL(tabId);
+        if ( Boolean(url) === false ) {
             return onBeforeBehindTheSceneRequest(fctxt);
         }
-        vAPI.tabs.onNavigation({ tabId, frameId: 0, url: tabContext.rawURL });
-        pageStore = µb.pageStoreFromTabId(tabId);
+        pageStore = µb.bindTabToPageStore(tabId, 'beforeRequest');
+        if ( pageStore === null ) {
+            return onBeforeBehindTheSceneRequest(fctxt);
+        }
     }
 
     const result = pageStore.filterRequest(fctxt);
@@ -108,7 +111,7 @@ function onBeforeRequest(details) {
         details.parentFrameId !== -1 &&
         details.aliasURL === undefined
     ) {
-        pageStore.setFrameURL(details);
+        frameManager.addFrame(details);
     }
 
     if ( result === 2 ) {
@@ -172,7 +175,6 @@ function onBeforeRootFrameRequest(fctxt) {
 
     const pageStore = µb.bindTabToPageStore(fctxt.tabId, 'beforeRequest');
     if ( pageStore !== null ) {
-        pageStore.journalAddRootFrame('uncommitted', requestURL);
         pageStore.journalAddRequest(fctxt, result);
     }
 
@@ -380,10 +382,10 @@ function onBeforeBehindTheSceneRequest(fctxt) {
     //   Not especially elegant but for now this accomplishes the purpose of
     //   not dealing with network requests fired from a synthetic scope,
     //   that is unless advanced user mode is enabled.
-
+    const tabOrigin = fctxt.getTabOrigin();
     if (
-        fctxt.tabOrigin.endsWith('-scheme') === false &&
-        isNetworkURI(fctxt.tabOrigin) ||
+        tabOrigin.endsWith('-scheme') === false &&
+        isNetworkURI(tabOrigin) ||
         µb.userSettings.advancedUserEnabled ||
         fctxt.itype === fctxt.CSP_REPORT
     ) {
@@ -1155,7 +1157,7 @@ function injectPP(fctxt, pageStore, responseHeaders) {
 
     if ( permissions.length === 0 ) { return; }
 
-    µb.updateToolbarIcon(fctxt.tabId, 0x02);
+    µb.updateToolbarIcon(fctxt.tabId, 0b0010);
 
     responseHeaders.push({
         name: 'permissions-policy',

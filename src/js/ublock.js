@@ -19,6 +19,8 @@
     Home: https://github.com/gorhill/uBlock
 */
 
+import * as frameManager from './vapi-contexts.js';
+
 import {
     broadcast,
     filteringBehaviorChanged,
@@ -67,7 +69,7 @@ import µb from './background.js';
 
     // Return all settings if none specified.
     if ( name === undefined ) {
-        us = JSON.parse(JSON.stringify(us));
+        us = structuredClone(us);
         us.noCosmeticFiltering = sessionSwitches.evaluate('no-cosmetic-filtering', '*') === 1;
         us.noLargeMedia = sessionSwitches.evaluate('no-large-media', '*') === 1;
         us.noRemoteFonts = sessionSwitches.evaluate('no-remote-fonts', '*') === 1;
@@ -199,7 +201,25 @@ import µb from './background.js';
     targetElement,
     zap = false,
 ) {
-    if ( vAPI.isBehindTheSceneTabId(tabId) ) { return; }
+    if ( tabId === frameManager.TAB_ID_NONE ) { return; }
+
+    // Element picker's dependencies: may not be present when uBO is restarted
+    // outside of browser launch context.
+    await vAPI.tabs.executeScript(tabId, {
+        file: '/js/vapi.js',
+        frameId,
+        runAt: 'document_start'
+    }),
+    await vAPI.tabs.executeScript(tabId, {
+        file: '/js/vapi-client.js',
+        frameId,
+        runAt: 'document_start'
+    }),
+    await vAPI.tabs.executeScript(tabId, {
+        file: '/js/contentscript.js',
+        frameId,
+        runAt: 'document_start'
+    }),
 
     this.epickerArgs.target = targetElement || '';
     this.epickerArgs.zap = zap;
@@ -207,7 +227,7 @@ import µb from './background.js';
     // https://github.com/uBlockOrigin/uBlock-issues/issues/40
     //   The element picker needs this library
     if ( zap !== true ) {
-        vAPI.tabs.executeScript(tabId, {
+        await vAPI.tabs.executeScript(tabId, {
             file: '/lib/diff/swatinem_diff.js',
             runAt: 'document_end',
         });

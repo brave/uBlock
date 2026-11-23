@@ -102,13 +102,7 @@
 //   https://github.com/gorhill/uBlock/issues/2029
 
 // >>>>>>>> start of HUGE-IF-BLOCK
-if ( typeof vAPI === 'object' && !vAPI.contentScript ) {
-
-/******************************************************************************/
-/******************************************************************************/
-/******************************************************************************/
-
-vAPI.contentScript = true;
+if ( typeof vAPI === 'object' ) {
 
 /******************************************************************************/
 /******************************************************************************/
@@ -1163,7 +1157,7 @@ vAPI.DOMFilterer = class {
             classesFromNode(document.body);
         }
         if ( newHashes.size !== 0 ) {
-            getSurveyResults(newHashes, true);
+            getSurveyResults(true);
         }
         addPendingList(qsa(document, '[id],[class]'));
         if ( hasPendingNodes() ) {
@@ -1317,6 +1311,9 @@ vAPI.DOMFilterer = class {
     };
 
     vAPI.bootstrap = function() {
+        if ( self === self.top ) {
+            if ( document.location.href.startsWith('about:') ) { return; }
+        }
         vAPI.messaging.send('contentscript', {
             what: 'retrieveContentScriptParameters',
             url: vAPI.effectiveSelf.location.href,

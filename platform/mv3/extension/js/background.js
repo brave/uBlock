@@ -372,11 +372,23 @@ async function onMessage(request, sender) {
         if ( frameId === false ) { return; }
         return injectCustomFilters(tabId, frameId, request.hostname);
 
-    case 'getToolOverlaySecret':
-        if ( onMessage.toolOverlaySecret === undefined ) {
-            onMessage.toolOverlaySecret = self.crypto.randomUUID();
+    case 'toolOverlayPairing': {
+        if ( frameId === false ) { return; }
+        const time = Date.now();
+        if ( request.contentScript ) {
+            const password = self.crypto.randomUUID();
+            onMessage.toolOverlayPairing = { password, tabId, frameId, time };
+            return { password };
         }
-        return onMessage.toolOverlaySecret;
+        const pairing = onMessage.toolOverlayPairing;
+        const succeed = (time - (pairing.time ?? 0)) < 2000;
+        const response = succeed ? { password: pairing.password } : undefined;
+        browser.tabs.sendMessage(pairing.tabId,
+            { what: 'toolOverlayPairing', succeed },
+            { frameId: pairing.frameId }
+        );
+        return response;
+    }
 
     default:
         break;

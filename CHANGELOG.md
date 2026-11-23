@@ -1,3 +1,51 @@
+- [[picker] Improve pairing logic and ensure dependencies are present](https://github.com/gorhill/uBlock/commit/1d70d4a1c6)
+- [[regression] Use JSON.stringify() to eliminate undefined values](https://github.com/gorhill/uBlock/commit/b51ee2a989)
+- [Remove per-tab network request journaling](https://github.com/gorhill/uBlock/commit/080ecbd3d6)
+- [Refactor contexts (tabs/frames) management](https://github.com/gorhill/uBlock/commit/0b5d131ea7)
+- [[picker] Improve reliability of element picker launch](https://github.com/gorhill/uBlock/commit/73b2bb6e29)
+
+----------
+
+# 1.77.0
+
+- [[security] Disallow non-HTTP URLs in click2load resource](https://github.com/gorhill/uBlock/commit/5934db2a04)
+- [Fix text color of code in `prevent-clipboard-write` scriptlet](https://github.com/gorhill/uBlock/commit/e1aa62030d)
+- [[regression] Fix broken DOM inspector](https://github.com/gorhill/uBlock/commit/3028a92bdb)
+- [Use `structuredClone(...)` instead of `JSON.parse(JSON.stringify(...))`](https://github.com/gorhill/uBlock/commit/2e7c2d4e52)
+- [[shim] Add optimizely.js redirect resource](https://github.com/gorhill/uBlock/commit/e68e05cde0) by @ryanbr
+
+----------
+
+# 1.76.6
+
+- [[scriptlets] Add (back) support for path-based targets](https://github.com/gorhill/uBlock/commit/a23b117141)
+- [[picker] Fix unpleasant flickering of mouse cursor in picking mode](https://github.com/gorhill/uBlock/commit/765c51daa1)
+- [[security] Use shadow DOM when programmatically injecting scriptlets](https://github.com/gorhill/uBlock/commit/e743ee760f)
+- [[security] Conceal DOM of overlay-based tools inside a shadow DOM](https://github.com/gorhill/uBlock/commit/1765528bec)
+
+----------
+
+# 1.76.4
+
+- [[security] Address remaining reported security issues](https://github.com/gorhill/uBlock/commit/5466554104)
+- [[generic cosmetic filtering] Fix extraneous function argument](https://github.com/gorhill/uBlock/commit/e8efba123b)
+- [[filter parser] Non-leading tag names must be preceded by whitespace](https://github.com/gorhill/uBlock/commit/a63712e39c)
+- [[security] Removed no longer used warOrigin/warSecret](https://github.com/gorhill/uBlock/commit/73ef1b23f7)
+
+----------
+
+# 1.76.2
+
+- [[diff updater] Use canonical patch URL to prevent duplicate fetches](https://github.com/gorhill/uBlock/commit/736ef4d100)
+- [[element picker] Increase delay before establishing communication](https://github.com/gorhill/uBlock/commit/f00b8ae693)
+- [[firefox] Update fallback version extraction to 128](https://github.com/gorhill/uBlock/commit/3a0c64184d)
+- [Improve `json-edit` scriptlet](https://github.com/gorhill/uBlock/commit/d4d6e75001)
+
+----------
+
+# 1.76.0
+
+- [[security] "Universal XSS from website-driven element picker"](https://github.com/gorhill/uBlock/commit/cbb22a5eee)
 - [Prevent `war:`-related filters for the time being](https://github.com/gorhill/uBlock/commit/150df125fd)
 - [Validate about to be created filter in element picker](https://github.com/gorhill/uBlock/commit/b1f7d27c87)
 - [Prevent re-entrancy with recursive operator in JSONPath](https://github.com/gorhill/uBlock/commit/b6fec9089f)
