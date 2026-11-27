@@ -903,7 +903,6 @@ onBroadcast(msg => {
         staticNetFilteringEngine.freeze();
         staticExtFilteringEngine.freeze();
         redirectEngine.freeze();
-        vAPI.net.unsuspend();
         filteringBehaviorChanged();
 
         ubolog(`loadFilterLists() All filters ready at ${elapsed()}`);
@@ -955,9 +954,6 @@ onBroadcast(msg => {
 
         µb.availableFilterLists = lists;
 
-        if ( vAPI.Net.canSuspend() ) {
-            vAPI.net.suspend();
-        }
         staticExtFilteringEngine.reset();
         staticNetFilteringEngine.reset();
         µb.selfieManager.destroy();
@@ -1007,7 +1003,7 @@ onBroadcast(msg => {
             ubolog(`loadFilterLists() Redirects/scriptlets ready at ${elapsed()}`);
             return this.getAvailableLists();
         }).then(lists => {
-            return onFilterListsReady(lists)
+            return onFilterListsReady(lists);
         }).then(( ) => {
             onDone();
         });
@@ -1197,9 +1193,10 @@ onBroadcast(msg => {
             return true;
         }
 
+        ubolog('Loaded redirect/scriptlets resources from scratch');
+
         const fetcher = (path, options = undefined) => {
-            if ( path.startsWith('/web_accessible_resources/') ) {
-                path += `?secret=${vAPI.warSecret.short()}`;
+            if ( path.startsWith(vAPI.Net.warOrigin) ) {
                 return io.fetch(path, options);
             }
             return io.fetchText(path);

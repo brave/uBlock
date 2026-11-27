@@ -100,13 +100,6 @@ const onVersionReady = async lastVersion => {
         version: vAPI.app.version,
         versionUpdateTime: Date.now(),
     });
-
-    // Special case: first installation
-    if ( lastVersionInt === 0 ) {
-        vAPI.net.unsuspend({ all: true, discard: true });
-        return;
-    }
-
     // Since built-in resources may have changed since last version, we
     // force a reload of all resources.
     redirectEngine.invalidateResourcesSelfie(io);
@@ -146,7 +139,7 @@ const onUserSettingsReady = fetched => {
         vAPI.Net.canSuspend() &&
         fetched.suspendUntilListsAreLoaded === false
     ) {
-        vAPI.net.unsuspend({ all: true, discard: true });
+        vAPI.net.unsuspend({ all: true, discard: true, clear: false });
         ubolog(`Unsuspend network activity listener at ${tnow} ms`);
         µb.supportStats.unsuspendAfter = `${tnow} ms`;
     } else if (
@@ -386,16 +379,24 @@ const createDefaultProps = ( ) => {
         }
     }
 
-    // Final initialization steps after all needed assets are in memory.
     await scriptletFilteringEngine.start();
-    await frameManager.start();
 
     // https://github.com/uBlockOrigin/uBlock-issues/issues/974
     //   This can be used to defer filtering decision-making.
     µb.readyToFilter = true;
 
+    await frameManager.start();
+
     // Start network observers.
-    webRequest.start();
+    const suspended = µb.userSettings.suspendUntilListsAreLoaded;
+    if ( suspended !== true ) {
+        for ( const [ tabId, pageStore ] of µb.pageStores ) {
+            if ( pageStore.isTrusted() ) { continue; }
+            if ( vAPI.net.hasUnprocessedRequest(tabId) === false ) { continue; }
+            pageStore.hasUnprocessedRequest = true;
+        }
+    }
+    webRequest.start({ discard: suspended !== true });
 
     // Force an update of the context menu according to the currently
     // active tab.

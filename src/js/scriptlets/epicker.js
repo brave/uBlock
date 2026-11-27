@@ -1303,7 +1303,7 @@ const bootstrap = async ( ) => {
         lastNetFilterHostname = eprom.lastNetFilterHostname || '';
         lastNetFilterUnion = eprom.lastNetFilterUnion || '';
     }
-    const url = new URL(pickerBootArgs.pickerURL);
+    const url = new URL(pickerBootArgs.url);
     if ( pickerBootArgs.zap ) {
         url.searchParams.set('zap', '1');
     }
@@ -1319,7 +1319,7 @@ const bootstrap = async ( ) => {
         const onMessage = msg => {
             browser.runtime.onMessage.removeListener(onMessage);
             if ( msg?.what !== 'elementPickerPairing' || msg?.succeed !== true ) {
-                return quitPicker();
+                return resolve();
             }
             iframe.setAttribute('loaded', '');
             const channel = new MessageChannel();
@@ -1332,7 +1332,7 @@ const bootstrap = async ( ) => {
             };
             iframe.contentWindow.postMessage(
                 { what: 'epickerStart', password: pickerPairing.password },
-                url.href,
+                url.origin,
                 [ channel.port2 ]
             );
             resolve(iframe);

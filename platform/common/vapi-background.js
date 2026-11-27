@@ -26,17 +26,13 @@
 
 /******************************************************************************/
 
-import * as frameManager from './vapi-contexts.js';
 import { ubolog } from './console.js';
 import webext from './webext.js';
 
 /******************************************************************************/
 
+const EXTENSION_ORIGIN = vAPI.getURL('').replace(/\/$/, '');
 const manifest = browser.runtime.getManifest();
-
-vAPI.cantWebsocket =
-    browser.webRequest.ResourceType instanceof Object === false  ||
-    browser.webRequest.ResourceType.WEBSOCKET !== 'websocket';
 
 vAPI.canWASM = vAPI.webextFlavor.soup.has('chromium') === false;
 if ( vAPI.canWASM === false ) {
@@ -755,11 +751,7 @@ if ( webext.browserAction instanceof Object ) {
         const tab = await vAPI.tabs.get(tabId);
         if ( tab === null ) { return; }
 
-        const hasUnprocessedRequest = vAPI.net && vAPI.net.hasUnprocessedRequest(tabId);
-        const { parts, state } = details;
-        const { badge, color } = hasUnprocessedRequest
-            ? { badge: '!', color: '#FC0' }
-            : details;
+        const { parts, state, badge, color } = details;
 
         if ( browserAction.setIcon !== undefined ) {
             if ( parts === undefined || (parts & 0b0001) !== 0 ) {
@@ -795,19 +787,25 @@ if ( webext.browserAction instanceof Object ) {
 
     vAPI.setDefaultIcon = function(flavor, text) {
         if ( browserAction.setIcon === undefined ) { return; }
-        browserAction.setIcon({
-            path: {
-                '16': `img/icon_16${flavor}.png`,
-                '32': `img/icon_32${flavor}.png`,
-                '64': `img/icon_64${flavor}.png`,
-            }
-        });
-        browserAction.setBadgeText({ text });
-        browserAction.setBadgeBackgroundColor({
-            color: text === '!' ? '#FC0' : '#666'
-        });
+        if ( typeof flavor === 'string' ) {
+            browserAction.setIcon({
+                path: {
+                    '16': `img/icon_16${flavor}.png`,
+                    '32': `img/icon_32${flavor}.png`,
+                    '64': `img/icon_64${flavor}.png`,
+                }
+            });
+        }
+        if ( typeof text === 'string' ) {
+            browserAction.setBadgeText({ text });
+            browserAction.setBadgeBackgroundColor({
+                color: text === '!' ? '#FC0' : '#666'
+            });
+        }
     };
 }
+
+vAPI.setDefaultIcon('-loading', '');
 
 browser.browserAction.onClicked.addListener(function(tab) {
     vAPI.tabs.open({
@@ -819,12 +817,6 @@ browser.browserAction.onClicked.addListener(function(tab) {
 /******************************************************************************/
 /******************************************************************************/
 
-// https://github.com/uBlockOrigin/uBlock-issues/issues/710
-//   uBO uses only ports to communicate with its auxiliary pages and
-//   content scripts. Whether a message can trigger a privileged operation is
-//   decided based on whether the port from which a message is received is
-//   privileged, which is a status evaluated once, at port connection time.
-//
 // https://github.com/uBlockOrigin/uBlock-issues/issues/1992
 //   If present, use MessageSender.origin to determine whether the port is
 //   from a privileged page, otherwise use MessageSender.url.
@@ -832,92 +824,44 @@ browser.browserAction.onClicked.addListener(function(tab) {
 //   compromised renderer.
 
 vAPI.messaging = {
-    ports: new Map(),
     listeners: new Map(),
     defaultHandler: null,
-    PRIVILEGED_ORIGIN: vAPI.getURL('').slice(0, -1),
-    NOOPFUNC: function(){},
     UNHANDLED: 'vAPI.messaging.notHandled',
 
-    listen: function(details) {
+    listen(details) {
         this.listeners.set(details.name, {
             fn: details.listener,
             privileged: details.privileged === true
         });
     },
 
-    onPortDisconnect: function(port) {
-        this.ports.delete(port.name);
-        void browser.runtime.lastError;
-    },
-
-    // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/Port
-    //   port.sender is always present for onConnect() listeners.
-    onPortConnect: function(port) {
-        port.onDisconnect.addListener(port =>
-            this.onPortDisconnect(port)
-        );
-        port.onMessage.addListener((request, port) =>
-            this.onPortMessage(request, port)
-        );
-        const portDetails = { port };
-        const sender = port.sender;
-        const { origin, tab, url } = sender;
-        portDetails.frameId = sender.frameId;
-        portDetails.frameURL = url;
-        portDetails.privileged = origin !== undefined
-            ? origin === this.PRIVILEGED_ORIGIN
-            : url.startsWith(this.PRIVILEGED_ORIGIN);
-        if ( tab ) {
-            portDetails.tabId = tab.id;
-            portDetails.tabURL = tab.url;
-        }
-        this.ports.set(port.name, portDetails);
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=1652925#c24
-        port.sender = undefined;
-    },
-
-    setup: function(defaultHandler) {
+    setup(defaultHandler) {
         if ( this.defaultHandler !== null ) { return; }
-
         if ( typeof defaultHandler !== 'function' ) {
             defaultHandler = function() {
                 return this.UNHANDLED;
             };
         }
         this.defaultHandler = defaultHandler;
-
-        browser.runtime.onConnect.addListener(
-            port => this.onPortConnect(port)
-        );
-
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=1392067
-        //   Workaround: manually remove ports matching removed tab.
-        if (
-            vAPI.webextFlavor.soup.has('firefox') &&
-            vAPI.webextFlavor.major < 61
-        ) {
-            browser.tabs.onRemoved.addListener(tabId => {
-                for ( const { port, tabId: portTabId } of this.ports.values() ) {
-                    if ( portTabId !== tabId ) { continue; }
-                    this.onPortDisconnect(port);
-                }
-            });
-        }
     },
 
-    onFrameworkMessage: function(request, port, callback) {
-        const portDetails = this.ports.get(port.name) || {};
-        const tabId = portDetails.tabId;
+    isPrivilegedContext(sender) {
+        const { origin } = sender;
+        if ( origin ) {
+            return origin === EXTENSION_ORIGIN;
+        }
+        return sender.url.startsWith(EXTENSION_ORIGIN);
+    },
+
+    async onFrameworkMessage(request, sender) {
+        const tabId = sender.tabId;
         const msg = request.msg;
         switch ( msg.what ) {
         case 'localStorage': {
-            if ( portDetails.privileged !== true ) { break; }
-            const args = msg.args || [];
-            vAPI.localStorage[msg.fn](...args).then(result => {
-                callback(result);
-            });
-            break;
+            const fromPrivilegedContext = this.isPrivilegedContext(sender);
+            if ( fromPrivilegedContext !== true ) { break; }
+            const args = msg.args ?? [];
+            return vAPI.localStorage[msg.fn](...args);
         }
         case 'userCSS': {
             if ( tabId === undefined ) { break; }
@@ -925,7 +869,7 @@ vAPI.messaging = {
             if ( msg.add ) {
                 const details = {
                     code: undefined,
-                    frameId: portDetails.frameId,
+                    frameId: sender.frameId,
                     matchAboutBlank: true,
                     runAt: 'document_start',
                 };
@@ -937,7 +881,7 @@ vAPI.messaging = {
             if ( msg.remove ) {
                 const details = {
                     code: undefined,
-                    frameId: portDetails.frameId,
+                    frameId: sender.frameId,
                     matchAboutBlank: true,
                 };
                 for ( const cssText of msg.remove ) {
@@ -945,9 +889,7 @@ vAPI.messaging = {
                     promises.push(vAPI.tabs.removeCSS(tabId, details));
                 }
             }
-            Promise.all(promises).then(( ) => {
-                callback();
-            });
+            await Promise.all(promises);
             break;
         }
         default:
@@ -955,371 +897,44 @@ vAPI.messaging = {
         }
     },
 
-    // Use a wrapper to avoid closure and to allow reuse.
-    CallbackWrapper: class {
-        constructor(messaging, port, msgId) {
-            this.messaging = messaging;
-            this.callback = this.proxy.bind(this); // bind once
-            this.init(port, msgId);
+    async onDispatch(request, sender) {
+        const { tab } = sender;
+        if ( tab?.id ) {
+            sender.tabId = tab.id;
         }
-        init(port, msgId) {
-            this.port = port;
-            this.msgId = msgId;
-            return this;
-        }
-        proxy(response) {
-            // https://github.com/chrisaljoudi/uBlock/issues/383
-            try {
-                this.port.postMessage({
-                    msgId: this.msgId,
-                    msg: response !== undefined ? response : null,
-                });
-            } catch {
-                this.messaging.onPortDisconnect(this.port);
-            }
-            // Store for reuse
-            this.port = null;
-            this.messaging.callbackWrapperJunkyard.push(this);
-        }
-    },
-
-    callbackWrapperJunkyard: [],
-
-    callbackWrapperFactory: function(port, msgId) {
-        return this.callbackWrapperJunkyard.length !== 0
-            ? this.callbackWrapperJunkyard.pop().init(port, msgId)
-            : new this.CallbackWrapper(this, port, msgId);
-    },
-
-    onPortMessage: function(request, port) {
-        // prepare response
-        let callback = this.NOOPFUNC;
-        if ( request.msgId !== undefined ) {
-            callback = this.callbackWrapperFactory(port, request.msgId).callback;
-        }
-
-        // Content process to main process: framework handler.
         if ( request.channel === 'vapi' ) {
-            this.onFrameworkMessage(request, port, callback);
-            return;
+            return this.onFrameworkMessage(request, sender);
         }
-
-        // Auxiliary process to main process: specific handler
-        const portDetails = this.ports.get(port.name);
-        if ( portDetails === undefined ) { return; }
-
+        const fromPrivilegedContext = this.isPrivilegedContext(sender);
         const listenerDetails = this.listeners.get(request.channel);
-        let r = this.UNHANDLED;
-        if (
-            (listenerDetails !== undefined) &&
-            (listenerDetails.privileged === false || portDetails.privileged)
-            
-        ) {
-            r = listenerDetails.fn(request.msg, portDetails, callback);
+        if ( listenerDetails ) {
+            if ( listenerDetails.privileged ) {
+                if ( fromPrivilegedContext !== true ) { return; }
+            }
+            const r = await listenerDetails.fn(request.msg, sender);
+            if ( r !== this.UNHANDLED ) { return r; }
         }
-        if ( r !== this.UNHANDLED ) { return; }
-
-        // Auxiliary process to main process: default handler
-        if ( portDetails.privileged ) {
-            r = this.defaultHandler(request.msg, portDetails, callback);
-            if ( r !== this.UNHANDLED ) { return; }
-        }
-
-        // Auxiliary process to main process: no handler
-        ubolog(
-            `vAPI.messaging.onPortMessage > unhandled request: ${JSON.stringify(request.msg)}`,
-            request
-        );
-
-        // Need to callback anyways in case caller expected an answer, or
-        // else there is a memory leak on caller's side
-        callback();
+        if ( fromPrivilegedContext !== true ) { return; }
+        const r = await this.defaultHandler(request.msg, sender);
+        if ( r !== this.UNHANDLED ) { return r; }
+        ubolog(`vAPI.messaging.onDispatch: unhandled request ${JSON.stringify(request.msg)}`);
     },
-};
 
-/******************************************************************************/
-/******************************************************************************/
-
-// https://github.com/gorhill/uBlock/issues/3474
-// https://github.com/gorhill/uBlock/issues/2823
-//   Foil ability of web pages to identify uBO through
-//   its web accessible resources.
-// https://github.com/gorhill/uBlock/issues/3497
-//   Prevent web pages from interfering with uBO's element picker
-// https://github.com/uBlockOrigin/uBlock-issues/issues/550
-//   Support using a new secret for every network request.
-
-{
-    const root = vAPI.getURL('/');
-    const reSecret = /\?secret=(\w+)/;
-    const shortSecrets = [];
-    let lastShortSecretTime = 0;
-
-    // Long secrets are valid until revoked or uBO restarts. The realm is one
-    // value out of 36^18 = over 10^28 values.
-    const longSecrets = new Set();
-
-    const guard = details => {
-        const match = reSecret.exec(details.url);
-        if ( match === null ) { return { cancel: true }; }
-        const secret = match[1];
-        if ( longSecrets.has(secret) ) { return; }
-        const pos = shortSecrets.indexOf(secret);
-        if ( pos === -1 ) { return { cancel: true }; }
-        shortSecrets.splice(pos, 1);
-    };
-
-    browser.webRequest.onBeforeRequest.addListener(
-        guard,
-        {
-            urls: [ root + 'web_accessible_resources/*' ]
-        },
-        [ 'blocking' ]
-    );
-
-    vAPI.warSecret = {
-        short: ( ) => {
-            if ( shortSecrets.length !== 0 ) {
-                if ( (Date.now() - lastShortSecretTime) > 5000 ) {
-                    shortSecrets.splice(0);
-                } else if ( shortSecrets.length > 256 ) {
-                    shortSecrets.splice(0, shortSecrets.length - 192);
-                }
-            }
-            lastShortSecretTime = Date.now();
-            const secret = vAPI.generateSecret();
-            shortSecrets.push(secret);
-            return secret;
-        },
-        long: previous => {
-            if ( previous !== undefined ) {
-                longSecrets.delete(previous);
-            }
-            const secret = vAPI.generateSecret(3);
-            longSecrets.add(secret);
-            return secret;
-        },
-    };
-}
-
-/******************************************************************************/
-
-vAPI.Net = class {
-    constructor() {
-        this.validTypes = new Set();
-        {
-            const wrrt = browser.webRequest.ResourceType;
-            for ( const typeKey in wrrt ) {
-                if ( Object.hasOwn(wrrt, typeKey) ) {
-                    this.validTypes.add(wrrt[typeKey]);
-                }
-            }
-        }
-        this.suspendableListener = undefined;
-        this.deferredSuspendableListener = undefined;
-        this.listenerMap = new WeakMap();
-        this.suspendDepth = 0;
-        this.unprocessedTabs = new Map();
-
-        browser.webRequest.onBeforeRequest.addListener(
-            details => {
-                if ( details.tabId !== frameManager.TAB_ID_NONE ) {
-                    const { type } = details;
-                    if ( type === 'main_frame' || type === 'sub_frame' ) {
-                        frameManager.addFrame(details);
-                    }
-                }
-                this.normalizeDetails(details);
-                if ( this.suspendDepth !== 0 && details.tabId >= 0 ) {
-                    return this.suspendOneRequest(details);
-                }
-                return this.onBeforeSuspendableRequest(details);
-            },
-            this.denormalizeFilters({ urls: [ 'http://*/*', 'https://*/*' ] }),
-            [ 'blocking' ]
-        );
-
-        frameManager.addListener((type, details) => {
-            switch ( type ) {
-            case 'tab-removed': {
-                const { tabId } = details;
-                if ( this.hasUnprocessedRequest(tabId) === false ) { break; }
-                this.removeUnprocessedRequest(tabId);
-                break;
-            }
-            case 'frame-committed': {
-                const { tabId, frameId } = details;
-                if ( frameId !== 0 ) { break; }
-                if ( details.transitionType !== 'reload' ) { break; }
-                if ( this.hasUnprocessedRequest(tabId) === false ) { break; }
-                this.removeUnprocessedRequest(tabId);
-                break;
-            }
-            default:
-                break;
-            }
+    onMessage(request, sender, callback) {
+        this.onDispatch(request, sender).then(response => {
+            callback(response);
+        }).catch(( ) => {
+            callback();
         });
-
-        vAPI.setDefaultIcon('-loading', '');
-    }
-    setOptions(/* options */) {
-    }
-    normalizeDetails(/* details */) {
-    }
-    denormalizeFilters(filters) {
-        const urls = filters.urls || [ '<all_urls>' ];
-        let types = filters.types;
-        if ( Array.isArray(types) ) {
-            types = this.denormalizeTypes(types);
-        }
-        if (
-            (this.validTypes.has('websocket')) &&
-            (types === undefined || types.indexOf('websocket') !== -1) &&
-            (urls.indexOf('<all_urls>') === -1)
-        ) {
-            if ( urls.indexOf('ws://*/*') === -1 ) {
-                urls.push('ws://*/*');
-            }
-            if ( urls.indexOf('wss://*/*') === -1 ) {
-                urls.push('wss://*/*');
-            }
-        }
-        return { types, urls };
-    }
-    denormalizeTypes(types) {
-        return types;
-    }
-    canonicalNameFromHostname(/* hn */) {
-    }
-    addListener(which, clientListener, filters, options) {
-        const actualFilters = this.denormalizeFilters(filters);
-        const actualListener = this.makeNewListenerProxy(clientListener);
-        browser.webRequest[which].addListener(
-            actualListener,
-            actualFilters,
-            options
-        );
-    }
-    onBeforeSuspendableRequest(details) {
-        if ( this.suspendableListener !== undefined ) {
-            return this.suspendableListener(details);
-        }
-        this.onUnprocessedRequest(details);
-    }
-    setSuspendableListener(listener) {
-        for ( const [ tabId, requests ] of this.unprocessedTabs ) {
-            let i = requests.length;
-            while ( i-- ) {
-                const r = listener(requests[i]);
-                if ( r === undefined || r.cancel !== true ) {
-                    requests.splice(i, 1);
-                }
-            }
-            if ( requests.length !== 0 ) { continue; }
-            this.unprocessedTabs.delete(tabId);
-        }
-        if ( this.unprocessedTabs.size !== 0 ) {
-            this.deferredSuspendableListener = listener;
-            listener = details => {
-                const { tabId, type  } = details;
-                if ( type === 'main_frame' && this.unprocessedTabs.has(tabId) ) {
-                    if ( this.removeUnprocessedRequest(tabId) ) {
-                        return this.suspendableListener(details);
-                    }
-                }
-                return this.deferredSuspendableListener(details);
-            };
-        }
-        this.suspendableListener = listener;
-        vAPI.setDefaultIcon('', '');
-    }
-    removeListener(which, clientListener) {
-        const actualListener = this.listenerMap.get(clientListener);
-        if ( actualListener === undefined ) { return; }
-        this.listenerMap.delete(clientListener);
-        browser.webRequest[which].removeListener(actualListener);
-    }
-    makeNewListenerProxy(clientListener) {
-        const actualListener = details => {
-            this.normalizeDetails(details);
-            return clientListener(details);
-        };
-        this.listenerMap.set(clientListener, actualListener);
-        return actualListener;
-    }
-    handlerBehaviorChanged() {
-        browser.webRequest.handlerBehaviorChanged();
-    }
-    onUnprocessedRequest(details) {
-        const { tabId } = details;
-        if ( tabId === -1 ) { return; }
-        if ( this.unprocessedTabs.size === 0 ) {
-            vAPI.setDefaultIcon('-loading', '!');
-        }
-        let requests = this.unprocessedTabs.get(tabId);
-        if ( requests === undefined ) {
-            this.unprocessedTabs.set(tabId, (requests = []));
-        }
-        requests.push(Object.assign({}, details));
-    }
-    hasUnprocessedRequest(tabId) {
-        if ( this.unprocessedTabs.size === 0 ) { return false; }
-        if ( tabId === undefined ) { return true; }
-        return this.unprocessedTabs.has(tabId);
-    }
-    removeUnprocessedRequest(tabId) {
-        if ( this.deferredSuspendableListener === undefined ) {
-            this.unprocessedTabs.clear();
-            return true;
-        }
-        if ( tabId !== undefined ) {
-            this.unprocessedTabs.delete(tabId);
-        } else {
-            this.unprocessedTabs.clear();
-        }
-        if ( this.unprocessedTabs.size !== 0 ) { return false; }
-        this.suspendableListener = this.deferredSuspendableListener;
-        this.deferredSuspendableListener = undefined;
         return true;
-    }
-    suspendOneRequest() {
-    }
-    unsuspendAllRequests() {
-    }
-    suspend() {
-        this.suspendDepth += 1;
-    }
-    unsuspend({ all = false, discard = false } = {}) {
-        if ( this.suspendDepth === 0 ) { return; }
-        if ( all ) {
-            this.suspendDepth = 0;
-        } else {
-            this.suspendDepth -= 1;
-        }
-        if ( this.suspendDepth !== 0 ) { return; }
-        this.unsuspendAllRequests(discard);
-    }
-    headerValue(headers, name) {
-        for ( const header of headers ) {
-            if ( header.name.toLowerCase() === name ) {
-                return header.value.trim();
-            }
-        }
-        return '';
-    }
-    static canSuspend() {
-        return false;
+    },
+
+    start() {
+        browser.runtime.onMessage.addListener(this.onMessage.bind(this));
     }
 };
 
-/******************************************************************************/
-/******************************************************************************/
-
-// To be defined by platform-specific code.
-
-vAPI.scriptletsInjector = (( ) => {
-    self.uBO_scriptletsInjected = '';
-}).toString();
+vAPI.messaging.start();
 
 /******************************************************************************/
 /******************************************************************************/
@@ -1444,19 +1059,19 @@ vAPI.adminStorage = (( ) => {
 //       implementation at this point, but we override with the
 //       background-side implementation.
 vAPI.localStorage = {
-    start: async function() {
-        if ( this.cache instanceof Promise ) { return this.cache; }
-        if ( this.cache instanceof Object ) { return this.cache; }
-        this.cache = vAPI.storage.get('localStorage').then(bin => {
-            this.cache = bin && bin.localStorage || {};
-        });
+    async start() {
+        if ( this.cache === undefined ) {
+            this.cache = vAPI.storage.get('localStorage').then(bin => {
+                this.cache = bin && bin.localStorage || {};
+            });
+        }
         return this.cache;
     },
-    clear: function() {
+    clear() {
         this.cache = {};
         return vAPI.storage.set({ localStorage: this.cache });
     },
-    getItem: function(key) {
+    getItem(key) {
         if ( this.cache instanceof Object === false ) {
             console.info(`localStorage.getItem('${key}') not ready`);
             return null;
@@ -1464,15 +1079,15 @@ vAPI.localStorage = {
         const value = this.cache[key];
         return value !== undefined ? value : null;
     },
-    getItemAsync: async function(key) {
+    async getItemAsync(key) {
         await this.start();
         const value = this.cache[key];
-        return value !== undefined ? value : null;
+        return value ?? null;
     },
-    removeItem: async function(key) {
-        this.setItem(key);
+    removeItem(key) {
+        return this.setItem(key);
     },
-    setItem: async function(key, value = undefined) {
+    async setItem(key, value = undefined) {
         await this.start();
         if ( value === this.cache[key] ) { return; }
         this.cache[key] = value;
@@ -1686,20 +1301,18 @@ vAPI.cloud = (( ) => {
         return { used: results[0], total: results[1], max: QUOTA_BYTES };
     };
 
-    const getOptions = function(callback) {
-        if ( typeof callback !== 'function' ) { return; }
-        callback(options);
+    const getOptions = function() {
+        return options;
     };
 
-    const setOptions = function(details, callback) {
+    const setOptions = function(details) {
         if ( typeof details !== 'object' || details === null ) { return; }
 
         if ( typeof details.deviceName === 'string' ) {
             vAPI.localStorage.setItem('deviceName', details.deviceName);
             options.deviceName = details.deviceName;
         }
-
-        getOptions(callback);
+        return getOptions();
     };
 
     return { push, pull, used, getOptions, setOptions };

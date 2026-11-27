@@ -48,11 +48,11 @@ import µb from './background.js';
 
 µb.isTrustedSite = function(url) {
     return this.trustedSites.isTrusted(url);
-}
+};
 
 µb.isNotTrustedSite = function(url) {
     return this.trustedSites.isTrusted(url) === false;
-}
+};
 
 µb.toggleTrustedStatus = function(url, scope, state) {
     const r = µb.trustedSites.toggle(url, scope, state);
@@ -60,7 +60,7 @@ import µb from './background.js';
     µb.saveWhitelist();
     filteringBehaviorChanged({ hostname: hostnameFromURI(url) });
     return r;
-}
+};
 
 /******************************************************************************/
 
@@ -108,6 +108,7 @@ import µb from './background.js';
         if ( value === true ) {
             us.popupPanelSections |= 0b11111;
         }
+        filteringBehaviorChanged();
         break;
     case 'autoUpdate':
         this.scheduleAssetUpdater({ updateDelay: value ? 2000 : 0 });
@@ -202,24 +203,6 @@ import µb from './background.js';
     zap = false,
 ) {
     if ( tabId === frameManager.TAB_ID_NONE ) { return; }
-
-    // Element picker's dependencies: may not be present when uBO is restarted
-    // outside of browser launch context.
-    await vAPI.tabs.executeScript(tabId, {
-        file: '/js/vapi.js',
-        frameId,
-        runAt: 'document_start'
-    }),
-    await vAPI.tabs.executeScript(tabId, {
-        file: '/js/vapi-client.js',
-        frameId,
-        runAt: 'document_start'
-    }),
-    await vAPI.tabs.executeScript(tabId, {
-        file: '/js/contentscript.js',
-        frameId,
-        runAt: 'document_start'
-    }),
 
     this.epickerArgs.target = targetElement || '';
     this.epickerArgs.zap = zap;
